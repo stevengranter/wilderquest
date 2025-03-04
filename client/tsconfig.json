@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "forceConsistentCasingInFileNames": true
+
+  },
+  "experimental": {
+    "classRegex": ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+  },
+  "include": [
+    "src",
+    "global.d.ts"
+  ]
+}
