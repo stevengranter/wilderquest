@@ -8,8 +8,8 @@
     "preview": "pnpm run build && NODE_ENV=production tsx server/src/server.ts",
     "build": "vite build && tsc",
     "start": "pnpm run build && node dist/server/server.js",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "storybook": "npx storybook dev -p 6006",
+    "build-storybook": "npx storybook build"
   },
   "dependencies": {
     "express": "^4.21.2",
