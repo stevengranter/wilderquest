@@ -1,16 +1,39 @@
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Selection from "selection-popover";
 import classes from "./EditableComponent.module.css";
+import ButtonGroup from "./ButtonGroup";
 
-export default function EditableComponent() {
+type TextElement =
+  | "h1"
+  | "h2"
+  | "h3"
+  | "h4"
+  | "h5"
+  | "div"
+  | "p"
+  | "blockquote"
+  | "span";
+
+type EditableComponentProps = {
+  tag?: TextElement;
+};
+
+export default function EditableComponent({
+  tag = "div",
+}: EditableComponentProps) {
   const ref = useRef<HTMLElement>(null);
   const [isEditing] = useState(false);
   const [state, setState] = useState({ html: "<b>Hello World</b>" });
+  const [tagName, setTagName] = useState<string>(tag);
 
   function handleChange(e: ContentEditableEvent) {
     setState({ html: e.target.value });
   }
+
+  useEffect(() => {
+    console.log(tagName);
+  }, [tagName]);
 
   return (
     <>
@@ -20,13 +43,14 @@ export default function EditableComponent() {
             innerRef={ref}
             onChange={handleChange}
             html={state.html}
-            tagName="p"
+            tagName={tagName}
             disabled={isEditing}
           />
         </Selection.Trigger>
         <Selection.Portal>
           <Selection.Content className={classes.SelectionContent}>
             <Selection.Arrow />
+            <ButtonGroup size="small" clickHandler={setTagName} />
           </Selection.Content>
         </Selection.Portal>
       </Selection.Root>
