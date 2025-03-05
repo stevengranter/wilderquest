@@ -14,8 +14,10 @@
         "resolveJsonModule": true,
         "jsx" : "react-jsx",
         "isolatedModules": true,
-        "noEmit": true
+        "noEmit": false,
+        "outDir": "dist/server"
     },
+    "include": ["server"],
     "exclude": [
         "node_modules"
     ]

@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "nodemon -w server -x tsx server/src/server.ts",
-    "preview": "pnpm run build && NODE_ENV=production tsx server/src/server.ts",
+    "dev": "nodemon -w server -x tsx server/src/index.ts",
+    "preview": "pnpm run build && NODE_ENV=production tsx server/src/index.ts",
     "build": "vite build && tsc",
-    "start": "pnpm run build && node dist/server/server.js",
+    "start": "node dist/server/index.js",
     "storybook": "npx storybook dev -p 6006",
     "build-storybook": "npx storybook build"
   },
