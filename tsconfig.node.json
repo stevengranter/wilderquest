@@ -1,5 +1,5 @@
 {
-    "extends": "../tsconfig.json",
+    "extends": "./tsconfig.json",
     "compilerOptions": {
         "module": "Node16",
         "moduleResolution": "node16",
@@ -7,5 +7,5 @@
         "noEmit": false,
         "outDir": "dist/server"
     },
-    "include": ["src/**.ts"]
+    "include": ["server/src"]
 }

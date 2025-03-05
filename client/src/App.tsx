@@ -1,5 +1,11 @@
-import Button from "./components/ui/Button";
+import EditableComponent from "./components/EditableComponent";
 
-export default function App() {
-  return <Button>Hello</Button>;
-}
+const App = () => {
+  return (
+    <>
+      <EditableComponent />
+    </>
+  );
+};
+
+export default App;

@@ -6,26 +6,28 @@
   "scripts": {
     "dev": "nodemon -w server -x tsx server/src/index.ts",
     "preview": "pnpm run build && NODE_ENV=production tsx server/src/index.ts",
-    "build": "vite build && tsc",
+    "build": "tsc -p tsconfig.node.json && vite build",
     "start": "node dist/server/index.js",
     "storybook": "npx storybook dev -p 6006",
-    "build-storybook": "npx storybook build"
+    "build-storybook": "npx storybook build -o dist/storybook"
   },
   "dependencies": {
     "express": "^4.21.2",
     "react": "^18.3.1",
+    "react-contenteditable": "^3.3.7",
     "react-dom": "^18.3.1",
+    "selection-popover": "^0.3.0",
+    "use-text-selection": "^1.1.5",
     "vite-express": "^0.20.0"
   },
   "devDependencies": {
-    "@typescript-eslint/parser": "^8.25.0",
     "@chromatic-com/storybook": "^3.2.5",
     "@eslint/js": "^9.21.0",
     "@storybook/addon-essentials": "^8.6.3",
     "@storybook/addon-interactions": "^8.6.3",
-    "@storybook/addon-onboarding": "^8.6.3", 
-    "@storybook/experimental-addon-test": "^8.6.3", 
+    "@storybook/addon-onboarding": "^8.6.3",
     "@storybook/blocks": "^8.6.3",
+    "@storybook/experimental-addon-test": "^8.6.3",
     "@storybook/react": "^8.6.3",
     "@storybook/react-vite": "^8.6.3",
     "@storybook/test": "^8.6.3",
@@ -35,6 +37,7 @@
     "@types/node": "^20.17.22",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "@typescript-eslint/parser": "^8.25.0",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/browser": "^3.0.7",
     "@vitest/coverage-v8": "^3.0.7",
@@ -54,6 +57,7 @@
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.25.0",
     "vite": "^6.2.0",
+    "vite-css-modules": "^1.8.4",
     "vitest": "^3.0.7"
   },
   "eslintConfig": {
