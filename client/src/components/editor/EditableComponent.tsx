@@ -2,7 +2,7 @@ import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
 import { useEffect, useRef, useState } from "react";
 import * as Selection from "selection-popover";
 import classes from "./EditableComponent.module.css";
-import ButtonGroup from "./ButtonGroup";
+import ElementMenu from "./ElementMenu";
 
 type TextElement =
   | "h1"
@@ -50,7 +50,7 @@ export default function EditableComponent({
         <Selection.Portal>
           <Selection.Content className={classes.SelectionContent}>
             <Selection.Arrow />
-            <ButtonGroup size="small" clickHandler={setTagName} />
+            <ElementMenu handleClick={setTagName} />
           </Selection.Content>
         </Selection.Portal>
       </Selection.Root>

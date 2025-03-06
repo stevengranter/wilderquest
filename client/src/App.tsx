@@ -3,9 +3,11 @@ import EditorContainer from "./components/editor/EditorContainer";
 
 const App = () => {
   return (
-    <EditorContainer>
-      <EditableComponent />
-    </EditorContainer>
+    <>
+      <EditorContainer>
+        <EditableComponent />
+      </EditorContainer>
+    </>
   );
 };
 

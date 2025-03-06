@@ -2,7 +2,7 @@ import { ButtonHTMLAttributes, DetailedHTMLProps, ReactNode } from "react";
 import cx from "classix";
 
 type ButtonType = "primary" | "secondary" | "accent" | "ghost";
-type ButtonSize = "small" | "medium" | "large";
+type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps
   extends DetailedHTMLProps<
@@ -30,21 +30,21 @@ const variantClasses = {
 };
 
 const sizeClasses = {
-  small: "text-sm py-1 px-3",
-  medium: "text-md py-2 px-4",
-  large: "text-xl py-2 px-6",
+  sm: "text-sm py-1 px-3",
+  md: "text-md py-2 px-4",
+  lg: "text-xl py-2 px-6",
 };
 
 const roundedClasses = {
-  small: "rounded-sm",
-  medium: "rounded-md",
-  large: "rounded-lg",
+  sm: "rounded-sm",
+  md: "rounded-md",
+  lg: "rounded-lg",
 };
 
 export default function Button({
   label = "Button",
   variant = "primary",
-  size = "small",
+  size = "sm",
   rounded = false,
   disabled = false,
   className,

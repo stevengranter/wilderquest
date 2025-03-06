@@ -1,14 +1,14 @@
 import Button from "../ui/Button";
 
-type ButtonGroupSize = "small" | "medium" | "large";
+type ButtonGroupSize = "sm" | "md" | "lg";
 
 type ButtonGroupProps = {
-  size: ButtonGroupSize;
+  size?: ButtonGroupSize;
   clickHandler?: (arg0: string) => void;
 };
 
 export default function ButtonGroup({
-  size = "medium",
+  size = "md",
   clickHandler = () => {},
 }: ButtonGroupProps) {
   return (
