@@ -2,19 +2,30 @@ import express from "express";
 import ViteExpress from "vite-express";
 import { createServer } from "http";
 import path from "path";
+import { readFile } from "fs/promises";
 
 const __dirname = import.meta.dirname;
 
+async function getFile(fileName: string): Promise<string> {
+  return await readFile(fileName, {
+    encoding: "utf-8",
+  });
+}
+
+getFile("public/pages/sample.html").then((result) => {
+  console.log("File read");
+  console.log(result);
+});
 const app = express();
 const server = createServer(app).listen(3000, () => {
-    console.log("HTTP server is listening at http://localhost:3000!");
+  console.log("HTTP server is listening at http://localhost:3000!");
 });
 
 if (process.env.NODE_ENV === "production") {
-    app.use(express.static(path.join(__dirname, "../../dist/static")));
-    console.log(__dirname)
+  app.use(express.static(path.join(__dirname, "../../dist/static")));
+  console.log(__dirname);
 } else {
-    ViteExpress.bind(app, server).then(() => {
-        console.log("Vite started!");
-    });
+  ViteExpress.bind(app, server).then(() => {
+    console.log("Vite started!");
+  });
 }

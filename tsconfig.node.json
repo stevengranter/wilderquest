@@ -1,11 +1,12 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "module": "Node16",
+        "module": "NodeNext",
         "moduleResolution": "node16",
+        "target": "ES2022",
         "jsx": "react-jsx",
         "noEmit": false,
         "outDir": "dist/server"
     },
-    "include": ["server/src"]
+    "include": ["server/src"],
 }
