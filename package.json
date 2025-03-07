@@ -12,6 +12,9 @@
     "build-storybook": "npx storybook build"
   },
   "dependencies": {
+    "@blocknote/core": "^0.25.1",
+    "@blocknote/react": "^0.25.1",
+    "@blocknote/shadcn": "^0.25.1",
     "@radix-ui/react-slot": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
