@@ -1,18 +1,24 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
+    "composite": true,
     "module": "ES2022",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "forceConsistentCasingInFileNames": true,
-    "outDir": "dist/client"
+    "outDir": "dist/client",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["client/src/*"],
+      "@/lib/*": ["client/src/lib/*"]
+    }
 
   },
   "experimental": {
     "classRegex": ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
   },
   "include": [
-    "src",
+    "client/src",
     "global.d.ts"
   ]
 }

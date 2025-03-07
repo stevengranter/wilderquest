@@ -1,11 +1,12 @@
 {
-    "extends": "../tsconfig.json",
+    "extends": "./tsconfig.json",
     "compilerOptions": {
         "module": "Node16",
         "moduleResolution": "node16",
         "jsx": "react-jsx",
         "noEmit": false,
-        "outDir": "dist/server"
+        "outDir": "dist/server",
+        "composite": true
     },
     "include": ["src/**.ts"]
 }
