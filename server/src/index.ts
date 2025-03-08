@@ -4,7 +4,6 @@ import { createServer } from "http";
 import path from "path";
 
 import { getFileList } from "./lib/utils.js";
-import fs from "fs/promises";
 
 let ABSOLUTE_STATIC_PATH = "";
 

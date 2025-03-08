@@ -1,12 +1,11 @@
-import {
-  DefaultReactGridSuggestionItem,
-  GridSuggestionMenuProps,
-} from "@blocknote/react";
+// import {
+//   DefaultReactGridSuggestionItem,
+//   GridSuggestionMenuProps,
+// } from "@blocknote/react";
 import { useEffect, useState } from "react";
 
-export default function CustomGifPicker(
-  props: GridSuggestionMenuProps<DefaultReactGridSuggestionItem>,
-) {
+export default function CustomGifPicker() {
+  // props: GridSuggestionMenuProps<DefaultReactGridSuggestionItem>,
   const [gifList, setGifList] = useState([]);
   useEffect(() => {
     fetch("api/gifs")
@@ -22,7 +21,11 @@ export default function CustomGifPicker(
             key={index}
             className="flex justify-center items-center bg-slate-300 p-2 rounded-xl aspect-square"
           >
-            <img src={item.path} alt={item.path} className="w-full" />
+            <img
+              src={item.path}
+              alt={item.path}
+              className="object-scale-down aspect-square"
+            />
           </div>
         ))}
       </div>
