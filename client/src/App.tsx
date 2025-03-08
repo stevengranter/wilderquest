@@ -5,14 +5,47 @@ import {
 } from "@blocknote/core";
 import "@blocknote/core/fonts/inter.css";
 import {
+  DefaultReactGridSuggestionItem,
   DefaultReactSuggestionItem,
   getDefaultReactSlashMenuItems,
+  GridSuggestionMenuController,
+  GridSuggestionMenuProps,
   SuggestionMenuController,
   useCreateBlockNote,
 } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/shadcn";
 import "@blocknote/shadcn/style.css";
 import { HiOutlineGlobeAlt } from "react-icons/hi";
+
+import "./App.css";
+import CustomGifPicker from "@/components/editor/CustomGifPicker";
+
+// Custom component to replace the default Emoji Picker.
+function CustomEmojiPicker(
+  props: GridSuggestionMenuProps<DefaultReactGridSuggestionItem>,
+) {
+  return (
+    <div
+      className={"emoji-picker"}
+      style={
+        { gridTemplateColumns: `repeat(${props.columns || 1}, 1fr)` } as any
+      }
+    >
+      {props.items.map((item, index) => (
+        <div
+          className={`emoji-picker-item ${
+            props.selectedIndex === index ? " selected" : ""
+          }`}
+          onClick={() => {
+            props.onItemClick?.(item);
+          }}
+        >
+          {item.icon}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // Custom Slash Menu item to insert a block after the current one.
 const insertHelloWorldItem = (editor: BlockNoteEditor) => ({
@@ -68,7 +101,7 @@ export default function App() {
 
   // Renders the editor instance.
   return (
-    <BlockNoteView editor={editor} slashMenu={false}>
+    <BlockNoteView editor={editor} slashMenu={false} emojiPicker={false}>
       <SuggestionMenuController
         triggerCharacter={"/"}
         // Replaces the default Slash Menu items with our custom ones.
@@ -76,6 +109,13 @@ export default function App() {
           filterSuggestionItems(getCustomSlashMenuItems(editor), query)
         }
       />
+      <GridSuggestionMenuController
+        triggerCharacter={":"}
+        gridSuggestionMenuComponent={CustomEmojiPicker}
+        columns={5}
+        minQueryLength={2}
+      />
+      <CustomGifPicker />
     </BlockNoteView>
   );
 }
