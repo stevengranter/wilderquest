@@ -4,13 +4,11 @@ import {
   defaultBlockSpecs,
   defaultInlineContentSpecs,
   filterSuggestionItems,
-  insertOrUpdateBlock,
 } from "@blocknote/core";
 import "@blocknote/core/fonts/inter.css";
 import { BlockNoteView } from "@blocknote/shadcn";
 import "@blocknote/shadcn/style.css";
 import {
-  DefaultReactGridSuggestionItem,
   DefaultReactSuggestionItem,
   getDefaultReactSlashMenuItems,
   GridSuggestionMenuController,
@@ -18,12 +16,8 @@ import {
   useCreateBlockNote,
 } from "@blocknote/react";
 
-import { Mention } from "./Mention";
 import { MotionGif } from "@/components/editor/MotionGif";
-import CustomGifPicker from "@/components/editor/CustomGifPicker";
 
-// Our schema with inline content specs, which contain the configs and
-// implementations for inline content  that we want our editor to use.
 const schema = BlockNoteSchema.create({
   blockSpecs: {
     // Adds all default blocks.
@@ -34,8 +28,6 @@ const schema = BlockNoteSchema.create({
   inlineContentSpecs: {
     // Adds all default inline content.
     ...defaultInlineContentSpecs,
-    // Adds the mention tag.
-    mention: Mention,
   },
 });
 
@@ -46,27 +38,6 @@ const getCustomSlashMenuItems = (
   ...getDefaultReactSlashMenuItems(editor),
   insertMotionGif(editor),
 ];
-
-const getMentionMenuItems = (
-  editor: typeof schema.BlockNoteEditor,
-): DefaultReactSuggestionItem[] => {
-  const users = ["Steve", "Bob", "Joe", "Mike"];
-
-  return users.map((user) => ({
-    title: user,
-    onItemClick: () => {
-      editor.insertInlineContent([
-        {
-          type: "mention",
-          props: {
-            user,
-          },
-        },
-        " ", // add a space after the mention
-      ]);
-    },
-  }));
-};
 
 const getMotionGifItems = (
   editor: typeof schema.BlockNoteEditor,
@@ -133,23 +104,14 @@ export function Editor() {
       },
       {
         type: "paragraph",
-        content: [
-          {
-            type: "mention",
-            props: {
-              user: "Steve",
-            },
-          },
-          {
-            type: "text",
-            text: " <- This is an example mention",
-            styles: {},
-          },
-        ],
+        content:
+          "Press the '/' key to insert a block (headings, paragraphs, lists)",
       },
       {
         type: "paragraph",
-        content: "Press the '@' key to open the mentions menu and add another",
+        content:
+          "Press the '>' key to open gif menu, start typing to filter" +
+          " results",
       },
       {
         type: "paragraph",
@@ -159,34 +121,18 @@ export function Editor() {
 
   return (
     <BlockNoteView editor={editor} slashMenu={false} emojiPicker={true}>
-      {/* Adds a mentions menu which opens with the "@" key */}
       <SuggestionMenuController
         triggerCharacter={"/"}
         getItems={async (query) =>
-          // Gets all default slash menu items and `insertAlert` item.
           filterSuggestionItems(getCustomSlashMenuItems(editor), query)
         }
       />
-      <SuggestionMenuController
-        triggerCharacter={"@"}
-        getItems={async (query) =>
-          // Gets the mentions menu items
-          // TODO: Fix map/type cast
-          filterSuggestionItems(
-            getMotionGifItems(editor).map((item) => ({
-              title: item.url,
-            })),
-            query,
-          )
-        }
-        columns={2}
-        minQueryLength={2}
-      />
+
       <GridSuggestionMenuController
         triggerCharacter={">"}
         // gridSuggestionMenuComponent={CustomGifPicker}
         getItems={async (query) =>
-          // Gets the mentions menu items
+          // Filters gifs by query string
           filterSuggestionItems(getMotionGifItems(editor), query)
         }
         columns={3}
