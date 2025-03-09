@@ -1,0 +1,19 @@
+openapi: 3.1.0
+info:
+  title: cRUdVale
+  description: cRUdVale
+  version: 1.0.0
+servers:
+  - url: 'https://crudvale.fly.dev'
+paths:
+  /api:
+    get:
+      description: Primary endpoint
+      responses:
+        200:
+          description: New response
+          content:
+            application/json:
+              schema:
+                :
+  

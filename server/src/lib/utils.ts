@@ -7,5 +7,6 @@ export async function getFileList(
   const files = await fs.readdir(dir);
   return files.map((file: string) => ({
     url: `${outDir}/${file}`,
+    id: crypto.randomUUID(),
   }));
 }
