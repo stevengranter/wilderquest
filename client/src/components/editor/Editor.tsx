@@ -82,7 +82,7 @@ const getMotionGifItems = (
         " ", // add a space after the mention
       ]);
     },
-    icon: <img src={gif.url} />,
+    icon: <img src={gif.url} alt="gif" />,
   }));
 };
 
