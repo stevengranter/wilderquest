@@ -1,13 +1,6 @@
-import {
-  DefaultReactGridSuggestionItem,
-  GridSuggestionMenuProps,
-} from "@blocknote/react";
 import { useEffect, useState } from "react";
-import "./CustomGifPicker.css";
 
-export default function CustomGifPicker(
-  props: GridSuggestionMenuProps<DefaultReactGridSuggestionItem>,
-) {
+export default MotionGifSuggestionMenu() {
   const [gifList, setGifList] = useState([]);
   useEffect(() => {
     fetch("api/gifs")

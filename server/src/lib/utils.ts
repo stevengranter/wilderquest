@@ -6,6 +6,6 @@ export async function getFileList(
 ): Promise<string[]> {
   const files = await fs.readdir(dir);
   return files.map((file: string) => ({
-    path: `${outDir}/${file}`,
+    url: `${outDir}/${file}`,
   }));
 }
