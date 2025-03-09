@@ -1,4 +1,6 @@
 
+.gif-picker {@apply w-3/4}
+
 .gif-picker {
     background-color: white;
     border: 1px solid lightgray;

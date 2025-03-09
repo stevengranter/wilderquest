@@ -17,66 +17,50 @@ import {
 } from "@blocknote/react";
 
 import { MotionGif } from "@/components/editor/MotionGif";
+import CustomGifPicker from "@/components/editor/CustomGifPicker";
+import { CgMenuMotion } from "react-icons/cg";
 
 const schema = BlockNoteSchema.create({
   blockSpecs: {
     // Adds all default blocks.
     ...defaultBlockSpecs,
-    // Adds MotionGif
-    motionGif: MotionGif,
   },
   inlineContentSpecs: {
     // Adds all default inline content.
     ...defaultInlineContentSpecs,
+    motionGif: MotionGif,
   },
 });
 
-// List containing all default Slash Menu Items, as well as our custom one.
-const getCustomSlashMenuItems = (
-  editor: BlockNoteEditor,
-): DefaultReactSuggestionItem[] => [
-  ...getDefaultReactSlashMenuItems(editor),
-  insertMotionGif(editor),
-];
+async function fetchGifs(): Promise<{ url: string; id: string }[]> {
+  try {
+    const response = await fetch("/api/gifs");
 
-const getMotionGifItems = (
-  editor: typeof schema.BlockNoteEditor,
-): DefaultReactSuggestionItem[] => {
-  const gifs = [
-    { url: "assets/gifs/3demail.gif" },
-    {
-      url: "assets/gifs/850f9d2c-6c14-4924-ba68-a3914e2e181b_220x200.gif",
-    },
-    { url: "assets/gifs/Snowglobe.gif" },
-    { url: "assets/gifs/SnowglobeJesus.gif" },
-    { url: "assets/gifs/VFWComputerMouseAnim.gif" },
-    { url: "assets/gifs/aniheart.gif" },
-    { url: "assets/gifs/arroba.gif" },
-    { url: "assets/gifs/canada_flag.gif" },
-    { url: "assets/gifs/clipart_tech_computers_007.gif" },
-    { url: "assets/gifs/cool.gif" },
-    { url: "assets/gifs/garfield.gif" },
-    { url: "assets/gifs/garfield29.gif" },
-    { url: "assets/gifs/garfield42.gif" },
-    { url: "assets/gifs/heart_2.gif" },
-    { url: "assets/gifs/mail.gif" },
-    { url: "assets/gifs/mountainsnowglobe.gif" },
-    { url: "assets/gifs/smashingcomputer.gif" },
-    { url: "assets/gifs/snowglobe7.gif" },
-    { url: "assets/gifs/snowglobeelvis.gif" },
-    { url: "assets/gifs/studentatcomputer.gif" },
-    { url: "assets/gifs/warning.gif" },
-    { url: "assets/gifs/wwwdani.gif" },
-  ];
+    if (!response.ok) {
+      throw new Error("Failed to load GIFs");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+const getMotionGifItems = async (editor: BlockNoteEditor) => {
+  const gifs = await fetchGifs();
 
   return gifs.map((gif) => ({
     title: gif.url,
+    id: gif.id,
     onItemClick: () => {
       editor.insertInlineContent([
         {
           type: "motionGif",
           props: {
             url: gif.url,
+            textAlignment: "left",
+            textColor: "",
           },
         },
         " ", // add a space after the mention
@@ -86,13 +70,22 @@ const getMotionGifItems = (
   }));
 };
 
-const insertMotionGif = (editor: typeof schema.BlockNoteEditor) => ({
+const insertMotionGif = (editor: BlockNoteEditor) => ({
   title: "MotionGif",
+  description: "GIFs with motion",
   onItemClick: () => {
     editor.openSuggestionMenu(">");
   },
-  group: "Other",
+  group: "Others",
+  icon: <CgMenuMotion size={18} />,
 });
+
+const getCustomSlashMenuItems = (
+  editor: BlockNoteEditor,
+): DefaultReactSuggestionItem[] => [
+  ...getDefaultReactSlashMenuItems(editor),
+  insertMotionGif(editor),
+];
 
 export function Editor() {
   const editor = useCreateBlockNote({
@@ -120,22 +113,22 @@ export function Editor() {
   });
 
   return (
-    <BlockNoteView editor={editor} slashMenu={false} emojiPicker={true}>
+    <BlockNoteView editor={editor} slashMenu={true} emojiPicker={true}>
       <SuggestionMenuController
         triggerCharacter={"/"}
+        // Replaces the default Slash Menu items with our custom ones.
         getItems={async (query) =>
           filterSuggestionItems(getCustomSlashMenuItems(editor), query)
         }
       />
-
       <GridSuggestionMenuController
         triggerCharacter={">"}
-        // gridSuggestionMenuComponent={CustomGifPicker}
-        getItems={async (query) =>
-          // Filters gifs by query string
-          filterSuggestionItems(getMotionGifItems(editor), query)
-        }
-        columns={3}
+        gridSuggestionMenuComponent={CustomGifPicker}
+        getItems={async (query) => {
+          const gifItems = await getMotionGifItems(editor);
+          return filterSuggestionItems(gifItems, query);
+        }}
+        columns={8}
         minQueryLength={0}
       />
     </BlockNoteView>
