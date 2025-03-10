@@ -21,7 +21,7 @@ export default function CustomGifPicker(
     gifList && (
       <div
         className={classes["gif-picker"]}
-        style={{ gridTemplateColumns: `repeat(${props.columns || 1}, 1fr)` }}
+        // style={{ gridTemplateColumns: `repeat(${props.columns || 1}, 1fr)` }}
       >
         {props.items.map((item, index) => (
           <div

@@ -1,5 +1,6 @@
 import { createReactInlineContentSpec } from "@blocknote/react";
 import { defaultProps } from "@blocknote/core";
+import { motion } from "motion/react";
 
 export const MotionGif = createReactInlineContentSpec(
   {
@@ -18,7 +19,12 @@ export const MotionGif = createReactInlineContentSpec(
   },
   {
     render: (props) => (
-      <img src={props.inlineContent.props.url} alt="motion gif here" />
+      <motion.img
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        src={props.inlineContent.props.url}
+        alt="motion gif here"
+      />
     ),
   },
 );

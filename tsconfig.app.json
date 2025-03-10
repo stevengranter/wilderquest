@@ -7,7 +7,7 @@
     "jsx": "react-jsx",
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist/client",
-    "types": ["src/global.d.ts", "vite/client"],
+    "types": ["client/src/global.d.ts", "vite/client"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["client/src/*"],
