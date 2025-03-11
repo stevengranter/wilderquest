@@ -13,12 +13,21 @@ import {
   getDefaultReactSlashMenuItems,
   GridSuggestionMenuController,
   SuggestionMenuController,
+  SuggestionMenuProps,
   useCreateBlockNote,
 } from "@blocknote/react";
 
 import { MotionGif } from "@/components/editor/MotionGif";
 import CustomGifPicker from "@/components/editor/CustomGifPicker";
 import { CgMenuMotion } from "react-icons/cg";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "../ui/dropdownmenu";
+import { Button } from "@/components/ui/button";
 
 const schema = BlockNoteSchema.create({
   blockSpecs: {
@@ -80,6 +89,29 @@ const insertMotionGif = (editor: BlockNoteEditor) => ({
   icon: <CgMenuMotion size={18} />,
 });
 
+// Custom component to replace the default Slash Menu.
+function CustomSlashMenu(
+  props: SuggestionMenuProps<DefaultReactSuggestionItem>,
+) {
+  return (
+    <div className={"slash-menu flex flex-col"}>
+      {props.items.map((item, index) => (
+        <div
+          className={`slash-menu-item ${
+            props.selectedIndex === index ? " selected" : ""
+          }`}
+          onClick={() => {
+            props.onItemClick?.(item);
+          }}
+          key={index}
+        >
+          {item.icon} {item.title} {item.subtext}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const getCustomSlashMenuItems = (
   editor: BlockNoteEditor,
 ): DefaultReactSuggestionItem[] => [
@@ -113,13 +145,14 @@ export function Editor() {
   });
 
   return (
-    <BlockNoteView editor={editor} slashMenu={true} emojiPicker={true}>
+    <BlockNoteView editor={editor} slashMenu={false} emojiPicker={true}>
       <SuggestionMenuController
         triggerCharacter={"/"}
         // Replaces the default Slash Menu items with our custom ones.
         getItems={async (query) =>
           filterSuggestionItems(getCustomSlashMenuItems(editor), query)
         }
+        // suggestionMenuComponent={CustomSlashMenu}
       />
       <GridSuggestionMenuController
         triggerCharacter={">"}
