@@ -6,7 +6,9 @@
         "jsx": "react-jsx",
         "noEmit": false,
         "outDir": "dist/server",
-        "composite": true
+        "composite": true,
+        "strict": true,
+
     },
-    "include": ["src/**.ts"]
+    "include": ["server"]
 }

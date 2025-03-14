@@ -25,13 +25,11 @@
         "noEmit": false,
         "outDir": "dist/server",
         "baseUrl": ".",
-        "paths": {
-            "@/*": [
-                "./client/src/*"
-            ]
-        }
+      
     },
-    "include": ["server"],
+    "include": [
+      "server",
+    ],
     "exclude": [
         "node_modules"
     ]
