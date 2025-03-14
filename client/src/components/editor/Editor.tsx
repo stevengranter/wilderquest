@@ -16,6 +16,7 @@ import {
   SuggestionMenuProps,
   useCreateBlockNote,
 } from "@blocknote/react";
+import { Badge } from "@/components/ui/badge";
 
 import { MotionGif } from "@/components/editor/MotionGif";
 import CustomGifPicker from "@/components/editor/CustomGifPicker";
@@ -28,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdownmenu";
 import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
 
 const schema = BlockNoteSchema.create({
   blockSpecs: {
@@ -93,22 +95,48 @@ const insertMotionGif = (editor: BlockNoteEditor) => ({
 function CustomSlashMenu(
   props: SuggestionMenuProps<DefaultReactSuggestionItem>,
 ) {
-  return (
-    <div className={"slash-menu flex flex-col"}>
-      {props.items.map((item, index) => (
+  const renderedItems = useMemo(() => {
+    let currentGroup: string | undefined;
+    const renderedItems = [];
+    for (let i = 0; i < props.items.length; i++) {
+      const item = props.items[i];
+      if (item.group !== currentGroup) {
+        currentGroup = item.group;
+        renderedItems.push(
+          <div className={"bn-suggestion-menu-label"} key={currentGroup}>
+            {currentGroup}
+          </div>,
+        );
+      }
+      renderedItems.push(
         <div
-          className={`slash-menu-item ${
-            props.selectedIndex === index ? " selected" : ""
-          }`}
+          className={"bn-suggestion-menu-item" + " flex"}
+          id={`bn-suggestion-menu-item-${i}`}
+          key={item.title}
           onClick={() => {
             props.onItemClick?.(item);
           }}
-          key={index}
         >
-          {item.icon} {item.title} {item.subtext}
-        </div>
-      ))}
-    </div>
+          <div className="bg-primary-100 p-2 m-1 aspect-square">
+            {item.icon}
+          </div>
+          <div className="flex content-center items-center w-full">
+            <div className="flex flex-col">
+              {item.title}
+              <div className="text-xs">{item.subtext}</div>
+            </div>
+          </div>
+          <div className="w-40  flex justify-end h-5">
+            {item.badge && <Badge>{item.badge}</Badge>}
+          </div>
+        </div>,
+      );
+    }
+    return renderedItems;
+  }, [props.items]);
+
+  return (
+    <div className="flex flex-col w-100 bg-primary-300">{renderedItems}</div>
   );
 }
 
@@ -152,7 +180,7 @@ export function Editor() {
         getItems={async (query) =>
           filterSuggestionItems(getCustomSlashMenuItems(editor), query)
         }
-        // suggestionMenuComponent={CustomSlashMenu}
+        suggestionMenuComponent={CustomSlashMenu}
       />
       <GridSuggestionMenuController
         triggerCharacter={">"}

@@ -9,10 +9,12 @@ export default function CustomGifPicker(
   props: GridSuggestionMenuProps<DefaultReactGridSuggestionItem>,
 ) {
   const [gifList, setGifList] = useState<{ url: string; id: string }[]>([]);
+  
   useEffect(() => {
     fetch("api/gifs")
       .then((res) => res.json())
-      .then((data) => setGifList(data));
+      .then((data) => setGifList(data))
+      .catch((error) => console.error("Failed to fetch GIFs:", error));
   }, []);
 
   console.log(props);
@@ -36,23 +38,7 @@ export default function CustomGifPicker(
             {item.icon}
           </div>
         ))}
-        {/*{gifList.map((item, index) => (*/}
-        {/*  <div*/}
-        {/*    className={`gif-picker-item ${*/}
-        {/*      props.selectedIndex === index ? " selected" : ""*/}
-        {/*    }`}*/}
-        {/*    onClick={() => {*/}
-        {/*      console.log(props);*/}
-        {/*    }}*/}
-        {/*    key={index}*/}
-        {/*  >*/}
-        {/*    <img*/}
-        {/*      src={item.url}*/}
-        {/*      alt={item.url}*/}
-        {/*      className="object-scale-down aspect-square"*/}
-        {/*    />*/}
-        {/*  </div>*/}
-        {/*))}*/}
+     
       </div>
     )
   );
