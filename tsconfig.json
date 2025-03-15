@@ -23,12 +23,11 @@
         "jsx" : "react-jsx",
         "isolatedModules": true,
         "noEmit": false,
-        "outDir": "dist/server",
+//        "outDir": "dist/server",
         "baseUrl": ".",
-      
+
     },
     "include": [
-      "server",
     ],
     "exclude": [
         "node_modules"

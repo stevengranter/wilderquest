@@ -1,14 +1,21 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "module": "Node16",
-        "moduleResolution": "node16",
-        "jsx": "react-jsx",
-        "noEmit": false,
-        "outDir": "dist/server",
-        "composite": true,
+        "useDefineForClassFields": true,
+        "lib": ["DOM", "DOM.Iterable", "ESNext"],
+        "allowJs": false,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
         "strict": true,
-
+        "forceConsistentCasingInFileNames": true,
+        "module": "NodeNext",
+        "moduleResolution": "nodenext",
+        "resolveJsonModule": true,
+        "jsx" : "react-jsx",
+        "isolatedModules": true,
+        "noEmit": false,
+        "outDir": "dist/server"
     },
-    "include": ["server"]
+    "include": ["server/src/**/*.ts"]
 }
