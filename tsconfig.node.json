@@ -17,5 +17,7 @@
         "noEmit": false,
         "outDir": "dist/server"
     },
-    "include": ["server/src/**/*.ts"]
+    "include": [
+        "server/src/**/*.ts"
+    ]
 }

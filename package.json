@@ -9,7 +9,8 @@
     "build": "vite build && tsc -p tsconfig.node.json",
     "start": "node dist/server/index.js",
     "storybook": "npx storybook dev -p 6006",
-    "build-storybook": "npx storybook build"
+    "build-storybook": "npx storybook build",
+    "dbmate": "docker run --rm -it --network=host -v \"$(pwd)/db:/db\" ghcr.io/amacneil/dbmate"
   },
   "dependencies": {
     "@blocknote/core": "^0.25.1",
@@ -56,6 +57,7 @@
     "@vitest/browser": "^3.0.7",
     "@vitest/coverage-v8": "^3.0.7",
     "classix": "^2.2.2",
+    "dbmate": "^2.26.0",
     "eslint": "^9.21.0",
     "eslint-config-prettier": "^10.0.2",
     "eslint-plugin-react": "^7.37.4",

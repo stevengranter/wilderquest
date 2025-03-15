@@ -27,7 +27,7 @@ services:
       - MYSQL_DATABASE=myapp
       - MYSQL_ROOT_PASSWORD=root
     ports:
-      - 3306:3306
+      - 33060:33060
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s

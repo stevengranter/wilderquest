@@ -24,6 +24,7 @@ const server = createServer(app).listen(3000, () => {
   console.log(
     chalk.green.bold("🕸️ HTTP server is listening at http://localhost:3000!"),
   );
+  console.log(process.env.MY_SECRET);
 });
 
 if (process.env.NODE_ENV === "production") {
@@ -36,5 +37,8 @@ if (process.env.NODE_ENV === "production") {
 }
 
 app.use("/api", router);
+
+console.log("Ssh, here's a secret:");
+console.log(process.env.MY_SECRET);
 
 connection();
