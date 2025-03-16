@@ -1,10 +1,6 @@
 import "./App.css";
-import Editor from "@/components/editor/Editor";
+import { Outlet } from "react-router";
 
 export default function App() {
-  return (
-    <>
-      <Editor></Editor>
-    </>
-  );
+  return <Outlet />;
 }

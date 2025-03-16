@@ -1,8 +1,5 @@
 @import "tailwindcss";
 
-/*@import "tailwindcss/theme.css" layer(theme);*/
-/*@import "tailwindcss/utilities.css" layer(utilities);*/
-
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
@@ -49,25 +46,52 @@ body {@apply bg-gray-50 dark:bg-gray-800}
 
 
 :root {
+    --bg: var(--color-primary-100);
+    --bw: #fff;
+    --blank: #000;
     --border: #000;
-    --dark-border: #000;
+    --text: #000;
+    --mtext: #000;
+    --ring: #000;
+    --ring-offset: #fff;
+
+    --main: var(--color-primary-400);
+    --overlay: rgba(0, 0, 0, 0.8);
+
+    --border-radius: 5px;
     --box-shadow-x: 4px;
     --box-shadow-y: 4px;
     --reverse-box-shadow-x: -4px;
     --reverse-box-shadow-y: -4px;
-    --border-radius: 5px;
+
+    --shadow: var(--box-shadow-x) var(--box-shadow-y) 0px 0px var(--border);
+}
+
+.dark {
+    --bg: #272933;
+    --bw: #212121;
+    --blank: #fff;
+    --border: #000;
+    --text: #e6e6e6;
+    --mtext: #000;
+    --ring: #fff;
+    --ring-offset: #000;
+
+    --shadow: var(--box-shadow-x) var(--box-shadow-y) 0px 0px var(--border);
 }
 
 @theme inline {
-    --color-main: var(--color-primary-300);
-    --color-bg: #dfe5f2;
-    --color-darkBg: #272933;
-    --color-border: #000;
-    --color-darkBorder: #000;
-    --color-overlay: rgba(0, 0, 0, 0.8);
-    --color-text: #000;
-    --color-darkText: #e6e6e6;
     --color-secondaryBlack: #212121;
+    --color-overlay: var(--overlay);
+    --color-main: var(--main);
+    --color-bg: var(--bg);
+    --color-bw: var(--bw);
+    --color-blank: var(--blank);
+    --color-text: var(--text);
+    --color-mtext: var(--mtext);
+    --color-border: var(--border);
+    --color-ring: var(--ring);
+    --color-ringOffset: var(--ring-offset);
 
     --spacing-boxShadowX: var(--box-shadow-x);
     --spacing-boxShadowY: var(--box-shadow-y);
@@ -76,8 +100,7 @@ body {@apply bg-gray-50 dark:bg-gray-800}
 
     --radius-base: var(--border-radius);
 
-    --shadow-light: var(--box-shadow-x) var(--box-shadow-y) 0px 0px #000;
-    --shadow-dark: var(--box-shadow-x) var(--box-shadow-y) 0px 0px #000;
+    --shadow-shadow: var(--shadow);
 
     --font-weight-base: 500;
     --font-weight-heading: 700;
@@ -136,6 +159,7 @@ body {@apply bg-gray-50 dark:bg-gray-800}
         }
     }
 }
+
 
 /* BlockNote default styles */
 

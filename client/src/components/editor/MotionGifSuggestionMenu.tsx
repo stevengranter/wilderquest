@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 
-export default MotionGifSuggestionMenu() {
+type MotionGifSuggestionMenuProps = {
+  columns: number;
+  selectedIndex: number;
+};
+
+export default function MotionGifSuggestionMenu({
+  ...props
+}: MotionGifSuggestionMenuProps) {
   const [gifList, setGifList] = useState([]);
   useEffect(() => {
     fetch("api/gifs")
