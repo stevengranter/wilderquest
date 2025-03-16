@@ -1,7 +1,7 @@
 import express, { Router } from "express";
 const router: Router = express.Router();
 import { getGifs } from "../middleware/gifs.middleware.js";
-import { utils } from "../../lib/utils.js";
+import { utils } from "../../utils/utils.js";
 
 const absoluteGifsDir = utils.getAbsoluteStaticPath() + "/assets/gifs";
 

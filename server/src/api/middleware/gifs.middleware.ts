@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getFileList } from "../../lib/utils.js";
+import { getFileList } from "../../utils/utils.js";
 
 const publicGifsDir = "assets/gifs";
 
