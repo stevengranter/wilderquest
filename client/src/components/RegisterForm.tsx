@@ -18,20 +18,25 @@ import React from "react";
 
 const RegisterForm = React.forwardRef(() => {
   const { toast } = useToast();
-  const formSchema = z.object({
-    username: z.string().email(),
-    password: z.string().min(8, {
-      message: "Password must be at least 8 characters.",
-    }),
-    confirmPassword: z.string().min(8, {
-      message: "Password fields must match.",
-    }),
-  });
+  const formSchema = z
+    .object({
+      email: z.string().email(),
+      password: z.string().min(8, {
+        message: "Password must be at least 8 characters.",
+      }),
+      confirmPassword: z.string().min(8, {
+        message: "Password must be at least 8 characters.",
+      }),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: "Passwords don't match",
+      path: ["confirmPassword"],
+    });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
       confirmPassword: "",
     },
@@ -39,18 +44,20 @@ const RegisterForm = React.forwardRef(() => {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(JSON.stringify(values));
-    const response = await fetch("/api/users/register", {
+    const res = await fetch("/api/users/register", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
-        username: values.username,
+        email: values.email,
         password: values.password,
       }),
     });
-    const message = await response.json();
+    const response = await res.json();
     toast({
-      title: "Scheduled: Catch up ",
-      description: message,
-      // action: <ToastAction altText="Goto schedule to undo">Undo</ToastAction>,
+      title: response.success ? "Success" : "Error",
+      description: response.message,
     });
   }
 
@@ -62,7 +69,7 @@ const RegisterForm = React.forwardRef(() => {
       >
         <FormField
           control={form.control}
-          name="username"
+          name="email"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
@@ -81,7 +88,7 @@ const RegisterForm = React.forwardRef(() => {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input placeholder="" {...field} />
+                <Input type="password" placeholder="" {...field} />
               </FormControl>
               <FormDescription>Choose a password.</FormDescription>
               <FormMessage />
@@ -96,7 +103,7 @@ const RegisterForm = React.forwardRef(() => {
               <FormLabel>Confirm Password</FormLabel>
 
               <FormControl>
-                <Input placeholder="" {...field} />
+                <Input type="password" placeholder="" {...field} />
               </FormControl>
 
               <FormDescription>Must match previous field.</FormDescription>

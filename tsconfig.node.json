@@ -15,7 +15,8 @@
         "jsx" : "react-jsx",
         "isolatedModules": true,
         "noEmit": false,
-        "outDir": "dist/server"
+        "outDir": "dist/server",
+        "sourceMap": true
     },
     "include": [
         "server/src/**/*.ts"

@@ -1,18 +1,22 @@
-import { Request, Response } from "express";
 import { db } from "../services/db.js";
 import bcrypt from "bcrypt";
-import { RowDataPacket } from "mysql2";
 
 const saltRounds = 10;
 
-export const registerUser = async (req: Request, res: Response) => {
+type userData = {
+  email: string;
+  password: string;
+};
+
+export const registerUser = async (userData: userData) => {
+  console.log("registerUser()");
   let response;
   try {
-    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+    const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
 
     const result = await db.query(
-      `INSERT INTO users(username, password, created, updated) VALUES (?, ?, ?, ?)`,
-      [req.body.username, hashedPassword, new Date(), new Date()],
+      `INSERT INTO users(email, password, created, updated) VALUES (?, ?, ?, ?)`,
+      [userData.email, hashedPassword, new Date(), new Date()],
     );
 
     if (result.affectedRows > 0) {
@@ -27,8 +31,8 @@ export const registerUser = async (req: Request, res: Response) => {
       message: "Error creating user",
       error: error instanceof Error ? error.message : String(error),
     };
-    return response; // Make sure to return a value from the function
+    // return response; // Make sure to return a value from the function
   }
 
-  res.json(response);
+  return response;
 };

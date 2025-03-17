@@ -1,10 +1,10 @@
 const config = {
   db: {
-    host: "localhost",
+    host: "db",
     user: "root",
     password: "root",
-    database: "myapp",
     port: 3306,
+    database: "myapp",
   },
 };
 

@@ -8,9 +8,12 @@ services:
     env_file: ".env"
     environment:
       NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL}
+      MYSQL_HOST: db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: myapp
     ports:
-      [ "3000:3000" ]
+      - "3000:3000"
     develop:
         watch:
           - action: rebuild
@@ -24,14 +27,22 @@ services:
     restart: always
     volumes:
       - db-data:/var/lib/mysql
-#    env_file: ".env"
     environment:
       - MYSQL_DATABASE=myapp
       - MYSQL_ROOT_PASSWORD=root
     ports:
-      [ "3306:3306" ]
+      - "3306:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+#  dbmate:
+#    image: ghcr.io/amacneil/dbmate
+#    depends_on:
+#      - db
+#    env_file:
+#      - docker.env
+#    volumes:
+#      - ./db/migrations:/db/migrations

@@ -2,11 +2,18 @@ import express, { Router } from "express";
 const router: Router = express.Router();
 import { errorHandler } from "../utils.js";
 import { userRegistrationSchema } from "../schemas/user.schemas.js";
+import { registerUser } from "../controllers/user.controller.js";
 
 router.post("/register", async (req, res) => {
-  console.log(req.body);
-  userRegistrationSchema.safeParse(req.body);
-  res.send(req.body);
+  const result = userRegistrationSchema.safeParse(req.body);
+  if (!result.success) {
+    console.log(result.error);
+    res.status(400).send({ message: result.error });
+  } else {
+    const response = await registerUser(result.data);
+    console.log(response);
+    res.status(200).send(response);
+  }
 });
 
 router.get("/", async (req, res) => {
