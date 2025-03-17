@@ -42,6 +42,3 @@ if (process.env.NODE_ENV === "production") {
     console.log("Vite started!");
   });
 }
-
-console.log("Ssh, here's a secret:");
-console.log(process.env.MY_SECRET);

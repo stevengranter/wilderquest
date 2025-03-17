@@ -1,11 +1,13 @@
 import express, { Router } from "express";
 const router: Router = express.Router();
 import { errorHandler } from "../utils.js";
-import { registerUser } from "../controllers/user.controller.js";
-import { validateData } from "../middleware/validation.middleware.js";
 import { userRegistrationSchema } from "../schemas/user.schemas.js";
 
-router.post("/", validateData(userRegistrationSchema), registerUser);
+router.post("/register", async (req, res) => {
+  console.log(req.body);
+  userRegistrationSchema.safeParse(req.body);
+  res.send(req.body);
+});
 
 router.get("/", async (req, res) => {
   const userId = req.query.id;

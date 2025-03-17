@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import React from "react";
+import { Link } from "react-router";
 
-const LoginForm = React.forwardRef((props, ref) => {
+const LoginForm = React.forwardRef(() => {
   const formSchema = z.object({
     username: z.string().min(2, {
       message: "Username must be at least 2 characters.",
@@ -60,9 +61,14 @@ const LoginForm = React.forwardRef((props, ref) => {
           )}
         />
         <Button type="submit">Submit</Button>
+        <div>
+          Not registered?&nbsp;
+          <Link to="/register">Register here</Link>
+        </div>
       </form>
     </Form>
   );
 });
 
+LoginForm.displayName = "LoginForm";
 export default LoginForm;
