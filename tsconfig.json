@@ -18,14 +18,15 @@
         "strict": true,
         "forceConsistentCasingInFileNames": true,
         "module": "NodeNext",
-        "moduleResolution": "nodenext",
+        "moduleResolution": "bundler",
         "resolveJsonModule": true,
         "jsx" : "react-jsx",
         "isolatedModules": true,
         "noEmit": false,
-//        "outDir": "dist/server",
         "baseUrl": ".",
-
+        "paths": {
+            "@/*": ["./client/src/*"],
+        }
     },
     "include": [
     ],

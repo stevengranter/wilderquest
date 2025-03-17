@@ -1,5 +1,5 @@
-import LoginForm from "@/components/LoginForm";
-import { Card } from "../ui/card";
+import LoginForm from "../LoginForm";
+import { Card } from "@/components/ui/card";
 
 export default function Login() {
   return (

@@ -5,9 +5,9 @@ import { BrowserRouter, Routes, Route } from "react-router";
 
 // React Components
 import App from "./App";
-import Login from "@/components/pages/Login";
-import Register from "@/components/pages/Register";
-import Home from "@/components/pages/Home";
+import Login from "./components/pages/Login";
+import Register from "./components/pages/Register";
+import Home from "./components/pages/Home";
 
 // Stylesheets
 import "./main.css";

@@ -13,8 +13,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import React from "react";
 
-export default function LoginForm() {
+const LoginForm = React.forwardRef((props, ref) => {
   const formSchema = z.object({
     username: z.string().min(2, {
       message: "Username must be at least 2 characters.",
@@ -44,9 +45,13 @@ export default function LoginForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="ekmas" {...field} />
-              </FormControl>
+              <div>
+                <FormControl>
+                  <div>
+                    <Input placeholder="ekmas" {...field} />
+                  </div>
+                </FormControl>
+              </div>
               <FormDescription>
                 This is your public display name.
               </FormDescription>
@@ -58,4 +63,6 @@ export default function LoginForm() {
       </form>
     </Form>
   );
-}
+});
+
+export default LoginForm;

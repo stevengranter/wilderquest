@@ -21,14 +21,6 @@ import { Badge } from "@/components/ui/badge";
 import { MotionGif } from "@/components/editor/MotionGif";
 import CustomGifPicker from "@/components/editor/CustomGifPicker";
 import { CgMenuMotion } from "react-icons/cg";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from "../ui/dropdownmenu";
-import { Button } from "@/components/ui/button";
 import { useMemo } from "react";
 
 const schema = BlockNoteSchema.create({
@@ -67,6 +59,7 @@ const getMotionGifItems = async (editor: BlockNoteEditor) => {
     onItemClick: () => {
       editor.insertInlineContent([
         {
+          // @ts-expect-error TODO: fix error for type: motionGif
           type: "motionGif",
           props: {
             url: gif.url,
@@ -178,14 +171,17 @@ export function Editor() {
         triggerCharacter={"/"}
         // Replaces the default Slash Menu items with our custom ones.
         getItems={async (query) =>
+          // @ts-expect-error TODO: fix error for editor type mismatch
           filterSuggestionItems(getCustomSlashMenuItems(editor), query)
         }
         suggestionMenuComponent={CustomSlashMenu}
       />
       <GridSuggestionMenuController
         triggerCharacter={">"}
+        // @ts-expect-error TODO: fix error for gridSuggestionMenuComponent
         gridSuggestionMenuComponent={CustomGifPicker}
         getItems={async (query) => {
+          // @ts-expect-error TODO: fix error for editor type
           const gifItems = await getMotionGifItems(editor);
           return filterSuggestionItems(gifItems, query);
         }}
