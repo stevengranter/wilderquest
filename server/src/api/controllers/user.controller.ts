@@ -8,15 +8,47 @@ type userData = {
   password: string;
 };
 
+async function isEmailAlreadyRegistered(
+  email: string,
+): Promise<{ success: boolean; exists?: boolean; error?: string }> {
+  try {
+    const result = await db.querySelect(
+      "SELECT email FROM users WHERE email = ?",
+      [email.toLowerCase()],
+    );
+    return { success: true, exists: result.length > 0 };
+  } catch (error: unknown) {
+    console.error("Error checking email existence:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 export const registerUser = async (userData: userData) => {
   console.log("registerUser()");
   let response;
   try {
+    const emailCheckResult = await isEmailAlreadyRegistered(userData.email);
+
+    if (!emailCheckResult.success) {
+      return {
+        success: false,
+        message: "Error checking email existence",
+        error: emailCheckResult.error,
+      };
+    }
+
+    if (emailCheckResult.exists) {
+      return { success: false, message: "Email already registered" };
+    }
+
     const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
 
-    const result = await db.query(
-      `INSERT INTO users(email, password, created, updated) VALUES (?, ?, ?, ?)`,
-      [userData.email, hashedPassword, new Date(), new Date()],
+    const result = await db.queryModify(
+      "INSERT INTO users(email, password, created, updated) VALUES (?,?,?,?)",
+      [userData.email.toLowerCase(), hashedPassword, new Date(), new Date()],
     );
 
     if (result.affectedRows > 0) {
@@ -31,7 +63,6 @@ export const registerUser = async (userData: userData) => {
       message: "Error creating user",
       error: error instanceof Error ? error.message : String(error),
     };
-    // return response; // Make sure to return a value from the function
   }
 
   return response;

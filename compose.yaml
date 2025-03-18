@@ -5,13 +5,13 @@ services:
   server:
     build:
       context: .
-    env_file: ".env"
+    env_file: .env
     environment:
-      NODE_ENV: production
-      MYSQL_HOST: db
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
-      MYSQL_DATABASE: myapp
+      - NODE_ENV=production
+      - MYSQL_HOST
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+      - MYSQL_DATABASE
     ports:
       - "3000:3000"
     develop:
@@ -25,11 +25,12 @@ services:
   db:
     image: mysql:8.0
     restart: always
+    env_file: .env
     volumes:
       - db-data:/var/lib/mysql
     environment:
-      - MYSQL_DATABASE=myapp
-      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE
+      - MYSQL_ROOT_PASSWORD
     ports:
       - "3306:3306"
     healthcheck:

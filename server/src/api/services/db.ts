@@ -1,4 +1,4 @@
-import mysql, { ResultSetHeader } from "mysql2/promise";
+import mysql, { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import dotenv from "dotenv";
 import chalk from "chalk";
 import config from "../config.js";
@@ -8,7 +8,7 @@ dotenv.config();
 async function createConnection() {
   try {
     const db = await mysql.createConnection(config.db);
-    console.log(chalk.green.bold("📚 Database connected successfully")); // Log
+    console.log(chalk.green.bold("📚 Database connected successfully"));
     return db;
   } catch (error) {
     console.log(
@@ -20,10 +20,23 @@ async function createConnection() {
 
 const connection = await createConnection();
 
-async function query(sql: string, params?: unknown) {
-  const [results] = await connection.execute<ResultSetHeader>(sql, params);
-  return results;
+// Function for SELECT queries (returning rows)
+async function querySelect<T extends RowDataPacket[]>(
+  sql: string,
+  params?: unknown,
+): Promise<T> {
+  const [rows] = await connection.execute<T>(sql, params);
+  return rows;
 }
 
-const db = { query };
+// Function for INSERT/UPDATE/DELETE queries (returning ResultSetHeader)
+async function queryModify(
+  sql: string,
+  params?: unknown,
+): Promise<ResultSetHeader> {
+  const [result] = await connection.execute<ResultSetHeader>(sql, params);
+  return result;
+}
+
+const db = { querySelect, queryModify };
 export { db };

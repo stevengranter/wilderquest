@@ -1,4 +1,5 @@
 import express from "express";
+import morgan from "morgan";
 import ViteExpress from "vite-express";
 import { createServer } from "http";
 import { router } from "./api/api.js";
@@ -11,8 +12,10 @@ const __dirname = import.meta.dirname;
 const httpPort = process.env.HTTP_PORT || 3000;
 
 const app = express();
+// morgan logging middleware
+app.use(morgan("dev"));
 
-// CORS configuration
+// CORS middlware config
 app.use(
   cors({
     methods: ["GET", "POST", "DELETE", "PUT"], // Allowed HTTP methods
