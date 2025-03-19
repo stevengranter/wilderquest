@@ -8,7 +8,7 @@ type userData = {
   password: string;
 };
 
-async function isEmailAlreadyRegistered(
+export async function findUser(
   email: string,
 ): Promise<{ success: boolean; exists?: boolean; error?: string }> {
   try {
@@ -30,7 +30,7 @@ export const registerUser = async (userData: userData) => {
   console.log("registerUser()");
   let response;
   try {
-    const emailCheckResult = await isEmailAlreadyRegistered(userData.email);
+    const emailCheckResult = await findUser(userData.email);
 
     if (!emailCheckResult.success) {
       return {

@@ -1,5 +1,5 @@
 -- migrate:up
-create table if not exists users (
+create table users (
            email varchar(60),
            password varchar(255),
            created timestamp,

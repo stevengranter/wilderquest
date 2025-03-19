@@ -55,6 +55,7 @@ const RegisterForm = React.forwardRef(() => {
       }),
     });
     const response = await res.json();
+    console.log(response);
     toast({
       title: response.success ? "Success" : "Error",
       description: response.message,
