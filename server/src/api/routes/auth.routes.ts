@@ -1,10 +1,45 @@
 import express, { Router } from "express";
 const router: Router = express.Router();
+
 import { errorHandler } from "../utils.js";
 import { userRegistrationSchema } from "../schemas/user.schemas.js";
 import { StatusCodes } from "http-status-codes";
-import { registerUser } from "../controllers/user.controller.js";
-import { findUser } from "../controllers/user.controller.js";
+import { registerUser } from "../controllers/auth.controller.js";
+import { findUser } from "../controllers/auth.controller.js";
+import { db } from "../services/db.js";
+import bcrypt from "bcrypt";
+
+router.post("/login", async (req, res) => {
+  const result = userRegistrationSchema.safeParse(req.body);
+  if (!result.success) {
+    console.log(result.error);
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .send({ success: false, message: result.error });
+  }
+
+  const { email, password } = result.data;
+  // Find the user by email
+  const query = "SELECT * FROM users WHERE email = ?";
+
+  try {
+    const rows = await db.querySelect(query, [email]);
+    if (rows.length === 0) {
+      return res.status(404).send("User not found");
+    }
+    if (rows.length > 0) {
+      const user = rows[0];
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (isMatch) {
+        res.status(200).send("Login successful");
+      } else {
+        res.status(401).send("Invalid credentials");
+      }
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
 
 router.post("/register", async (req, res) => {
   const result = userRegistrationSchema.safeParse(req.body);

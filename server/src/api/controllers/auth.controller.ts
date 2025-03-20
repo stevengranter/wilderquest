@@ -1,4 +1,5 @@
 import { db } from "../services/db.js";
+
 import bcrypt from "bcrypt";
 
 const saltRounds = 10;
