@@ -1,24 +1,8 @@
-import mysql, { ResultSetHeader, RowDataPacket } from "mysql2/promise";
+import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import dotenv from "dotenv";
-import chalk from "chalk";
-import config from "../config.js";
+import { connection } from "../../dbConnect.js";
 
 dotenv.config();
-
-async function createConnection() {
-  try {
-    const db = await mysql.createConnection(config.db);
-    console.log(chalk.green.bold("📚 Database connected successfully"));
-    return db;
-  } catch (error) {
-    console.log(
-      chalk.red.italic("⛔️ Error while connecting with the database"),
-    );
-    throw error;
-  }
-}
-
-const connection = await createConnection();
 
 // Function for SELECT queries (returning rows)
 async function querySelect<T extends RowDataPacket[]>(

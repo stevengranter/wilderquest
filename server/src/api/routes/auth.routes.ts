@@ -33,6 +33,7 @@ router.post("/login", async (req, res) => {
       const user = rows[0];
       const isMatch = await bcrypt.compare(password, user.password);
       if (isMatch) {
+        req.session.user = { email: user.email };
         res.status(200).send({ success: true, message: "Login successful" });
       } else {
         res

@@ -1,5 +1,5 @@
 import express from "express";
-import morgan from "morgan";
+// import morgan from "morgan";
 import ViteExpress from "vite-express";
 import { createServer } from "http";
 import { router } from "./api/api.js";
@@ -7,15 +7,36 @@ import * as utils from "./utils/utils.js";
 import cors from "cors";
 import chalk from "chalk";
 import bodyParser from "body-parser";
+import session from "express-session";
+import sessionStore from "./sessionStore.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const __dirname = import.meta.dirname;
 const httpPort = process.env.HTTP_PORT || 3000;
 
 const app = express();
-// morgan logging middleware
-app.use(morgan("dev"));
 
-// CORS middlware config
+// morgan logging middleware
+// app.use(morgan("dev"));
+
+app.use(
+  session({
+    name: "session_cookie_name",
+    secret: process.env.SESSION_SECRET || "secret",
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false,
+  }),
+);
+
+// Log session data
+app.use((req, res, next) => {
+  console.log("Session:", req.session);
+  next();
+});
+
+// CORS middleware config
 app.use(
   cors({
     methods: ["GET", "POST", "DELETE", "PUT"], // Allowed HTTP methods
