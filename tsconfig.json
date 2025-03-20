@@ -8,7 +8,7 @@
     }
 ],
     "compilerOptions": {
-//        "target": "ESNext",
+//
         "useDefineForClassFields": true,
         "lib": ["DOM", "DOM.Iterable", "ESNext"],
         "allowJs": false,
@@ -17,8 +17,8 @@
         "allowSyntheticDefaultImports": true,
         "strict": true,
         "forceConsistentCasingInFileNames": true,
-        "module": "NodeNext",
-        "moduleResolution": "bundler",
+//        "module": "NodeNext",
+//        "moduleResolution": "bundler",
         "resolveJsonModule": true,
         "jsx" : "react-jsx",
         "isolatedModules": true,

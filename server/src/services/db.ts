@@ -1,6 +1,6 @@
 import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import dotenv from "dotenv";
-import { connection } from "../../dbConnect.js";
+import { connection } from "../dbConnect.js";
 
 dotenv.config();
 

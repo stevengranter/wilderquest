@@ -33,7 +33,7 @@ const LoginForm = React.forwardRef(() => {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(JSON.stringify(values));
-    const res = await fetch("/api/login", {
+    const res = await fetch("/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

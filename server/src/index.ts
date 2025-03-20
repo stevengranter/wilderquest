@@ -1,49 +1,20 @@
-import express from "express";
-// import morgan from "morgan";
+import express, { Express } from "express";
 import ViteExpress from "vite-express";
 import { createServer } from "http";
-import { router } from "./api/api.js";
-import * as utils from "./utils/utils.js";
-import cors from "cors";
 import chalk from "chalk";
-import bodyParser from "body-parser";
-import session from "express-session";
-import sessionStore from "./sessionStore.js";
 import dotenv from "dotenv";
+
+import { router } from "./router.js";
+import { getAbsoluteStaticPath } from "./utils/utils.js";
+import addMiddleware from "./addMiddleware.js";
 dotenv.config();
 
 const __dirname = import.meta.dirname;
 const httpPort = process.env.HTTP_PORT || 3000;
 
-const app = express();
+export const app: Express = express();
 
-// morgan logging middleware
-// app.use(morgan("dev"));
-
-app.use(
-  session({
-    name: "session_cookie_name",
-    secret: process.env.SESSION_SECRET || "secret",
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-  }),
-);
-
-// Log session data
-app.use((req, res, next) => {
-  console.log("Session:", req.session);
-  next();
-});
-
-// CORS middleware config
-app.use(
-  cors({
-    methods: ["GET", "POST", "DELETE", "PUT"], // Allowed HTTP methods
-    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
-    credentials: true, // Enable passing cookies across origins
-  }),
-);
+addMiddleware();
 
 const server = createServer(app).listen(httpPort, () => {
   console.log(
@@ -52,13 +23,12 @@ const server = createServer(app).listen(httpPort, () => {
   console.log(process.env.MY_SECRET);
 });
 
-app.use(bodyParser.json());
-app.use("/api", router);
+app.use("/", router);
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(utils.getAbsoluteStaticPath()));
+  app.use(express.static(getAbsoluteStaticPath()));
   app.get("*", function (req, res) {
-    res.sendFile("index.html", { root: utils.getAbsoluteStaticPath() });
+    res.sendFile("index.html", { root: getAbsoluteStaticPath() });
   });
   console.log(__dirname);
 } else {

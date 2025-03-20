@@ -1,4 +1,5 @@
 import fs from "fs/promises";
+import { ErrorRequestHandler } from "express";
 
 function getAbsoluteStaticPath() {
   if (process.env.NODE_ENV === "production") {
@@ -21,6 +22,14 @@ async function getFileList(
   }));
 }
 
-const utils = { getAbsoluteStaticPath, getFileList };
+const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+  console.error(err);
+  if (err instanceof Error) {
+    res.status(400).send({ message: err.message });
+  } else {
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+  next();
+};
 
-export { getAbsoluteStaticPath, getFileList, utils };
+export { getAbsoluteStaticPath, getFileList, errorHandler };
