@@ -45,6 +45,21 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.get("/logout", (req, res, next) => {
+  req.session.user = null;
+  req.session.save(function (err) {
+    if (err) next(err);
+
+    // regenerate the session, which is good practice to help
+    // guard against forms of session fixation
+    req.session.regenerate(function (err) {
+      if (err) next(err);
+      console.log("User has been logged out");
+      res.redirect("/");
+    });
+  });
+});
+
 router.post("/register", async (req, res) => {
   const result = userRegistrationSchema.safeParse(req.body);
 

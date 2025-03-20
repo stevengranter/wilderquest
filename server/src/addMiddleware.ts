@@ -15,11 +15,11 @@ export default function addMiddleware() {
     bodyParser.json(),
     // Session middleware config
     session({
-      name: "session_cookie_name",
       secret: process.env.SESSION_SECRET || "secret",
       store: sessionStore,
       resave: false,
       saveUninitialized: false,
+      cookie: { httpOnly: true },
     }),
     // CORS middleware config
     cors({
