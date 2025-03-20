@@ -3,7 +3,7 @@ const router: Router = express.Router();
 import { router as authRouter } from "./routes/auth.routes.js";
 import { router as gifRouter } from "./api/routes/gifs.route.js";
 
-router.get("/", async (req, res) => {
+router.get("/api", async (req, res) => {
   res.send("API server is listening at http://localhost:3000");
 });
 
