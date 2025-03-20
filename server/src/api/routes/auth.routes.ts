@@ -25,15 +25,19 @@ router.post("/login", async (req, res) => {
   try {
     const rows = await db.querySelect(query, [email]);
     if (rows.length === 0) {
-      return res.status(404).send("User not found");
+      return res
+        .status(404)
+        .send({ success: false, message: "User not found" });
     }
     if (rows.length > 0) {
       const user = rows[0];
       const isMatch = await bcrypt.compare(password, user.password);
       if (isMatch) {
-        res.status(200).send("Login successful");
+        res.status(200).send({ success: true, message: "Login successful" });
       } else {
-        res.status(401).send("Invalid credentials");
+        res
+          .status(401)
+          .send({ success: false, message: "Invalid credentials" });
       }
     }
   } catch (error) {

@@ -15,23 +15,40 @@ import {
 import { Input } from "@/components/ui/input";
 import React from "react";
 import { Link } from "react-router";
+import { toast } from "@/hooks/use-toast";
 
 const LoginForm = React.forwardRef(() => {
   const formSchema = z.object({
-    username: z.string().min(2, {
-      message: "Username must be at least 2 characters.",
-    }),
+    email: z.string().email(),
+    password: z.string().min(8),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
+      email: "",
+      password: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log(JSON.stringify(values));
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: values.email,
+        password: values.password,
+      }),
+    });
+    const response = await res.json();
+    console.log(response);
+    toast({
+      title: response.success ? "Success" : "Error",
+      description: response.message,
+    });
   }
 
   return (
@@ -42,20 +59,36 @@ const LoginForm = React.forwardRef(() => {
       >
         <FormField
           control={form.control}
-          name="username"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Email address</FormLabel>
               <div>
                 <FormControl>
                   <div>
-                    <Input placeholder="ekmas" {...field} />
+                    <Input placeholder="" {...field} />
                   </div>
                 </FormControl>
               </div>
-              <FormDescription>
-                This is your public display name.
-              </FormDescription>
+              <FormDescription>Please enter your email address</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <div>
+                <FormControl>
+                  <div>
+                    <Input placeholder="" {...field} />
+                  </div>
+                </FormControl>
+              </div>
+              <FormDescription>Please enter a password</FormDescription>
               <FormMessage />
             </FormItem>
           )}
