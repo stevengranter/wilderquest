@@ -48,7 +48,8 @@ export const registerUser = async (userData: userData) => {
     const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
 
     const result = await db.queryModify(
-      "INSERT INTO users(email, password, created, updated) VALUES (?,?,?,?)",
+      "INSERT INTO users(email, password, createdAt, updatedAt) VALUES" +
+        " (?,?,?,?)",
       [userData.email.toLowerCase(), hashedPassword, new Date(), new Date()],
     );
 
