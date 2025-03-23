@@ -7,7 +7,6 @@ import "dotenv/config"
 import express from "express"
 import path from "path"
 import cookieParser from "cookie-parser"
-import cors from "cors"
 // Internal imports
 import { rootRouter } from "./routes/root.route.js"
 import { usersRouter } from "./routes/users.route.js"
@@ -15,7 +14,6 @@ import logger from "./middleware/logger.js"
 import { SCRIPT_DIR, VIEWS_DIR } from "./constants.js"
 import { PORT, HOST, PROTOCOL } from "./constants.js"
 import errorHandler from "./middleware/errorHandler.js"
-import corsOptions from "./config/corsOptions.js"
 import { dbService } from "./services/mysql.service.js"
 import { authRouter } from "./routes/auth.route.js"
 import { refreshTokenRouter } from "./routes/refresh.route.js"
@@ -31,7 +29,7 @@ export const db = dbService
 // Logger
 app.use(logger)
 // CORS
-app.use(cors(corsOptions))
+// app.use(cors(corsOptions))
 // JSON
 app.use(express.json())
 // Cookie Parser

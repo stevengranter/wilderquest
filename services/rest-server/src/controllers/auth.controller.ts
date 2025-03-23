@@ -48,7 +48,7 @@ const handleLogin = async (req: Request, res: Response) => {
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000,
         })
-        res.status(200).json({ accessToken })
+        res.status(200).json({ accessToken, refreshToken })
     } else {
         res.status(400).json({ message: "Invalid credentials" })
     }
