@@ -1,0 +1,23 @@
+@import "fonts.css";
+
+
+body {
+    height: 100vh;
+    overflow-y: hidden;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    background-color: #cdf9ff;
+    font-family: "Instrument Sans", sans-serif
+}
+
+h1 {
+    font-family: "Doto", sans-serif;
+    font-size: 3rem;
+    margin: 0;
+    padding: 0
+}
+
+p {
+    font-size: 1rem;
+}

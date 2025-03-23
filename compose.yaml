@@ -2,28 +2,6 @@
 volumes:
   db-data:
 services:
-  server:
-    build:
-      context: .
-    env_file: .env
-    environment:
-      - NODE_ENV=production
-      - MYSQL_HOST=db
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_USER
-      - MYSQL_PASSWORD
-      - MYSQL_DATABASE
-      - DATABASE_URL = "mysql://apiuser:apiuserk@0.0.0.0:3306/myapp
-    ports:
-      - "3000:3000"
-    develop:
-        watch:
-          - action: rebuild
-            path: .
-    depends_on:
-      db:
-        condition: service_healthy
-
   db:
     image: mysql:8.0
     restart: always
