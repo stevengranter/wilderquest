@@ -5,10 +5,14 @@ type MotionGifSuggestionMenuProps = {
   selectedIndex: number;
 };
 
+type GifItem = {
+  url: string
+}
+
 export default function MotionGifSuggestionMenu({
   ...props
 }: MotionGifSuggestionMenuProps) {
-  const [gifList, setGifList] = useState([]);
+  const [gifList, setGifList] = useState<GifItem[]>([]);
   useEffect(() => {
     fetch("api/gifs")
       .then((res) => res.json())
@@ -20,7 +24,7 @@ export default function MotionGifSuggestionMenu({
       <div
         className={"gif-picker"}
         style={
-          { gridTemplateColumns: `repeat(${props.columns || 1}, 1fr)` } as any
+          { gridTemplateColumns: `repeat(${props.columns || 1}, 1fr)` }
         }
       >
         {gifList.map((item, index) => (
