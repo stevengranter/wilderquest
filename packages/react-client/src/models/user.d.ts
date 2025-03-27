@@ -1,7 +1,7 @@
 
 
 export type UserProfileToken = {
-  username: string,
+  user: string,
   email: string,
   accessToken: string,
   refreshToken: string,

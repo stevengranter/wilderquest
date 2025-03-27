@@ -1,23 +1,11 @@
 import useAuth from "@/hooks/useAuth.tsx";
-import { useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
+import { Button } from '@/components/ui/button.tsx'
+
 
 const Welcome = () => {
-  const {token} = useAuth()
+  const {token, refreshAccessToken} = useAuth()
   const user = localStorage.getItem("user")
-
-  useEffect(()=>{
-    console.log(token)
-    if (token) {
-      const decodedToken = jwtDecode(JSON.stringify(token) || "");
-      console.log(decodedToken)
-
-
-
-
-    }
-
-  },[token])
 
   return (
     <>
@@ -27,7 +15,7 @@ const Welcome = () => {
       <div>Token Expire time:
       {token ? jwtDecode(token).exp : ""}
       </div>
-
+      <Button onClick={refreshAccessToken}>Refresh Access Token</Button>
   </>
   )
 }

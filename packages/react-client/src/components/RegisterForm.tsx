@@ -47,44 +47,46 @@ const RegisterForm = React.forwardRef(() => {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(JSON.stringify(values));
-    const res = await fetch("/api/users", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: values.email,
-        password: values.password,
-        confirmPassword: values.confirmPassword
-      }),
-    });
-    const response = await res.json();
-    console.log(response);
-    toast({
-      title: response.success ? "Success" : "Error",
-      description: response.message,
-    });
 
-    if (response.success) {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({
-          email: values.email,
-          password: values.password,
-        }),
-      });
-      const { accessToken, refreshToken } = await res.json();
-      auth.login(values.email, accessToken, refreshToken)
-      navigate("/welcome")
-
-    }
-  }
+  // TODO: Fix for axios + useAuth hook
+  // async function onSubmit(values: z.infer<typeof formSchema>) {
+  //   console.log(JSON.stringify(values));
+  //   const res = await fetch("/api/users", {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify({
+  //       email: values.email,
+  //       password: values.password,
+  //       confirmPassword: values.confirmPassword
+  //     }),
+  //   });
+  //   const response = await res.json();
+  //   console.log(response);
+  //   toast({
+  //     title: response.success ? "Success" : "Error",
+  //     description: response.message,
+  //   });
+  //
+  //   if (response.success) {
+  //     const res = await fetch("/api/auth/login", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //
+  //       body: JSON.stringify({
+  //         email: values.email,
+  //         password: values.password,
+  //       }),
+  //     });
+  //     const { accessToken, refreshToken } = await res.json();
+  //     auth.loginUser(values.email, accessToken, refreshToken)
+  //     navigate("/welcome")
+  //
+  //   }
+  // }
 
 
   return (

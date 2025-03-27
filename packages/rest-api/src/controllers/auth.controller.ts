@@ -26,16 +26,17 @@ const handleLogin = async (req: Request, res: Response) => {
 
     // Check if password matches
     const match = compareSync(password, foundUser.password)
+    console.log('foundUser.email', foundUser.email)
     if (match) {
         const accessToken = jwt.sign(
-            { email: foundUser.email },
+            { user: foundUser.email },
             process.env.ACCESS_TOKEN_SECRET!,
             { expiresIn: '30s' }
         )
         const refreshToken = jwt.sign(
-            { email: foundUser.email },
+            { user: foundUser.email },
             process.env.REFRESH_TOKEN_SECRET!,
-            { expiresIn: '120s' }
+            { expiresIn: '1h' }
         )
         const result = await db
             .mutate('UPDATE user_data SET refresh_token = ? WHERE email = ?', [
@@ -49,7 +50,7 @@ const handleLogin = async (req: Request, res: Response) => {
         //   maxAge: 24 * 60 * 60 * 1000,
         // });
         res.status(200).json({
-            username: foundUser.email,
+            user: foundUser.email,
             accessToken,
             refreshToken,
             // message: "Successfully logged in",
