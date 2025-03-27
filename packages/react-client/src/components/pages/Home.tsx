@@ -21,6 +21,7 @@ export default function Home() {
     <>
       <h2>Howdy ho!</h2>
       <Link to="/login">Login</Link>
+      <Link to="/register">Register</Link>
 
     </>
   );

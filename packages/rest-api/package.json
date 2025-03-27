@@ -33,7 +33,9 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.13.11",
     "esbuild": "0.25.1",
+    "nodemon": "^3.1.9",
     "prettier": "3.5.3",
+    "ts-node": "^10.9.2",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }

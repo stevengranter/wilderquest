@@ -11,17 +11,23 @@ import Home from "./components/pages/Home.tsx";
 
 // Stylesheets
 import "./main.css";
+import Welcome from "@/components/pages/Welcome.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
+
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />}>
+
           <Route index element={<Home />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="welcome" element={<Welcome />}/>
+
         </Route>
       </Routes>
     </BrowserRouter>
+
   </React.StrictMode>,
 );

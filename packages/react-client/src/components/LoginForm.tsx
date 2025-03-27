@@ -15,10 +15,15 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import React from "react";
 import { Link, useNavigate } from "react-router";
+import useAuth from "@/hooks/useAuth.tsx";
+import { useToast } from "@/hooks/use-toast.ts";
 // import { toast } from "@/hooks/use-toast";
 
 const LoginForm = React.forwardRef(() => {
   const navigate = useNavigate();
+  const auth = useAuth();
+  const { toast } = useToast();
+
   const formSchema = z.object({
     email: z.string().email(),
     password: z.string().min(8),
@@ -45,14 +50,22 @@ const LoginForm = React.forwardRef(() => {
         password: values.password,
       }),
     });
-    const {accessToken, refreshToken} = await res.json();
-    localStorage.setItem("token", JSON.stringify({accessToken, refreshToken}));
 
-    navigate('/')
-    // toast({
-    //   title: success ? "Success" : "Error",
-    //   description: message,
-    // });
+    console.log(res)
+
+    toast({
+        title: (res.ok) ? "Success" : "Error",
+        description: res.status + " " + res.statusText
+      });
+    if (res.ok) {
+      const {user, accessToken, refreshToken,} = await res.json();
+      auth.login(user, accessToken, refreshToken)
+      // console.log(accessToken)
+      navigate("/welcome")
+    }
+
+
+
   }
 
   return (

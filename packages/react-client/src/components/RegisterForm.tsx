@@ -15,9 +15,14 @@ import {
 } from "@/components/ui/form.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import React from "react";
+import { useNavigate } from "react-router";
+import useAuth from "@/hooks/useAuth.tsx";
 
 const RegisterForm = React.forwardRef(() => {
   const { toast } = useToast();
+  const auth = useAuth();
+  const navigate = useNavigate();
+
   const formSchema = z
     .object({
       email: z.string().email(),
@@ -44,7 +49,7 @@ const RegisterForm = React.forwardRef(() => {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(JSON.stringify(values));
-    const res = await fetch("/register", {
+    const res = await fetch("/api/users", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -52,6 +57,7 @@ const RegisterForm = React.forwardRef(() => {
       body: JSON.stringify({
         email: values.email,
         password: values.password,
+        confirmPassword: values.confirmPassword
       }),
     });
     const response = await res.json();
@@ -60,7 +66,26 @@ const RegisterForm = React.forwardRef(() => {
       title: response.success ? "Success" : "Error",
       description: response.message,
     });
+
+    if (response.success) {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+        }),
+      });
+      const { accessToken, refreshToken } = await res.json();
+      auth.login(values.email, accessToken, refreshToken)
+      navigate("/welcome")
+
+    }
   }
+
 
   return (
     <Form {...form}>

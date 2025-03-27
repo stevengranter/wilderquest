@@ -20,7 +20,7 @@ const handleLogin = async (req: Request, res: Response) => {
     [email.toLowerCase()],
   );
   if (!foundUser || foundUser.length < 1) {
-    res.status(400).json({ message: "User not found" });
+    res.status(401).json({ message: "User not found" });
     return;
   }
 
@@ -30,12 +30,12 @@ const handleLogin = async (req: Request, res: Response) => {
     const accessToken = jwt.sign(
       { email: foundUser.email },
       process.env.ACCESS_TOKEN_SECRET!,
-      { expiresIn: "120s" },
+      { expiresIn: "30s" },
     );
     const refreshToken = jwt.sign(
       { email: foundUser.email },
       process.env.REFRESH_TOKEN_SECRET!,
-      { expiresIn: "1d" },
+      { expiresIn: "120s" },
     );
     const result = await db
       .mutate("UPDATE user_data SET refresh_token = ? WHERE email = ?", [
@@ -44,13 +44,18 @@ const handleLogin = async (req: Request, res: Response) => {
       ])
       .then(() => console.log("Refresh token saved to database"));
 
-    res.cookie("jwt", refreshToken, {
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
+    // res.cookie("jwt", refreshToken, {
+    //   httpOnly: true,
+    //   maxAge: 24 * 60 * 60 * 1000,
+    // });
+    res.status(200).json({
+      user: foundUser.email,
+      accessToken,
+      refreshToken,
+      message: "Successfully logged in",
     });
-    res.status(200).json({ accessToken, refreshToken });
   } else {
-    res.status(400).json({ message: "Invalid credentials" });
+    res.status(401).json({ message: "Invalid credentials" });
   }
 
   // console.log(foundUser)
