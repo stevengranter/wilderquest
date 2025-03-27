@@ -1,66 +1,66 @@
-import "dotenv/config";
-import { compareSync } from "bcrypt-ts";
-import jwt from "jsonwebtoken";
-import { userSchema } from "../schemas/user.schema.js";
-import { db } from "../server.js";
-import { Request, Response } from "express";
+import 'dotenv/config'
+import { compareSync } from 'bcrypt-ts'
+import jwt from 'jsonwebtoken'
+import { userSchema } from '../schemas/user.schema.js'
+import { db } from '../server.js'
+import { Request, Response } from 'express'
 
 const handleLogin = async (req: Request, res: Response) => {
-  // Check req.body to see if matches schema
-  const parsedBody = userSchema.safeParse(req.body);
-  if (parsedBody.error) {
-    res.status(400).send(parsedBody.error.message);
-    return;
-  }
-  const { email, password } = parsedBody.data;
+    // Check req.body to see if matches schema
+    const parsedBody = userSchema.safeParse(req.body)
+    if (parsedBody.error) {
+        res.status(400).send(parsedBody.error.message)
+        return
+    }
+    const { email, password } = parsedBody.data
 
-  // Check if user exists
-  const [foundUser] = await db.query(
-    "SELECT email,password FROM user_data WHERE" + " email = ?",
-    [email.toLowerCase()],
-  );
-  if (!foundUser || foundUser.length < 1) {
-    res.status(401).json({ message: "User not found" });
-    return;
-  }
+    // Check if user exists
+    const [foundUser] = await db.query(
+        'SELECT email,password FROM user_data WHERE' + ' email = ?',
+        [email.toLowerCase()]
+    )
+    if (!foundUser || foundUser.length < 1) {
+        res.sendStatus(401)
+        return
+    }
 
-  // Check if password matches
-  const match = compareSync(password, foundUser.password);
-  if (match) {
-    const accessToken = jwt.sign(
-      { email: foundUser.email },
-      process.env.ACCESS_TOKEN_SECRET!,
-      { expiresIn: "30s" },
-    );
-    const refreshToken = jwt.sign(
-      { email: foundUser.email },
-      process.env.REFRESH_TOKEN_SECRET!,
-      { expiresIn: "120s" },
-    );
-    const result = await db
-      .mutate("UPDATE user_data SET refresh_token = ? WHERE email = ?", [
-        refreshToken,
-        foundUser.email,
-      ])
-      .then(() => console.log("Refresh token saved to database"));
+    // Check if password matches
+    const match = compareSync(password, foundUser.password)
+    if (match) {
+        const accessToken = jwt.sign(
+            { email: foundUser.email },
+            process.env.ACCESS_TOKEN_SECRET!,
+            { expiresIn: '30s' }
+        )
+        const refreshToken = jwt.sign(
+            { email: foundUser.email },
+            process.env.REFRESH_TOKEN_SECRET!,
+            { expiresIn: '120s' }
+        )
+        const result = await db
+            .mutate('UPDATE user_data SET refresh_token = ? WHERE email = ?', [
+                refreshToken,
+                foundUser.email,
+            ])
+            .then(() => console.log('Refresh token saved to database'))
 
-    // res.cookie("jwt", refreshToken, {
-    //   httpOnly: true,
-    //   maxAge: 24 * 60 * 60 * 1000,
-    // });
-    res.status(200).json({
-      user: foundUser.email,
-      accessToken,
-      refreshToken,
-      message: "Successfully logged in",
-    });
-  } else {
-    res.status(401).json({ message: "Invalid credentials" });
-  }
+        // res.cookie("jwt", refreshToken, {
+        //   httpOnly: true,
+        //   maxAge: 24 * 60 * 60 * 1000,
+        // });
+        res.status(200).json({
+            username: foundUser.email,
+            accessToken,
+            refreshToken,
+            // message: "Successfully logged in",
+        })
+    } else {
+        res.sendStatus(401)
+    }
 
-  // console.log(foundUser)
-};
+    // console.log(foundUser)
+}
 
-const authController = { handleLogin };
+const authController = { handleLogin }
 
-export default authController;
+export default authController

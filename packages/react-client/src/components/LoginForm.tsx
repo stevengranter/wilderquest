@@ -16,13 +16,10 @@ import { Input } from "@/components/ui/input.tsx";
 import React from "react";
 import { Link, useNavigate } from "react-router";
 import useAuth from "@/hooks/useAuth.tsx";
-import { useToast } from "@/hooks/use-toast.ts";
-// import { toast } from "@/hooks/use-toast";
 
 const LoginForm = React.forwardRef(() => {
   const navigate = useNavigate();
   const auth = useAuth();
-  const { toast } = useToast();
 
   const formSchema = z.object({
     email: z.string().email(),
@@ -39,34 +36,13 @@ const LoginForm = React.forwardRef(() => {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(JSON.stringify(values));
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify({
-        email: values.email,
-        password: values.password,
-      }),
-    });
-
-    console.log(res)
-
-    toast({
-        title: (res.ok) ? "Success" : "Error",
-        description: res.status + " " + res.statusText
-      });
-    if (res.ok) {
-      const {user, accessToken, refreshToken,} = await res.json();
-      auth.login(user, accessToken, refreshToken)
-      // console.log(accessToken)
+      auth.loginUser(values.email, values.password)
       navigate("/welcome")
     }
 
 
 
-  }
+
 
   return (
     <Form {...form}>

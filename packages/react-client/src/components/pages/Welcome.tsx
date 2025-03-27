@@ -11,7 +11,7 @@ const Welcome = () => {
     if (token) {
       const decodedToken = jwtDecode(JSON.stringify(token) || "");
       console.log(decodedToken)
-      // const currentTime = Date.now() / 1000;
+
 
 
 
