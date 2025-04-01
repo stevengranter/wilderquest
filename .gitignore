@@ -11,25 +11,14 @@ node_modules
 dist
 dist-ssr
 *.local
-storybook-static
-
-
-# .env
-.env*
-.env.*
-
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea/*
+.idea
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-.vercel
-*.tsbuildinfo
-
-*storybook.log
