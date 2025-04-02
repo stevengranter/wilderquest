@@ -57,7 +57,7 @@ if (process.env.NODE_ENV !== "production") {
   app.use(express.static(publicDir));
 
   // Handle all other routes by serving 'index.html'
-  app.get("*", (req: Request, res: Response) => {
+  app.get("*name", (req: Request, res: Response) => {
     res.sendFile(path.join(publicDir, "index.html"));
   });
 

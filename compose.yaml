@@ -19,9 +19,9 @@ services:
       - NODE_ENV=production
       - MYSQL_HOST=db
       - MYSQL_PORT
-      - MYSQL_USER
+      - MYSQL_USER=apiuser
       - MYSQL_PASSWORD
-      - MYSQL_DATABASE
+      - MYSQL_DATABASE=myapp
       - ACCESS_TOKEN_SECRET
       - REFRESH_TOKEN_SECRET
 
@@ -37,9 +37,9 @@ services:
     volumes:
       - db-data:/var/lib/mysql
     environment:
-      - MYSQL_DATABASE
+      - MYSQL_DATABASE=myapp
       - MYSQL_ROOT_PASSWORD
-      - MYSQL_USER
+      - MYSQL_USER=apiuser
       - MYSQL_PASSWORD
     ports:
       - 3306:3306

@@ -1,13 +1,13 @@
 {
-  "name": "module3",
+  "name": "crudvale",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "nodemon --watch src/server --ext ts --exec 'tsx src/server/server.ts'",
     "start:preview": "NODE_ENV=production tsx src/server/server.ts",
     "start": "NODE_ENV=production node dist/server/server.js",
-    "build": "rm -rf dist && vite build && tsc -p src/server/tsconfig.json"
+    "build": "NODE_ENV=production rm -rf dist && vite build && tsc -p src/server/tsconfig.json"
   },
   "dependencies": {
     "@blocknote/core": "^0.26.0",
