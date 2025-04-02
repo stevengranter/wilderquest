@@ -21,20 +21,32 @@ type AuthContextType = {
 }
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
+type User = {
+    id: string,
+    email: string,
+    username: string,
+    cuid: string
+}
+
 export const AuthProvider = ({children}: { children: ReactNode }) => {
+    const [user, setUser] = useState<User | null>(null)
     const [userId, setUserId] = useState<string | null>(null)
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
 
     useEffect(() => {
+        const storedUserJSON = localStorage.getItem("user")
         const storedUserId = localStorage.getItem("user_cuid");
         const storedAccessToken = localStorage.getItem("access_token");
 
-        if (storedUserId && storedAccessToken && authService.verifyToken(storedAccessToken)) {
+        if (storedUserId && storedAccessToken && storedUserJSON&& authService.verifyToken(storedAccessToken)) {
+            setUser(JSON.parse(storedUserJSON))
             setUserId(storedUserId);
             setIsAuthenticated(true);
         } else {
-            setIsAuthenticated(false);
+            setUser(null)
             setUserId(null)
+            setIsAuthenticated(false);
+
         }
     }, []);
 

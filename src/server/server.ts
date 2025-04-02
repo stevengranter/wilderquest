@@ -15,6 +15,8 @@ import cors from "cors";
 import ViteExpress from "vite-express";
 import { apiRouter } from "./routes/api.route.js";
 import { SCRIPT_DIR } from "./constants.js";
+import mysql from "mysql2/promise";
+import dbConfig from "./config/dbConfig.js";
 
 const PROTOCOL = process.env.PROTOCOL || "http"
 const HOST = process.env.HOST || "localhost"
@@ -24,7 +26,8 @@ const PORT = Number(process.env.PORT) || 3000
 const app = express();
 
 // * Database setup * //
-export const db = dbService;
+// export const db = dbService;
+// export const db = mysql.createPool(dbConfig)
 
 // * Middleware * //
 // Logger
@@ -43,7 +46,7 @@ app.use("/api", apiRouter);
 
 if (process.env.NODE_ENV !== "production") {
   // Error Handler
-  app.use(errorHandler);
+
   ViteExpress.listen(app, PORT, () => {
     console.log(`Server running on ${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}`);
   });

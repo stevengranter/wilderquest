@@ -2,14 +2,15 @@ import 'dotenv/config'
 import {compareSync, genSaltSync, hashSync} from 'bcrypt-ts'
 import jwt from 'jsonwebtoken'
 import {userRegistrationSchema, userSchema} from '../schemas/user.schema.js'
-import { db } from '../server.js'
-import { Request, Response } from 'express'
+import {Request, Response} from 'express'
 import {createId} from "@paralleldrive/cuid2";
-import {LoginResponse} from "../../shared/types/authTypes.js";
+import UsersRepository from "../repositories/UsersRepository.js";
 
 
-const register = async(req:Request, res:Response) => {
-    // Check req.body to see if matches schema
+const register = async (req: Request, res: Response) => {
+
+
+     // Check req.body to see if matches schema
     const parsedBody = userRegistrationSchema.safeParse(req.body)
 
     if (parsedBody.error) {
@@ -17,63 +18,61 @@ const register = async(req:Request, res:Response) => {
         return;
     }
 
-    const { username, email, password: UNSAFEPassword } = parsedBody.data;
+    const {username, email, password: UNSAFEPassword} = parsedBody.data;
 
     // Check if email or username already exists in db
-    const [emailExists] = await db.query(
-        "SELECT email FROM user_data WHERE email = ?",
-        [email])
-
-    const [usernameExists] = await db.query(
-        "SELECT username FROM user_data WHERE username = ?",
-        [username])
-
-    if (emailExists || usernameExists) {
-        res.status(409).send({message:"Email or username already exists"});
+    const emailRows  = await UsersRepository.getUsersByEmail(email)
+    const usernameRows = await UsersRepository.getUsersByUsername(username)
+    // res.send({emailRows,usernameRows})
+    if (emailRows.length > 0 || usernameRows.length > 0) {
+        res.status(409).send({message: "Username and/or email already exists"})
         return
     }
 
+
+    //  If neither username and email are in the db, create user
     const hashedPassword = hashSync(UNSAFEPassword, genSaltSync(10));
+    const userCuid = createId()
 
-    const userId = createId()
+    const user = {
+        user_cuid: userCuid,
+        email: email,
+        username: username,
+        password: hashedPassword,
+    }
 
-    const SQL =
-    `INSERT INTO user_data 
-    (user_cuid, email, username, password, created_at,updated_at) 
-    VALUES (?,?,?,?,?,?)`
+    const result = await UsersRepository.create(user)
 
-
-    const result = await db.mutate(SQL,
-        [userId, email, username, hashedPassword, new Date(), new Date()]
-    )
-
-    if (result.affectedRows > 0) {
+    if (result) {
         res.status(200).json({
-            userId,
-            message: "User created successfully!"});
-    } else {
-        res.sendStatus(500).json({ message: "Failed to create user" });
+            user_id: result,
+            user_cuid: userCuid,
+            message: "User created successfully!"
+    })}
+
+    else {
+        res.sendStatus(500).json({message: "Failed to create user"})
+        return
     }
 
 }
 
 
-
 const login = async (req: Request, res: Response) => {
+
     // Check req.body to see if matches schema
     const parsedBody = userSchema.safeParse(req.body)
     if (parsedBody.error) {
         res.status(400).send(parsedBody.error.message)
         return
     }
-    const { username, password } = parsedBody.data
+    const {username, password} = parsedBody.data
 
-    const SQL =
-        'SELECT username,password,user_cuid FROM user_data WHERE username = ?'
 
-    // Check if user exists
-    const [foundUser] = await db.query(SQL, [username])
-    if (!foundUser || foundUser.length < 1) {
+    const userRows = await UsersRepository.getUsersByUsername(username)
+    const foundUser = userRows[0]
+
+    if (userRows.length < 1 || !userRows) {
         res.sendStatus(401)
         return
     }
@@ -83,54 +82,45 @@ const login = async (req: Request, res: Response) => {
 
     if (match) {
         const accessToken = jwt.sign(
-            { user_cuid: foundUser.user_cuid },
+            {user_cuid: foundUser.user_cuid, user_id: foundUser.id},
             process.env.ACCESS_TOKEN_SECRET!,
-            { expiresIn: '30s' }
+            {expiresIn: '300s'}
         )
         const refreshToken = jwt.sign(
-            { user_cuid: foundUser.user_cuid },
+            {user_cuid: foundUser.user_cuid, user_id: foundUser.id},
             process.env.REFRESH_TOKEN_SECRET!,
-            { expiresIn: '1h' }
+            {expiresIn: '1h'}
         )
 
-        const SQL =
-            'UPDATE user_data SET refresh_token = ? WHERE user_cuid = ?'
-
-        const result = await db
-            .mutate(SQL, [
-                refreshToken,
-                foundUser.user_cuid,
-            ])
-            .then(() => console.log('Refresh token saved to database'))
-
+        const result = UsersRepository.update(foundUser.id,{refresh_token: refreshToken})
 
         res.status(200).json({
+            user: {
+                id: foundUser.id,
+                cuid: foundUser.user_cuid,
+                username: foundUser.username,
+                email: foundUser.email
+            },
             user_cuid: foundUser.user_cuid,
             access_token: accessToken,
             refresh_token: refreshToken,
 
         })
+        return
     } else {
         res.sendStatus(401)
     }
 
 }
 
-const logout = async (req:Request, res: Response) => {
-    const {user_cuid} = req.body
-    if (!user_cuid) res.sendStatus(400)
+const logout = async (req: Request, res: Response) => {
+    const {user_id} = req.body
+    if (!user_id) res.sendStatus(400)
 
-    const SQL =
-        "UPDATE user_data SET refresh_token = NULL WHERE user_cuid = ?"
+    const result = UsersRepository.update(user_id,{refresh_token: null})
 
-    const result = await db.mutate(SQL,[user_cuid])
-    if (result.affectedRows > 0) {
-        res.sendStatus(204)
-    } else {
-        res.sendStatus(400)
-    }
 }
 
-const authController = { register, login, logout }
+const authController = {register, login, logout}
 
 export default authController

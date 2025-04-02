@@ -47,7 +47,8 @@ export const authService = {
             if (!data || status !== 200) {
                 handleError({data: "Could not login user"})
             }
-            const {user_cuid, access_token, refresh_token} = data;
+            const {user, user_cuid, access_token, refresh_token} = data;
+            localStorage.setItem("user",JSON.stringify(user))
             localStorage.setItem("user_cuid", user_cuid.toString());
             localStorage.setItem("access_token", access_token.toString());
             localStorage.setItem("refresh_token", refresh_token.toString());

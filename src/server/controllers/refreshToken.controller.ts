@@ -1,9 +1,10 @@
 import 'dotenv/config'
 import jwt from 'jsonwebtoken'
-import { db } from '../server.js'
+// import db from '../db.js'
 import { NextFunction, Request, Response } from 'express'
 
 import { z } from 'zod'
+import UsersRepository from "../repositories/UsersRepository.js";
 
 const RefreshReqBodySchema = z.object({
     user_cuid: z.string().cuid2(),
@@ -25,15 +26,13 @@ const handleRefreshToken = async (
     }
 
     const { user_cuid, refresh_token } = parsedBody.data
-    console.log(parsedBody.data)
-    // Check if user exists
-    const [foundUser] = await db.query(
-        'SELECT user_cuid,refresh_token FROM user_data WHERE refresh_token = ?' +
-        ' AND user_cuid = ?',
-        [refresh_token, user_cuid]
-    )
+
+
+    const foundUser = await UsersRepository.findOne({user_cuid,refresh_token})
+
     console.log('foundUser:', foundUser)
-    if (!foundUser || foundUser.length < 1) {
+
+    if (!foundUser) {
         res.status(403).send({
             message: 'User not found / Invalid refresh token',
         })
@@ -64,38 +63,6 @@ const handleRefreshToken = async (
             }
         )
     }
-
-    // if (!foundUser || foundUser.length < 1) {
-    //     res.status(403).send({
-    //         message: 'User not found / Invalid refresh token',
-    //     })
-    //     return
-    // } else {
-    //     console.log('User found')
-    //     //evaluate JWT
-    //     jwt.verify(
-    //         refreshToken,
-    //         process.env.REFRESH_TOKEN_SECRET!,
-    //         (err: any, decoded: any) => {
-    //             if (err || foundUser.email !== decoded.email) {
-    //                 console.log(err)
-    //                 res.status(403).send({
-    //                     success: false,
-    //                     message: 'Invalid refresh token',
-    //                 })
-    //                 return
-    //             }
-    //             console.log(decoded)
-    //             const accessToken = jwt.sign(
-    //                 { email: decoded.email },
-    //                 process.env.ACCESS_TOKEN_SECRET!,
-    //                 { expiresIn: '30s' }
-    //             )
-    //             console.log('Refresh token valid')
-    //             res.json({ accessToken })
-    //         }
-    //     )
-    // }
 }
 
 const refreshTokenController = { handleRefreshToken }

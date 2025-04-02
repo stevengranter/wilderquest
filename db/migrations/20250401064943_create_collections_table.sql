@@ -2,7 +2,7 @@
 CREATE TABLE
     collections (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id VARCHAR(32),
+        user_id INT(16),
         name VARCHAR(32),
         created_at TIMESTAMP,
         updated_at TIMESTAMP
