@@ -12,6 +12,7 @@ interface UserData {
     created_at: Date;
     updated_at: Date;
     refresh_token: string | null;
+    role_id: number;
 }
 
 class UsersRepository extends BaseRepository<UserData> {

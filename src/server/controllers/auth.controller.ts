@@ -35,6 +35,7 @@ const register = async (req: Request, res: Response) => {
     const userCuid = createId()
 
     const user = {
+        role_id: 1,
         user_cuid: userCuid,
         email: email,
         username: username,
