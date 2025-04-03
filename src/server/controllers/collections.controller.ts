@@ -1,8 +1,33 @@
 import {Request, Response} from "express"
 import {collectionSchema} from "../schemas/collection.schema.js";
-import db from "../db.js";
 import CollectionsRepository from "../repositories/CollectionsRepository.js";
-// import {sqlHelper} from "../helpers/sqlHelper.js";
+
+const get = async (req: Request, res: Response) => {
+    console.log("Hello from collections controller get")
+    const userIdFromParams = req.params.id;
+    console.log(req.params);
+
+    const parsedBody = collectionSchema.safeParse(req.body)
+    if (parsedBody.error) {
+        res.status(400).send(parsedBody.error.message)
+        return
+    }
+    const {user_id:userIdFromJWT} = parsedBody.data
+
+    // If a user_id is provided in the params, use that.
+    // Otherwise, use the logged-in user's id.
+    const user_id = parseInt(userIdFromParams)
+        // || userIdFromJWT;
+
+    console.log(user_id)
+
+    const result = await CollectionsRepository.getCollectionsByUserId(user_id)
+    console.log("result")
+    console.log(result)
+    //
+    res.status(200).json(result)
+    return
+}
 
 const create = async(req:Request, res: Response) => {
     const parsedBody = collectionSchema.safeParse(req.body)
@@ -71,7 +96,7 @@ const update = async(req:Request, res: Response) => {
 
 
 const collectionsController = {
-    create,update
+    create,update,get,
 }
 
 export default collectionsController

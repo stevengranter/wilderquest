@@ -19,7 +19,7 @@ const verifyJWT = (req: Request, res: Response, next: NextFunction) => {
             if (err) {
                 res.status(403).json({ message: "Invalid token / Token Expired" })
                 console.log(err)
-                return
+                throw err
             }
             console.log(decoded)
             req.body.user_cuid = decoded.user_cuid

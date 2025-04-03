@@ -19,8 +19,6 @@ class UsersRepository extends BaseRepository<UserData> {
         super('user_data');
     }
 
-
-
     async findOne(conditions: Partial<UserData>): Promise<UserData | null> {
         try {
             // Build the WHERE clause dynamically from the conditions object
@@ -73,6 +71,8 @@ class UsersRepository extends BaseRepository<UserData> {
             throw error;
         }
     }
+
+
 }
 
 export default new UsersRepository(); // Export a single instance
