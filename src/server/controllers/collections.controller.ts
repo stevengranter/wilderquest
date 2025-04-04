@@ -35,12 +35,9 @@ const create = async(req:Request, res: Response) => {
         res.status(400).send(parsedBody.error.message)
         return
     }
-    const {user_id, name, description, emoji} = parsedBody.data
-
-    console.log(parsedBody.data)
 
 
-    const result = await CollectionsRepository.create({user_id, name})
+    const result = await CollectionsRepository.create(parsedBody.data)
 
 
     if (result > 0) {
@@ -48,7 +45,7 @@ const create = async(req:Request, res: Response) => {
             message: "Collection created successfully!"});
         return
     } else {
-        res.sendStatus(500).json({ message: "Failed to create collection" });
+        res.status(500).json({ message: "Failed to create collection" });
         return
     }
 

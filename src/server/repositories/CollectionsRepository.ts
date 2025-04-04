@@ -3,10 +3,18 @@ import {Collection} from "../../types.js";
 import db from "../db.js";
 import {RowDataPacket} from "mysql2/promise";
 
+
 class CollectionsRepository extends BaseRepository<Collection> {
 
     constructor() {
         super('collections');
+    }
+
+    async create(data: Partial<Collection>): Promise<number> {
+        const created_at: Date = new Date();
+        const updated_at: Date = new Date();
+        const newData = {...data, created_at, updated_at};
+        return await super.create(newData);
     }
 
     async getCollectionsByUserId(user_id: number): Promise<Collection[]> {

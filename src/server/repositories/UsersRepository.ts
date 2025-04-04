@@ -20,6 +20,13 @@ class UsersRepository extends BaseRepository<UserData> {
         super('user_data');
     }
 
+    async create(data: Partial<UserData>): Promise<number> {
+        const created_at: Date = new Date();
+        const updated_at: Date = new Date();
+        const newData = {...data, created_at, updated_at};
+        return await super.create(newData);
+    }
+
     async findOne(conditions: Partial<UserData>): Promise<UserData | null> {
         try {
             // Build the WHERE clause dynamically from the conditions object

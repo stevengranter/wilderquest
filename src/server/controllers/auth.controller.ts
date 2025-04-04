@@ -42,19 +42,25 @@ const register = async (req: Request, res: Response) => {
         password: hashedPassword,
     }
 
-    const result = await UsersRepository.create(user)
+    const user_id = await UsersRepository.create(user)
 
-    if (result) {
-        res.status(200).json({
-            user_id: result,
-            user_cuid: userCuid,
-            message: "User created successfully!"
-    })}
+    if (user_id) {
+        const createdUser = await UsersRepository.findOne({id: user_id});
 
-    else {
-        res.sendStatus(500).json({message: "Failed to create user"})
+        if (createdUser) {
+            req.body = { username: createdUser.username, password: UNSAFEPassword }; //create login request body
+            await login(req, res);
+
+        } else {
+            res.status(500).json({ message: "Failed to retrieve created user." });
+            return;
+        }
+
+    } else {
+        res.status(500).json({message: "Failed to create user"})
         return
     }
+
 
 }
 
@@ -100,7 +106,8 @@ const login = async (req: Request, res: Response) => {
                 id: foundUser.id,
                 cuid: foundUser.user_cuid,
                 username: foundUser.username,
-                email: foundUser.email
+                email: foundUser.email,
+                role_id: foundUser.role_id,
             },
             user_cuid: foundUser.user_cuid,
             access_token: accessToken,
