@@ -1,18 +1,24 @@
 import 'dotenv/config'
 import {compareSync, genSaltSync, hashSync} from 'bcrypt-ts'
 import jwt from 'jsonwebtoken'
-import {userRegistrationSchema, userSchema} from '../schemas/user.schema.js'
 import {Request, Response} from 'express'
 import {createId} from "@paralleldrive/cuid2";
 import UsersRepository from "../repositories/UsersRepository.js";
+import {LoginRequestSchema, RegisterRequestSchema} from "../../shared/schemas/Auth.js"
+import {LoginRequestBody, RegisterRequestBody} from "../../types/types.js";
 
+interface LoginRequest extends Request {
+    body: LoginRequestBody;
+}
 
-const register = async (req: Request, res: Response) => {
+interface RegisterRequest extends Request {
+    body: RegisterRequestBody;
+}
 
+const register = async (req: LoginRequest, res: Response) => {
 
      // Check req.body to see if matches schema
-    const parsedBody = userRegistrationSchema.safeParse(req.body)
-
+    const parsedBody = RegisterRequestSchema.safeParse(req.body)
     if (parsedBody.error) {
         res.status(400).send(parsedBody.error.message);
         return;
@@ -23,12 +29,10 @@ const register = async (req: Request, res: Response) => {
     // Check if email or username already exists in db
     const emailRows  = await UsersRepository.getUsersByEmail(email)
     const usernameRows = await UsersRepository.getUsersByUsername(username)
-    // res.send({emailRows,usernameRows})
     if (emailRows.length > 0 || usernameRows.length > 0) {
         res.status(409).send({message: "Username and/or email already exists"})
         return
     }
-
 
     //  If neither username and email are in the db, create user
     const hashedPassword = hashSync(UNSAFEPassword, genSaltSync(10));
@@ -42,13 +46,16 @@ const register = async (req: Request, res: Response) => {
         password: hashedPassword,
     }
 
+    // Save user to db
     const user_id = await UsersRepository.create(user)
 
     if (user_id) {
+        // Verify user is in db
         const createdUser = await UsersRepository.findOne({id: user_id});
 
+        // If found, login user
         if (createdUser) {
-            req.body = { username: createdUser.username, password: UNSAFEPassword }; //create login request body
+            req.body  = { username: createdUser.username, password: UNSAFEPassword } as LoginRequestBody; //create login request body
             await login(req, res);
 
         } else {
@@ -60,63 +67,65 @@ const register = async (req: Request, res: Response) => {
         res.status(500).json({message: "Failed to create user"})
         return
     }
-
-
 }
 
-
-const login = async (req: Request, res: Response) => {
+const login = async (req: LoginRequest, res: Response) => {
 
     // Check req.body to see if matches schema
-    const parsedBody = userSchema.safeParse(req.body)
+    const parsedBody = LoginRequestSchema.safeParse(req.body as LoginRequestBody)
     if (parsedBody.error) {
         res.status(400).send(parsedBody.error.message)
         return
     }
+
+    // Deconstruct username and password from parsedBody
     const {username, password} = parsedBody.data
 
 
-    const userRows = await UsersRepository.getUsersByUsername(username)
-    const foundUser = userRows[0]
+    const user = await UsersRepository.findOne({username: username})
 
-    if (userRows.length < 1 || !userRows) {
-        res.sendStatus(401)
+    if (!user) {
+        res.status(401).json({message: "User not found"})
         return
     }
 
     // Check if password matches
-    const match = compareSync(password, foundUser.password)
+    const match = compareSync(password, user.password)
 
     if (match) {
+        // Generate access and refresh tokens
         const accessToken = jwt.sign(
-            {user_cuid: foundUser.user_cuid, user_id: foundUser.id},
+            {user_cuid: user.user_cuid, user_id: user.id},
             process.env.ACCESS_TOKEN_SECRET!,
             {expiresIn: '300s'}
         )
         const refreshToken = jwt.sign(
-            {user_cuid: foundUser.user_cuid, user_id: foundUser.id},
+            {user_cuid: user.user_cuid, user_id: user.id},
             process.env.REFRESH_TOKEN_SECRET!,
             {expiresIn: '1h'}
         )
 
-        const result = UsersRepository.update(foundUser.id,{refresh_token: refreshToken})
+        // Save refresh token to db
+        const result = UsersRepository.update(user.id,{refresh_token: refreshToken})
 
+        // return user profile to client
         res.status(200).json({
             user: {
-                id: foundUser.id,
-                cuid: foundUser.user_cuid,
-                username: foundUser.username,
-                email: foundUser.email,
-                role_id: foundUser.role_id,
+                id: user.id,
+                cuid: user.user_cuid,
+                username: user.username,
+                email: user.email,
+                role_id: user.role_id,
             },
-            user_cuid: foundUser.user_cuid,
+            user_cuid: user.user_cuid,
             access_token: accessToken,
             refresh_token: refreshToken,
 
         })
         return
     } else {
-        res.sendStatus(401)
+        res.status(401).json({message: "User not found"})
+        return
     }
 
 }

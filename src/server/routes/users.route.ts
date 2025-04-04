@@ -8,7 +8,8 @@ const users = usersController
 
 router
     .get('/:id', users.getById)
-    .get('/', verifyJWT, users.getByRequestBodyId)
+    .get('/me', verifyJWT, users.getByRequestBodyId)
     .get('/:id/collections', users.getCollectionsByUserId)
+    .get('/',users.getAll)
 
 export { router as usersRouter }

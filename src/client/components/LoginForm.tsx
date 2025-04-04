@@ -16,28 +16,25 @@ import { Input } from "@/components/ui/input.js";
 import React from "react";
 import { Link, useNavigate } from "react-router";
 import {useAuth} from "@/hooks/useAuth.js";
-import {UserLoginCredentialsSchema} from "@/models/user.js";
+import {createNameId} from "mnemonic-id";
+import {LoginRequestSchema} from "@shared/schemas/Auth.js";
 
 const LoginForm = React.forwardRef(() => {
   const navigate = useNavigate();
   const {login}= useAuth();
 
 
-  const form = useForm<z.infer<typeof UserLoginCredentialsSchema>>({
-    resolver: zodResolver(UserLoginCredentialsSchema),
+  const form = useForm<z.infer<typeof LoginRequestSchema>>({
+    resolver: zodResolver(LoginRequestSchema),
     defaultValues: {
       username: "",
       password: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof UserLoginCredentialsSchema>) {
-    const {username,password} = values
-      console.log(values)
+  async function onSubmit(values: z.infer<typeof LoginRequestSchema>) {
       const response = await login(values)
-      console.log(response)
-
-
+      navigate("/welcome");
     }
 
   return   (
@@ -55,7 +52,7 @@ const LoginForm = React.forwardRef(() => {
               <div>
                 <FormControl>
                   <div>
-                    <Input placeholder="" {...field} />
+                    <Input placeholder={createNameId({capitalize:true, delimiter:''})} {...field} />
                   </div>
                 </FormControl>
               </div>
@@ -73,7 +70,7 @@ const LoginForm = React.forwardRef(() => {
               <div>
                 <FormControl>
                   <div>
-                    <Input placeholder="" {...field} />
+                    <Input type="password" placeholder="" {...field} />
                   </div>
                 </FormControl>
               </div>

@@ -7,15 +7,16 @@ import {
     LoginResponseData,
     RegisterResponseData
 } from "@shared/types/authTypes.js";
-import {LOCAL_STORAGE} from "@shared/types/localStorageTypes.d.js";
-import {UserRegistrationData} from "@/models/user.js";
 import {DecodedTokenSchema} from "@/models/token.js";
+import {z} from "zod";
+import {LoginRequestSchema, RegisterRequestSchema} from "@shared/schemas/Auth.js";
 
 
 export const authService = {
 
-    async register(validatedUserData: UserRegistrationData):Promise<RegisterResponseData | undefined> {
-        const {email, username, password} = validatedUserData;
+    async register(credentials: z.infer<typeof RegisterRequestSchema>):Promise<RegisterResponseData | undefined> {
+        const {email, username, password} = credentials;
+
         try {
             const {data, status} = await axios.post("/api/auth/register", {
                 email: email,
@@ -34,10 +35,11 @@ export const authService = {
         }
     },
 
-    async login({username, password}: { username: string, password: string })
+    async login(credentials: z.infer<typeof LoginRequestSchema>)
         : Promise<
         LoginResponseData | undefined
         | null> {
+        const {username,password} = credentials;
         try {
             const response = await axios.post("/api/auth/login", {
                 username: username,
@@ -83,7 +85,7 @@ export const authService = {
             const refreshToken = localStorage.getItem("refresh_token");
             const user_cuid = localStorage.getItem("user_cuid");
             if (!refreshToken || !user_cuid) {
-                console.warn("No refresh token found. User needs to re-authenticate.");
+                console.warn("No refresh token found. UserSchema needs to re-authenticate.");
                 // Handle case where there's no refresh token.  Maybe redirect to login?
                 // Example:  window.location.href = "/login";
                 handleError("No refresh token found"); // Crucial to throw an

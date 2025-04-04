@@ -1,13 +1,13 @@
 import {createContext, ReactNode, useContext, useEffect, useState} from 'react'
 import authService from "@/services/authService.js";
 import {handleError} from "@/helpers/errorHandler.js";
-import {UserRegistrationData} from "@/models/user.js";
 import {
     LoginRequest,
     LoginResponseData,
     RegisterResponseData
 } from "@shared/types/authTypes.js";
 import {toast} from '@/hooks/use-toast.js'
+import {LoginRequestBody, RegisterRequestBody} from "../../types/types.js";
 
 
 type AuthContextType = {
@@ -15,9 +15,9 @@ type AuthContextType = {
     userId: string | null,
     isAuthenticated: boolean,
     // Methods
-    login: (credentials: LoginRequest) => Promise<LoginResponseData | undefined>,
+    login: (credentials: LoginRequestBody) => Promise<LoginResponseData | undefined>,
     logout: (userId?: string) => void,
-    register: (registrationData: UserRegistrationData) => Promise<RegisterResponseData | undefined>
+    register: (registrationData: RegisterRequestBody) => Promise<RegisterResponseData | undefined>
 }
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
@@ -38,7 +38,7 @@ export const AuthProvider = ({children}: { children: ReactNode }) => {
         const storedUserId = localStorage.getItem("user_cuid");
         const storedAccessToken = localStorage.getItem("access_token");
 
-        if (storedUserId && storedAccessToken && storedUserJSON&& authService.verifyToken(storedAccessToken)) {
+        if (storedUserId && storedAccessToken && storedUserJSON && authService.verifyToken(storedAccessToken)) {
             setUser(JSON.parse(storedUserJSON))
             setUserId(storedUserId);
             setIsAuthenticated(true);
@@ -50,28 +50,25 @@ export const AuthProvider = ({children}: { children: ReactNode }) => {
         }
     }, []);
 
-
-    const login = async (credentials: { username: string, password: string }) => {
+    const login = async (credentials: LoginRequestBody) => {
         try {
             // console.log(credentials)
             const response = await authService.login(credentials);
-            console.log("response from authService: ")
-            console.log(response)
 
-           if (!response) {
-               setIsAuthenticated(false);
-               setUserId(null);
-               console.log("Login error")
-               handleError({data: "Could not login user"})
-               return
-           } else if (response.user_cuid.length) {
-               console.log("Authenticated")
-               setIsAuthenticated(true);
-               setUserId(response.user_cuid);
-               return response
-           } else {
-               console.log("Why here?")
-           }
+            if (!response) {
+                setIsAuthenticated(false);
+                setUserId(null);
+                console.log("LoginRequestBody error")
+                handleError({data: "Could not login user"})
+                return
+            } else if (response.user_cuid.length) {
+                console.log("Authenticated")
+                setIsAuthenticated(true);
+                setUserId(response.user_cuid);
+                return response
+            } else {
+                console.log("Why here?")
+            }
 
 
         } catch (error) {
@@ -81,6 +78,7 @@ export const AuthProvider = ({children}: { children: ReactNode }) => {
             throw error; // Re-throw so the component using login knows it failed
         }
     };
+
 
     const logout = async () => {
         try {
@@ -98,7 +96,7 @@ export const AuthProvider = ({children}: { children: ReactNode }) => {
         }
     };
 
-    const register = async (registrationData: UserRegistrationData) => {
+    const register = async (registrationData: RegisterRequestBody) => {
         try {
             toast({title:"Hello there"})
             return await authService.register(registrationData)

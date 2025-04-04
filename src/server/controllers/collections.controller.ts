@@ -12,10 +12,19 @@ const getAll = async (req: Request, res: Response) => {
 const getById = async (req: Request, res: Response) => {
     const id = req.params.id;
     console.log(req.params);
-    const result = await CollectionsRepository.findOne({id});
-    //
-    res.status(200).json(result)
-    return
+    const collection = await CollectionsRepository.findOne({id});
+    if (collection) {
+        const enrichedCollection = { ...collection, taxon_ids: [] as number[] }
+            if (collection.id) {
+                const taxa = await CollectionsRepository.getTaxaByCollectionId(collection.id)
+                taxa.forEach(item => enrichedCollection.taxon_ids.push(item.taxon_id))
+            }
+        res.status(200).json(enrichedCollection)
+        return
+    } else {
+        res.status(404).json({message: "Not Found"})
+        return
+    }
 }
 
 const create = async(req:Request, res: Response) => {

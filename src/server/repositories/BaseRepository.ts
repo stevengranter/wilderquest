@@ -1,6 +1,12 @@
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import db from '../db.js'; // Import the database connection
 
+
+export type getColumnsOptions = {
+  orderByColumn: string;
+  order: "desc" | "asc";
+}
+
 class BaseRepository<T> {
   private tableName: string;
 
@@ -49,6 +55,30 @@ class BaseRepository<T> {
       return rows as T[];
     } catch (error) {
       console.error(`Error fetching all records from ${this.tableName}:`, error);
+      throw error;
+    }
+  }
+
+  // Method to get only certain columns
+  async getColumns(columns: string[], options: getColumnsOptions): Promise<Partial<T>[]> {
+    try {
+      const columnString = columns.join(', ');
+      const order = options.order.toUpperCase() || "ASC"
+      const [rows] = await db.execute<RowDataPacket[]>(`SELECT ${columnString} FROM ${this.tableName} ORDER BY ${options.orderByColumn} ${order}`);
+
+      // Map the results to Partial<T> to ensure type safety, as only selected columns are returned.
+      return rows.map(row => {
+        const partialT: Partial<T> = {};
+        columns.forEach(column => {
+          if (row.hasOwnProperty(column)) {
+            partialT[column as keyof T] = row[column];
+          }
+        });
+        return partialT;
+      });
+
+    } catch (error) {
+      console.error(`Error fetching columns ${columns.join(', ')} from ${this.tableName}:`, error);
       throw error;
     }
   }

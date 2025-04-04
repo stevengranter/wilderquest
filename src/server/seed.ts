@@ -6,6 +6,7 @@ import * as emoji from "node-emoji"
 import pluralize from "pluralize"
 import {createId} from "@paralleldrive/cuid2"
 import axios from "axios";
+import {createNameId} from "mnemonic-id";
 
 const db = await mysql.createConnection(dbConfig)
 
@@ -31,7 +32,7 @@ const fetchInatTaxa = async (query: inatApiParams) => { //default to empty objec
 
     const result = await axios.get(API_URL, {params: params});
 
-    const taxonArray = result.data.results.map(record => {
+    const taxonArray = result.data.results.map((record: { id: any; }) => {
         return record.id
     })
 
@@ -78,9 +79,10 @@ const adminUser = {
 const createFakeUser = () => {
     const firstName = faker.person.firstName()
     const lastName = faker.person.lastName()
-    const username = faker.internet.username({firstName, lastName})
+    // const username = faker.internet.username({firstName, lastName})
+    const username = createNameId({capitalize:true, delimiter:''})
     const user_cuid = createId()
-    const email = faker.internet.email({firstName, lastName})
+    const email = username.toLowerCase() + "@" + faker.internet.domainName()
     const password = faker.internet.password({memorable:true})
     const role_id = 1
     const created_at = faker.date.between({ from: '2020-01-01', to: Date.now() })
@@ -145,11 +147,12 @@ async function addRowToTable<T extends object>(tableName:string, data:T) {
 }
 
 
-
+const users = await createUsers(12)
+db.end()
 
 // console.log(users)
 // console.log(collections)
-console.log(await createUsers(1))
+console.log(users)
 // console.log(await addRowsToTable("collections",collections))
 // console.log(await(fetchInatTaxa({q:"squirrel",})));
 

@@ -1,5 +1,5 @@
 import BaseRepository from './BaseRepository.js';
-import {Collection, CollectionToTaxaSchema} from "../../types.js";
+import {Collection, CollectionToTaxaSchema} from "../../types/types.js";
 import db from "../db.js";
 import {RowDataPacket} from "mysql2/promise";
 
@@ -40,7 +40,6 @@ class CollectionsRepository extends BaseRepository<Collection> {
             throw error;
         }
     }
-
 
 }
 

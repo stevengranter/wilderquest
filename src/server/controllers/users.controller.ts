@@ -4,6 +4,18 @@ import {Request, Response} from "express";
 import UsersRepository from "../repositories/UsersRepository.js";
 import CollectionsRepository from "../repositories/CollectionsRepository.js";
 
+const getAll = async (req: Request, res: Response) => {
+    const result = await UsersRepository.getColumns(["id","user_cuid","username","email"],{orderByColumn:"created_at", order:"desc"});
+
+    if (result) {
+        res.status(200).json(result)
+        return
+    } else {
+        res.status(404).json({message: "Not Found"})
+        return
+    }
+}
+
 const getById = async (req: Request, res: Response) => {
     const id  = parseInt(req.params.id);
     console.log(req.params);
@@ -16,6 +28,7 @@ const getById = async (req: Request, res: Response) => {
         return
     }
 }
+
 
 const getByRequestBodyId = async (req: Request, res: Response) => {
     const id = parseInt(req.body.user_id);
@@ -43,7 +56,8 @@ const getCollectionsByUserId = async (req: Request, res: Response) => {
                 enrichedResult.push(enrichedCollection)
             }
         }
-        res.status(200).json(enrichedResult)
+        // res.status(200).json(enrichedResult)
+        res.sendStatus(200)
         return
     } else {
         res.status(404).json({message: "Not Found"})
@@ -51,6 +65,6 @@ const getCollectionsByUserId = async (req: Request, res: Response) => {
     }
 }
 
-const usersController = { getById, getByRequestBodyId, getCollectionsByUserId };
+const usersController = { getAll, getById, getByRequestBodyId, getCollectionsByUserId };
 
 export default usersController;

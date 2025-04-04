@@ -34,11 +34,11 @@ const handleRefreshToken = async (
 
     if (!foundUser) {
         res.status(403).send({
-            message: 'User not found / Invalid refresh token',
+            message: 'UserSchema not found / Invalid refresh token',
         })
         return
     } else {
-        console.log('User found!')
+        console.log('UserSchema found!')
         console.log(refresh_token)
         jwt.verify(
             refresh_token,

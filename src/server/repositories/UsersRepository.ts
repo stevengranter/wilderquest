@@ -1,28 +1,23 @@
-import BaseRepository from './BaseRepository.js';
+import BaseRepository, {getColumnsOptions} from './BaseRepository.js';
 import {RowDataPacket} from "mysql2/promise";
 import db from "../db.js";
 
-interface UserData {
-    id: number;
-    email: string;
-    username: string;
-    user_cuid: string;
-    password: string;
-    age: number;
-    created_at: Date;
-    updated_at: Date;
-    refresh_token: string | null;
-    role_id: number;
-}
+import {UserData} from "../../types/types.js";
 
 class UsersRepository extends BaseRepository<UserData> {
     constructor() {
         super('user_data');
     }
 
+   async getColumns(columns: string[], {orderByColumn=columns[0],order="asc"}:getColumnsOptions): Promise<Partial<UserData>[]> {
+        return super.getColumns(columns, {orderByColumn, order});
+   }
+
     async create(data: Partial<UserData>): Promise<number> {
-        const created_at: Date = new Date();
-        const updated_at: Date = new Date();
+        const date = new Date();
+        const dateString = date.toLocaleDateString("en-CA");
+        const created_at = dateString;
+        const updated_at = dateString;
         const newData = {...data, created_at, updated_at};
         return await super.create(newData);
     }

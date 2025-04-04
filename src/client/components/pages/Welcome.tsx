@@ -3,6 +3,9 @@ import { jwtDecode } from "jwt-decode";
 import { Button } from '@/components/ui/button.js'
 import authService from "@/services/authService.js";
 import {useEffect, useState} from "react";
+import UserCollectionsView from "@/components/UserCollectionsView.js";
+import UserProfile from "@/components/UserProfile.js";
+import CollectionView from "@/components/CollectionView.js";
 
 
 const Welcome = () => {
@@ -24,6 +27,8 @@ const Welcome = () => {
       {token ? jwtDecode(token).exp : ""}
       </div>
       <Button onClick={refreshAccessToken}>Refresh Access Token</Button>
+      <UserCollectionsView userId={374} />
+      <CollectionView collectionId={294} />
   </>
   )
 }

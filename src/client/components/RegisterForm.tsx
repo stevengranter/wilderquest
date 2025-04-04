@@ -13,11 +13,13 @@ import {
   FormMessage,
 } from "@/components/ui/form.js";
 import { Input } from "@/components/ui/input.js";
-import React from "react";
+import React, {useMemo} from "react";
 import { useNavigate } from "react-router";
 import {useAuth} from "@/hooks/useAuth.js";
 import {RegisterFormSchema} from "@/components/RegisterForm.schema.js";
 import {toast} from "@/hooks/use-toast.js";
+import {createNameId} from "mnemonic-id";
+import {faker} from "@faker-js/faker/locale/ar";
 
 type Inputs = {
     email: string,
@@ -47,8 +49,15 @@ const RegisterForm = React.forwardRef(() => {
     }
 
 
+    const animalNameId = useMemo(() => {
+        return createNameId({ capitalize: true, delimiter: '' });
+    }, []);
 
-  return (
+    const fakeEmailAddress = useMemo(()=> {
+        return animalNameId.toLowerCase() + "@" + faker.internet.domainName()
+    },[animalNameId])
+
+    return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
@@ -61,7 +70,7 @@ const RegisterForm = React.forwardRef(() => {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="m@example.com" {...field} />
+                <Input placeholder={fakeEmailAddress} {...field} />
               </FormControl>
               <FormDescription>Enter your email address.</FormDescription>
               <FormMessage />
@@ -75,7 +84,7 @@ const RegisterForm = React.forwardRef(() => {
                   <FormItem>
                       <FormLabel>Username</FormLabel>
                       <FormControl>
-                          <Input placeholder="My Awesome UserName" {...field} />
+                          <Input placeholder={animalNameId} {...field} />
                       </FormControl>
                       <FormDescription>Enter your desired username</FormDescription>
                       <FormMessage />
