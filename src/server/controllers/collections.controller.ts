@@ -2,28 +2,17 @@ import {Request, Response} from "express"
 import {collectionSchema} from "../schemas/collection.schema.js";
 import CollectionsRepository from "../repositories/CollectionsRepository.js";
 
-const get = async (req: Request, res: Response) => {
-    console.log("Hello from collections controller get")
-    const userIdFromParams = req.params.id;
+const getAll = async (req: Request, res: Response) => {
+    const result = await CollectionsRepository.getAll();
+    console.log(result);
+    res.status(200).json(result);
+    return
+}
+
+const getById = async (req: Request, res: Response) => {
+    const id = req.params.id;
     console.log(req.params);
-
-    const parsedBody = collectionSchema.safeParse(req.body)
-    if (parsedBody.error) {
-        res.status(400).send(parsedBody.error.message)
-        return
-    }
-    const {user_id:userIdFromJWT} = parsedBody.data
-
-    // If a user_id is provided in the params, use that.
-    // Otherwise, use the logged-in user's id.
-    const user_id = parseInt(userIdFromParams)
-        // || userIdFromJWT;
-
-    console.log(user_id)
-
-    const result = await CollectionsRepository.getCollectionsByUserId(user_id)
-    console.log("result")
-    console.log(result)
+    const result = await CollectionsRepository.findOne({id});
     //
     res.status(200).json(result)
     return
@@ -93,7 +82,7 @@ const update = async(req:Request, res: Response) => {
 
 
 const collectionsController = {
-    create,update,get,
+    create,update,getById,getAll
 }
 
 export default collectionsController

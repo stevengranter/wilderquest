@@ -5,7 +5,8 @@ import verifyJWT from "../middleware/verifyJWT.js";
 const router = Router()
 
 router
-    .get("/", verifyJWT, collectionsController.get)
+    .get("/:id", collectionsController.getById)
+    .get("/", collectionsController.getAll)
     .post("/", verifyJWT, collectionsController.create)
     .put("/", verifyJWT, collectionsController.update)
 

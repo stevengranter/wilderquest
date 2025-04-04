@@ -4,6 +4,7 @@ import { Request, Response, NextFunction } from "express"
 
 const verifyJWT = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers["authorization"]
+    if (!req.body) req.body = {};
     if (!authHeader) {
         res.sendStatus(401)
         console.log("No auth header")

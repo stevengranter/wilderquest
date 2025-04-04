@@ -1,5 +1,5 @@
 import BaseRepository from './BaseRepository.js';
-import {Collection} from "../../types.js";
+import {Collection, CollectionToTaxaSchema} from "../../types.js";
 import db from "../db.js";
 import {RowDataPacket} from "mysql2/promise";
 
@@ -25,6 +25,18 @@ class CollectionsRepository extends BaseRepository<Collection> {
             return rows as Collection[];
         } catch (error) {
             console.error('Error fetching collections by user_id:', error);
+            throw error;
+        }
+    }
+
+    async getTaxaByCollectionId(collection_id: number): Promise<CollectionToTaxaSchema[]> {
+        try {
+            const [rows] = await db.execute<RowDataPacket[]>(
+                `SELECT taxon_id FROM collections_to_taxa WHERE collection_id = ?`, [collection_id]);
+            console.log("rows", rows);
+            return rows as CollectionToTaxaSchema[];
+        }catch (error) {
+            console.error('Error fetching taxa by collection_id:', error);
             throw error;
         }
     }
