@@ -6,6 +6,7 @@ import {useEffect, useState} from "react";
 import UserCollectionsView from "@/components/UserCollectionsView.js";
 import UserProfile from "@/components/UserProfile.js";
 import CollectionView from "@/components/CollectionView.js";
+import {Link} from "react-router";
 
 
 const Welcome = () => {
@@ -26,9 +27,9 @@ const Welcome = () => {
       <div>Token Expire time:
       {token ? jwtDecode(token).exp : ""}
       </div>
+
+      <Link to="/users">See all users</Link>
       <Button onClick={refreshAccessToken}>Refresh Access Token</Button>
-      <UserCollectionsView userId={374} />
-      <CollectionView collectionId={294} />
   </>
   )
 }

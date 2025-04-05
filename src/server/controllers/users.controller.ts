@@ -3,9 +3,24 @@ import {Request, Response} from "express";
 
 import UsersRepository from "../repositories/UsersRepository.js";
 import CollectionsRepository from "../repositories/CollectionsRepository.js";
+import {AuthenticatedRequest} from "../middleware/verifyJWT.js";
 
-const getAll = async (req: Request, res: Response) => {
-    const result = await UsersRepository.getColumns(["id","user_cuid","username","email"],{orderByColumn:"created_at", order:"desc"});
+const getAll = async (req: AuthenticatedRequest, res: Response) => {
+    // res.status(200).send(req.user);
+    if (!req.user) {
+        res.status(401).send({message: 'No user in request'});
+        return
+    }
+
+    const {role_id} = req.user;
+    console.log(req.user);
+    // res.status(200).send(role_id);
+    if (role_id !== 2) {
+        res.status(401).send({message: 'Not Authorized'});
+        return
+    }
+
+    const result = await UsersRepository.getColumns(["id","user_cuid","username","email"],{orderByColumn:"id", order:"desc"});
 
     if (result) {
         res.status(200).json(result)
@@ -30,8 +45,11 @@ const getById = async (req: Request, res: Response) => {
 }
 
 
-const getByRequestBodyId = async (req: Request, res: Response) => {
-    const id = parseInt(req.body.user_id);
+const getByRequestUser = async (req: AuthenticatedRequest, res: Response) => {
+    if (!req.user) {
+        res.status(400).json({message: "Authentication required"})
+    }
+    const id = req.user?.id
     const result = await UsersRepository.findOne({id})
     console.log(result)
     if (result) {
@@ -65,6 +83,6 @@ const getCollectionsByUserId = async (req: Request, res: Response) => {
     }
 }
 
-const usersController = { getAll, getById, getByRequestBodyId, getCollectionsByUserId };
+const usersController = { getAll, getById, getByRequestBodyId: getByRequestUser, getCollectionsByUserId };
 
 export default usersController;

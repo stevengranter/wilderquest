@@ -7,9 +7,9 @@ const router = Router()
 const users = usersController
 
 router
-    .get('/:id', users.getById)
     .get('/me', verifyJWT, users.getByRequestBodyId)
+    .get('/:id', users.getById)
     .get('/:id/collections', users.getCollectionsByUserId)
-    .get('/',users.getAll)
+    .get('/', verifyJWT, users.getAll)
 
 export { router as usersRouter }

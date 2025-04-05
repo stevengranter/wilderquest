@@ -11,6 +11,19 @@ import {DecodedTokenSchema} from "@/models/token.js";
 import {z} from "zod";
 import {LoginRequestSchema, RegisterRequestSchema} from "@shared/schemas/Auth.js";
 
+// Add an interceptor to set the Authorization header
+axios.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 export const authService = {
 
@@ -53,6 +66,8 @@ export const authService = {
             localStorage.setItem("user",JSON.stringify(user))
             localStorage.setItem("user_cuid", user_cuid.toString());
             localStorage.setItem("access_token", access_token.toString());
+            console.log("new access token set")
+            // axios.defaults.headers.common['authorization'] = 'Bearer ' + access_token; // Update Axios headers
             localStorage.setItem("refresh_token", refresh_token.toString());
             return data;
         } catch (error) {
@@ -115,7 +130,7 @@ export const authService = {
             const newAccessToken = response.data.access_token;
             localStorage.setItem("access_token", newAccessToken); // Update
             console.log("new access token set")
-            axios.defaults.headers.common['Authorization'] = 'Bearer ' + newAccessToken; // Update Axios headers
+            // axios.defaults.headers.common['authorization'] = 'Bearer ' + newAccessToken; // Update Axios headers
 
         } catch (error: any) {  //Important to type error correctly
             console.error("Error during token refresh:", error);
@@ -146,7 +161,7 @@ export const authService = {
 
             if (parsedToken.data.exp > currentTime) {
                 // Token is valid
-                axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+                // axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
                 return true;
             } else {
                 // Token expired

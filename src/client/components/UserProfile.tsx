@@ -9,9 +9,6 @@ export default function UserProfile() {
     const { id } = useParams();
     const [user, setUser] = useState<UserData | null>(null);
 
-
-
-
     useEffect(() => {
         axios.get(`/api/users/${id}`)
             .then((res)=> {

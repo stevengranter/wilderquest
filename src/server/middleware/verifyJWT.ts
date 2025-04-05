@@ -9,6 +9,7 @@ export interface AuthenticatedRequest extends Request {
     user?: {
         id: number;
         cuid: string;
+        role_id: number;
     };
 }
 
@@ -17,8 +18,11 @@ const verifyJWT = (
     res: Response,
     next: NextFunction
 ) => {
+    if (!req.headers.authorization) {
+        console.error("Authorization header is missing");
+    }
     const authHeader = req.headers.authorization; // Access authorization directly
-    if (!req.body) req.body = {};
+    // if (!req.body) req.body = {};
 
     if (!authHeader) {
         res.sendStatus(401);
@@ -38,8 +42,9 @@ const verifyJWT = (
             }
             console.log(decoded);
             req.user = {
-                id: parseInt(decoded.user_id),
+                id: decoded.id,
                 cuid: decoded.cuid,
+                role_id: decoded.role_id,
             };
             next();
         }

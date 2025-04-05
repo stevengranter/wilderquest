@@ -96,12 +96,12 @@ const login = async (req: LoginRequest, res: Response) => {
     if (match) {
         // Generate access and refresh tokens
         const accessToken = jwt.sign(
-            {user_cuid: user.user_cuid, user_id: user.id},
+            {id: user.id,cuid: user.user_cuid,role_id: user.role_id},
             process.env.ACCESS_TOKEN_SECRET!,
             {expiresIn: '300s'}
         )
         const refreshToken = jwt.sign(
-            {user_cuid: user.user_cuid, user_id: user.id},
+            {id: user.id,cuid: user.user_cuid,role_id: user.role_id},
             process.env.REFRESH_TOKEN_SECRET!,
             {expiresIn: '1h'}
         )
