@@ -3,6 +3,7 @@ import {usersRouter} from "./users.route.js";
 import {authRouter} from "./auth.route.js";
 import {refreshTokenRouter} from "./refresh.route.js";
 import {collectionsRouter} from "./collections.routes.js";
+import {iNaturalistProxyRouter} from "./iNaturalist.proxy.route.js";
 
 const router = Router()
 
@@ -12,7 +13,8 @@ const routes = [
     { url: "/users", router: usersRouter },
     { url: "/auth", router: authRouter },
     { url: "/refresh", router: refreshTokenRouter },
-    {url: "/collections", router: collectionsRouter}
+    {url: "/collections", router: collectionsRouter},
+    {url: "/iNatAPI", router:iNaturalistProxyRouter}
 ];
 
 routes.forEach((route) => {
