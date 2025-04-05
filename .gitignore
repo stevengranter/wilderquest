@@ -2,6 +2,11 @@
 .env
 .env.*
 
+# seeded data
+*.dev.json
+*.dev.txt
+*.dev.csv
+
 # Logs
 logs
 *.log

@@ -76,6 +76,7 @@
     "uuid": "^11.1.0",
     "vaul": "^1.1.2",
     "vite-express": "*",
+    "weighted": "^1.0.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {

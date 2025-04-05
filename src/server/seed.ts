@@ -5,8 +5,10 @@ import {faker} from "@faker-js/faker"
 import * as emoji from "node-emoji"
 import pluralize from "pluralize"
 import {createId} from "@paralleldrive/cuid2"
-import axios from "axios";
 import {createNameId} from "mnemonic-id";
+import weighted from "weighted";
+import {genSaltSync, hashSync} from "bcrypt-ts";
+import fs from "fs";
 
 const db = await mysql.createConnection(dbConfig)
 
@@ -19,25 +21,13 @@ type inatApiParams = {
     order_by?:string
 }
 
-const fetchInatTaxa = async (query: inatApiParams) => { //default to empty object if nothing is passed
-    const {
-        q = '',
-        rank = 'species', // Default to 'species'
-        order = 'asc', // Default to 'asc'
-        order_by = 'name', // Default to 'name'
-        ...rest // Capture any other properties passed in query
-    } = query;
-
-    const params = { q, rank, order, order_by, ...rest}; //recreate the params object.
-
-    const result = await axios.get(API_URL, {params: params});
-
-    const taxonArray = result.data.results.map((record: { id: any; }) => {
-        return record.id
-    })
-
-    return taxonArray
-};
+const generateFakeTaxa = (quantity) => {
+    let taxa = []
+    for (let i = 0; i < quantity; i++) {
+        taxa.push(getRandomInt(5000,999999))
+    }
+    return taxa;
+}
 
 function getRandomItem<T>(arr: T[]): T | undefined {
     if (arr.length === 0) {
@@ -68,7 +58,7 @@ function capitalizeString(str: string): string {
 
 const adminUser = {
     username: "admin",
-    password: "admin",
+    password: "mypassword",
     email: "adminUser555@example.com",
     user_cuid: createId(),
     created_at: new Date(),
@@ -76,27 +66,66 @@ const adminUser = {
     role_id: 2,
 }
 
+// Function to log the raw user data to a file before password hashing
+const logRawUserData = (user) => {
+    const rawUserData = [
+        user.username,
+        user.email,
+        user.password, // Log the password before hashing
+        user.created_at,
+        user.updated_at,
+        user.user_cuid,
+    ];
+
+    // Append the data to a CSV file
+    const csvRow = rawUserData.join(",") + "\n";
+
+    fs.appendFile('raw_user_data.dev.csv', csvRow, (err) => {
+        if (err) {
+            console.error("Error logging user data:", err);
+        } else {
+            console.log("User data logged to file.");
+        }
+    });
+};
+
+// Function to ensure the CSV header is written to the file
+const writeCsvHeader = () => {
+    const header = "username,email,password,created_at,updated_at,user_cuid\n";
+    fs.writeFile('raw_user_data.dev.csv', header, (err) => {
+        if (err) {
+            console.error("Error writing CSV header:", err);
+        }
+    });
+};
+
+// Ensure the CSV header is written when the script starts
+writeCsvHeader();
+
 const createFakeUser = () => {
     const firstName = faker.person.firstName()
     const lastName = faker.person.lastName()
     // const username = faker.internet.username({firstName, lastName})
     const username = createNameId({capitalize:true, delimiter:''})
-    const user_cuid = createId()
     const email = username.toLowerCase() + "@" + faker.internet.domainName()
-    const password = faker.internet.password({memorable:true})
+    const password = faker.internet.password({length:8, memorable:true})
     const role_id = 1
     const created_at = faker.date.between({ from: '2020-01-01', to: Date.now() })
     const updated_at = faker.date.between({ from: '2020-01-01', to: Date.now() })
-    return {username,user_cuid,email,password,role_id,created_at,updated_at}
+    const user_cuid = createId()
+    return {username,email,password,role_id,created_at,updated_at,user_cuid}
 }
 
 const createFakeCollection = (animal = faker.animal.type()) => {
     const user_id = getRandomInt(1,12)
     // const animal = animal || faker.animal.type()
     const animalEmoji= emoji.find(animal)
-    const prefixes = ["My fave ", "","","","","","Awesome ", "My favourite ", "", "I love "]
-    const suffixes = ["!",""," ❤️"," ⭐️","","","","",""]
-    const nameStr = getRandomItem(prefixes) + pluralize(animal) + getRandomItem(suffixes)
+    // let animalEmojiStr = ""
+    // if (animalEmoji) {animalEmojiStr = animalEmoji.emoji.toString()}
+    const prefixStr = ["","Awesome ", "My favourite ", "I love "]
+    const suffixStr = [""," ❤️",animalEmoji?.emoji || "😍","!"]
+    const weights = [0.49,0.17,0.17,0.17]
+    const nameStr = weighted.select(prefixStr,weights) + pluralize(animal) + " " + weighted.select(suffixStr,weights)
     const name= capitalizeString(nameStr)
     const created_at = faker.date.between({ from: '2020-01-01', to: Date.now() })
     const updated_at = faker.date.between({ from: '2020-01-01', to: Date.now() })
@@ -110,24 +139,41 @@ const createUsers = async (quantity: number) => {
     const userIds = []
     for (let i = 0; i < quantity; i++) {
         const user = createFakeUser()
-        const user_id = await addRowToTable("user_data", user)
-        const animal = faker.animal.type()
-        const collection = createFakeCollection(animal)
-        collection.user_id = user_id
-        const collection_id = await addRowToTable("collections", collection)
-        const taxaArray = await fetchInatTaxa({q: animal})
-        for (const taxon_id of taxaArray) {
-            await addRowToTable("collections_to_taxa",{collection_id, taxon_id})
+        logRawUserData(user);
+        const user_id = await addUserToDatabase(user)
+
+        if (!user_id) {
+            console.log("Error adding user to db")
+            return
         }
-        userIds.push(user_id)
+        // Generate collections
+        const numberOfCollections = getRandomInt(0,5)
+        for (let j = 0; j < numberOfCollections; j++) {
+            const animal = faker.animal.type()
+            const collection = createFakeCollection(animal)
+            collection.user_id = user_id
+            const collection_id = await addRowToTable("collections", collection)
+            const numberOfTaxa = getRandomInt(1,99)
+            const taxaArray = generateFakeTaxa(numberOfTaxa)
+            for (const taxon_id of taxaArray) {
+                await addRowToTable("collections_to_taxa",{collection_id, taxon_id})
+            }
+            userIds.push(user_id)
+
+        }
     }
     return userIds;
 }
 
-
-
 const dropTable = async (tableName:string) => {
     await db.execute(`DROP TABLE ${tableName}`);
+}
+
+async function addUserToDatabase(user) {
+    const { password: UNSAFEPassword } = user;
+    const securePassword = hashSync(UNSAFEPassword, genSaltSync(10));
+    const safeUser = {...user, password:securePassword};
+    return await addRowToTable("user_data", safeUser);
 }
 
 async function addRowToTable<T extends object>(tableName:string, data:T) {
@@ -148,11 +194,17 @@ async function addRowToTable<T extends object>(tableName:string, data:T) {
 
 
 const users = await createUsers(12)
+const admin = await addUserToDatabase(adminUser)
+if (admin) {
+    console.log("Admin created successfully:")
+    console.log(adminUser)
+}
 db.end()
 
 // console.log(users)
 // console.log(collections)
 console.log(users)
+
 // console.log(await addRowsToTable("collections",collections))
 // console.log(await(fetchInatTaxa({q:"squirrel",})));
 
