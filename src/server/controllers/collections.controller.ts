@@ -1,6 +1,8 @@
 import {Request, Response} from "express"
+import {AuthenticatedRequest} from "../middleware/verifyJWT.js";
 import {collectionSchema} from "../schemas/collection.schema.js";
 import CollectionsRepository from "../repositories/CollectionsRepository.js";
+import {collectionToTaxaSchema} from "../schemas/collection_to_taxa.schema.js";
 
 const getAll = async (req: Request, res: Response) => {
     const result = await CollectionsRepository.getAll();
@@ -27,15 +29,21 @@ const getById = async (req: Request, res: Response) => {
     }
 }
 
-const create = async(req:Request, res: Response) => {
+const create = async(req:AuthenticatedRequest, res: Response) => {
+    if (!req.user) {
+        res.status(400).json({message: "Authentication failed"})
+        return
+    }
+    const {id:user_id} = req.user;
+
     const parsedBody = collectionSchema.safeParse(req.body)
     if (parsedBody.error) {
         res.status(400).send(parsedBody.error.message)
         return
     }
+    const collectionData = {...parsedBody.data, user_id};
 
-
-    const result = await CollectionsRepository.create(parsedBody.data)
+    const result = await CollectionsRepository.create(collectionData)
 
 
     if (result > 0) {
@@ -49,49 +57,42 @@ const create = async(req:Request, res: Response) => {
 
 }
 
-const update = async(req:Request, res: Response) => {
-    const parsedBody = collectionSchema.safeParse(req.body)
-    if (parsedBody.error) {
-        res.status(400).send(parsedBody.error.message)
+const updateCollection = async(req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const { id } = req.params;
+    if (!req.user || !req.user.id) {
+        res.status(400).send({message: "Authentication failed"});
         return
     }
-    const {id,user_id,name:requestedName} = parsedBody.data
+    const {id:user_id} = req.user
+    const { name, description, taxa } = req.body;
 
-
-    const foundCollection = await CollectionsRepository.findOne({id, user_id})
-
-    // res.status(200).json({"message": `Found collection: ${foundCollection?.name}`})
-    console.log("foundCollection", foundCollection)
-
-    if (foundCollection && foundCollection.name && foundCollection.id) {
-        console.log("Found collection:", foundCollection.name)
-
-        // const result = await db.execute("".)
-        const result = await CollectionsRepository.update(foundCollection.id,{name: requestedName})
-
-        console.log(result)
-        if (result) {
-            res.status(200).json({
-                message: "Collection updated successfully!"});
-            return
-        } else {
-            res.status(500).json({ message: "Failed to update collection" });
+    try {
+        // const userCollections = await CollectionsRepository.getCollectionsByUserId(user_id)
+       const collection = await CollectionsRepository.findOne({user_id,id})
+        // console.log(userCollections)
+        // res.status(200).json(userCollections)
+        if (!collection) {
+            res.status(404).json({message: `Cannot update collection. Collection not found, or not owned by user`});
             return
         }
+        const detailsResult = await CollectionsRepository.updateCollection(parseInt(id), name, description);
 
-    } else {
-        res.status(400).json({ message: "Could not update collection" });
+        if (taxa) {
+            await CollectionsRepository.updateCollectionTaxa(parseInt(id), taxa);
+        }
+
+        res.json({ message: 'Collection updated successfully' });
         return
+    } catch (error) {
+        console.error('Error updating collection:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
 }
 
 
 
-
-
 const collectionsController = {
-    create,update,getById,getAll
+    create,updateCollection,getById,getAll
 }
 
 export default collectionsController

@@ -21,7 +21,7 @@ const getById = async (req: Request, res: Response) => {
     console.log(req.params);
     const result = await UsersRepository.findOne({id})
     if (result) {
-        res.status(200).json({username: result.username})
+        res.status(200).json({username:result.username, user_cuid:result.user_cuid})
         return
     } else {
         res.status(404).json({message: "Not Found"})

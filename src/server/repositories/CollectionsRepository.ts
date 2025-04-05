@@ -1,7 +1,8 @@
 import BaseRepository from './BaseRepository.js';
 import {Collection, CollectionToTaxaSchema} from "../../types/types.js";
 import db from "../db.js";
-import {RowDataPacket} from "mysql2/promise";
+import {ResultSetHeader, RowDataPacket} from "mysql2/promise";
+import error from "eslint-plugin-react/lib/util/error.js";
 
 
 class CollectionsRepository extends BaseRepository<Collection> {
@@ -9,6 +10,7 @@ class CollectionsRepository extends BaseRepository<Collection> {
     constructor() {
         super('collections');
     }
+
 
     async create(data: Partial<Collection>): Promise<number> {
         const created_at: Date = new Date();
@@ -37,6 +39,31 @@ class CollectionsRepository extends BaseRepository<Collection> {
             return rows as CollectionToTaxaSchema[];
         }catch (error) {
             console.error('Error fetching taxa by collection_id:', error);
+            throw error;
+        }
+    }
+
+    async updateCollection(collectionId: number, name: string, description: string): Promise<{success:boolean}> {
+        // TODO: verify collection exists
+        const [result] = await db.execute<ResultSetHeader>('UPDATE collections SET name = ?, description = ? WHERE id = ?', [name, description, collectionId]) ;
+        if (result.affectedRows === 0) {
+            throw error
+        }
+        return {success:true};
+    }
+
+    async updateCollectionTaxa(collectionId: number, taxaIds: number[]): Promise<{ success: boolean }> {
+        try {
+
+            if (taxaIds && taxaIds.length > 0) {
+                for (let i = 0; i < taxaIds.length; i++) {
+                    await db.execute('INSERT INTO collections_to_taxa (collection_id, taxon_id) VALUES (?,?)', [collectionId, taxaIds[i]]);
+                }
+
+            }
+            return { success: true };
+        } catch (error) {
+            console.error('Error updating collection taxa:', error);
             throw error;
         }
     }

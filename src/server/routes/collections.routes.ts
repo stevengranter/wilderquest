@@ -8,7 +8,8 @@ router
     .get("/:id", collectionsController.getById)
     .get("/", collectionsController.getAll)
     .post("/", verifyJWT, collectionsController.create)
-    .put("/", verifyJWT, collectionsController.update)
+    .put("/:id", verifyJWT, collectionsController.updateCollection)
+    .patch("/:id", verifyJWT, collectionsController.updateCollection)
 
 
 export {router as collectionsRouter}

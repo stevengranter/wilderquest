@@ -6,6 +6,7 @@ import {createId} from "@paralleldrive/cuid2";
 import UsersRepository from "../repositories/UsersRepository.js";
 import {LoginRequestSchema, RegisterRequestSchema} from "../../shared/schemas/Auth.js"
 import {LoginRequestBody, RegisterRequestBody} from "../../types/types.js";
+import {AuthenticatedRequest} from "../middleware/verifyJWT.js";
 
 interface LoginRequest extends Request {
     body: LoginRequestBody;
@@ -130,12 +131,10 @@ const login = async (req: LoginRequest, res: Response) => {
 
 }
 
-const logout = async (req: Request, res: Response) => {
-    const {user_id} = req.body
-    if (!user_id) res.sendStatus(400)
-
-    const result = UsersRepository.update(user_id,{refresh_token: null})
-
+const logout = async (req: AuthenticatedRequest, res: Response) => {
+    if (req.user && req.user.id) {
+        const result = UsersRepository.update(req.user.id,{refresh_token: null})
+    }
 }
 
 const authController = {register, login, logout}

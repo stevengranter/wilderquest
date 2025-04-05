@@ -48,7 +48,48 @@ class BaseRepository<T> {
     }
   }
 
-  // Method to get all records from the table
+  // Method to find records matching multiple conditions
+  async findMany(conditions: Partial<{}>, options?: { limit?: number; offset?: number; orderByColumn?: string; order?: "asc" | "desc" }): Promise<T[]> {
+    try {
+      const whereClauses = [];
+      const values: any[] = [];
+
+      for (const [key, value] of Object.entries(conditions)) {
+        whereClauses.push(`${key} = ?`);
+        values.push(value);
+      }
+
+      let whereSql = '';
+      if (whereClauses.length > 0) {
+        whereSql = `WHERE ${whereClauses.join(' AND ')}`;
+      }
+
+      let orderBySql = '';
+      if (options?.orderByColumn) {
+        orderBySql = `ORDER BY ${options.orderByColumn} ${options.order?.toUpperCase() || 'ASC'}`;
+      }
+
+      let limitSql = '';
+      if (options?.limit) {
+        limitSql = `LIMIT ${options.limit}`;
+        if (options?.offset) {
+          limitSql += ` OFFSET ${options.offset}`;
+        }
+      }
+
+      const query = `SELECT * FROM ${this.tableName} ${whereSql} ${orderBySql} ${limitSql}`;
+
+      const [rows] = await db.execute<RowDataPacket[]>(query, values);
+      return rows as T[];
+    } catch (error) {
+      console.error('Error in findMany method:', error);
+      throw error;
+    }
+  }
+
+
+
+// Method to get all records from the table
   async getAll(): Promise<T[]> {
     try {
       const [rows] = await db.execute<RowDataPacket[]>(`SELECT * FROM ${this.tableName}`);
