@@ -1,11 +1,7 @@
-import {useAuth} from "@/hooks/useAuth.js";
 import { jwtDecode } from "jwt-decode";
 import { Button } from '@/components/ui/button.js'
 import authService from "@/services/authService.js";
 import {useEffect, useState} from "react";
-import UserCollectionsView from "@/components/UserCollectionsView.js";
-import UserProfile from "@/components/UserProfile.js";
-import CollectionView from "@/components/CollectionView.js";
 import {Link} from "react-router";
 
 

@@ -11,12 +11,13 @@ import {DecodedTokenSchema} from "@/models/token.js";
 import {z} from "zod";
 import {LoginRequestSchema, RegisterRequestSchema} from "@shared/schemas/Auth.js";
 
+
 // Add an interceptor to set the Authorization header
 axios.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('access_token');
         if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+            config.headers.authorization = `Bearer ${token}`;
         }
         return config;
     },
@@ -24,6 +25,8 @@ axios.interceptors.request.use(
         return Promise.reject(error);
     }
 );
+
+
 
 export const authService = {
 

@@ -10,6 +10,15 @@ import weighted from "weighted";
 import {genSaltSync, hashSync} from "bcrypt-ts";
 import fs from "fs";
 
+type User = {
+    username : string,
+    email: string,
+    password: string, // Log the password before hashing
+    created_at: Date,
+    updated_at: Date,
+    user_cuid: string,
+}
+
 const db = await mysql.createConnection(dbConfig)
 
 const API_URL = "https://api.inaturalist.org/v1/taxa/"
@@ -21,7 +30,7 @@ type inatApiParams = {
     order_by?:string
 }
 
-const generateFakeTaxa = (quantity) => {
+const generateFakeTaxa = (quantity:number) => {
     let taxa = []
     for (let i = 0; i < quantity; i++) {
         taxa.push(getRandomInt(5000,999999))
@@ -67,7 +76,7 @@ const adminUser = {
 }
 
 // Function to log the raw user data to a file before password hashing
-const logRawUserData = (user) => {
+const logRawUserData = (user:User) => {
     const rawUserData = [
         user.username,
         user.email,
@@ -169,7 +178,7 @@ const dropTable = async (tableName:string) => {
     await db.execute(`DROP TABLE ${tableName}`);
 }
 
-async function addUserToDatabase(user) {
+async function addUserToDatabase(user:User) {
     const { password: UNSAFEPassword } = user;
     const securePassword = hashSync(UNSAFEPassword, genSaltSync(10));
     const safeUser = {...user, password:securePassword};

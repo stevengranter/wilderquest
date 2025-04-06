@@ -55,6 +55,8 @@ class UsersRepository extends BaseRepository<UserData> {
         }
     }
 
+
+
     async getUsersByEmail(email: string): Promise<UserData[]> {
         try {
             const [rows] = await db.execute<RowDataPacket[]>('SELECT * FROM user_data WHERE email = ?', [email]);

@@ -2,7 +2,6 @@ import BaseRepository from './BaseRepository.js';
 import {Collection, CollectionToTaxaSchema} from "../../types/types.js";
 import db from "../db.js";
 import {ResultSetHeader, RowDataPacket} from "mysql2/promise";
-import error from "eslint-plugin-react/lib/util/error.js";
 
 
 class CollectionsRepository extends BaseRepository<Collection> {
@@ -47,7 +46,7 @@ class CollectionsRepository extends BaseRepository<Collection> {
         // TODO: verify collection exists
         const [result] = await db.execute<ResultSetHeader>('UPDATE collections SET name = ?, description = ? WHERE id = ?', [name, description, collectionId]) ;
         if (result.affectedRows === 0) {
-            throw error
+            throw Error
         }
         return {success:true};
     }
