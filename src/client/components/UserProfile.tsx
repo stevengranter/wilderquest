@@ -4,8 +4,6 @@ import axios from "axios";
 import { useParams } from "react-router";
 import avatar from "animal-avatar-generator";
 import { ReactSVG } from "react-svg";
-import {JSX} from "react/jsx-runtime";
-import IntrinsicAttributes = JSX.IntrinsicAttributes;
 
 export default function UserProfile() {
     const { id } = useParams();
@@ -24,8 +22,6 @@ export default function UserProfile() {
                 setCollections(res.data);
             });
     }, [id]);
-
-
 
 
     return (
