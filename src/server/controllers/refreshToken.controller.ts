@@ -1,7 +1,6 @@
 import 'dotenv/config'
 import jwt from 'jsonwebtoken'
-// import db from '../db.js'
-import { NextFunction, Request, Response } from 'express'
+import {  Request, Response } from 'express'
 
 import { z } from 'zod'
 import UsersRepository from "../repositories/UsersRepository.js";
@@ -14,7 +13,6 @@ const RefreshReqBodySchema = z.object({
 const handleRefreshToken = async (
     req: Request,
     res: Response,
-    next: NextFunction
 ) => {
     // Check req.body to see if matches schema
     console.log(req.body)
@@ -44,7 +42,7 @@ const handleRefreshToken = async (
             refresh_token,
             process.env.REFRESH_TOKEN_SECRET!,
             (err: any, decoded: any) => {
-                if (err || foundUser.user_cuid !== decoded.user_cuid) {
+                if (err || foundUser.user_cuid !== decoded.cuid) {
                     console.log(err)
                     res.status(403).send({
                         success: false,
@@ -54,7 +52,7 @@ const handleRefreshToken = async (
                 }
                 console.log(decoded)
                 const accessToken = jwt.sign(
-                    { user_cuid: decoded.user_cuid },
+                    { user_cuid: decoded.cuid, role_id: decoded.role_id },
                     process.env.ACCESS_TOKEN_SECRET!,
                     { expiresIn: '30s' }
                 )
