@@ -1,6 +1,5 @@
 import "dotenv/config"
 import mysql from "mysql2/promise";
-import dbConfig from "./config/dbConfig.js";
 import {faker} from "@faker-js/faker"
 import * as emoji from "node-emoji"
 import pluralize from "pluralize"
@@ -9,6 +8,8 @@ import {createNameId} from "mnemonic-id";
 import weighted from "weighted";
 import {genSaltSync, hashSync} from "bcrypt-ts";
 import fs from "fs";
+import dbConfig from "./config/appConfig.js";
+import appConfig from "./config/appConfig.js";
 
 type User = {
     username : string,
@@ -19,7 +20,13 @@ type User = {
     user_cuid: string,
 }
 
-const db = await mysql.createConnection(dbConfig)
+const db = await mysql.createConnection({
+    host: appConfig.MYSQL_HOST,
+    port: appConfig.MYSQL_PORT,
+    database: appConfig.MYSQL_DATABASE,
+    user: appConfig.MYSQL_USER,
+    password: appConfig.MYSQL_PASSWORD
+})
 
 const API_URL = "https://api.inaturalist.org/v1/taxa/"
 
@@ -36,15 +43,6 @@ const generateFakeTaxa = (quantity:number) => {
         taxa.push(getRandomInt(5000,999999))
     }
     return taxa;
-}
-
-function getRandomItem<T>(arr: T[]): T | undefined {
-    if (arr.length === 0) {
-        return undefined; // Return undefined for an empty array
-    }
-
-    const randomIndex = Math.floor(Math.random() * arr.length);
-    return arr[randomIndex];
 }
 
 function getRandomInt(min: number, max: number): number {
@@ -114,7 +112,6 @@ writeCsvHeader();
 const createFakeUser = () => {
     const firstName = faker.person.firstName()
     const lastName = faker.person.lastName()
-    // const username = faker.internet.username({firstName, lastName})
     const username = createNameId({capitalize:true, delimiter:''})
     const email = username.toLowerCase() + "@" + faker.internet.domainName()
     const password = faker.internet.password({length:8, memorable:true})
@@ -162,7 +159,7 @@ const createUsers = async (quantity: number) => {
             const collection = createFakeCollection(animal)
             collection.user_id = user_id
             const collection_id = await addRowToTable("collections", collection)
-            const numberOfTaxa = getRandomInt(1,99)
+            const numberOfTaxa = getRandomInt(1, 29)
             const taxaArray = generateFakeTaxa(numberOfTaxa)
             for (const taxon_id of taxaArray) {
                 await addRowToTable("collections_to_taxa",{collection_id, taxon_id})

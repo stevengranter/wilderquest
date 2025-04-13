@@ -1,7 +1,12 @@
-import allowedOrigins from './allowedOrigins.js'
 import { CorsOptions } from 'cors'
 
-const corsOptions: CorsOptions = {
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://wildernest.fly.dev",
+];
+
+const corsConfig: CorsOptions = {
     origin: (origin, callback) => {
         if ((origin && allowedOrigins.indexOf(origin) !== -1) || !origin) {
             callback(null, true)
@@ -13,4 +18,4 @@ const corsOptions: CorsOptions = {
     optionsSuccessStatus: 200,
 }
 
-export default corsOptions
+export default corsConfig

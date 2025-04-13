@@ -52,12 +52,13 @@ const handleRefreshToken = async (
                 }
                 console.log(decoded)
                 const accessToken = jwt.sign(
-                    { user_cuid: decoded.cuid, role_id: decoded.role_id },
+                    {cuid: decoded.cuid, role_id: decoded.role_id},
                     process.env.ACCESS_TOKEN_SECRET!,
                     { expiresIn: '30s' }
                 )
-                console.log('Refresh token valid')
+                console.log('Refresh token valid...')
                 res.json({ access_token:accessToken })
+                console.log("New access token: " + accessToken)
             }
         )
     }

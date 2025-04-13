@@ -9,7 +9,7 @@ primary_region = 'yul'
 [build]
   image = 'mysql:8.0'
 
-[env]
+[appConfig]
   MYSQL_DATABASE = 'myapp'
   MYSQL_USER = 'apiuser'
 

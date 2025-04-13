@@ -1,72 +1,76 @@
-
-
 // * Imports * //
 
 // External imports
-import "dotenv/config";
-import express, { Request, Response, NextFunction } from "express"; // Import Request, Repsonse types
+import express, {Request, Response, NextFunction} from "express"; // Import Request, Repsonse types
 import path from "path";
 
 // Internal imports
-import errorHandler from "./middleware/errorHandler.js";
-import { dbService } from "./services/mysql.service.js";
-import corsOptions from "./config/corsOptions.js";
-import cors from "cors";
 import ViteExpress from "vite-express";
-import { apiRouter } from "./routes/api.route.js";
-import { SCRIPT_DIR } from "./constants.js";
-import mysql from "mysql2/promise";
-import dbConfig from "./config/dbConfig.js";
+import errorHandler from "./middleware/errorHandler.js";
+import cors from "cors";
+import corsConfig from "./config/corsConfig.js";
+import {apiRouter} from "./routes/api.route.js";
+import {getDbPool, initializeDb} from "./db.js";
 
-const PROTOCOL = process.env.PROTOCOL || "http"
-const HOST = process.env.HOST || "localhost"
-const PORT = Number(process.env.PORT) || 3000
+import {SCRIPT_DIR} from "./constants.js";
+import appConfig from "./config/appConfig.js";
 
-// * Express App setup * //
-const app = express();
+async function startServer() {
+    try {
 
-// * Database setup * //
-// export const db = dbService;
-// export const db = mysql.createPool(dbConfig)
+// 🛢️ Initialise db connection
+        await initializeDb()
 
-// * Middleware * //
-// Logger
-// app.use(logger);
-// CORS
-app.use(cors(corsOptions));
-// JSON
-app.use(express.json());
+// ☕️ Initialize express app
+        const app = express();
 
-app.use("/api", apiRouter);
+// 📎 Middleware
+        app.use(cors(corsConfig));
+        app.use(express.json());
+        app.use("/api", apiRouter);
+
+//  Server setup  //
+        if (process.env.NODE_ENV !== "production") {
+
+            // Error Handler
+            app.use(errorHandler);
+            ViteExpress.listen(app, appConfig.PORT, () => {
+                console.log(`Server running on ${appConfig.PROTOCOL}://${appConfig.HOST}:${appConfig.PORT} ✅ `);
+            });
+        } else {
+            const publicDir = path.join(SCRIPT_DIR, "../../dist/public");
+
+            // Serve static files from the 'public' directory
+            app.use(express.static(publicDir));
+
+            // Handle all other routes by serving 'index.html'
+            app.get(['*splat'], (req: Request, res: Response) => {
+                res.sendFile(path.join(publicDir, "index.html"));
+            });
+
+            // Error Handler
+            app.use(errorHandler);
 
 
+            app.listen(appConfig.PORT, () => {
+                console.log(`Server running on ${appConfig.PROTOCOL}://${appConfig.HOST}:${appConfig.PORT} ✅ `); //Log the actual port
+            });
 
 
-// * Server setup * //
+        }
+        const shutdownHandler = () => {
+            console.log("Shutting down server...");
+            // Close database connections, etc.
+            process.exit(0);
+        }
+        process.on("SIGTERM", shutdownHandler);
+        process.on("SIGINT", shutdownHandler);
+        return true
 
-if (process.env.NODE_ENV !== "production") {
-  // Error Handler
-
-  ViteExpress.listen(app, PORT, () => {
-    console.log(`Server running on ${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}`);
-  });
-} else {
-  const publicDir = path.join(SCRIPT_DIR, "../../dist/public");
-
-  // Serve static files from the 'public' directory
-  app.use(express.static(publicDir));
-
-  // Handle all other routes by serving 'index.html'
-  app.get(['*splat'], (req: Request, res: Response) => {
-    res.sendFile(path.join(publicDir, "index.html"));
-  });
-
-   // Provide a default port
-
-  // Error Handler
-  app.use(errorHandler);
-
-  app.listen(PORT, () => {
-    console.log(`Production server running on ${PROTOCOL}://${HOST}:${PORT}`); //Log the actual port
-  });
+    } catch (error) {
+        console.error("⛔️ Failed to start server:", error);
+        process.exit(1);
+    }
 }
+
+startServer().then((result) => result && console.log("Server setup complete ✅ "));
