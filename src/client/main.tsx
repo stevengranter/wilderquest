@@ -15,6 +15,7 @@ import Welcome from "./components/pages/Welcome";
 import UserList from "@/components/UserList";
 import UserProfile from "@/components/UserProfile";
 import {Camera} from "react-camera-pro";
+import SearchForm from "@/components/SearchForm";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -27,13 +28,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
           <Route path="welcome" element={<Welcome />}/>
-            <Route path='camera' element={<Camera errorMessages={{
-                noCameraAccessible: 'No camera device accessible. Please connect your camera or try a different browser.',
-                permissionDenied: 'Permission denied. Please refresh and give camera permission.',
-                switchCamera:
-                    'It is not possible to switch camera to different one because there is only one video device accessible.',
-                canvas: 'Canvas is not supported.'
-            }}/>}/>
+          <Route path='search' element={<SearchForm/>}/>
           <Route path="users">
             <Route index element={<UserList />} />
             <Route path=":id" element={<UserProfile />} />
