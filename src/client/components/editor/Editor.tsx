@@ -96,7 +96,7 @@ function CustomSlashMenu(
       if (item.group !== currentGroup) {
         currentGroup = item.group;
         renderedItems.push(
-          <div className={"bn-suggestion-menu-label"} key={currentGroup}>
+            <div className={"bn-suggestion-menu-name"} key={currentGroup}>
             {currentGroup}
           </div>,
         );
