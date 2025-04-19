@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@/lib/utils.ts";
+import {cn} from "@/lib/utils";
 
 const Card = React.forwardRef<
   HTMLDivElement,
@@ -65,6 +65,15 @@ const CardContent = React.forwardRef<
 ));
 CardContent.displayName = "CardContent";
 
+const CardSection = React.forwardRef<
+    HTMLDivElement,
+    React.HTMLAttributes<HTMLDivElement>
+>(({className, ...props}, ref) => (
+    <div ref={ref} className={cn("p-0 pt-0 m-0", className)} {...props} />
+));
+CardSection.displayName = "CardSection";
+
+
 const CardFooter = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -84,4 +93,5 @@ export {
   CardTitle,
   CardDescription,
   CardContent,
+  CardSection,
 };
