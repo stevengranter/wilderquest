@@ -146,7 +146,7 @@ export default function SearchBox() {
             )}
 
             {/* Full Results Display */}
-            <ul className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6'>
+            <ul className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
                 {filteredResults.map((item, index) => (
                     <Card
                         key={index}
@@ -157,9 +157,9 @@ export default function SearchBox() {
                         <CardSection>
                             {item.default_photo?.square_url && (
                                 <img
-                                    src={item.default_photo.square_url}
+                                    src={item.default_photo.medium_url}
                                     alt={item.name}
-                                    className='w-full'
+                                    className='w-full rounded-t-md object-cover aspect-square'
                                 />
                             )}
                         </CardSection>

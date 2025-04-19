@@ -58,7 +58,7 @@ body {@apply bg-gray-50 dark:bg-gray-800}
     --main: var(--color-primary-400);
     --overlay: rgba(0, 0, 0, 0.8);
 
-    --border-radius: 5px;
+    --border-radius: 10px;
     --box-shadow-x: 4px;
     --box-shadow-y: 4px;
     --reverse-box-shadow-x: -4px;
