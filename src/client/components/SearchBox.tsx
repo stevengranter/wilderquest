@@ -13,7 +13,6 @@ async function fetchSearchResults({query, pageParam = 1}: { query: string; pageP
     if (!query || query.length < 2) {
         return {results: [], page: 1, per_page: 20, total_results: 0};
     }
-    console.log(`fetching ${query} page ${pageParam}`)
     const {data} = await axios.get<ApiResponse>(API_URL, {
         params: {
             q: query,
@@ -22,11 +21,8 @@ async function fetchSearchResults({query, pageParam = 1}: { query: string; pageP
             per_page: 20,
         },
     });
-    console.log(`fetched ${query} page ${pageParam}`)
-    console.log(data)
     return data;
 }
-
 
 function filterAndSortResults(results: iNatTaxaResponse[]) {
     return results
@@ -43,6 +39,7 @@ function filterAndSortResults(results: iNatTaxaResponse[]) {
 export default function SearchBox() {
     const [query, setQuery] = useState("");
     const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+    const [showSuggestions, setShowSuggestions] = useState(false);
     const debouncedQuery = useDebounce(query, 300);
 
     const {
@@ -54,18 +51,14 @@ export default function SearchBox() {
         hasNextPage,
     } = useInfiniteQuery({
         queryKey: [debouncedQuery],
-        queryFn: ({pageParam}) => {
-            console.log(`pageParam: ${pageParam} query: ${debouncedQuery}`)
-            return fetchSearchResults({query: debouncedQuery, pageParam})
-        },
+        queryFn: ({pageParam}) => fetchSearchResults({query: debouncedQuery, pageParam}),
         getNextPageParam: (lastPage) => {
             const {page, per_page, total_results} = lastPage;
             const totalPages = Math.ceil(total_results / per_page);
-            console.log(`totalPages: ${totalPages}, page: ${page}, per_page: ${per_page}, total_results: ${total_results}`)
             if (page < totalPages) {
-                return page + 1; // Fetch the next page
+                return page + 1;
             } else {
-                return undefined; // No more pages
+                return undefined;
             }
         },
         enabled: debouncedQuery.length > 1,
@@ -73,7 +66,6 @@ export default function SearchBox() {
         staleTime: 5 * 60 * 1000,
         placeholderData: keepPreviousData,
     });
-
 
     const allResults = data?.pages.flatMap((page) => page.results) ?? [];
     const filteredResults = filterAndSortResults(allResults);
@@ -89,16 +81,18 @@ export default function SearchBox() {
 
     const handleSelect = (item: SuggestionItem) => {
         setQuery(item.common_name);
+        setShowSuggestions(false);
     };
 
     return (
-        <div className='p-4'>
+        <div className='p-4 relative'>
             {/* Search Input */}
             <input
                 type='text'
                 value={query}
                 onChange={(e) => {
                     setQuery(e.target.value);
+                    setShowSuggestions(true);
                     setHighlightedIndex(-1);
                 }}
                 onKeyDown={(e) => {
@@ -111,16 +105,18 @@ export default function SearchBox() {
                     } else if (e.key === "Enter") {
                         if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
                             handleSelect(suggestions[highlightedIndex]);
+                            setShowSuggestions(false);
                         }
                     }
                 }}
                 placeholder='Search animals...'
                 className='border p-2 rounded w-full'
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
             />
 
             {/* Suggestions Dropdown */}
-            {query && (
-                <ul className='border mt-2 rounded bg-white shadow'>
+            {query && showSuggestions && (
+                <ul className='border mt-0 rounded absolute z-10 text-primary-900 w-full bg-opacity-80 bg-primary-200 shadow'>
                     {isLoading ? (
                         <li className='p-2 text-gray-400 italic'>Loading...</li>
                     ) : isError ? (
@@ -128,10 +124,9 @@ export default function SearchBox() {
                     ) : suggestions.length > 0 ? (
                         suggestions.map((item, index) => (
                             <li
-                                key={crypto.randomUUID()}
-                                // key={item.value}
+                                key={item.value}
                                 className={`p-2 cursor-pointer ${
-                                    index === highlightedIndex ? "bg-blue-100" : "hover:bg-gray-100"
+                                    index === highlightedIndex ? "bg-blue-800 text-primary-100" : "hover:bg-blue-300"
                                 }`}
                                 onMouseEnter={() => setHighlightedIndex(index)}
                                 onMouseDown={() => handleSelect(item)}
@@ -146,12 +141,15 @@ export default function SearchBox() {
             )}
 
             {/* Full Results Display */}
-            <ul className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
+            <ul className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-4'>
                 {filteredResults.map((item, index) => (
                     <Card
                         key={index}
                         className={cn("p-0 m-0")}
-                        onClick={() => setQuery(item.name)}
+                        onClick={() => {
+                            setQuery(item.name);
+                            setShowSuggestions(false);
+                        }}
                         style={{cursor: "pointer"}}
                     >
                         <CardSection>
@@ -244,4 +242,5 @@ interface SuggestionItem {
     name: string;
     common_name: string;
     photo_url: string | undefined;
+    observations_count: number;
 }
