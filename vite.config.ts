@@ -10,7 +10,11 @@ export default defineConfig({
     outDir: 'dist/public',
     emptyOutDir: true, // also necessary
   },
-  plugins: [react(), tailwindcss()],
+  plugins: [react({
+    babel: {
+      plugins: [['babel-plugin-react-compiler', {target: '19'}]],
+    },
+  }), tailwindcss()],
   resolve: {
     alias: {
       "@shared": path.resolve(__dirname,"./src/shared"),
