@@ -9,6 +9,7 @@ export default function Home() {
             <Link to='/register'>Register</Link>
             {/*<Link to='/camera'>Camera</Link>*/}
             <Link to='/search'>Search</Link>
+
         </>
     );
 }
