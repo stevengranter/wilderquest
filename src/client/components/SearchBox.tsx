@@ -3,7 +3,6 @@
 import {useState} from "react";
 import {useDebounce} from "@/hooks/useDebounce";
 import {keepPreviousData, useInfiniteQuery} from "@tanstack/react-query";
-import axios from "axios";
 import _ from "lodash";
 import {Card, CardContent, CardSection} from "@/components/ui/card";
 import {cn} from "@/lib/utils";
@@ -12,49 +11,8 @@ import {Input} from "@/components/ui/input";
 import {Badge} from "@/components/ui/badge";
 import {motion, AnimatePresence} from "motion/react";
 import {FaWikipediaW} from "react-icons/fa";
-
-// --- API fetcher function ---
-const API_URL = "/api/iNatAPI/taxa";
-
-async function fetchSearchResults({query, pageParam = 1}: { query: string; pageParam?: number }): Promise<ApiResponse> {
-    if (!query || query.length < 2) {
-        return {results: [], page: 1, per_page: 20, total_results: 0};
-    }
-    const {data} = await axios.get<ApiResponse>(API_URL, {
-        params: {
-            q: query,
-            rank: "species",
-            page: pageParam,
-            per_page: 20,
-        },
-    });
-    return data;
-}
-
-async function fetchWikipediaContent(title: string) {
-    try {
-        const {data} = await axios.get(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
-        return {
-            extract: data.extract,
-            image: data.thumbnail?.source || null,
-            fullUrl: data.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`,
-        };
-    } catch (error) {
-        console.error("Failed to fetch Wikipedia content:", error);
-        return null;
-    }
-}
-
-function filterAndSortResults(results: iNatTaxaResponse[]) {
-    return results
-        .filter((item) => {
-            const matched = item.matched_term?.toLowerCase();
-            const commonName = item.preferred_common_name?.toLowerCase() || "";
-            const scientificName = item.name?.toLowerCase() || "";
-            return matched && (commonName.includes(matched) || scientificName.includes(matched));
-        })
-        .sort((a, b) => (b.observations_count || 0) - (a.observations_count || 0));
-}
+import fetchSearchResults from "@/utils/fetchSearchResults";
+import fetchWikipediaContent from "@/utils/fetchWikipediaContent";
 
 // --- Main Component ---
 export default function SearchBox() {
@@ -175,123 +133,158 @@ export default function SearchBox() {
                     )}
                 </ul>
             )}
+            <SearchResults
+                selectedItem={selectedItem}
+                wikiContent={wikiContent}
+                setSelectedItem={setSelectedItem}
+                setWikiContent={setWikiContent}
+                filteredResults={filteredResults}
+                setShowSuggestions={setShowSuggestions}
+                hasNextPage={hasNextPage}
+                fetchNextPage={fetchNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+            />
 
-            {/* Main Display */}
-            <AnimatePresence mode='wait'>
-                {selectedItem ? (
-                    <>
-                        <motion.div
-                            key='selected'
-                            initial={{opacity: 0, x: 100}}
-                            animate={{opacity: 1, x: 0}}
-                            exit={{opacity: 0, x: -100}}
-                            transition={{duration: 0.5}}
-                            className='flex flex-col md:flex-row gap-4 mt-4'
-                        >
-                            {/* Selected Card */}
-                            <div className='w-full md:w-1/3'>
-                                <Card className='p-0 m-0'>
-                                    <CardSection>
-                                        {selectedItem.default_photo?.medium_url && (
-                                            <img
-                                                src={selectedItem.default_photo.medium_url}
-                                                alt={selectedItem.name}
-                                                className='w-full rounded-t-md object-cover aspect-square'
-                                            />
-                                        )}
-                                    </CardSection>
-                                    <CardContent className='p-4 pt-2'>
-                                        <h3 className='font-bold text-xl'>{_.startCase(_.camelCase(selectedItem.preferred_common_name))}</h3>
-                                        <h4 className='italic'>{selectedItem.name}</h4>
-                                        <div className='text-xs'>Matched term: {selectedItem.matched_term}</div>
-                                        <div>Observations: <Badge>{selectedItem.observations_count}</Badge></div>
+        </div>
+    );
+}
 
 
-                                    </CardContent>
-                                </Card>
+function filterAndSortResults(results: iNatTaxaResponse[]) {
+    return results
+        .filter((item) => {
+            const matched = item.matched_term?.toLowerCase();
+            const commonName = item.preferred_common_name?.toLowerCase() || "";
+            const scientificName = item.name?.toLowerCase() || "";
+            return matched && (commonName.includes(matched) || scientificName.includes(matched));
+        })
+        .sort((a, b) => (b.observations_count || 0) - (a.observations_count || 0));
+}
 
-                            </div>
-
-                            {/* Wikipedia Custom View */}
-                            <div className='w-full md:w-2/3 bg-white p-6 rounded border-1 '>
-                                {wikiContent ? (
-                                    <>
-                                        <FaWikipediaW size={"2em"}/>
-                                        {wikiContent.image && (
-                                            <img src={wikiContent.image} alt='Wikipedia'
-                                                 className='w-full max-h-60 object-contain mb-4 rounded'/>
-                                        )}
-                                        <h2 className='text-2xl font-bold mb-2'>{_.startCase(_.camelCase(selectedItem.preferred_common_name))}</h2>
-                                        <p className='text-gray-700 mb-4'>{wikiContent.extract}</p>
-                                        <a
-                                            href={wikiContent.fullUrl}
-                                            target='_blank'
-                                            rel='noopener noreferrer'
-                                            className='text-blue-500 underline'
-                                        >
-                                            Read full article on Wikipedia →
-                                        </a>
-                                    </>
-                                ) : (
-                                    <p className='text-gray-400 italic'>No Wikipedia content available.</p>
-                                )}
-
-                            </div>
-
-                        </motion.div>
-                        <Button className='mt-4 w-full' variant='reverse' onClick={() => {
-                            setSelectedItem(null);
-                            setWikiContent(null);
-                        }}>
-                            Back to search
-                        </Button>
-                    </>
-                ) : (
-                    <motion.ul
-                        key='grid'
-                        initial={{opacity: 0}}
-                        animate={{opacity: 1}}
-                        exit={{opacity: 0}}
-                        className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-4'
+function SearchResults({
+                           selectedItem,
+                           wikiContent,
+                           setSelectedItem,
+                           setWikiContent,
+                           filteredResults,
+                           setShowSuggestions,
+                           hasNextPage,
+                           fetchNextPage,
+                           isFetchingNextPage
+                       }: {}) {
+    return (
+        <AnimatePresence mode='wait'>
+            {selectedItem ? (
+                <>
+                    <motion.div
+                        key='selected'
+                        initial={{opacity: 0, x: 100}}
+                        animate={{opacity: 1, x: 0}}
+                        exit={{opacity: 0, x: -100}}
+                        transition={{duration: 0.5}}
+                        className='flex flex-col md:flex-row gap-4 mt-4'
                     >
-                        {filteredResults.map((item, index) => (
-                            <Card
-                                key={index}
-                                className={cn("p-0 m-0 cursor-pointer transition-all duration-300 hover:scale-105 hover:rotate-2")}
-                                onClick={async () => {
-                                    setSelectedItem(item);
-                                    setShowSuggestions(false);
-
-                                    if (item.wikipedia_url) {
-                                        const title = item.wikipedia_url.split("/").pop() || item.name;
-                                        const content = await fetchWikipediaContent(title);
-                                        setWikiContent(content);
-                                    } else {
-                                        setWikiContent(null);
-                                    }
-                                }}
-                            >
+                        {/* Selected Card */}
+                        <div className='w-full md:w-1/3'>
+                            <Card className='p-0 m-0'>
                                 <CardSection>
-                                    {item.default_photo?.medium_url && (
+                                    {selectedItem.default_photo?.medium_url && (
                                         <img
-                                            src={item.default_photo.medium_url}
-                                            alt={item.name}
+                                            src={selectedItem.default_photo.medium_url}
+                                            alt={selectedItem.name}
                                             className='w-full rounded-t-md object-cover aspect-square'
                                         />
                                     )}
                                 </CardSection>
                                 <CardContent className='p-4 pt-2'>
-                                    <h3 className='font-bold text-xl'>{_.startCase(_.camelCase(item.preferred_common_name))}</h3>
-                                    <h4 className='italic'>{item.name}</h4>
-                                    <div>Observations: <Badge>{item.observations_count}</Badge></div>
+                                    <h3 className='font-bold text-xl'>{_.startCase(_.camelCase(selectedItem.preferred_common_name))}</h3>
+                                    <h4 className='italic'>{selectedItem.name}</h4>
+                                    <div className='text-xs'>Matched term: {selectedItem.matched_term}</div>
+                                    <div>Observations: <Badge>{selectedItem.observations_count}</Badge></div>
+
+
                                 </CardContent>
                             </Card>
-                        ))}
-                    </motion.ul>
-                )}
-            </AnimatePresence>
 
-            {/* Load More Button */}
+                        </div>
+
+                        {/* Wikipedia Custom View */}
+                        <div className='w-full md:w-2/3 bg-white p-6 rounded border-1 '>
+                            {wikiContent ? (
+                                <>
+                                    <FaWikipediaW size={"2em"}/>
+                                    {wikiContent.image && (
+                                        <img src={wikiContent.image} alt='Wikipedia'
+                                             className='w-full max-h-60 object-contain mb-4 rounded'/>
+                                    )}
+                                    <h2 className='text-2xl font-bold mb-2'>{_.startCase(_.camelCase(selectedItem.preferred_common_name))}</h2>
+                                    <p className='text-gray-700 mb-4'>{wikiContent.extract}</p>
+                                    <a
+                                        href={wikiContent.fullUrl}
+                                        target='_blank'
+                                        rel='noopener noreferrer'
+                                        className='text-blue-500 underline'
+                                    >
+                                        Read full article on Wikipedia →
+                                    </a>
+                                </>
+                            ) : (
+                                <p className='text-gray-400 italic'>No Wikipedia content available.</p>
+                            )}
+
+                        </div>
+
+                    </motion.div>
+                    <Button className='mt-4 w-full' variant='reverse' onClick={() => {
+                        setSelectedItem(null);
+                        setWikiContent(null);
+                    }}>
+                        Back to search
+                    </Button>
+                </>
+            ) : (
+                <motion.ul
+                    key='grid'
+                    initial={{opacity: 0}}
+                    animate={{opacity: 1}}
+                    exit={{opacity: 0}}
+                    className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-4'
+                >
+                    {filteredResults.map((item, index) => (
+                        <Card
+                            key={index}
+                            className={cn("p-0 m-0 cursor-pointer transition-all duration-300 hover:scale-105 hover:rotate-2")}
+                            onClick={async () => {
+                                setSelectedItem(item);
+                                setShowSuggestions(false);
+
+                                if (item.wikipedia_url) {
+                                    const title = item.wikipedia_url.split("/").pop() || item.name;
+                                    const content = await fetchWikipediaContent(title);
+                                    setWikiContent(content);
+                                } else {
+                                    setWikiContent(null);
+                                }
+                            }}
+                        >
+                            <CardSection>
+                                {item.default_photo?.medium_url && (
+                                    <img
+                                        src={item.default_photo.medium_url}
+                                        alt={item.name}
+                                        className='w-full rounded-t-md object-cover aspect-square'
+                                    />
+                                )}
+                            </CardSection>
+                            <CardContent className='p-4 pt-2'>
+                                <h3 className='font-bold text-xl'>{_.startCase(_.camelCase(item.preferred_common_name))}</h3>
+                                <h4 className='italic'>{item.name}</h4>
+                                <div>Observations: <Badge>{item.observations_count}</Badge></div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </motion.ul>
+            )}
             {hasNextPage && !selectedItem && (
                 <div className='flex justify-center mt-6'>
                     <Button
@@ -304,56 +297,9 @@ export default function SearchBox() {
                     </Button>
                 </div>
             )}
-        </div>
-    );
+        </AnimatePresence>
+
+    )
+
 }
 
-// --- Types ---
-type iNatTaxaResponse = {
-    id: number;
-    rank: "species" | "genus" | "family" | "order" | "class" | "phylum" | "kingdom";
-    rank_level: number;
-    iconic_taxon_id: number;
-    ancestor_ids: number[];
-    is_active: boolean;
-    name: string;
-    parent_id: number;
-    ancestry: string;
-    extinct: boolean;
-    default_photo?: {
-        id: number;
-        license_code: string | null;
-        attribution: string;
-        url: string;
-        original_dimensions: { height: number; width: number; };
-        flags: [];
-        square_url: string;
-        medium_url: string;
-    };
-    taxon_changes_count: number;
-    taxon_schemes_count: number;
-    observations_count: number;
-    flag_counts: { resolved: number; unresolved: number; };
-    current_synonymous_taxon_ids: number | null;
-    atlas_id: number;
-    complete_species_count: null;
-    wikipedia_url: string;
-    matched_term: string;
-    iconic_taxon_name: string;
-    preferred_common_name: string;
-};
-
-interface ApiResponse {
-    results: iNatTaxaResponse[];
-    per_page: number;
-    page: number;
-    total_results: number;
-}
-
-interface SuggestionItem {
-    value: string;
-    name: string;
-    common_name: string;
-    photo_url: string | undefined;
-    observations_count: number;
-}

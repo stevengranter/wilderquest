@@ -18,7 +18,7 @@ export function ThreeFiberCanvas() {
                 />
                 <directionalLight position={[-5, 10, 5]} intensity={2}/>
 
-                <HostCharacter character='sheep'/>
+                <HostCharacter character='axolotl'/>
 
                 <OrbitControls enablePan={false}/>
             </Canvas>
