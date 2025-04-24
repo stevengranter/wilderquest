@@ -1,19 +1,20 @@
 // Third party imports
-import {useState} from 'react'
-import {keepPreviousData, useInfiniteQuery} from '@tanstack/react-query'
+import { useState } from 'react'
+import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import _ from 'lodash'
 
 // Local imports
 import fetchSearchResults from '@/utils/fetchSearchResults'
-import {useDebounce} from '@/hooks/useDebounce'
-import {Input} from '@/components/ui/input'
-import {Badge} from "@/components/ui/badge";
+import { useDebounce } from '@/hooks/useDebounce'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 
 export default function SearchAutoComplete({
-                                               selectionHandler,
-                                           }: {
+    selectionHandler,
+}: {
     selectionHandler: (suggestionItem: iNatTaxaResponse) => void
 }) {
+    // const inputRef = useRef<HTMLInputElement>(null)
     const [query, setQuery] = useState('')
     const debouncedQuery = useDebounce(query, 300)
     const [highlightedSuggestion, setHighlightedSuggestion] =
@@ -22,10 +23,10 @@ export default function SearchAutoComplete({
 
     const suggestionResult = useInfiniteQuery({
         queryKey: [debouncedQuery],
-        queryFn: ({pageParam}) =>
-            fetchSearchResults({query: debouncedQuery, pageParam}),
+        queryFn: ({ pageParam }) =>
+            fetchSearchResults({ query: debouncedQuery, pageParam }),
         getNextPageParam: (lastPage) => {
-            const {page, per_page, total_results} = lastPage
+            const { page, per_page, total_results } = lastPage
             const totalPages = Math.ceil(total_results / per_page)
             if (page < totalPages) {
                 return page + 1
@@ -51,7 +52,6 @@ export default function SearchAutoComplete({
         // common_name: _.startCase(_.camelCase(result.preferred_common_name)),
         // photo_url: result.default_photo?.square_url,
         // observations_count: result.observations_count,
-
     }))
 
     // async function handleSelect(item: SuggestionItem) {
@@ -65,7 +65,7 @@ export default function SearchAutoComplete({
             <div>
                 {/* Search Input */}
                 <Input
-                    type='text'
+                    type="text"
                     value={query}
                     onChange={(e) => {
                         setQuery(e.target.value)
@@ -96,8 +96,8 @@ export default function SearchAutoComplete({
                             }
                         }
                     }}
-                    placeholder='Search species by name or common name...'
-                    className='border p-2 rounded w-full'
+                    placeholder="Search species by name or common name..."
+                    className="border p-2 rounded w-full"
                     onBlur={() =>
                         setTimeout(() => setShowSuggestions(false), 100)
                     }
@@ -105,13 +105,13 @@ export default function SearchAutoComplete({
 
                 {/* Suggestions Dropdown */}
                 {query && showSuggestions && (
-                    <ul className='border mt-0 rounded absolute z-10 text-primary-900 w-full bg-opacity-80 bg-primary-200 shadow'>
+                    <ul className="border mt-0 rounded absolute z-10 text-primary-900 w-full bg-opacity-80 bg-primary-200 shadow">
                         {suggestionResult.isLoading ? (
-                            <li className='p-2 text-gray-400 italic'>
+                            <li className="p-2 text-gray-400 italic">
                                 Loading...
                             </li>
                         ) : suggestionResult.isError ? (
-                            <li className='p-2 text-red-400 italic'>
+                            <li className="p-2 text-red-400 italic">
                                 Error fetching suggestions
                             </li>
                         ) : suggestions.length > 0 ? (
@@ -122,18 +122,24 @@ export default function SearchAutoComplete({
                                     onMouseEnter={() =>
                                         setHighlightedSuggestion(index)
                                     }
-                                    onMouseDown={() => selectionHandler(item)}
+                                    onMouseDown={() => {
+                                        setQuery(item.preferred_common_name)
+                                        selectionHandler(item)
+                                    }}
                                 >
-                                    <div className='flex flex-row justify-between'>
-                                        {_.startCase(_.camelCase(item.preferred_common_name))}
+                                    <div className="flex flex-row justify-between">
+                                        {_.startCase(
+                                            _.camelCase(
+                                                item.preferred_common_name
+                                            )
+                                        )}
                                         <Badge>{item.rank}</Badge>
                                     </div>
-
                                 </li>
                             ))
                         ) : (
-                            <li className='p-2 text-gray-400 italic'>
-                                No results found
+                            <li className="p'2 text-gray-400 italic">
+                                ' No results found
                             </li>
                         )}
                     </ul>
