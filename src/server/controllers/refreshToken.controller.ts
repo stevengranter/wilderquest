@@ -1,19 +1,16 @@
 import 'dotenv/config'
 import jwt from 'jsonwebtoken'
-import {  Request, Response } from 'express'
+import {Request, Response} from 'express'
 
 import { z } from 'zod'
-import UsersRepository from "../repositories/UsersRepository.js";
+import UsersRepository from '../repositories/UsersRepository.js'
 
 const RefreshReqBodySchema = z.object({
     user_cuid: z.string().cuid2(),
     refresh_token: z.string(),
 })
 
-const handleRefreshToken = async (
-    req: Request,
-    res: Response,
-) => {
+const handleRefreshToken = async (req: Request, res: Response) => {
     // Check req.body to see if matches schema
     console.log(req.body)
     const parsedBody = RefreshReqBodySchema.safeParse(req.body)
@@ -25,8 +22,10 @@ const handleRefreshToken = async (
 
     const { user_cuid, refresh_token } = parsedBody.data
 
-
-    const foundUser = await UsersRepository.findOne({user_cuid,refresh_token})
+    const foundUser = await UsersRepository.findOne({
+        user_cuid,
+        refresh_token,
+    })
 
     console.log('foundUser:', foundUser)
 
@@ -57,8 +56,8 @@ const handleRefreshToken = async (
                     { expiresIn: '30s' }
                 )
                 console.log('Refresh token valid...')
-                res.json({ access_token:accessToken })
-                console.log("New access token: " + accessToken)
+                res.json({access_token: accessToken})
+                console.log('New access token: ' + accessToken)
             }
         )
     }

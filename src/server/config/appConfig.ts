@@ -1,14 +1,10 @@
 // src/server/config/appConfig.ts
-import "dotenv/config";
-import {z} from "zod";
+import 'dotenv/config'
+import {z} from 'zod'
 
 const envSchema = z.object({
     // Express app variables
-    PROTOCOL: z
-        .union([
-            z.literal('http'),
-            z.literal('https'),
-        ]),
+    PROTOCOL: z.union([z.literal('http'), z.literal('https')]),
     PORT: z.coerce.number().min(1000),
     HOST: z.string(),
 
@@ -21,10 +17,8 @@ const envSchema = z.object({
 
     // Token secret variables
     ACCESS_TOKEN_SECRET: z.string(),
-    REFRESH_TOKEN_SECRET: z.string()
-
+    REFRESH_TOKEN_SECRET: z.string(),
 })
-
 
 const appConfig = envSchema.parse({
     PROTOCOL: process.env.PROTOCOL,
@@ -40,8 +34,6 @@ const appConfig = envSchema.parse({
     // Token secret variables
     ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
     REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
-
 })
 
 export default appConfig
-

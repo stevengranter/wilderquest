@@ -1,5 +1,5 @@
-import z from "zod";
+import z from 'zod'
 
 export const AddTaxaToCollectionRequestSchema = z.object({
-    taxa: z.number().array()
+    taxa: z.number().array(),
 })

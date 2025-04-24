@@ -1,10 +1,10 @@
 import { CorsOptions } from 'cors'
 
 const allowedOrigins = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "https://wildernest.fly.dev",
-];
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://wildernest.fly.dev',
+]
 
 const corsConfig: CorsOptions = {
     origin: (origin, callback) => {

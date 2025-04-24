@@ -1,6 +1,8 @@
-@import "theme.css";
+@import 'theme.css';
 
-.gif-picker {@apply w-3/4}
+.gif-picker {
+    @apply w-3/4;
+}
 
 .gif-picker {
     @apply grid grid-cols-3 md:grid-cols-4;
@@ -20,7 +22,6 @@
     padding: 8px;
 
     top: 8px;
-
 }
 
 .gif-picker-item {

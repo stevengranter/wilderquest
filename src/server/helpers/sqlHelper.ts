@@ -1,18 +1,15 @@
 const selectQuery = (
     tableName: string,
     selectColumns: Array<string>,
-    whereClause: string) => {
+    whereClause: string
+) => {
     const selectColumnString = selectColumns.toString()
     return `SELECT ${selectColumnString} FROM ${tableName} WHERE ${whereClause}`
 }
 
-
-const selectAllQuery = (
-    tableName: string,
-    whereClause: string) => {
+const selectAllQuery = (tableName: string, whereClause: string) => {
     return `SELECT * FROM ${tableName} WHERE ${whereClause}`
 }
-
 
 // const updateQuery = (
 //     tableName: string,
@@ -22,18 +19,15 @@ const selectAllQuery = (
 //     return `UPDATE ${tableName} SET ${updateColumnString} WHERE ${whereClause}`
 // }
 
-const insertQuery = (
-    tableName: string,
-    insertColumns: Array<string>) => {
-
+const insertQuery = (tableName: string, insertColumns: Array<string>) => {
     const insertColumnString = insertColumns.toString()
 
     const numColumns = insertColumns.length
-    let insertValueString = ""
+    let insertValueString = ''
     for (let i = 0; i < numColumns; i++) {
-        insertValueString += "?"
+        insertValueString += '?'
         if (i < numColumns - 1) {
-            insertValueString += ","
+            insertValueString += ','
         }
     }
 
@@ -44,15 +38,11 @@ export const sqlHelper = {
     select: selectQuery,
     selectAll: selectAllQuery,
     // update: updateQuery,
-    insert: insertQuery
+    insert: insertQuery,
 }
 
 interface SelectQueryObject {
-    table: string;
-    columns: string;
-    where: string;
+    table: string
+    columns: string
+    where: string
 }
-
-
-
-

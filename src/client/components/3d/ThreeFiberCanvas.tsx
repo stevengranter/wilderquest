@@ -1,9 +1,8 @@
-import {Canvas} from "@react-three/fiber";
-import HostCharacter from "@/components/3d/HostCharacter";
-import {OrbitControls} from "@react-three/drei";
+import {Canvas} from '@react-three/fiber'
+import HostCharacter from '@/components/3d/HostCharacter'
+import {OrbitControls} from '@react-three/drei'
 
 export function ThreeFiberCanvas() {
-
     return (
         <div id='canvas-container' className='h-full w-full absolute'>
             <Canvas camera={{position: [0, 1.5, 5], fov: 50}}>
@@ -22,9 +21,6 @@ export function ThreeFiberCanvas() {
 
                 <OrbitControls enablePan={false}/>
             </Canvas>
-
-
         </div>
     )
-
 }

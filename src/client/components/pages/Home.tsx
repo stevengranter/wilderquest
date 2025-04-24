@@ -1,8 +1,7 @@
-import {Link} from "react-router";
-import {ThreeFiberCanvas} from "@/components/3d/ThreeFiberCanvas";
+import {Link} from 'react-router'
+import {ThreeFiberCanvas} from '@/components/3d/ThreeFiberCanvas'
 
 export default function Home() {
-
     return (
         <>
             <h2>Howdy ho!</h2>
@@ -12,5 +11,5 @@ export default function Home() {
             <Link to='/search'>Search</Link>
             <ThreeFiberCanvas/>
         </>
-    );
+    )
 }

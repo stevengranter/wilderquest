@@ -1,6 +1,6 @@
 // schemas/userSchema.ts
 
-import { z } from "zod"
+import {z} from 'zod'
 
 export const UserSchema = z.object({
     id: z.number().int().min(1),
@@ -13,6 +13,3 @@ export const UserSchema = z.object({
     role_id: z.number().int().min(1),
     refresh_token: z.string().jwt().nullish(),
 })
-
-
-

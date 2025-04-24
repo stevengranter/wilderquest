@@ -35,7 +35,7 @@ export const handleError = (error: unknown) => {
             window.history.pushState({}, 'LoginPage', '/login')
         } else if (err) {
             // console.log(err)
-            toast({ title:'Error', description: err?.data })
+            toast({title: 'Error', description: err?.data})
         }
     }
 }

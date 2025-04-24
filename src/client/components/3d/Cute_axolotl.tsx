@@ -24,14 +24,29 @@ type GLTFResult = GLTF & {
 }
 
 export function Axolotl2(props: JSX.IntrinsicElements['group']) {
-    const {nodes, materials} = useGLTF('/cute_axolotl-transformed.glb') as GLTFResult
+    const {nodes, materials} = useGLTF(
+        '/cute_axolotl-transformed.glb'
+    ) as GLTFResult
     return (
         <group {...props} dispose={null}>
-            <mesh geometry={nodes.Object_4.geometry} material={materials.skin}/>
-            <mesh geometry={nodes.Object_12.geometry} material={materials.head_things} position={[0.296, -0.201, 1.142]}
-                  rotation={[-2.338, -0.131, 0.087]} scale={[-0.273, 0.273, 0.273]}/>
-            <mesh geometry={nodes.Object_14.geometry} material={materials.face_elements} position={[0.778, 0.14, 0.556]}
-                  rotation={[0.075, -0.293, 0.111]} scale={[0.091, 0.151, 0.151]}/>
+            <mesh
+                geometry={nodes.Object_4.geometry}
+                material={materials.skin}
+            />
+            <mesh
+                geometry={nodes.Object_12.geometry}
+                material={materials.head_things}
+                position={[0.296, -0.201, 1.142]}
+                rotation={[-2.338, -0.131, 0.087]}
+                scale={[-0.273, 0.273, 0.273]}
+            />
+            <mesh
+                geometry={nodes.Object_14.geometry}
+                material={materials.face_elements}
+                position={[0.778, 0.14, 0.556]}
+                rotation={[0.075, -0.293, 0.111]}
+                scale={[0.091, 0.151, 0.151]}
+            />
         </group>
     )
 }

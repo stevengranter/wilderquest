@@ -1,14 +1,16 @@
-import {useEffect} from "react";
-import axios, {AxiosResponse} from "axios";
+import {useEffect} from 'react'
+import axios, {AxiosResponse} from 'axios'
 
-type iNatQueryType = ["taxa", "places", "photos", "observations"]
+type iNatQueryType = ['taxa', 'places', 'photos', 'observations']
 
 export default function useINatApi() {
-
     async function fetchData(query: iNatQueryType, params: any) {
-        const response = await axios.get(`https://api.inaturalist.org/v1/${query.join("/")}`, {params})
+        const response = await axios.get(
+            `https://api.inaturalist.org/v1/${query.join('/')}`,
+            {params}
+        )
         if (response.status === 200) {
-            return response.data;
+            return response.data
         }
     }
 
@@ -21,6 +23,6 @@ export default function useINatApi() {
     //     }
     // }
 
-    return {fetchINatData: fetchData};
+    return {fetchINatData: fetchData}
     // return {fetchTaxaByIds}
 }
