@@ -14,6 +14,7 @@
         "@blocknote/react": "^0.26.0",
         "@blocknote/shadcn": "^0.26.0",
         "@faker-js/faker": "^9.6.0",
+        "@genkit-ai/googleai": "^1.7.0",
         "@hookform/resolvers": "^4.1.3",
         "@paralleldrive/cuid2": "^2.2.2",
         "@radix-ui/react-accordion": "^1.2.3",
@@ -55,6 +56,7 @@
         "dotenv": "^16.4.7",
         "embla-carousel-react": "^8.5.2",
         "express": "^5.1.0",
+        "genkit": "^1.7.0",
         "input-otp": "^1.4.2",
         "jsonwebtoken": "^9.0.2",
         "jwt-decode": "^4.0.0",
@@ -119,5 +121,5 @@
         "umzug": "^3.8.2",
         "vite": "^6.2.0"
     },
-    "packageManager": "pnpm@10.8.0+sha512.0e82714d1b5b43c74610193cb20734897c1d00de89d0e18420aebc5977fa13d780a9cb05734624e81ebd81cc876cd464794850641c48b9544326b5622ca29971"
+    "packageManager": "pnpm@10.9.0+sha512.0486e394640d3c1fb3c9d43d49cf92879ff74f8516959c235308f5a8f62e2e19528a65cdc2a3058f587cde71eba3d5b56327c8c33a97e4c4051ca48a10ca2d5f"
 }
