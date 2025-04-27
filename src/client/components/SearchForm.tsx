@@ -12,22 +12,32 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import _ from 'lodash'
 import fetchWikipediaContent from '@/utils/fetchWikipediaContent'
+import ImageInput from '@/components/ImageInput'
 
 // ⭐️ SearchForm component
 export default function SearchForm() {
+    const [selectedItemName, setSelectedItemName] = useState('')
     const [searchResults, setSearchResults] = useState<iNatTaxaResponse[]>([])
 
     // const [taxonId, setTaxonId] = useState<number | null>(null)
 
     async function handleSelect(item: iNatTaxaResponse) {
+        setSelectedItemName(item.preferred_common_name || item.name)
         const result = await axios.get(`/api/iNatAPI/taxa/?taxon_id=${item.id}`)
         setSearchResults(result.data.results)
     }
 
     return (
         <>
-            <SearchAutoComplete selectionHandler={handleSelect} />
-            <SearchResults searchResults={searchResults} />
+            <SearchAutoComplete
+                selectionHandler={handleSelect}
+                selectedItemName={selectedItemName}
+            />
+            <SearchResults
+                searchResults={searchResults}
+                onSelect={handleSelect}
+            />
+            <ImageInput />
         </>
     )
 }
@@ -35,19 +45,15 @@ export default function SearchForm() {
 // 🌱 SearchResults component
 function SearchResults({
     searchResults,
+    onSelect,
 }: {
     searchResults: iNatTaxaResponse[]
+    onSelect: (item: iNatTaxaResponse) => void
 }) {
     return (
-        <ul
-            // key='grid'
-            // initial={{opacity: 0}}
-            // animate={{opacity: 1}}
-            // exit={{opacity: 0}}
-            className="m-6 gap-8 grid grid-cols-2 md:grid-cols-3 lg:'rid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 "
-        >
+        <ul className="m-6 gap-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
             {searchResults.map((item) => (
-                <TaxonCard item={item} key={item.id} />
+                <TaxonCard item={item} key={item.id} onClick={onSelect} />
             ))}
         </ul>
     )
@@ -55,10 +61,10 @@ function SearchResults({
 
 function TaxonCard({
     item,
-    handleSelect,
+    onClick,
 }: {
     item: iNatTaxaResponse
-    handleSelect?: (item: iNatTaxaResponse) => void
+    onClick?: (item: iNatTaxaResponse) => void
 }) {
     const [wikiContent, setWikiContent] = useState<string | null>(null)
     const [selectedAncestorTaxon, setSelectedAncestorTaxon] = useState<
@@ -101,13 +107,16 @@ function TaxonCard({
                 scale: { type: 'spring', duration: 0.4 },
             }}
             whileHover={{ scale: 1.1, rotate: 2 }}
+            whileTap={{ scale: 0.95 }}
         >
             <Card
                 key={item.id}
                 className={cn('p-0 m-0')}
                 onClick={() => {
                     console.log(item)
-                    // fetchWikipediaArticle()
+                    if (onClick) {
+                        onClick(item)
+                    }
                 }}
             >
                 <CardSection>
@@ -129,7 +138,7 @@ function TaxonCard({
                         Observations: <Badge>{item.observations_count}</Badge>
                     </div>
                     <div>Rank: {item.rank}</div>
-                    {handleSelect && (
+                    {onClick && (
                         <button
                             onClick={() => fetchAncestorData(item.ancestor_ids)}
                         >

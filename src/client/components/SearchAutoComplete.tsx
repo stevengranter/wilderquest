@@ -1,5 +1,5 @@
 // Third party imports
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import _ from 'lodash'
 
@@ -7,12 +7,13 @@ import _ from 'lodash'
 import fetchSearchResults from '@/utils/fetchSearchResults'
 import { useDebounce } from '@/hooks/useDebounce'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 
 export default function SearchAutoComplete({
     selectionHandler,
+    selectedItemName,
 }: {
     selectionHandler: (suggestionItem: iNatTaxaResponse) => void
+    selectedItemName: string | null
 }) {
     // const inputRef = useRef<HTMLInputElement>(null)
     const [query, setQuery] = useState('')
@@ -42,19 +43,26 @@ export default function SearchAutoComplete({
 
     const allResults =
         suggestionResult.data?.pages.flatMap((page) => page.results) ?? []
-    const filteredResults = filterAndSortResults(allResults)
+    // const filteredResults = filterAndSortResults(allResults)
 
-    const suggestions = filteredResults.map((result) => ({
-        ...result,
-        // id: result.id.toString(),
-        // name: result.name,
-        // matched_term: result.matched_term,
-        // common_name: _.startCase(_.camelCase(result.preferred_common_name)),
-        // photo_url: result.default_photo?.square_url,
-        // observations_count: result.observations_count,
-    }))
+    const suggestions = allResults
+    //     filteredResults.map((result) => ({
+    //     ...result,
+    //     // id: result.id.toString(),
+    //     // name: result.name,
+    //     // matched_term: result.matched_term,
+    //     // common_name: _.startCase(_.camelCase(result.preferred_common_name)),
+    //     // photo_url: result.default_photo?.square_url,
+    //     // observations_count: result.observations_count,
+    // }))
 
-    // async function handleSelect(item: SuggestionItem) {
+    useEffect(() => {
+        if (selectedItemName) {
+            setQuery(selectedItemName)
+        }
+    }, [selectedItemName])
+
+    // async function onClick(item: SuggestionItem) {
     //     selectionHandler(item);
     //     const result = await axios.get(`/api/iNatAPI/taxa/?taxon_id=${item.id}`);
     //     setSearchResults(result.data.results);
@@ -123,17 +131,35 @@ export default function SearchAutoComplete({
                                         setHighlightedSuggestion(index)
                                     }
                                     onMouseDown={() => {
-                                        setQuery(item.preferred_common_name)
+                                        setQuery(item.name)
                                         selectionHandler(item)
                                     }}
                                 >
-                                    <div className="flex flex-row justify-between">
-                                        {_.startCase(
-                                            _.camelCase(
-                                                item.preferred_common_name
-                                            )
-                                        )}
-                                        <Badge>{item.rank}</Badge>
+                                    <div className="flex flex-row items-center gap-5 w-150">
+                                        <div>
+                                            <img
+                                                src={
+                                                    item.default_photo
+                                                        ?.square_url
+                                                }
+                                                alt={item.name}
+                                                className="w-10 h-10"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <div>
+                                                {_.startCase(
+                                                    _.camelCase(
+                                                        item.preferred_common_name
+                                                    )
+                                                )}
+                                            </div>
+                                            <div className="text-xs">
+                                                {' '}
+                                                {item.name}
+                                            </div>
+                                        </div>
+                                        {item.rank}
                                     </div>
                                 </li>
                             ))
@@ -149,19 +175,19 @@ export default function SearchAutoComplete({
     )
 }
 
-function filterAndSortResults(results: iNatTaxaResponse[]) {
-    return results
-        .filter((item) => {
-            const matched = item.matched_term?.toLowerCase()
-            const commonName = item.preferred_common_name?.toLowerCase() || ''
-            const scientificName = item.name?.toLowerCase() || ''
-            return (
-                matched &&
-                (commonName.includes(matched) ||
-                    scientificName.includes(matched))
-            )
-        })
-        .sort(
-            (a, b) => (b.observations_count || 0) - (a.observations_count || 0)
-        )
-}
+// function filterAndSortResults(results: iNatTaxaResponse[]) {
+//     return results
+//         .filter((item) => {
+//             const matched = item.matched_term?.toLowerCase()
+//             const commonName = item.preferred_common_name?.toLowerCase() || ''
+//             const scientificName = item.name?.toLowerCase() || ''
+//             return (
+//                 matched &&
+//                 (commonName.includes(matched) ||
+//                     scientificName.includes(matched))
+//             )
+//         })
+//         .sort(
+//             (a, b) => (b.observations_count || 0) - (a.observations_count || 0)
+//         )
+// }

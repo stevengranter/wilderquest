@@ -1,3 +1,6 @@
 onlyBuiltDependencies:
   - '@swc/core'
+  - bufferutil
   - esbuild
+  - msw
+  - protobufjs
