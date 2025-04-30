@@ -1,30 +1,66 @@
-// 📦 Packages
+import { useParams, useNavigate, Link } from 'react-router'
 import { useEffect, useState } from 'react'
-import { motion } from 'motion/react'
 import axios from 'axios'
-
-// ⚛️ Components
 import SearchAutoComplete from '@/components/SearchAutoComplete'
-import { Card, CardContent, CardSection } from './ui/card'
-import { Badge } from '@/components/ui/badge'
-
-// 🛠️ Utils
-import { cn } from '@/lib/utils'
-import _ from 'lodash'
-import fetchWikipediaContent from '@/utils/fetchWikipediaContent'
+import SearchResults from '@/components/SearchResults'
 import ImageInput from '@/components/ImageInput'
+import { useQuery } from '@tanstack/react-query'
 
-// ⭐️ SearchForm component
+import { useQueryClient } from '@tanstack/react-query'
+import {
+    BreadcrumbItem,
+    BreadcrumbList,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
+import React from 'react'
+
+function useTaxonSearch(taxonId: string) {
+    return useQuery({
+        queryKey: ['taxon', taxonId],
+        queryFn: () =>
+            axios
+                .get(`/api/iNatAPI/taxa/?taxon_id=${taxonId}`)
+                .then((res) => res.data.results),
+        enabled: !!taxonId,
+        initialData: [] as iNatTaxaResponse[],
+    })
+}
+
 export default function SearchForm() {
+    const queryClient = useQueryClient()
+    const { taxonId } = useParams()
+    const navigate = useNavigate()
     const [selectedItemName, setSelectedItemName] = useState('')
     const [searchResults, setSearchResults] = useState<iNatTaxaResponse[]>([])
+    const [searchHistory, setSearchHistory] = useState<iNatTaxaResponse[]>([])
 
-    // const [taxonId, setTaxonId] = useState<number | null>(null)
+    const { data, isLoading } = useTaxonSearch(taxonId)
+
+    useEffect(() => {
+        console.log(data)
+    }, [data])
+
+    // useEffect(() => {
+    //     if (!taxonId) return
+    //     axios.get(`/api/iNatAPI/taxa/?taxon_id=${taxonId}`).then((res) => {
+    //         const item = res.data.results[0]
+    //         setSelectedItemName(item.preferred_common_name || item.name)
+    //         setSearchResults(res.data.results)
+    //     })
+    // }, [taxonId])
 
     async function handleSelect(item: iNatTaxaResponse) {
-        setSelectedItemName(item.preferred_common_name || item.name)
-        const result = await axios.get(`/api/iNatAPI/taxa/?taxon_id=${item.id}`)
-        setSearchResults(result.data.results)
+        await queryClient.prefetchQuery({
+            queryKey: ['taxon', item.id],
+            queryFn: () =>
+                axios
+                    .get(`/api/iNatAPI/taxa/?taxon_id=${item.id}`)
+                    .then((res) => res.data.results),
+        })
+
+        navigate(`/search/${item.id}`)
+        setSearchHistory([...searchHistory, item])
+        console.log(searchHistory)
     }
 
     return (
@@ -33,134 +69,33 @@ export default function SearchForm() {
                 selectionHandler={handleSelect}
                 selectedItemName={selectedItemName}
             />
-            <SearchResults
-                searchResults={searchResults}
-                onSelect={handleSelect}
-            />
+            <SearchHistory searchHistory={searchHistory} />
+            <SearchResults searchResults={data} onSelect={handleSelect} />
             <ImageInput />
         </>
     )
 }
 
-// 🌱 SearchResults component
-function SearchResults({
-    searchResults,
-    onSelect,
+function SearchHistory({
+    searchHistory,
 }: {
-    searchResults: iNatTaxaResponse[]
-    onSelect: (item: iNatTaxaResponse) => void
+    searchHistory: iNatTaxaResponse[]
 }) {
     return (
-        <ul className="m-6 gap-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
-            {searchResults.map((item) => (
-                <TaxonCard item={item} key={item.id} onClick={onSelect} />
-            ))}
-        </ul>
-    )
-}
-
-function TaxonCard({
-    item,
-    onClick,
-}: {
-    item: iNatTaxaResponse
-    onClick?: (item: iNatTaxaResponse) => void
-}) {
-    const [wikiContent, setWikiContent] = useState<string | null>(null)
-    const [selectedAncestorTaxon, setSelectedAncestorTaxon] = useState<
-        number | null
-    >(null)
-    const [ancestors, setAncestors] = useState<iNatTaxaResponse[]>([])
-
-    useEffect(() => {
-        if (selectedAncestorTaxon) {
-            console.log('selectedAncestorTaxon: ', selectedAncestorTaxon)
-        }
-    })
-
-    async function fetchAncestorData(ancestorIds: number[]) {
-        const result = await axios.get(
-            `/api/iNatAPI/taxa/${ancestorIds.join()}`
+        searchHistory &&
+        searchHistory.length > 0 && (
+            <BreadcrumbList>
+                {searchHistory.map((item, index) => (
+                    <React.Fragment key={`${item.id}-${item.name}-${index}`}>
+                        <BreadcrumbItem>
+                            <Link to={`/search/${item.id}`}>{item.name}</Link>
+                        </BreadcrumbItem>
+                        {index < searchHistory.length - 1 && (
+                            <BreadcrumbSeparator />
+                        )}
+                    </React.Fragment>
+                ))}
+            </BreadcrumbList>
         )
-        console.log(result.data)
-        setAncestors(result.data.results)
-    }
-
-    async function fetchWikipediaArticle() {
-        if (item.wikipedia_url) {
-            const title = item.wikipedia_url.split('/').pop() || item.name
-            const content = await fetchWikipediaContent(title)
-            setWikiContent(content)
-        } else {
-            setWikiContent(null)
-        }
-    }
-
-    return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{
-                default: { duration: 0.5 },
-                rotate: { type: 'spring', duration: 0.4 },
-                scale: { type: 'spring', duration: 0.4 },
-            }}
-            whileHover={{ scale: 1.1, rotate: 2 }}
-            whileTap={{ scale: 0.95 }}
-        >
-            <Card
-                key={item.id}
-                className={cn('p-0 m-0')}
-                onClick={() => {
-                    console.log(item)
-                    if (onClick) {
-                        onClick(item)
-                    }
-                }}
-            >
-                <CardSection>
-                    {item.default_photo?.medium_url && (
-                        <img
-                            src={item.default_photo.medium_url}
-                            alt={item.name}
-                            className="w-full rounded-t-md object-cover aspect-square"
-                        />
-                    )}
-                </CardSection>
-                <CardContent className="p-4 pt-2">
-                    <h3 className="font-bold text-xl">
-                        {_.startCase(_.camelCase(item.preferred_common_name))}
-                    </h3>
-                    <h4 className="italic">{item.name}</h4>
-                    <div>Taxon ID: {item.id}</div>
-                    <div>
-                        Observations: <Badge>{item.observations_count}</Badge>
-                    </div>
-                    <div>Rank: {item.rank}</div>
-                    {onClick && (
-                        <button
-                            onClick={() => fetchAncestorData(item.ancestor_ids)}
-                        >
-                            View ancestors
-                        </button>
-                    )}
-
-                    {ancestors &&
-                        ancestors.length > 0 &&
-                        ancestors.map((ancestor) => (
-                            <button
-                                onClick={() =>
-                                    setSelectedAncestorTaxon(ancestor.id)
-                                }
-                            >
-                                <li>
-                                    {ancestor.rank}:{ancestor.name}
-                                </li>
-                            </button>
-                        ))}
-                </CardContent>
-            </Card>
-        </motion.div>
     )
 }
