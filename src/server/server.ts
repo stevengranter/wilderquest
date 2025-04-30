@@ -1,7 +1,7 @@
 // * Imports * //
 
 // External imports
-import express, {Request, Response, NextFunction} from 'express' // Import Request, Repsonse types
+import express, { Request, Response } from 'express' // Import Request, Repsonse types
 import path from 'path'
 
 // Internal imports
@@ -9,10 +9,10 @@ import ViteExpress from 'vite-express'
 import errorHandler from './middleware/errorHandler.js'
 import cors from 'cors'
 import corsConfig from './config/corsConfig.js'
-import {apiRouter} from './routes/api.route.js'
-import {getDbPool, initializeDb} from './db.js'
+import { apiRouter } from './routes/api.route.js'
+import { getDbPool, initializeDb } from './db.js'
 
-import {SCRIPT_DIR} from './constants.js'
+import { SCRIPT_DIR } from './constants.js'
 import appConfig from './config/appConfig.js'
 
 async function startServer() {
@@ -25,7 +25,8 @@ async function startServer() {
 
         // 📎 Middleware
         app.use(cors(corsConfig))
-        app.use(express.json())
+        app.use(express.json({ limit: '10mb' }))
+        app.use(express.urlencoded({ extended: true, limit: '10mb' }))
         app.use('/api', apiRouter)
 
         //  Server setup  //

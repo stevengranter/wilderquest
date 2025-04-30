@@ -1,15 +1,15 @@
 import 'dotenv/config'
-import {compareSync, genSaltSync, hashSync} from 'bcrypt-ts'
+import { compareSync, genSaltSync, hashSync } from 'bcrypt-ts'
 import jwt from 'jsonwebtoken'
-import {Request, Response} from 'express'
-import {createId} from '@paralleldrive/cuid2'
+import { Request, Response } from 'express'
+import { createId } from '@paralleldrive/cuid2'
 import UsersRepository from '../repositories/UsersRepository.js'
 import {
     LoginRequestSchema,
     RegisterRequestSchema,
 } from '../../shared/schemas/Auth.js'
-import {LoginRequestBody, RegisterRequestBody} from '../../types/types.js'
-import {AuthenticatedRequest} from '../middleware/verifyJWT.js'
+import { LoginRequestBody, RegisterRequestBody } from '../../types/types.js'
+import { AuthenticatedRequest } from '../middleware/verifyJWT.js'
 
 interface LoginRequest extends Request {
     body: LoginRequestBody
@@ -23,20 +23,18 @@ const register = async (req: LoginRequest, res: Response) => {
     // Check req.body to see if matches schema
     const parsedBody = RegisterRequestSchema.safeParse(req.body)
     if (parsedBody.error) {
-        res.status(400).send(parsedBody.error.message)
-        return
+        return res.status(400).send(parsedBody.error.message)
     }
 
-    const {username, email, password: UNSAFEPassword} = parsedBody.data
+    const { username, email, password: UNSAFEPassword } = parsedBody.data
 
     // Check if email or username already exists in db
     const emailRows = await UsersRepository.getUsersByEmail(email)
     const usernameRows = await UsersRepository.getUsersByUsername(username)
     if (emailRows.length > 0 || usernameRows.length > 0) {
-        res.status(409).send({
+        return res.status(409).send({
             message: 'Username and/or email already exists',
         })
-        return
     }
 
     //  If neither username and email are in the db, create user
@@ -56,7 +54,7 @@ const register = async (req: LoginRequest, res: Response) => {
 
     if (user_id) {
         // Verify user is in db
-        const createdUser = await UsersRepository.findOne({id: user_id})
+        const createdUser = await UsersRepository.findOne({ id: user_id })
 
         // If found, login user
         if (createdUser) {
@@ -66,14 +64,12 @@ const register = async (req: LoginRequest, res: Response) => {
             } as LoginRequestBody //create login request body
             await login(req, res)
         } else {
-            res.status(500).json({
+            return res.status(500).json({
                 message: 'Failed to retrieve created user.',
             })
-            return
         }
     } else {
-        res.status(500).json({message: 'Failed to create user'})
-        return
+        return res.status(500).json({ message: 'Failed to create user' })
     }
 }
 
@@ -83,18 +79,16 @@ const login = async (req: LoginRequest, res: Response) => {
         req.body as LoginRequestBody
     )
     if (parsedBody.error) {
-        res.status(400).send(parsedBody.error.message)
-        return
+        return res.status(400).send(parsedBody.error.message)
     }
 
     // Deconstruct username and password from parsedBody
-    const {username, password} = parsedBody.data
+    const { username, password } = parsedBody.data
 
-    const user = await UsersRepository.findOne({username: username})
+    const user = await UsersRepository.findOne({ username: username })
 
     if (!user) {
-        res.status(401).json({message: 'User not found'})
-        return
+        return res.status(401).json({ message: 'User not found' })
     }
 
     // Check if password matches
@@ -103,14 +97,14 @@ const login = async (req: LoginRequest, res: Response) => {
     if (match) {
         // Generate access and refresh tokens
         const accessToken = jwt.sign(
-            {id: user.id, cuid: user.user_cuid, role_id: user.role_id},
+            { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
             process.env.ACCESS_TOKEN_SECRET!,
-            {expiresIn: '300s'}
+            { expiresIn: '300s' }
         )
         const refreshToken = jwt.sign(
-            {id: user.id, cuid: user.user_cuid, role_id: user.role_id},
+            { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
             process.env.REFRESH_TOKEN_SECRET!,
-            {expiresIn: '1h'}
+            { expiresIn: '1h' }
         )
 
         // Save refresh token to db
@@ -119,7 +113,7 @@ const login = async (req: LoginRequest, res: Response) => {
         })
 
         // return user profile to client
-        res.status(200).json({
+        return res.status(200).json({
             user: {
                 id: user.id,
                 cuid: user.user_cuid,
@@ -131,10 +125,8 @@ const login = async (req: LoginRequest, res: Response) => {
             access_token: accessToken,
             refresh_token: refreshToken,
         })
-        return
     } else {
-        res.status(401).json({message: 'User not found'})
-        return
+        return res.status(401).json({ message: 'User not found' })
     }
 }
 
@@ -146,6 +138,6 @@ const logout = async (req: AuthenticatedRequest, res: Response) => {
     }
 }
 
-const authController = {register, login, logout}
+const authController = { register, login, logout }
 
 export default authController

@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import jwt from 'jsonwebtoken'
-import {Request, Response} from 'express'
+import { Request, Response } from 'express'
 
 import { z } from 'zod'
 import UsersRepository from '../repositories/UsersRepository.js'
@@ -51,12 +51,12 @@ const handleRefreshToken = async (req: Request, res: Response) => {
                 }
                 console.log(decoded)
                 const accessToken = jwt.sign(
-                    {cuid: decoded.cuid, role_id: decoded.role_id},
+                    { cuid: decoded.cuid, role_id: decoded.role_id },
                     process.env.ACCESS_TOKEN_SECRET!,
                     { expiresIn: '30s' }
                 )
                 console.log('Refresh token valid...')
-                res.json({access_token: accessToken})
+                res.json({ access_token: accessToken })
                 console.log('New access token: ' + accessToken)
             }
         )
