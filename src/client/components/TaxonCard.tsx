@@ -6,6 +6,7 @@ import { Card, CardContent, CardSection } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import _ from 'lodash'
 import { Badge } from '@/components/ui/badge'
+import { useParams } from 'react-router'
 
 export default function TaxonCard({
     item,
@@ -14,6 +15,8 @@ export default function TaxonCard({
     item: iNatTaxaResponse
     onClick?: (item: iNatTaxaResponse) => void
 }) {
+    const { taxonId } = useParams()
+    const isAlreadySelected = Number(taxonId) === item.id
     const [wikiContent, setWikiContent] = useState<{
         extract: string
         image: string
@@ -59,13 +62,18 @@ export default function TaxonCard({
                 rotate: { type: 'spring', duration: 0.4 },
                 scale: { type: 'spring', duration: 0.4 },
             }}
-            whileHover={{ scale: 1.1, rotate: 2 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={isAlreadySelected ? {} : { scale: 1.1, rotate: 2 }}
+            whileTap={isAlreadySelected ? {} : { scale: 0.95 }}
         >
             <Card
                 key={item.id}
                 className={cn('p-0 m-0')}
                 onClick={async () => {
+                    if (Number(taxonId) === item.id) {
+                        console.log(taxonId)
+                        console.log('already selected')
+                        return
+                    }
                     if (item.rank === 'species') {
                         fetchWikipediaArticle()
                     }

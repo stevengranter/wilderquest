@@ -13,6 +13,7 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import React from 'react'
+import _ from 'lodash'
 
 function useTaxonSearch(taxonId: string) {
     return useQuery({
@@ -69,7 +70,10 @@ export default function SearchForm() {
                 selectionHandler={handleSelect}
                 selectedItemName={selectedItemName}
             />
-            <SearchHistory searchHistory={searchHistory} />
+            <SearchHistory
+                searchHistory={searchHistory}
+                setSearchHistory={setSearchHistory}
+            />
             <SearchResults searchResults={data} onSelect={handleSelect} />
             <ImageInput />
         </>
@@ -78,17 +82,47 @@ export default function SearchForm() {
 
 function SearchHistory({
     searchHistory,
+    setSearchHistory,
 }: {
     searchHistory: iNatTaxaResponse[]
+    setSearchHistory: React.Dispatch<React.SetStateAction<iNatTaxaResponse[]>>
 }) {
+    const navigate = useNavigate()
+    const handleBreadcrumbClick = (clickedItem, index) => {
+        // Prevent clicking the last item (current location)
+        if (index === searchHistory.length - 1) {
+            return
+        }
+
+        // Trim the history array up to the clicked item's index
+        const newHistory = searchHistory.slice(0, index + 1)
+        setSearchHistory(newHistory)
+
+        navigate(`/search/${clickedItem.id}`)
+    }
+
     return (
         searchHistory &&
         searchHistory.length > 0 && (
             <BreadcrumbList>
                 {searchHistory.map((item, index) => (
                     <React.Fragment key={`${item.id}-${item.name}-${index}`}>
-                        <BreadcrumbItem>
-                            <Link to={`/search/${item.id}`}>{item.name}</Link>
+                        <BreadcrumbItem
+                            // Make the item clickable
+                            onClick={() => {
+                                handleBreadcrumbClick(item, index)
+                            }}
+                            // Optional: Add a class or style for styling clickable items
+                            style={{
+                                cursor:
+                                    index < searchHistory.length - 1
+                                        ? 'pointer'
+                                        : 'default',
+                            }}
+                        >
+                            {_.startCase(
+                                _.camelCase(item.preferred_common_name)
+                            ) || item.name}
                         </BreadcrumbItem>
                         {index < searchHistory.length - 1 && (
                             <BreadcrumbSeparator />
