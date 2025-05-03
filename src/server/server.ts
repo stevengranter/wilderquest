@@ -9,7 +9,7 @@ import ViteExpress from 'vite-express'
 import errorHandler from './middleware/errorHandler.js'
 import cors from 'cors'
 import corsConfig from './config/corsConfig.js'
-import { apiRouter } from './routes/api.route.js'
+import { apiRouter } from './routes/api/index.routes.js'
 import { getDbPool, initializeDb } from './db.js'
 
 import { SCRIPT_DIR } from './constants.js'

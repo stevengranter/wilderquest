@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import { compareSync, genSaltSync, hashSync } from 'bcrypt-ts'
 import jwt from 'jsonwebtoken'
-import { Request, Response } from 'express'
+import { NextFunction, Request, RequestHandler, Response } from 'express'
 import { createId } from '@paralleldrive/cuid2'
 import UsersRepository from '../repositories/UsersRepository.js'
 import {
@@ -19,11 +19,12 @@ interface RegisterRequest extends Request {
     body: RegisterRequestBody
 }
 
-const register = async (req: LoginRequest, res: Response) => {
+const register: RequestHandler = async (req: LoginRequest, res: Response) => {
     // Check req.body to see if matches schema
     const parsedBody = RegisterRequestSchema.safeParse(req.body)
     if (parsedBody.error) {
-        return res.status(400).send(parsedBody.error.message)
+        res.status(400).send(parsedBody.error.message)
+        return
     }
 
     const { username, email, password: UNSAFEPassword } = parsedBody.data
@@ -32,9 +33,10 @@ const register = async (req: LoginRequest, res: Response) => {
     const emailRows = await UsersRepository.getUsersByEmail(email)
     const usernameRows = await UsersRepository.getUsersByUsername(username)
     if (emailRows.length > 0 || usernameRows.length > 0) {
-        return res.status(409).send({
+        res.status(409).send({
             message: 'Username and/or email already exists',
         })
+        return
     }
 
     //  If neither username and email are in the db, create user
@@ -62,24 +64,32 @@ const register = async (req: LoginRequest, res: Response) => {
                 username: createdUser.username,
                 password: UNSAFEPassword,
             } as LoginRequestBody //create login request body
-            await login(req, res)
+            await login(req, res, () => {})
         } else {
-            return res.status(500).json({
+            res.status(500).json({
                 message: 'Failed to retrieve created user.',
             })
+            return
         }
     } else {
-        return res.status(500).json({ message: 'Failed to create user' })
+        res.status(500).json({ message: 'Failed to create user' })
+        return
     }
 }
 
-const login = async (req: LoginRequest, res: Response) => {
+const login: RequestHandler = async (
+    req: LoginRequest,
+    res: Response,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    next: NextFunction
+) => {
     // Check req.body to see if matches schema
     const parsedBody = LoginRequestSchema.safeParse(
         req.body as LoginRequestBody
     )
     if (parsedBody.error) {
-        return res.status(400).send(parsedBody.error.message)
+        res.status(400).send(parsedBody.error.message)
+        return
     }
 
     // Deconstruct username and password from parsedBody
@@ -88,7 +98,8 @@ const login = async (req: LoginRequest, res: Response) => {
     const user = await UsersRepository.findOne({ username: username })
 
     if (!user) {
-        return res.status(401).json({ message: 'User not found' })
+        res.status(401).json({ message: 'User not found' })
+        return
     }
 
     // Check if password matches
@@ -113,7 +124,7 @@ const login = async (req: LoginRequest, res: Response) => {
         })
 
         // return user profile to client
-        return res.status(200).json({
+        res.status(200).json({
             user: {
                 id: user.id,
                 cuid: user.user_cuid,
@@ -125,8 +136,10 @@ const login = async (req: LoginRequest, res: Response) => {
             access_token: accessToken,
             refresh_token: refreshToken,
         })
+        return
     } else {
-        return res.status(401).json({ message: 'User not found' })
+        res.status(401).json({ message: 'User not found' })
+        return
     }
 }
 

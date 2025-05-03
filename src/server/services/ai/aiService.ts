@@ -5,7 +5,7 @@ import { IdentifiedTaxonSchema } from './schemas.js'
 
 const ai = genkit({ plugins: [googleAI()] })
 
-const identify = async (image: string) => {
+export const identifySpecies = async (image: string) => {
     const { text } = await ai.generate({
         system: aiTaxonIdentificationPromptAlt,
         model: gemini20Flash,
@@ -20,9 +20,3 @@ const identify = async (image: string) => {
     })
     return text
 }
-
-const aiService = {
-    identifySpecies: identify,
-}
-
-export default aiService

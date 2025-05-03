@@ -1,10 +1,10 @@
 import { Router } from 'express'
-import { usersRouter } from './users.route.js'
-import { authRouter } from './auth.route.js'
-import { refreshTokenRouter } from './refresh.route.js'
-import { collectionsRouter } from './collections.routes.js'
-import { iNaturalistProxyRouter } from './iNaturalist.proxy.route.js'
-import { aiRouter } from './ai.route.js'
+import { usersRouter } from './users/users.route.js'
+import { authRouter } from './auth/auth.routes.js'
+import { refreshTokenRouter } from './refresh/refresh.route.js'
+import { collectionsRouter } from './collections/collections.routes.js'
+import { searchRouter } from './search/search.routes.js'
+import { iNaturalistProxyRouter } from '../iNaturalist.proxy.route.js'
 
 const router = Router()
 
@@ -16,7 +16,7 @@ const routes = [
     { url: '/refresh', router: refreshTokenRouter },
     { url: '/collections', router: collectionsRouter },
     { url: '/iNatAPI', router: iNaturalistProxyRouter },
-    { url: '/ai', router: aiRouter },
+    { url: '/search', router: searchRouter },
 ]
 
 routes.forEach((route) => {

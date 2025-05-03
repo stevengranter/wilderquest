@@ -1,6 +1,6 @@
-import {Router} from 'express'
-import collectionsController from '../controllers/collections.controller.js'
-import verifyJWT from '../middleware/verifyJWT.js'
+import { Router } from 'express'
+import collectionsController from '../../../controllers/collections.controller.js'
+import verifyJWT from '../../../middleware/verifyJWT.js'
 
 const router = Router()
 
@@ -11,4 +11,4 @@ router
     .put('/:id', verifyJWT, collectionsController.updateCollection)
     .patch('/:id', verifyJWT, collectionsController.updateCollection)
 
-export {router as collectionsRouter}
+export { router as collectionsRouter }
