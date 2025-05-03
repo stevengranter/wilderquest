@@ -1,8 +1,8 @@
-import {zodResolver} from '@hookform/resolvers/zod'
-import {SubmitHandler, useForm} from 'react-hook-form'
-import {z} from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import { z } from 'zod'
 
-import {Button} from '@/components/ui/button.js'
+import { Button } from '@/components/ui/button.js'
 import {
     Form,
     FormControl,
@@ -12,14 +12,13 @@ import {
     FormLabel,
     FormMessage,
 } from '@/components/ui/form.js'
-import {Input} from '@/components/ui/input.js'
-import React, {useMemo} from 'react'
-import {useNavigate} from 'react-router'
-import {useAuth} from '@/hooks/useAuth.js'
-import {RegisterFormSchema} from '@/components/RegisterForm.schema.js'
-import {toast} from '@/hooks/use-toast.js'
-import {createNameId} from 'mnemonic-id'
-import {faker} from '@faker-js/faker/locale/ar'
+import { Input } from '@/components/ui/input.js'
+import React, { useMemo } from 'react'
+import { useNavigate } from 'react-router'
+import { useAuth } from '@/hooks/useAuth.js'
+import { RegisterFormSchema } from '@/components/RegisterForm.schema.js'
+import { createNameId } from 'mnemonic-id'
+import { faker } from '@faker-js/faker/locale/ar'
 
 type Inputs = {
     email: string
@@ -29,7 +28,7 @@ type Inputs = {
 }
 
 const RegisterForm = React.forwardRef(() => {
-    const {register} = useAuth()
+    const { register } = useAuth()
 
     const form = useForm<z.infer<typeof RegisterFormSchema>>({
         resolver: zodResolver(RegisterFormSchema),
@@ -47,7 +46,7 @@ const RegisterForm = React.forwardRef(() => {
     }
 
     const animalNameId = useMemo(() => {
-        return createNameId({capitalize: true, delimiter: ''})
+        return createNameId({ capitalize: true, delimiter: '' })
     }, [])
 
     const fakeEmailAddress = useMemo(() => {
@@ -58,12 +57,12 @@ const RegisterForm = React.forwardRef(() => {
         <Form {...form}>
             <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className='space-y-6 w-80 p-4'
+                className="space-y-6 w-80 p-4"
             >
                 <FormField
                     control={form.control}
-                    name='email'
-                    render={({field}) => (
+                    name="email"
+                    render={({ field }) => (
                         <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
@@ -75,14 +74,14 @@ const RegisterForm = React.forwardRef(() => {
                             <FormDescription>
                                 Enter your email address.
                             </FormDescription>
-                            <FormMessage/>
+                            <FormMessage />
                         </FormItem>
                     )}
                 />
                 <FormField
                     control={form.control}
-                    name='username'
-                    render={({field}) => (
+                    name="username"
+                    render={({ field }) => (
                         <FormItem>
                             <FormLabel>Username</FormLabel>
                             <FormControl>
@@ -91,41 +90,41 @@ const RegisterForm = React.forwardRef(() => {
                             <FormDescription>
                                 Enter your desired username
                             </FormDescription>
-                            <FormMessage/>
+                            <FormMessage />
                         </FormItem>
                     )}
                 />
                 <FormField
                     control={form.control}
-                    name='password'
-                    render={({field}) => (
+                    name="password"
+                    render={({ field }) => (
                         <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
                                 <Input
-                                    type='password'
-                                    placeholder=''
+                                    type="password"
+                                    placeholder=""
                                     {...field}
                                 />
                             </FormControl>
                             <FormDescription>
                                 Choose a password.
                             </FormDescription>
-                            <FormMessage/>
+                            <FormMessage />
                         </FormItem>
                     )}
                 />
                 <FormField
                     control={form.control}
-                    name='confirmPassword'
-                    render={({field}) => (
+                    name="confirmPassword"
+                    render={({ field }) => (
                         <FormItem>
                             <FormLabel>Confirm Password</FormLabel>
 
                             <FormControl>
                                 <Input
-                                    type='password'
-                                    placeholder=''
+                                    type="password"
+                                    placeholder=""
                                     {...field}
                                 />
                             </FormControl>
@@ -133,11 +132,11 @@ const RegisterForm = React.forwardRef(() => {
                             <FormDescription>
                                 Must match previous field.
                             </FormDescription>
-                            <FormMessage/>
+                            <FormMessage />
                         </FormItem>
                     )}
                 />
-                <Button type='submit'>Submit</Button>
+                <Button type="submit">Submit</Button>
             </form>
         </Form>
     )

@@ -1,34 +1,6 @@
-import { ChangeEvent, useEffect, useState, useRef } from 'react'
-import imageBlobReduce from 'image-blob-reduce'
+import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import axios from 'axios'
-
-async function resizeImage(image: Blob, maxSize = 1000): Promise<Blob> {
-    const reduce = imageBlobReduce()
-    return await reduce.toBlob(image, { max: maxSize })
-}
-
-async function blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onloadend = () => {
-            if (reader.result && typeof reader.result === 'string') {
-                resolve(reader.result)
-            } else {
-                reject('Failed to read file')
-            }
-        }
-        reader.onerror = reject
-        reader.readAsDataURL(blob)
-    })
-}
-
-interface DetectedObject {
-    box2d: [number, number, number, number]
-    colors: string[]
-    description: string
-    name: string
-    text: string
-}
+import { blobToBase64, resizeImage } from '@/lib/utils'
 
 interface DetectedSubject {
     scientific_name: string
@@ -42,9 +14,11 @@ interface DetectedSubject {
 export default function ImageInput({
     resize = true,
     maxSize = 1000,
+    handleSearch,
 }: {
     resize?: boolean
     maxSize?: number
+    handleSearch?: (query: string) => void
 }) {
     const [file, setFile] = useState<{
         url: string
@@ -52,7 +26,6 @@ export default function ImageInput({
         originalWidth?: number
         originalHeight?: number
     } | null>(null)
-    const [objects, setObjects] = useState<DetectedObject[]>([])
     const [subject, setSubject] = useState<DetectedSubject[]>([])
     const imageRef = useRef<HTMLImageElement>(null)
 
@@ -75,6 +48,13 @@ export default function ImageInput({
             URL.revokeObjectURL(file.url)
         }
     }, [file])
+
+    useEffect(() => {
+        if (subject.length > 0 && handleSearch) {
+            console.log({ subject })
+            handleSearch(subject[0].scientific_name)
+        }
+    }, [subject])
 
     async function handleChange(e: ChangeEvent<HTMLInputElement>) {
         if (!e.target.files?.[0]) return
@@ -130,55 +110,6 @@ export default function ImageInput({
                                 <div>Confidence: {subject.confidence}</div>
                             </li>
                         ))}
-
-                    {/*/!* Draw boxes *!/*/}
-                    {/*{file &&*/}
-                    {/*    objects.map((obj, index) => {*/}
-                    {/*        const [x1, y1, x2, y2] = obj.box2d*/}
-                    {/*        const originalWidth = file.originalWidth || 1*/}
-                    {/*        const originalHeight = file.originalHeight || 1*/}
-                    {/*        const displayedWidth = imageRef.current?.offsetWidth*/}
-                    {/*        const displayedHeight =*/}
-                    {/*            imageRef.current?.offsetHeight*/}
-
-                    {/*        console.log(*/}
-                    {/*            'Displayed dimensions:',*/}
-                    {/*            displayedWidth,*/}
-                    {/*            displayedHeight*/}
-                    {/*        )*/}
-
-                    {/*        if (!displayedWidth || !displayedHeight) {*/}
-                    {/*            return null // Or some other fallback*/}
-                    {/*        }*/}
-
-                    {/*        const scaleX = displayedWidth / originalWidth*/}
-                    {/*        const scaleY = displayedHeight / originalHeight*/}
-
-                    {/*        const scaledX = x1 * scaleX*/}
-                    {/*        const scaledY = y1 * scaleY*/}
-                    {/*        const scaledWidth = (x2 - x1) * scaleX*/}
-                    {/*        const scaledHeight = (y2 - y1) * scaleY*/}
-
-                    {/*        return (*/}
-                    {/*            <div*/}
-                    {/*                key={index}*/}
-                    {/*                style={{*/}
-                    {/*                    position: 'absolute',*/}
-                    {/*                    left: scaledX,*/}
-                    {/*                    top: scaledY,*/}
-                    {/*                    width: scaledWidth,*/}
-                    {/*                    height: scaledHeight,*/}
-                    {/*                    border: '2px solid red',*/}
-                    {/*                    color: 'red',*/}
-                    {/*                    fontSize: `${12 * Math.min(scaleX, scaleY)}px`, // Adjust font size too*/}
-                    {/*                    backgroundColor: 'rgba(255, 0, 0, 0.2)',*/}
-                    {/*                    pointerEvents: 'none',*/}
-                    {/*                }}*/}
-                    {/*            >*/}
-                    {/*                {obj.name}*/}
-                    {/*            </div>*/}
-                    {/*        )*/}
-                    {/*    })}*/}
                 </div>
             </form>
         </div>
