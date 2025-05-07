@@ -1,9 +1,8 @@
-import {useRef, useEffect, useState} from 'react'
-import {Group, Box3, Vector3} from 'three'
-import {Sheep} from '@/components/3d/Sheep'
-import {Axolotl} from '@/components/3d/Axolotl'
-import {Axolotl2} from '@/components/3d/Cute_axolotl'
-import {useFrame} from '@react-three/fiber'
+import React, { useRef, useEffect, useState } from 'react'
+import { Group, Box3, Vector3 } from 'three'
+import { Sheep } from '@/components/3d/Sheep'
+import { Axolotl } from '@/components/3d/Axolotl'
+import { Axolotl2 } from '@/components/3d/Cute_axolotl'
 
 const characterComponents = {
     sheep: Sheep,
@@ -17,15 +16,36 @@ type HostCharacterProps = {
     character: CharacterName
 }
 
-export default function HostCharacter({character}: HostCharacterProps) {
+const HostCharacterContext = React.createContext<HostCharacterProps>({
+    character: 'sheep',
+})
+
+type HostCharacterProviderProps = {
+    children?: React.ReactNode
+    character: CharacterName
+}
+
+export function HostCharacterProvider({
+    children,
+    character,
+}: HostCharacterProviderProps) {
+    return (
+        <HostCharacterContext.Provider value={{ character }}>
+            <HostCharacter character={character} />
+            {children}
+        </HostCharacterContext.Provider>
+    )
+}
+
+export default function HostCharacter({ character }: HostCharacterProps) {
     const hostCharacter = useRef<Group>(null)
     const modelRef = useRef<Group>(null)
     const [scale, setScale] = useState(1)
 
-    useFrame(({clock}) => {
-        if (!hostCharacter.current) return
-        hostCharacter.current.rotation.y = clock.elapsedTime
-    })
+    // useFrame(({clock}) => {
+    //     if (!hostCharacter.current) return
+    //     hostCharacter.current.rotation.y = clock.elapsedTime
+    // })
 
     const CharacterComponent = characterComponents[character]
 
@@ -53,7 +73,7 @@ export default function HostCharacter({character}: HostCharacterProps) {
     return (
         <group ref={hostCharacter}>
             <group ref={modelRef} scale={[scale, scale, scale]}>
-                <CharacterComponent/>
+                <CharacterComponent />
             </group>
         </group>
     )
