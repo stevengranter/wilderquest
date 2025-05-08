@@ -15,7 +15,7 @@ export default function App() {
                 <Outlet />
                 <Toaster />
                 <ThreeFiberCanvasProvider>
-                    <HostCharacterProvider character="axolotl" />
+                    <HostCharacterProvider character="bee" />
                 </ThreeFiberCanvasProvider>
             </AuthProvider>
         </QueryClientProvider>

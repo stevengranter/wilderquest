@@ -1,6 +1,6 @@
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
-import React, { createContext } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
+import React, { createContext, useEffect } from 'react'
+import { OrthographicCamera } from '@react-three/drei'
 
 const ThreeFiberCanvasContext = createContext<unknown | undefined>(undefined)
 
@@ -12,7 +12,8 @@ export function ThreeFiberCanvasProvider({
     return (
         <ThreeFiberCanvasContext value={'true'}>
             <div id="canvas-container" className="h-full w-full absolute">
-                <Canvas camera={{ position: [0, 1.5, 5], fov: 50 }}>
+                <Canvas camera={{ position: [0, 1.5, 5], fov: 30 }}>
+                    <CameraController />
                     <ambientLight intensity={2} />
                     <spotLight
                         position={[2, 2, 2]}
@@ -21,11 +22,20 @@ export function ThreeFiberCanvasProvider({
                         intensity={5}
                     />
                     <directionalLight position={[-5, 10, 5]} intensity={2} />
-                    <OrbitControls enablePan={false} />){children}
+                    {/*<OrbitControls enablePan={false} />)*/}
+                    {children}
                 </Canvas>
             </div>
         </ThreeFiberCanvasContext>
     )
+}
+
+function CameraController() {
+    const { camera } = useThree()
+    useEffect(() => {
+        camera.lookAt(0, 0, 0)
+    }, [camera])
+    return null
 }
 
 export function useThreeFiberContext() {
