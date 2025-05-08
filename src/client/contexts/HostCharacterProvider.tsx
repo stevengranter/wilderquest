@@ -63,37 +63,6 @@ export default function HostCharacter({ character }: HostCharacterProps) {
         console.log(state)
     }, [state])
 
-    const handleGoHome = () => {
-        if (modelRef.current) {
-            // 1. Get canvas dimensions
-            const { width, height } = size
-
-            // 2. Define the 2D lower-RIGHT corner screen coordinate
-            // const screenX = width // Right edge
-            // const screenY = height // Bottom edge
-
-            // 3. Convert screen coordinates to Normalized Device Coordinates (NDC)
-            // For lower-right (width, height):
-            // ndcX = (width / width) * 2 - 1 = 1
-            // ndcY = -(height / height) * 2 + 1 = -1
-            const ndcX = 1
-            const ndcY = -1
-
-            // 4. Create a 3D vector in NDC space.
-            // Use the group's current Z position to maintain depth, or choose a fixed Z.
-            const targetZ = modelRef.current.position.z
-            const ndcVector = new Vector3(ndcX, ndcY, targetZ)
-
-            // 5. Unproject the NDC vector into world coordinates
-            ndcVector.unproject(camera)
-
-            // 6. Update the group's position
-            modelRef.current.position.copy(ndcVector)
-
-            // Optional: Add animation here for smooth movement
-        }
-    }
-
     useFrame(({ pointer, clock }) => {
         if (!modelRef.current || !charHomeRef.current) return
 
@@ -101,17 +70,22 @@ export default function HostCharacter({ character }: HostCharacterProps) {
         const modelPos = modelRef.current.position
         const modelRot = modelRef.current.rotation
 
+        const targetX = state.viewport.width / 2
+        const targetY = -state.viewport.height / 2
+        const targetZ = 0 // Adjust Z if you need it further/closer
+        const lowerRight = new Vector3(targetX, targetY, targetZ)
+
         // Idle animation or return home logic
         if (!isActive) {
             if (isReturningHome) {
                 // Return home logic
-                const distanceToHome = modelPos.distanceTo(homePos)
-                const returnSpeed = 0.08
+                const distanceToHome = lowerRight.distanceTo(homePos)
+                const returnSpeed = 0.01
 
                 if (distanceToHome < 0.1) {
                     // Close enough to home, snap to position and reset
                     setIsReturningHome(false)
-                    modelPos.copy(homePos)
+                    modelPos.copy(lowerRight)
 
                     // Reset rotation to initial values
                     modelRot.x = MathUtils.lerp(
@@ -131,7 +105,16 @@ export default function HostCharacter({ character }: HostCharacterProps) {
                     )
                 } else {
                     // Keep moving toward home
-                    modelPos.lerp(homePos, returnSpeed)
+                    modelPos.lerp(lowerRight, returnSpeed)
+
+                    // Apply gentle rotation wobble
+
+                    const speed = 2
+
+                    const wobbleAmount = 0.05
+                    const wobble =
+                        Math.sin(clock.getElapsedTime() * speed * 1.5) *
+                        wobbleAmount
 
                     // Smoothly restore rotation
                     modelRot.x = MathUtils.lerp(
@@ -141,7 +124,7 @@ export default function HostCharacter({ character }: HostCharacterProps) {
                     )
                     modelRot.y = MathUtils.lerp(
                         modelRot.y,
-                        initialRotation.y,
+                        initialRotation.y + wobble,
                         0.1
                     )
                     modelRot.z = MathUtils.lerp(
@@ -259,7 +242,7 @@ export default function HostCharacter({ character }: HostCharacterProps) {
         box.getSize(size)
 
         const maxDimension = Math.max(size.x, size.y, size.z)
-        const desiredSize = 1 // Target size
+        const desiredSize = 0.66 // Target size
 
         const newScale = desiredSize / maxDimension
 
@@ -297,7 +280,7 @@ export default function HostCharacter({ character }: HostCharacterProps) {
                 onPointerDown={handlePointerDown}
             />
             <LowerRightCharacter>
-                <group ref={charHomeRef} onPointerDown={handleGoHome}>
+                <group ref={charHomeRef}>
                     <mesh>
                         <boxGeometry args={[1, 1, 1]} />
                         <meshBasicMaterial
