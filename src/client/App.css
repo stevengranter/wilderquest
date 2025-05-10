@@ -1,3 +1,10 @@
+.cherry-bomb-one-regular {
+    font-family: "Cherry Bomb One", system-ui;
+    font-weight: 400;
+    font-style: normal;
+}
+
+
 .emoji-picker {
     background-color: white;
     border: 1px solid lightgray;

@@ -4,7 +4,10 @@ import { authRouter } from './auth/auth.routes.js'
 import { refreshTokenRouter } from './refresh/refresh.route.js'
 import { collectionsRouter } from './collections/collections.routes.js'
 import { searchRouter } from './search/search.routes.js'
-import { iNaturalistProxyRouter } from '../iNaturalist.proxy.route.js'
+import {
+    iNaturalistProxyRouter,
+    pexelsProxyRouter,
+} from '../iNaturalist.proxy.route.js'
 
 const router = Router()
 
@@ -16,6 +19,7 @@ const routes = [
     { url: '/refresh', router: refreshTokenRouter },
     { url: '/collections', router: collectionsRouter },
     { url: '/iNatAPI', router: iNaturalistProxyRouter },
+    { url: '/proxy/pexels', router: pexelsProxyRouter },
     { url: '/search', router: searchRouter },
 ]
 

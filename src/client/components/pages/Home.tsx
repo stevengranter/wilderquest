@@ -1,9 +1,11 @@
 import { Link } from 'react-router'
+import usePexelsBackground from '@/hooks/usePexelsBackground'
 
 export default function Home() {
+    usePexelsBackground()
     return (
         <>
-            <h2>Howdy ho!</h2>
+            <h1 className="font-allerta-stencil text-5xl">wildernest</h1>
             <Link to="/login">Login</Link>
             <Link to="/register">Register</Link>
             {/*<Link to='/camera'>Camera</Link>*/}

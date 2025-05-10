@@ -1,8 +1,16 @@
-import {Router} from 'express'
+import { Router } from 'express'
 import iNaturalistAPIProxy from '../proxies/iNaturalistAPI.proxy.js'
+import pexelsAPIProxy from '../proxies/pexelsAPI.proxy.js'
 
-const router = Router()
+const iNatRouter = Router()
 
-router.get('/*splat', iNaturalistAPIProxy)
+iNatRouter.get('/*splat', iNaturalistAPIProxy)
 
-export {router as iNaturalistProxyRouter}
+const pexelsRouter = Router()
+
+pexelsRouter.get('/', pexelsAPIProxy)
+
+export {
+    iNatRouter as iNaturalistProxyRouter,
+    pexelsRouter as pexelsProxyRouter,
+}

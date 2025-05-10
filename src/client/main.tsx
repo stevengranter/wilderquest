@@ -14,7 +14,6 @@ import './main.css'
 import Welcome from './components/pages/Welcome'
 import UserList from '@/components/UserList'
 import UserProfile from '@/components/UserProfile'
-import { Camera } from 'react-camera-pro'
 import SearchForm from '@/components/SearchForm'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
