@@ -1,13 +1,17 @@
 import { Link } from 'react-router'
 // import usePexelsBackground from '@/hooks/usePexelsBackground'
 import { Card } from '@/components/ui/card'
+import { ThemeSwitcher } from '@/components/ui/theme-switcher'
 
 export default function LandingPage() {
     // usePexelsBackground()
     return (
         <>
-            <h1 className="font-allerta-stencil text-5xl">wildernest</h1>
-            <Card>
+            {/*<nav className="text-main-foreground transition-colors">*/}
+            {/*    <ThemeSwitcher />*/}
+            {/*</nav>*/}
+            <h1 className="font-allerta-stencil text-6xl">wildernest</h1>
+            <Card className="w-lg">
                 <p>A web app for exploring the world of wildlife.</p>
             </Card>
             <Link to="/login">Login</Link>

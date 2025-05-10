@@ -67,7 +67,7 @@ export default function TaxonCard({
         >
             <Card
                 key={item.id}
-                className={cn('p-0 m-0')}
+                className={cn('p-0 m-0 gap-0')}
                 onClick={async () => {
                     if (Number(taxonId) === item.id) {
                         console.log(taxonId)
@@ -83,18 +83,22 @@ export default function TaxonCard({
                     }
                 }}
             >
-                <CardContent className="p-4 pt-2">
+                <CardContent className="p-0 m-0">
                     {item.default_photo?.medium_url && (
                         <img
                             src={item.default_photo.medium_url}
                             alt={item.name}
-                            className="w-full rounded-t-md object-cover aspect-square"
+                            className="w-full object-cover aspect-square p-0 mb-0"
                         />
                     )}
-                    <h3 className="font-bold text-xl">
+                </CardContent>
+                <CardContent className="bg-cyan-300 py-2 border-y-3 border-black">
+                    <h3 className="font-bold text-xl p-0">
                         {_.startCase(_.camelCase(item.preferred_common_name))}
                     </h3>
                     <h4 className="italic">{item.name}</h4>
+                </CardContent>
+                <CardContent className="">
                     <div>Taxon ID: {item.id}</div>
                     <div>
                         Observations: <Badge>{item.observations_count}</Badge>

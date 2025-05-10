@@ -105,7 +105,7 @@ export default function SearchAutoComplete({
                         }
                     }}
                     placeholder="Search species by name or common name..."
-                    className="border p-2 rounded w-full"
+                    // className="mx-2"
                     onBlur={() =>
                         setTimeout(() => setShowSuggestions(false), 100)
                     }
@@ -126,7 +126,7 @@ export default function SearchAutoComplete({
                             suggestions.map((item, index) => (
                                 <li
                                     key={item.id}
-                                    className={`p-2 cursor-pointer ${index === highlightedSuggestion ? 'bg-blue-800 text-primary-100' : 'hover:bg-blue-300'}`}
+                                    className={`p-2 cursor-pointer bg-background ${index === highlightedSuggestion ? 'bg-secondary-background text-primary-100' : 'hover:bg-blue-300'}`}
                                     onMouseEnter={() =>
                                         setHighlightedSuggestion(index)
                                     }
