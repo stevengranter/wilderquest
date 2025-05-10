@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import fetchWikipediaContent from '@/utils/fetchWikipediaContent'
 import { motion } from 'motion/react'
-import { Card, CardContent, CardSection } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import _ from 'lodash'
 import { Badge } from '@/components/ui/badge'
@@ -83,7 +83,7 @@ export default function TaxonCard({
                     }
                 }}
             >
-                <CardSection>
+                <CardContent className="p-4 pt-2">
                     {item.default_photo?.medium_url && (
                         <img
                             src={item.default_photo.medium_url}
@@ -91,8 +91,6 @@ export default function TaxonCard({
                             className="w-full rounded-t-md object-cover aspect-square"
                         />
                     )}
-                </CardSection>
-                <CardContent className="p-4 pt-2">
                     <h3 className="font-bold text-xl">
                         {_.startCase(_.camelCase(item.preferred_common_name))}
                     </h3>

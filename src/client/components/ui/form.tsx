@@ -28,7 +28,7 @@ type FormFieldContextValue<
 }
 
 const FormFieldContext = React.createContext<FormFieldContextValue>(
-    {} as FormFieldContextValue
+    {} as FormFieldContextValue,
 )
 
 function FormField<
@@ -70,7 +70,7 @@ type FormItemContextValue = {
 }
 
 const FormItemContext = React.createContext<FormItemContextValue>(
-    {} as FormItemContextValue
+    {} as FormItemContextValue,
 )
 
 function FormItem({ className, ...props }: React.ComponentProps<'div'>) {
@@ -88,16 +88,16 @@ function FormItem({ className, ...props }: React.ComponentProps<'div'>) {
 }
 
 function FormLabel({
-    className,
-    ...props
-}: React.ComponentProps<typeof LabelPrimitive.Root>) {
+                       className,
+                       ...props
+                   }: React.ComponentProps<typeof LabelPrimitive.Root>) {
     const { error, formItemId } = useFormField()
 
     return (
         <Label
             data-slot="form-label"
             data-error={!!error}
-           'className='cn('font-heading', className)}
+            className={cn('font-heading', className)}
             htmlFor={formItemId}
             {...props}
         />
@@ -105,8 +105,7 @@ function FormLabel({
 }
 
 function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
-    const { error, formItemId, formDescriptionId, formMessageId } =
-        useFormField()
+    const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
     return (
         <Slot

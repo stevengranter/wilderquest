@@ -41,8 +41,8 @@ function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
 function CardDescription({ className, ...props }: React.ComponentProps<'div'>) {
     return (
         <div
-            data-slot="c'rd-description"
-'           className={cn('text-sm font-base', className)}
+            data-slot='card-description'
+            className={cn('text-sm font-base', className)}
             {...props}
         />
     )
@@ -81,25 +81,11 @@ function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
     )
 }
 
-function CardSection({ className, ...props }: React.ComponentProps<'div'>) {
-    return (
-        <div
-            data-slot='card-footer'
-            className={cn(
-                'flex items-center p-0 m-0 [.border-t]:pt-6',
-                className,
-            )}
-            {...props}
-        />
-    )
-}
-
 export {
     Card,
     CardHeader,
     CardFooter,
     CardTitle,
-    CardSection,
     CardDescription,
     CardContent,
     CardAction,
