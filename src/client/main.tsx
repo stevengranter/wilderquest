@@ -10,6 +10,7 @@ import Register from './components/pages/Register'
 import LandingPage from './components/pages/LandingPage'
 
 // Stylesheets
+import './globals.css'
 import './main.css'
 import Welcome from './components/pages/Welcome'
 import UserList from '@/components/UserList'

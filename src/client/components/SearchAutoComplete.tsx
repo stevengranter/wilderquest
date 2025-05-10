@@ -113,7 +113,7 @@ export default function SearchAutoComplete({
 
                 {/* Suggestions Dropdown */}
                 {query && showSuggestions && (
-                    <ul className="border mt-0 rounded absolute z-10 text-primary-900 w-full bg-opacity-80 bg-primary-200 shadow">
+                    <ul className="border mt-0 rounded absolute z-10 text-primary-900 w-full bg-opacity-80 shadow">
                         {suggestionResult.isLoading ? (
                             <li className="p-2 text-gray-400 italic">
                                 Loading...
