@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import usePexelsBackground from '@/hooks/usePexelsBackground'
 
-export default function Home() {
+export default function LandingPage() {
     usePexelsBackground()
     return (
         <>
