@@ -5,9 +5,9 @@ Files: cute_axolotl.glb [3.18MB] > /Users/teeb/repos/crudvale/public/cute_axolot
 */
 
 import * as THREE from 'three'
-import React, {JSX} from 'react'
-import {useGLTF} from '@react-three/drei'
-import {GLTF} from 'three-stdlib'
+import React, { JSX } from 'react'
+import { useGLTF } from '@react-three/drei'
+import { GLTF } from 'three-stdlib'
 
 type GLTFResult = GLTF & {
     nodes: {
@@ -24,8 +24,8 @@ type GLTFResult = GLTF & {
 }
 
 export function Axolotl2(props: JSX.IntrinsicElements['group']) {
-    const {nodes, materials} = useGLTF(
-        '/cute_axolotl-transformed.glb'
+    const { nodes, materials } = useGLTF(
+        '/cute_axolotl-transformed.glb',
     ) as GLTFResult
     return (
         <group {...props} dispose={null}>

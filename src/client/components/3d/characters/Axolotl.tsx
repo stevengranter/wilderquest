@@ -92,7 +92,7 @@ export const Axolotl = forwardRef<Group, AxolotlProps>(
                 />
             </group>
         )
-    }
+    },
 )
 
 useGLTF.preload('/cute_axolotl.glb')

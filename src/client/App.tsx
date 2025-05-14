@@ -4,7 +4,6 @@ import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/hooks/useAuth'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThreeFiberCanvasProvider } from '@/contexts/ThreeFiberCanvasContext'
-import { HostCharacterProvider } from '@/contexts/HostCharacterProvider'
 import { ThemeProvider } from 'next-themes'
 
 const queryClient = new QueryClient()
@@ -16,9 +15,7 @@ export default function App() {
                 <ThemeProvider attribute="class" disableTransitionOnChange>
                     <Outlet />
                     <Toaster />
-                    <ThreeFiberCanvasProvider>
-                        <HostCharacterProvider character="bee" />
-                    </ThreeFiberCanvasProvider>
+                    <ThreeFiberCanvasProvider></ThreeFiberCanvasProvider>
                 </ThemeProvider>
             </AuthProvider>
         </QueryClientProvider>

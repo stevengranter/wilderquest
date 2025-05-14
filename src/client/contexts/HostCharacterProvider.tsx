@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { Group, Box3, Vector3, MathUtils } from 'three'
-import { Sheep } from '@/components/3d/Sheep'
-import { Axolotl } from '@/components/3d/Axolotl'
-import { Axolotl2 } from '@/components/3d/Cute_axolotl'
-import { Bee } from '@/components/3d/Bee'
+import { Sheep } from '@/components/3d/characters/Sheep'
+import { Axolotl } from '@/components/3d/characters/Axolotl'
+import { Axolotl2 } from '@/components/3d/characters/Cute_axolotl'
+import { Bee } from '@/components/3d/characters/Bee'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 
@@ -242,7 +242,7 @@ export default function HostCharacter({ character }: HostCharacterProps) {
         box.getSize(size)
 
         const maxDimension = Math.max(size.x, size.y, size.z)
-        const desiredSize = 0.66 // Target size
+        const desiredSize = 2 // Target size
 
         const newScale = desiredSize / maxDimension
 
