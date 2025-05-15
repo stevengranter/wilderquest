@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/breadcrumb'
 import _ from 'lodash'
 import React from 'react'
+import GeoLocation from '@/components/Location'
 
 // Hook to fetch data for a specific taxon ID
 function useTaxonSearch(taxonId: string | undefined) {
@@ -117,6 +118,7 @@ export default function SearchForm() {
                 onSelect={handleSelect}
                 isLoading={isLoadingResults}
             />
+            <GeoLocation />
         </>
     )
 }

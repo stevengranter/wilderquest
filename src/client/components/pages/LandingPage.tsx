@@ -5,7 +5,7 @@ import SearchForm from '@/components/SearchForm'
 export default function LandingPage() {
     // usePexelsBackground()
     return (
-        <>
+        <div className='flex flex-col p-10 w-3/4'>
             {/*<nav className="text-main-foreground transition-colors">*/}
             {/*    <ThemeSwitcher />*/}
             {/*</nav>*/}
@@ -19,6 +19,6 @@ export default function LandingPage() {
             <Link to="/register">Register</Link>
             {/*<Link to='/camera'>Camera</Link>*/}
             <Link to="/search">Search</Link>
-        </>
+        </div>
     )
 }
