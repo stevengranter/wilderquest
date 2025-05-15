@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { Card } from '@/components/ui/card'
+import SearchForm from '@/components/SearchForm'
 
 export default function LandingPage() {
     // usePexelsBackground()
@@ -12,6 +13,8 @@ export default function LandingPage() {
             <Card className="w-lg">
                 <p>A web app for exploring the world of wildlife.</p>
             </Card>
+            <SearchForm />
+
             <Link to="/login">Login</Link>
             <Link to="/register">Register</Link>
             {/*<Link to='/camera'>Camera</Link>*/}
