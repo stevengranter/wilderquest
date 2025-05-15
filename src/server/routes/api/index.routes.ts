@@ -8,6 +8,7 @@ import {
     iNaturalistProxyRouter,
     pexelsProxyRouter,
 } from '../iNaturalist.proxy.route.js'
+import { serviceRouter } from './services/services.routes.js'
 
 const router = Router()
 
@@ -21,6 +22,7 @@ const routes = [
     { url: '/iNatAPI', router: iNaturalistProxyRouter },
     { url: '/proxy/pexels', router: pexelsProxyRouter },
     { url: '/search', router: searchRouter },
+    { url: '/service', router: serviceRouter },
 ]
 
 routes.forEach((route) => {
