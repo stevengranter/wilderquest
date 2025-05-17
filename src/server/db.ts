@@ -1,5 +1,5 @@
 import mysql, {Pool} from 'mysql2/promise'
-import appConfig from './config/appConfig.js'
+import appConfig from './_config/app.config.js'
 import chalk from 'chalk'
 
 let dbPool: Pool | undefined

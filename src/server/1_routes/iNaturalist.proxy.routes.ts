@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import iNaturalistAPIProxy from '../proxies/iNaturalistAPI.proxy.js'
-import pexelsAPIProxy from '../proxies/pexelsAPI.proxy.js'
+import iNaturalistAPIProxy from '../4_proxies/iNaturalistAPI.proxy.js'
+import pexelsAPIProxy from '../4_proxies/pexelsAPI.proxy.js'
 
 const iNatRouter = Router()
 

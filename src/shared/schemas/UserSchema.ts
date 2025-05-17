@@ -1,4 +1,4 @@
-// schemas/userSchema.ts
+// _schemas/userSchema.ts
 
 import {z} from 'zod'
 

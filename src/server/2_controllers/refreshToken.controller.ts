@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 import { Request, Response } from 'express'
 
 import { z } from 'zod'
-import UsersRepository from '../repositories/UsersRepository.js'
+import UsersRepository from '../4_repositories/UsersRepository.js'
 
 const RefreshReqBodySchema = z.object({
     user_cuid: z.string().cuid2(),

@@ -8647,7 +8647,7 @@ snapshots:
       '@swc/core': 1.11.21
       vite: 6.3.2(@types/node@22.14.1)(jiti@2.4.2)(lightningcss@1.29.2)(tsx@4.19.3)(yaml@2.7.1)
     transitivePeerDependencies:
-      - '@swc/helpers'
+      - '@swc/_helpers'
 
   '@vitejs/plugin-react@4.4.1(vite@6.3.2(@types/node@22.14.1)(jiti@2.4.2)(lightningcss@1.29.2)(tsx@4.19.3)(yaml@2.7.1))':
     dependencies:

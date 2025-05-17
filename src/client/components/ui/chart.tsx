@@ -334,7 +334,7 @@ function ChartLegendContent({
     )
 }
 
-// Helper to extract item config from a payload.
+// Helper to extract item _config from a payload.
 function getPayloadConfigFromPayload(
     config: ChartConfig,
     payload: unknown,

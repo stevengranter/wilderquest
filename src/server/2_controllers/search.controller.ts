@@ -1,7 +1,7 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express' // Keep RequestHandler here
 import { z } from 'zod'
-import { fetchInatData } from '../services/ai/iNaturalistService.js'
-import { identifySpecies } from '../services/ai/aiService.js'
+import { fetchInatData } from '../3_services/ai/iNaturalistService.js'
+import { identifySpecies } from '../3_services/ai/aiService.js'
 
 const SearchRequestSchema = z.object({
     type: z.enum(['image', 'text']),

@@ -3,7 +3,7 @@ export const API_ROUTES: {
     readonly LOGIN: '/api/users/login'
     readonly REFRESH_TOKEN: '/api/auth/refresh'
     readonly PRODUCTS: '/api/products'
-    // ... other routes
+    // ... other 1_routes
 }
 
 export type ApiRoutes = typeof API_ROUTES

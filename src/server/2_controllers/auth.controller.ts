@@ -3,13 +3,13 @@ import { compareSync, genSaltSync, hashSync } from 'bcrypt-ts'
 import jwt from 'jsonwebtoken'
 import { NextFunction, Request, RequestHandler, Response } from 'express'
 import { createId } from '@paralleldrive/cuid2'
-import UsersRepository from '../repositories/UsersRepository.js'
+import UsersRepository from '../4_repositories/UsersRepository.js'
 import {
     LoginRequestSchema,
     RegisterRequestSchema,
 } from '../../shared/schemas/Auth.js'
 import { LoginRequestBody, RegisterRequestBody } from '../../types/types.js'
-import { AuthenticatedRequest } from '../middleware/verifyJWT.js'
+import { AuthenticatedRequest } from '../_middleware/verifyJWT.js'
 
 interface LoginRequest extends Request {
     body: LoginRequestBody

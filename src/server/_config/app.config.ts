@@ -1,4 +1,4 @@
-// src/server/config/appConfig.ts
+// src/server/_config/appConfig.ts
 import 'dotenv/config'
 import {z} from 'zod'
 

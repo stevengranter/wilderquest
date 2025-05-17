@@ -1,9 +1,9 @@
 // users.controller.ts
 import {Request, Response} from 'express'
 
-import UsersRepository from '../repositories/UsersRepository.js'
-import CollectionsRepository from '../repositories/CollectionsRepository.js'
-import {AuthenticatedRequest} from '../middleware/verifyJWT.js'
+import UsersRepository from '../4_repositories/UsersRepository.js'
+import CollectionsRepository from '../4_repositories/CollectionsRepository.js'
+import { AuthenticatedRequest } from '../_middleware/verifyJWT.js'
 
 const getAll = async (req: AuthenticatedRequest, res: Response) => {
     // res.status(200).send(req.user);

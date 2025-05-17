@@ -1,8 +1,8 @@
 import {Request, Response} from 'express'
-import {AuthenticatedRequest} from '../middleware/verifyJWT.js'
-import {collectionSchema} from '../schemas/collection.schema.js'
-import CollectionsRepository from '../repositories/CollectionsRepository.js'
-import {collectionToTaxaSchema} from '../schemas/collection_to_taxa.schema.js'
+import { AuthenticatedRequest } from '../_middleware/verifyJWT.js'
+import { collectionSchema } from '../_schemas/collection.schema.js'
+import CollectionsRepository from '../4_repositories/CollectionsRepository.js'
+import { collectionToTaxaSchema } from '../_schemas/collection_to_taxa.schema.js'
 
 const getAll = async (req: Request, res: Response) => {
     const result = await CollectionsRepository.getAll()

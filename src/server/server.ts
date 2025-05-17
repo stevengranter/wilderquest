@@ -6,14 +6,14 @@ import path from 'path'
 
 // Internal imports
 import ViteExpress from 'vite-express'
-import errorHandler from './middleware/errorHandler.js'
+import errorHandler from './_middleware/errorHandler.js'
 import cors from 'cors'
-import corsConfig from './config/corsConfig.js'
-import { apiRouter } from './routes/api/index.routes.js'
+import corsConfig from './_config/cors.config.js'
+import { apiRouter } from './1_routes/api/_.routes.js'
 import { getDbPool, initializeDb } from './db.js'
 
 import { SCRIPT_DIR } from './constants.js'
-import appConfig from './config/appConfig.js'
+import appConfig from './_config/app.config.js'
 
 async function startServer() {
     try {
@@ -44,7 +44,7 @@ async function startServer() {
             // Serve static files from the 'public' directory
             app.use(express.static(publicDir))
 
-            // Handle all other routes by serving 'index.html'
+            // Handle all other 1_routes by serving 'index.html'
             app.get(['*splat'], (req: Request, res: Response) => {
                 res.sendFile(path.join(publicDir, 'index.html'))
             })
