@@ -1,14 +1,14 @@
 import { Router } from 'express'
-import { usersRouter } from './users/users.route.js'
-import { authRouter } from './auth/auth.routes.js'
-import { refreshTokenRouter } from './refresh/refresh.route.js'
-import { collectionsRouter } from './collections/collections.routes.js'
-import { searchRouter } from './search/search.routes.js'
+import { usersRouter } from './users.routes.js'
+import { authRouter } from './auth.routes.js'
+import { refreshTokenRouter } from './refresh.routes.js'
+import { collectionsRouter } from './collections.routes.js'
+import { searchRouter } from './search.routes.js'
 import {
     iNaturalistProxyRouter,
     pexelsProxyRouter,
-} from '../iNaturalist.proxy.route.js'
-import { serviceRouter } from './services/services.routes.js'
+} from '../iNaturalist.proxy.routes.js'
+import { serviceRouter } from './services.routes.js'
 
 const router = Router()
 
