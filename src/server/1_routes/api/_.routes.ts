@@ -7,7 +7,7 @@ import { searchRouter } from './search.routes.js'
 import {
     iNaturalistProxyRouter,
     pexelsProxyRouter,
-} from '../iNaturalist.proxy.routes.js'
+} from './proxies.routes.js'
 import { serviceRouter } from './services.routes.js'
 
 const router = Router()
