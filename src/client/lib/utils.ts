@@ -1,3 +1,5 @@
+// WARNING: this file is overwritten when running 'dlx shadcn@latest init'
+
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import imageBlobReduce from 'image-blob-reduce'
