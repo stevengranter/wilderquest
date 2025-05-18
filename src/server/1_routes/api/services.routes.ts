@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getGeoCodeForward } from '../../2_controllers/services.controller.js'
+import { getGeoCodeForward, getGeoCodeReverse } from '../../2_controllers/services.controller.js'
 
 const router = Router()
 
@@ -8,5 +8,6 @@ router.get('/', (req, res) => {
 })
 
 router.get('/geo/forward', getGeoCodeForward)
+router.get('/geo/reverse', getGeoCodeReverse)
 
 export { router as serviceRouter }
