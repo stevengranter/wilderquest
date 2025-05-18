@@ -16,9 +16,6 @@
     "declaration": true,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": [
-        "../shared/*"
-      ],
       "@/*": [
         "./*"
       ]

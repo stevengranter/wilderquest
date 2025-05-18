@@ -1,5 +1,3 @@
-'use client'
-
 import { Command as CommandPrimitive } from 'cmdk'
 import { Search } from 'lucide-react'
 
@@ -11,20 +9,20 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog'
+} from '@shared/components/ui/dialog'
 
-import { cn } from '@/lib/utils'
+import { cn } from '@shared/lib/utils'
 
 function Command({
-    className,
-    ...props
-}: React.ComponentProps<typeof CommandPrimitive>) {
+                     className,
+                     ...props
+                 }: React.ComponentProps<typeof CommandPrimitive>) {
     return (
         <CommandPrimitive
-            data-slot="command"
+            data-slot='command'
             className={cn(
                 'flex h-full w-full flex-col overflow-hidden rounded-[0px] border-2 border-border bg-main font-base text-main-foreground',
-                className
+                className,
             )}
             {...props}
         />
@@ -32,22 +30,23 @@ function Command({
 }
 
 function CommandDialog({
-    title = 'Command Palette',
-    description = 'Search for a command to run...',
-    children,
-    ...props
-}: React.ComponentProps<typeof Dialog> & {
+                           title = 'Command Palette',
+                           description = 'Search for a command to run...',
+                           children,
+                           ...props
+                       }: React.ComponentProps<typeof Dialog> & {
     title?: string
     description?: string
 }) {
     return (
         <Dialog {...props}>
-            <DialogHeader className="sr-only">
+            <DialogHeader className='sr-only'>
                 <DialogTitle>{title}</DialogTitle>
-                <DialogDescription>{description}</Dia'ogDescr'ption>
+                <DialogDescription>{description}</DialogDescription>
             </DialogHeader>
-            <DialogContent className="overflow-hidden p-0 rounded-[0px]! shadow-shadow border-0">
-                <Command className="**:data-[slot=comm'nd-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_['mdk-group-heading]]:font-heading [&_[cmdk-group-heading]]'mb-1 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+            <DialogContent className='overflow-hidden p-0 rounded-[0px]! shadow-shadow border-0'>
+                <Command
+                    className='**:data-[slot=command-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-heading [&_[cmdk-group-heading]]:mb-1 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5'>
                     {children}
                 </Command>
             </DialogContent>
@@ -55,7 +54,7 @@ function CommandDialog({
     )
 }
 
-function CommandIn'ut({
+function CommandInput({
                           className,
                           ...props
                       }: React.ComponentProps<typeof CommandPrimitive.Input>) {
@@ -144,7 +143,7 @@ function CommandItem({
             data-slot='command-item'
             className={cn(
                 'relative flex cursor-default select-none items-center rounded-base px-2 py-1.5 gap-2 text-sm text-main-foreground outline-border outline-0 aria-selected:outline-2 data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*=\'size-\'])]:size-4',
-                className
+                className,
             )}
             {...props}
         />
@@ -160,7 +159,7 @@ function CommandShortcut({
             data-slot='command-shortcut'
             className={cn(
                 'ml-auto text-xs tracking-widest text-main-foreground',
-                className
+                className,
             )}
             {...props}
         />

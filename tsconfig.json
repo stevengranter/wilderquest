@@ -19,11 +19,11 @@
     "isolatedModules": true,
     "noEmit": true,
     "paths": {
-      "@shared": [
-        "./src/shared/*"
-      ],
       "@/*": [
         "./src/client/*"
+      ],
+      "@shared": [
+        "./src/shared/*"
       ]
     }
   },
