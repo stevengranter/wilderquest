@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import SearchAutoComplete from '@/components/SearchAutoComplete'
 import SearchResults from '@/components/SearchResults'
-import ImageInput from '@/components/ImageInput'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     BreadcrumbItem,
@@ -12,7 +11,6 @@ import {
 } from '@/components/ui/breadcrumb'
 import _ from 'lodash'
 import React from 'react'
-import GeoLocation from '@/components/Location'
 
 // Hook to fetch data for a specific taxon ID
 function useTaxonSearch(taxonId: string | undefined) {
@@ -108,7 +106,6 @@ export default function SearchForm() {
                 selectionHandler={handleSelect}
                 selectedItemName={selectedItemName}
             />
-            <ImageInput handleSearch={handleSearch} />
             <SearchHistory
                 searchHistory={searchHistory}
                 setSearchHistory={setSearchHistory}
@@ -118,7 +115,6 @@ export default function SearchForm() {
                 onSelect={handleSelect}
                 isLoading={isLoadingResults}
             />
-            <GeoLocation />
         </>
     )
 }

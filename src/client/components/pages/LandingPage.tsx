@@ -1,24 +1,83 @@
-import { Link } from 'react-router'
-import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import SearchForm from '@/components/SearchForm'
+import ImageInput from '@/components/ImageInput'
+import GeoLocation from '@/components/Location'
 
 export default function LandingPage() {
     // usePexelsBackground()
     return (
-        <div className='flex flex-col p-10 w-3/4'>
-            {/*<nav className="text-main-foreground transition-colors">*/}
-            {/*    <ThemeSwitcher />*/}
-            {/*</nav>*/}
-            <h1 className='font-display text-6xl'>wildernest</h1>
-            <Card className="w-lg">
-                <p>A web app for exploring the world of wildlife.</p>
-            </Card>
-            <SearchForm />
+        <Tabs defaultValue='explore'>
+            <TabsList className='grid w-full grid-cols-3'>
+                <TabsTrigger value='explore'>Explore</TabsTrigger>
+                <TabsTrigger value='identify'>Identify</TabsTrigger>
+                <TabsTrigger value='locate'>Locate</TabsTrigger>
+            </TabsList>
+            <TabsContent value='explore'>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Explore</CardTitle>
+                        <CardDescription>
+                            Explore the world of nature
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className='grid gap-6'>
+                        <div className='grid gap-3'>
+                            <SearchForm />
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button className='w-full' variant='neutral'>
+                            Save changes
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </TabsContent>
+            <TabsContent value='identify'>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Identify</CardTitle>
+                        <CardDescription>
+                            Upload a photo to identify it
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className='grid gap-6'>
+                        <div className='grid gap-3'>
+                            <Label htmlFor='tabs-photo-upload'>Upload photo</Label>
+                            <ImageInput />
+                        </div>
 
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
-            {/*<Link to='/camera'>Camera</Link>*/}
-            <Link to="/search">Search</Link>
-        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button className='w-full' variant='neutral'>
+                            Save password
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </TabsContent>
+            <TabsContent value='locate'>
+                <CardHeader>
+                    <CardTitle>Locate</CardTitle>
+                    <CardDescription>
+                        Set location here
+                    </CardDescription>
+                </CardHeader>
+                <CardFooter>
+                    <GeoLocation />
+                </CardFooter>
+            </TabsContent>
+
+
+        </Tabs>
+
     )
 }
