@@ -1,4 +1,5 @@
-import { createContext, useState } from 'react'
+import { createContext } from 'react'
+import { useLocalStorage } from '@uidotdev/usehooks'
 
 type GeoLocation = {
     latitude: number
@@ -10,7 +11,7 @@ type GeoLocation = {
 const GeoLocationContext = createContext<GeoLocation | undefined>(undefined)
 
 export default function GeoLocationProvider() {
-    const [geoLocation, setGeoLocation] = useState<GeoLocation | undefined>(undefined)
+    const [geoLocation, setGeoLocation] = useLocalStorage<GeoLocation | undefined>('geoLocation', undefined)
     return (
         <GeoLocationContext.Provider value={geoLocation}></GeoLocationContext.Provider>
     )
