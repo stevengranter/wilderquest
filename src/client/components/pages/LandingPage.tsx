@@ -11,11 +11,14 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import SearchForm from '@/components/SearchForm'
 import ImageInput from '@/components/ImageInput'
-import GeoLocation from '@/components/Location'
+import GeoLocation from '@/components/location/LocationInput'
+import LocationIndicator from '@/components/location/LocationIndicator'
 
 export default function LandingPage() {
     // usePexelsBackground()
     return (
+        <>
+            <LocationIndicator />
         <Tabs defaultValue='explore'>
             <TabsList className='grid w-full grid-cols-3'>
                 <TabsTrigger value='explore'>Explore</TabsTrigger>
@@ -78,6 +81,6 @@ export default function LandingPage() {
 
 
         </Tabs>
-
+        </>
     )
 }

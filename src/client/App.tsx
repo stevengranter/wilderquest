@@ -5,6 +5,7 @@ import { AuthProvider } from '@/hooks/useAuth'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 // import { ThreeFiberCanvasProvider } from '@/contexts/ThreeFiberCanvasContext'
 import { ThemeProvider } from 'next-themes'
+import GeoLocationProvider from '@/contexts/GeoLocationProvider'
 
 const queryClient = new QueryClient()
 
@@ -12,12 +13,14 @@ export default function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <AuthProvider>
-                <ThemeProvider attribute="class" disableTransitionOnChange>
-                    <Outlet />
+                <GeoLocationProvider>
+                    <ThemeProvider attribute='class' disableTransitionOnChange>
+                        <Outlet />
 
-                    {/*<Toaster />*/}
-                    {/*<ThreeFiberCanvasProvider></ThreeFiberCanvasProvider>*/}
-                </ThemeProvider>
+                        {/*<Toaster />*/}
+                        {/*<ThreeFiberCanvasProvider></ThreeFiberCanvasProvider>*/}
+                    </ThemeProvider>
+                </GeoLocationProvider>
             </AuthProvider>
         </QueryClientProvider>
     )

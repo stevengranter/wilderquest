@@ -1,18 +1,63 @@
-import { createContext } from 'react'
+import { createContext, useContext, ReactNode } from 'react'
 import { useLocalStorage } from '@uidotdev/usehooks'
 
-type GeoLocation = {
-    latitude: number
-    longitude: number,
-    city: string,
-    country: string,
+// Extracted interface with required fields
+export interface GeoLocationData {
+    state: string;
+    latitude: string;
+    longitude: string;
+    city: string;
+    country: string;
 }
 
-const GeoLocationContext = createContext<GeoLocation | undefined>(undefined)
+// Extracted default values
+const DEFAULT_GEO_LOCATION: GeoLocationData = {
+    latitude: '',
+    longitude: '',
+    city: '',
+    country: '',
+    state: '',
+}
 
-export default function GeoLocationProvider() {
-    const [geoLocation, setGeoLocation] = useLocalStorage<GeoLocation | undefined>('geoLocation', undefined)
-    return (
-        <GeoLocationContext.Provider value={geoLocation}></GeoLocationContext.Provider>
+// Improved context type definition
+type GeoLocationContextType = {
+    geoLocation: GeoLocationData;
+    setGeoLocation: (geoLocation: GeoLocationData) => void;
+};
+
+// Extracted initial context
+const GeoLocationContext = createContext<GeoLocationContextType>({
+    geoLocation: DEFAULT_GEO_LOCATION,
+    setGeoLocation: () => {
+    },
+})
+
+// Added proper props interface
+interface GeoLocationProviderProps {
+    children?: ReactNode;
+}
+
+export default function GeoLocationProvider({ children }: GeoLocationProviderProps) {
+    const [geoLocation, setGeoLocation] = useLocalStorage<GeoLocationData>(
+        'geoLocation',
+        DEFAULT_GEO_LOCATION,
     )
+
+    return (
+        <GeoLocationContext.Provider
+            value={{ geoLocation, setGeoLocation }}
+        >
+            {children}
+        </GeoLocationContext.Provider>
+    );
+}
+
+export function useGeoLocation(): GeoLocationContextType {
+    const context = useContext(GeoLocationContext)
+
+    if (context === undefined) {
+        throw new Error('useGeoLocation must be used within a GeoLocationProvider')
+    }
+
+    return context
 }

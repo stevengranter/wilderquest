@@ -5,7 +5,7 @@ const API_KEY = process.env.LOCATIONIQ_KEY
 
 export async function getForwardGeocode(address: string) {
     const encodedAddress = encodeURIComponent(address)
-    const url = `${URL}/search?key=${API_KEY}&q=${encodedAddress}&format=json`
+    const url = `${URL}/search?key=${API_KEY}&q=${encodedAddress}&format=json&addressdetails=1&normalizeaddress=1`
     try {
         const result = await axios.post(url)
         if (result.status === 200) {
