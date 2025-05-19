@@ -18,7 +18,7 @@ export default function LandingPage() {
     // usePexelsBackground()
     return (
         <>
-            <LocationIndicator />
+            <LocationIndicator className='flex justify-end mb-2 text-xs' />
         <Tabs defaultValue='explore'>
             <TabsList className='grid w-full grid-cols-3'>
                 <TabsTrigger value='explore'>Explore</TabsTrigger>
