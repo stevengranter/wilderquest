@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from 'react-router'
 import App from './App'
 import Login from './components/pages/Login'
 import Register from './components/pages/Register'
-import LandingPage from './components/pages/LandingPage'
+import RootLayout, { ExploreTab, IdentifyTab, LocateTab } from './layouts/RootLayout'
 
 // Stylesheets
 import './globals.css'
@@ -22,19 +22,27 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<App />}>
-                    <Route index element={<LandingPage />} />
+                    <Route index element={<RootLayout />} />
+
+                    <Route path='explore' element={<ExploreTab />}>
+                        <Route index element={<ExploreTab />} />
+                        <Route path=':taxonId?' element={<ExploreTab />} />
+                    </Route>
+
+                    <Route path='identify' element={<IdentifyTab />} />
+                    <Route path='locate' element={<LocateTab />} />
+
+
                     <Route path="login" element={<Login />} />
                     <Route path="register" element={<Register />} />
                     <Route path="welcome" element={<Welcome />} />
-                    <Route path="search" element={<SearchForm />}>
-                        <Route index element={<SearchForm />} />
-                        <Route path=":taxonId?" element={<SearchForm />} />
-                    </Route>
+
                     <Route path="users">
                         <Route index element={<UserList />} />
                         <Route path=":id" element={<UserProfile />} />
                     </Route>
                 </Route>
+
             </Routes>
         </BrowserRouter>
     </React.StrictMode>

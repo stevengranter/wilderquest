@@ -71,7 +71,7 @@ export default function SearchForm() {
                     .then((res) => res.data.results),
         })
 
-        navigate(`/search/${item.id}`)
+        navigate(`/explore/${item.id}`)
 
         setSearchHistory((prevHistory) => {
             if (

@@ -41,11 +41,9 @@ export default function SearchAutoComplete({
         placeholderData: keepPreviousData,
     })
 
-    const allResults =
-        suggestionResult.data?.pages.flatMap((page) => page.results) ?? []
     // const filteredResults = filterAndSortResults(allResults)
 
-    const suggestions = allResults
+    const suggestions = suggestionResult.data?.pages.flatMap((page) => page.results) ?? []
     //     filteredResults.map((result) => ({
     //     ...result,
     //     // id: result.id.toString(),
@@ -96,10 +94,8 @@ export default function SearchAutoComplete({
                                 highlightedSuggestion >= 0 &&
                                 highlightedSuggestion < suggestions.length
                             ) {
-                                // selectionHandler(
-                                //     suggestions[highlightedSuggestion]
-                                // )
-                                console.log(highlightedSuggestion)
+                                setQuery(suggestions[highlightedSuggestion].name)
+                                selectionHandler(suggestions[highlightedSuggestion])
                                 setShowSuggestions(false)
                             }
                         }
