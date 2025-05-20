@@ -139,7 +139,7 @@ function SearchHistory({
 
         const newHistory = searchHistory.slice(0, index + 1)
         setSearchHistory(newHistory)
-        navigate(`/search/${clickedItem.id}`)
+        navigate(`/explore/${clickedItem.id}`)
     }
 
     return (
