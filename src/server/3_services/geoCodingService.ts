@@ -22,7 +22,7 @@ export async function getReverseGeocode(latitude: string, longitude: string) {
     const encodedLatitude = encodeURIComponent(latitude)
     const encodedLongitude = encodeURIComponent(longitude)
     console.log('Lat: ', latitude, 'Long: ', longitude, '')
-    const url = `${URL}/reverse?key=${API_KEY}&lat=${encodedLatitude}&lon=${encodedLongitude}&format=json`
+    const url = `${URL}/reverse?key=${API_KEY}&lat=${encodedLatitude}&lon=${encodedLongitude}&format=json&addressdetails=1&normalizeaddress=1`
     try {
         const result = await axios.post(url)
         if (result.status === 200) {
