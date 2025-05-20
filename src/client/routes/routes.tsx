@@ -1,5 +1,5 @@
 // src/routes/routes.tsx
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, Navigate } from 'react-router'
 import { TabsLayout } from '@/layouts/TabsLayout'
 import { ExploreTab } from './explore/ExploreTab'
 import { IdentifyTab } from './identify/IdentifyTab'
@@ -11,18 +11,21 @@ export const router = createBrowserRouter([
         element: <TabsLayout />,
         children: [
             {
+                index: true, // Match the root path exactly
+                element: <Navigate to='/explore' replace />, // Redirect to /explore
+            },
+            {
                 path: 'explore',
                 children: [
                     {
-                        index: true,  // This will be the default route for /explore
+                        index: true,
                         element: <ExploreTab />,
                     },
                     {
-                        path: ':taxonId',  // This creates the /explore/:taxaId route
+                        path: ':taxonId',
                         element: <ExploreTab />,
                     },
                 ],
-
             },
             {
                 path: 'identify',
@@ -32,7 +35,6 @@ export const router = createBrowserRouter([
                 path: 'locate',
                 element: <LocateTab />,
             },
-
         ],
     },
 ])
