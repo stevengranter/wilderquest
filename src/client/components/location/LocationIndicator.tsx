@@ -5,7 +5,7 @@ export default function LocationIndicator({ className }: { className?: string })
     return (
         <div className={className}>
             Current location: {' '}
-            {geoLocation && <>{geoLocation.city}, {geoLocation.state}, {geoLocation.country}</>}
+            {geoLocation && <>{geoLocation.city && `{geoLocation.city},`} {geoLocation.state}, {geoLocation.country}</>}
         </div>
     )
 }
