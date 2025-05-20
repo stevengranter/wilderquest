@@ -1,25 +1,12 @@
-import './App.css'
-import { Outlet } from 'react-router'
-// import { Toaster } from '@/components/ui/toaster'
-import { AuthProvider } from '@/hooks/useAuth'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-// import { ThreeFiberCanvasProvider } from '@/contexts/ThreeFiberCanvasContext'
-import { ThemeProvider } from 'next-themes'
-import GeoLocationProvider from '@/contexts/GeoLocationProvider'
-import RootLayout from '@/layouts/RootLayout'
-
-const queryClient = new QueryClient()
+// src/App.tsx
+import { AppProviders } from '@/providers/AppProviders'
+import { RouterProvider } from 'react-router'
+import { router } from '@/routes/routes'
 
 export default function App() {
     return (
-        <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-                <GeoLocationProvider>
-                    <ThemeProvider attribute='class' disableTransitionOnChange>
-                        <RootLayout />
-                    </ThemeProvider>
-                </GeoLocationProvider>
-            </AuthProvider>
-        </QueryClientProvider>
+        <AppProviders>
+            <RouterProvider router={router} />
+        </AppProviders>
     )
 }

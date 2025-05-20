@@ -1,17 +1,15 @@
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-
-import LocationIndicator from '@/components/location/LocationIndicator'
+// src/layouts/TabsLayout.tsx
 import { Outlet, useLocation, useNavigate } from 'react-router'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import LocationIndicator from '@/components/location/LocationIndicator'
 
-export default function RootLayout() {
+export function TabsLayout() {
     const navigate = useNavigate()
     const location = useLocation()
 
-    // Extract the current tab by matching the base path
     const currentTab = location.pathname.match(/\/(explore|identify|locate)/)?.[1] || 'explore'
 
     const handleTabChange = (value: string) => {
-        // Preserve any query parameters when changing tabs
         const searchParams = new URLSearchParams(location.search)
         navigate(`/${value}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`)
     }
@@ -30,10 +28,3 @@ export default function RootLayout() {
         </>
     )
 }
-
-
-
-
-
-
-
