@@ -92,7 +92,7 @@ export default function TaxonCard({
                         />
                     )}
                 </CardContent>
-                <CardContent className="bg-cyan-300 py-2 border-y-3 border-black">
+                <CardContent className='bg-cyan-300 dark:bg-cyan-800 py-2 border-y-3 border-black'>
                     <h3 className="font-bold text-xl p-0">
                         {_.startCase(_.camelCase(item.preferred_common_name))}
                     </h3>
