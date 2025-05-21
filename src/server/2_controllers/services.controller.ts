@@ -46,7 +46,7 @@ const getGeoCodeReverse: RequestHandler = async (req: Request, res: Response) =>
     }
 
     try {
-        const result = await getReverseGeocode(latitude, longitude)
+        const result = await getReverseGeocode(latitude.toString(), longitude.toString())
         if (!result) {
             res.status(404).json({
                 error: 'Location not found',
