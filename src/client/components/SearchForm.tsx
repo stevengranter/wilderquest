@@ -42,7 +42,7 @@ export default function SearchForm() {
     const [selectedItemName, setSelectedItemName] = useState('')
     const [searchHistory, setSearchHistory] = useState<iNatTaxaResponse[]>([])
 
-    const { data: taxonData, isLoading: isLoadingTaxon } =
+    const { data: taxonData, isLoading: isLoadingTaxon, error } =
         useTaxonSearch(taxonId)
     const { data: searchResultsFromText, isLoading: isLoadingTextSearch } =
         useTextSearch(searchText)
