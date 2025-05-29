@@ -1,5 +1,6 @@
 onlyBuiltDependencies:
   - '@swc/core'
+  - '@tailwindcss/oxide'
   - bufferutil
   - esbuild
   - msw

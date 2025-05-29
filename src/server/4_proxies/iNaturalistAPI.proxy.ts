@@ -18,7 +18,7 @@ const iNaturalistAPIProxy = async (req: Request, res: Response) => {
     // For all other status codes, assume success (or handle specific ones)
     res.status(result.status).send(result.data)
   } catch (error) {
-    console.error('API Proxy Error:', error.message)
+    // console.error('API Proxy Error:', error.message)
 
     if (axios.isAxiosError(error)) {
       res.status(500).json({ message: 'Internal Server Error' })

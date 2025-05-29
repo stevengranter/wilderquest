@@ -9,6 +9,7 @@ import {
     pexelsProxyRouter,
 } from './proxies.routes.js'
 import { serviceRouter } from './services.routes.js'
+import { chatRouter } from './chat.routes.js'
 
 const router = Router()
 
@@ -23,6 +24,7 @@ const routes = [
     { url: '/proxy/pexels', router: pexelsProxyRouter },
     { url: '/search', router: searchRouter },
     { url: '/service', router: serviceRouter },
+    { url: '/chat', router: chatRouter },
 ]
 
 routes.forEach((route) => {
