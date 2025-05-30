@@ -4,9 +4,11 @@ import { useChat } from '@ai-sdk/react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import TaxonCard from '@/components/TaxonCard'
+import { useState } from 'react'
 
 export default function Chatbot() {
-    const { messages, input, handleInputChange, handleSubmit, status, stop, error, reload } = useChat({})
+    const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
+    const { messages, input, handleInputChange, handleSubmit, status, stop, error, reload, append } = useChat({})
 
     return (
         <>
@@ -25,28 +27,51 @@ export default function Chatbot() {
                                 const { toolName, toolCallId, state } = toolInvocation
 
                                 if (state === 'result') {
-                                    if (toolName === 'getINatTaxonData') {
+                                    if (toolName === 'getINatObservationData') {
                                         const { result } = toolInvocation
-                                        return (
-                                            <div className='w-150' key={toolCallId}>
-                                                <TaxonCard item={result} />
-                                            </div>
-                                        )
-                                    }
-                                    if (toolName === 'getGeoLocationResults') {
+                                        if (result.length === 0) {
+                                            const observationList = result.map((observation) => {
+                                                return <TaxonCard key={observation.id} item={observation.taxon} />
+                                            })
+                                            return (<div>"Observation results" <ul
+                                                className='m-6 gap-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5'>
+                                                {observationList}
+                                            </ul></div>)
+                                        }
+                                    } else if (toolName === 'getINatTaxonData') {
                                         const { result } = toolInvocation
-                                        const locationList = result.map((location) => {
-                                            <li>{location.display_name}</li>
+                                        const taxonList = result.map((taxonData) => {
+                                            // return (<li>{taxonData.preferred_common_name}</li>)
+                                            return <TaxonCard key={taxonData.id} item={taxonData} />
                                         })
-                                        return <ul>{locationList}</ul>
-                                    }
-                                    if (toolName === 'getInatObservationData') {
+                                        return <ul
+                                            className='m-6 gap-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5'>
+                                            {taxonList}
+                                        </ul>
+                                    } else if (toolName === 'getGeoLocationResults') {
                                         const { result } = toolInvocation
-                                        const observationList = result.map((observation) => {
-                                            <li>{observation.id}</li>
-                                        })
-                                        return <ul>{observationList}</ul>
-                                    }
+                                        if (result.length > 0) {
+                                            const locationList = result.map((location) => (
+                                                <li key={location.place_id} className='mb-2'>
+                                                    <div className='flex justify-between items-center'>
+                                                        {/*<span>{location.display_name}</span>*/}
+                                                        <Button
+                                                            onClick={() => {
+                                                                setSelectedLocation(location)
+                                                                append({
+                                                                    role: 'user',
+                                                                    content: `I choose the location: ${location.display_name}`,
+                                                                })
+                                                            }}
+                                                        >
+                                                            {location.display_name}
+                                                        </Button>
+                                                    </div>
+                                                </li>
+                                            ))
+                                            return <ul>{locationList}</ul>
+                                        }
+                                    } else
                                     // Handle other tools with results
                                     return <div key={i}>Tool {toolName} completed</div>
                                 } else if (state === 'call') {

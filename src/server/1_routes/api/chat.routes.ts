@@ -7,7 +7,18 @@ import { geolocationTools, taxonomicDataTools } from '../../3_services/ai/tools/
 
 const router = Router()
 
-const systemPrompt = 'You are a helpful an knowledgeable assistant. Answer the question as detailed as possible. For any species related questions, use the iNat tools to retrieve more details to present them to the user'
+const systemPrompt = 'You are a helpful and knowledgeable assistant. ' +
+    'Answer the question as detailed as possible. ' +
+    'For any species related questions, use the iNat tools to retrieve more details' +
+    'When the user asks for information about a specific place, use the geoLocation tools to  ' +
+    'look up the latitude and longitude of the place. ' +
+    'When resolving ambiguous locations, always:' +
+    '1. First call `getGeoLocationResults` to disambiguate the location.' +
+    '2. Wait for the user to confirm their intended location. ' +
+    '3. Only then proceed to call `getINatObservationData` or other related tools. ' +
+    'Never call multiple tools in parallel unless all needed parameters are known. ' +
+    'Only present the information that is relevant to the question.'
+
 
 router.post('/', async (req: Request, res: Response) => {
     const { messages } = req.body
