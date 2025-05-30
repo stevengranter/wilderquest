@@ -1,6 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import axios from 'axios'
+import { INatObservation, INatTaxon } from '../../../../shared/types/iNatTypes.js'
 
 export const getINatTaxonData = tool({
     description: 'Get taxon data (including id) from iNaturalist database using common name or scientific name',
@@ -21,7 +22,7 @@ export const getINatTaxonData = tool({
                 // const { id, name } = results.data.results[0];
                 // return { id, name };
                 // return results.data.results[0]
-                const simplifiedResults = results.data.results.map(result => {
+                const simplifiedResults = results.data.results.map((result: INatTaxon) => {
                     return {
                         id: result.id,
                         name: result.name,
@@ -77,7 +78,7 @@ export const getINatObservationData = tool({
             console.log('Axios response:', results)
 
             if (results.status === 200 && results.data.results.length > 0) {
-                const simplifiedResults = results.data.results.map(result => ({
+                const simplifiedResults = results.data.results.map((result: INatObservation) => ({
                     id: result.id,
                     species_guess: result.species_guess,
                     location: result.location,

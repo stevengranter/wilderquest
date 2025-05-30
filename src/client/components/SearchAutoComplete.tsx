@@ -12,7 +12,7 @@ export default function SearchAutoComplete({
     selectionHandler,
     selectedItemName,
 }: {
-    selectionHandler: (suggestionItem: iNatTaxaResponse) => void
+    selectionHandler: (suggestionItem: iNatTaxaResult) => void
     selectedItemName: string | null
 }) {
     // const inputRef = useRef<HTMLInputElement>(null)
@@ -171,7 +171,7 @@ export default function SearchAutoComplete({
     )
 }
 
-// function filterAndSortResults(results: iNatTaxaResponse[]) {
+// function filterAndSortResults(results: iNatTaxaResult[]) {
 //     return results
 //         .filter((item) => {
 //             const matched = item.matched_term?.toLowerCase()

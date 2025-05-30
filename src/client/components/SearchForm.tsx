@@ -10,7 +10,7 @@ import SearchHistory from '@/components/SearchHistory'
 
 // Hook to fetch data for a specific taxon ID
 function useTaxonSearch(taxonId: string | undefined) {
-    return useQuery<iNatTaxaResponse[], Error>({
+    return useQuery<iNatTaxaResult[], Error>({
         queryKey: ['taxon', taxonId],
         queryFn: () =>
             axios
@@ -23,7 +23,7 @@ function useTaxonSearch(taxonId: string | undefined) {
 
 // Hook to fetch data based on a text query
 function useTextSearch(query: string) {
-    return useQuery<iNatTaxaResponse[], Error>({
+    return useQuery<iNatTaxaResult[], Error>({
         queryKey: ['textSearch', query],
         queryFn: () =>
             axios
@@ -40,7 +40,7 @@ export default function SearchForm() {
     const navigate = useNavigate()
     const [searchText, setSearchText] = useState('')
     const [selectedItemName, setSelectedItemName] = useState('')
-    const [searchHistory, setSearchHistory] = useState<iNatTaxaResponse[]>([])
+    const [searchHistory, setSearchHistory] = useState<iNatTaxaResult[]>([])
 
     const { data: taxonData, isLoading: isLoadingTaxon, error } =
         useTaxonSearch(taxonId)
@@ -58,7 +58,7 @@ export default function SearchForm() {
         console.log('Current Text Search Results:', searchResultsFromText)
     }, [taxonData, searchResultsFromText])
 
-    async function handleSelect(item: iNatTaxaResponse) {
+    async function handleSelect(item: iNatTaxaResult) {
         await queryClient.prefetchQuery({
             queryKey: ['taxon', item.id.toString()],
             queryFn: () =>

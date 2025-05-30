@@ -8,11 +8,11 @@ export default async function fetchSearchResults({
 }: {
     query: string
     pageParam?: number
-}): Promise<ApiResponse> {
+}): Promise<INatTaxaResponse> {
     if (!query || query.length < 2) {
         return { results: [], page: 1, per_page: 20, total_results: 0 }
     }
-    const { data } = await axios.get<ApiResponse>(API_URL, {
+    const { data } = await axios.get<INatTaxaResponse>(API_URL, {
         params: {
             q: query,
             page: pageParam,

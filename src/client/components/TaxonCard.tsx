@@ -7,13 +7,14 @@ import { cn } from '@/lib/utils'
 import _ from 'lodash'
 import { Badge } from '@/components/ui/badge'
 import { useParams } from 'react-router'
+import { INatObservation, INatTaxon } from '../../shared/types/iNatTypes'
 
 export default function TaxonCard({
     item,
     onClick,
 }: {
-    item: iNatTaxaResponse
-    onClick?: (item: iNatTaxaResponse) => void
+    item: INatTaxon
+    onClick?: (item: INatTaxon | INatObservation) => void
 }) {
     const { taxonId } = useParams()
     const isAlreadySelected = Number(taxonId) === item.id
@@ -25,7 +26,7 @@ export default function TaxonCard({
     const [selectedAncestorTaxon, setSelectedAncestorTaxon] = useState<
         number | null
     >(null)
-    const [ancestors, setAncestors] = useState<iNatTaxaResponse[]>([])
+    const [ancestors, setAncestors] = useState<INatTaxon[]>([])
 
     useEffect(() => {
         if (selectedAncestorTaxon) {

@@ -8,13 +8,13 @@ export default function SearchHistory({
                                           searchHistory,
                                           setSearchHistory,
                                       }: {
-    searchHistory: iNatTaxaResponse[]
-    setSearchHistory: React.Dispatch<React.SetStateAction<iNatTaxaResponse[]>>
+    searchHistory: iNatTaxaResult[]
+    setSearchHistory: React.Dispatch<React.SetStateAction<iNatTaxaResult[]>>
 }) {
     const navigate = useNavigate()
 
     const handleBreadcrumbClick = (
-        clickedItem: iNatTaxaResponse,
+        clickedItem: iNatTaxaResult,
         index: number,
     ) => {
         if (index === searchHistory.length - 1) {

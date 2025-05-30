@@ -1,5 +1,5 @@
 // --- Types ---
-type iNatTaxaResponse = {
+type iNatTaxaResult = {
     id: number
     rank:
         | 'species'
@@ -40,8 +40,8 @@ type iNatTaxaResponse = {
     preferred_common_name: string
 }
 
-interface ApiResponse {
-    results: iNatTaxaResponse[]
+interface INatTaxaResponse {
+    results: iNatTaxaResult[]
     per_page: number
     page: number
     total_results: number

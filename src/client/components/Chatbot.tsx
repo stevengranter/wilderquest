@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import TaxonCard from '@/components/TaxonCard'
 import { useState } from 'react'
+import { INatObservation } from '../../shared/types/iNatTypes'
 
 export default function Chatbot() {
     const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
@@ -30,7 +31,7 @@ export default function Chatbot() {
                                     if (toolName === 'getINatObservationData') {
                                         const { result } = toolInvocation
                                         if (result.length === 0) {
-                                            const observationList = result.map((observation) => {
+                                            const observationList = result.map((observation: INatObservation) => {
                                                 return <TaxonCard key={observation.id} item={observation.taxon} />
                                             })
                                             return (<div>"Observation results" <ul
