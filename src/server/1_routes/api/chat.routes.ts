@@ -3,6 +3,7 @@ import { google } from '@ai-sdk/google'
 import { streamText } from 'ai'
 import { Router } from 'express'
 import { Request, Response } from 'express'
+import { taxonomicDataTools } from '../../3_services/ai/tools/index.js'
 
 const router = Router()
 
@@ -11,10 +12,11 @@ router.post('/', async (req: Request, res: Response) => {
     try {
 
         const result = streamText({
-            model: google('gemini-2.0-flash-exp'),
+            model: google('gemini-2.5-flash-preview-04-17'),
             system: 'You are a helpful assistant.',
+            maxSteps: 3,
             messages,
-            // messages: [{"role":"user","content":"What is the capital of France?"}]
+            tools: taxonomicDataTools,
         })
         result.pipeDataStreamToResponse(res)
     } catch (error) {
