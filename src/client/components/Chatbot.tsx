@@ -28,10 +28,24 @@ export default function Chatbot() {
                                     if (toolName === 'getINatTaxonData') {
                                         const { result } = toolInvocation
                                         return (
-                                            <div className='w-150'>
+                                            <div className='w-150' key={toolCallId}>
                                                 <TaxonCard item={result} />
                                             </div>
                                         )
+                                    }
+                                    if (toolName === 'getGeoLocationResults') {
+                                        const { result } = toolInvocation
+                                        const locationList = result.map((location) => {
+                                            <li>{location.display_name}</li>
+                                        })
+                                        return <ul>{locationList}</ul>
+                                    }
+                                    if (toolName === 'getInatObservationData') {
+                                        const { result } = toolInvocation
+                                        const observationList = result.map((observation) => {
+                                            <li>{observation.id}</li>
+                                        })
+                                        return <ul>{observationList}</ul>
                                     }
                                     // Handle other tools with results
                                     return <div key={i}>Tool {toolName} completed</div>

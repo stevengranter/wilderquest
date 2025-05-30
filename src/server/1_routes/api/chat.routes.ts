@@ -3,9 +3,11 @@ import { google } from '@ai-sdk/google'
 import { streamText } from 'ai'
 import { Router } from 'express'
 import { Request, Response } from 'express'
-import { taxonomicDataTools } from '../../3_services/ai/tools/index.js'
+import { geolocationTools, taxonomicDataTools } from '../../3_services/ai/tools/index.js'
 
 const router = Router()
+
+const systemPrompt = 'You are a helpful an knowledgeable assistant. Answer the question as detailed as possible. For any species related questions, use the iNat tools to retrieve more details to present them to the user'
 
 router.post('/', async (req: Request, res: Response) => {
     const { messages } = req.body
@@ -13,10 +15,10 @@ router.post('/', async (req: Request, res: Response) => {
 
         const result = streamText({
             model: google('gemini-2.5-flash-preview-04-17'),
-            system: 'You are a helpful assistant.',
-            maxSteps: 3,
+            system: systemPrompt,
+            maxSteps: 8,
             messages,
-            tools: taxonomicDataTools,
+            tools: { ...taxonomicDataTools, ...geolocationTools },
         })
         result.pipeDataStreamToResponse(res)
     } catch (error) {
