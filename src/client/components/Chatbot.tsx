@@ -69,8 +69,8 @@ export default function Chatbot() {
                         <div
                             className={`px-4 py-2 my-1 rounded-lg max-w-[80%] whitespace-pre-wrap ${
                                 message.role === 'user'
-                                    ? 'bg-teal-200 text-right border-1 border-black shadow-shadow'
-                                    : 'bg-white text-left border-2 border-black shadow-shadow'
+                                    ? 'bg-teal-200 dark:bg-secondary-background text-black dark:text-teal-50 text-right border-1 border-black shadow-shadow'
+                                    : 'bg-white dark:bg-teal-900 dark:p-6 dark:font-light dark:tracking-wider text-black dark:text-white dark:text-shadow-md text-left border-2 border-black shadow-shadow'
                             }`}
                         >
                             {message.parts?.map((part, i) => {
@@ -194,7 +194,7 @@ export default function Chatbot() {
                                                     return (
                                                         <div key={i}>
                                                             {textPart && <Markdown>{textPart.text}</Markdown>}
-                                                            <p className='my-2 text-gray-700'>Please select a
+                                                            <p className='my-2'>Please select a
                                                                 location:</p>
                                                             <ul key={i}>{locationList}</ul>
                                                         </div>
