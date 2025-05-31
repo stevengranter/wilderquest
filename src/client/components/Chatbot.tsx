@@ -44,23 +44,23 @@ export default function Chatbot() {
                                     case 'text': {
                                         let displayText = part.text
 
-                                        // If there's a related tool result (e.g., TaxonCards) and the text includes a list, trim it
-                                        const hasObservationResult = message.parts?.some(
-                                            (p) =>
-                                                p.type === 'tool-invocation' &&
-                                                p.toolInvocation?.toolName === 'getINatObservationData' &&
-                                                p.toolInvocation?.state === 'result',
-                                        )
-
-                                        if (hasObservationResult && displayText.includes('\n\n')) {
-                                            // Keep only the first paragraph (the intro), discard the list
-                                            displayText = displayText.split('\n\n')[0]
-                                        }
+                                        // // If there's a related tool result (e.g., TaxonCards) and the text includes a list, trim it
+                                        // const hasObservationResult = message.parts?.some(
+                                        //     (p) =>
+                                        //         p.type === 'tool-invocation' &&
+                                        //         p.toolInvocation?.toolName === 'getINatObservationData' &&
+                                        //         p.toolInvocation?.state === 'result',
+                                        // )
+                                        //
+                                        // if (hasObservationResult && displayText.includes('\n\n')) {
+                                        //     // Keep only the first paragraph (the intro), discard the list
+                                        //     displayText = displayText.split('\n\n')[0]
+                                        // }
 
                                         return (
-                                            <div key={i}>
-                                                <Markdown>{displayText}</Markdown>
-                                            </div>
+
+                                            <Markdown key={i}>{displayText}</Markdown>
+
                                         )
                                     }
 

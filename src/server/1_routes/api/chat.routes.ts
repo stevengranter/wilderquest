@@ -17,7 +17,8 @@ const systemPrompt = 'You are a helpful and knowledgeable assistant.' +
     '2. Wait for the user to confirm their intended location. ' +
     '3. Only then proceed to call `getINatObservationData` or other related tools. ' +
     'Never call multiple tools in parallel unless all needed parameters are known. ' +
-    'Only present the information that is relevant to the question.'
+    'Only present the information that is relevant to the question.' +
+    'Return text in Markdown format.'
 
 
 router.post('/', async (req: Request, res: Response) => {
