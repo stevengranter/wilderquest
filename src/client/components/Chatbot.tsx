@@ -4,28 +4,63 @@ import { useChat } from '@ai-sdk/react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import TaxonCard from '@/components/TaxonCard'
-import { useState, useEffect, useRef } from 'react' // Import useEffect and useRef
+import { useState, useEffect, useRef } from 'react'
 import { INatObservation, INatTaxon } from '../../shared/types/iNatTypes'
 import { LocationIQPlace } from '../../shared/types/LocationIQPlace'
 import Markdown from 'react-markdown'
+import { Message } from 'ai' // Import Message type from 'ai'
+
+
+
 
 export default function Chatbot() {
     const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
     const { messages, input, handleInputChange, handleSubmit, status, stop, error, reload, append } = useChat({})
 
-    // Create a ref for the messages container
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
-    // Scroll to the bottom whenever messages change
     useEffect(() => {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
         }
-    }, [messages]) // Depend on the messages array
+    }, [messages])
+
+    // Helper function to determine if TaxonCards should be shown
+    const shouldShowTaxonCards = (message: Message, currentIndex: number) => {
+        if (!message.parts) return false
+
+        const lastTaxonDataIndex = message.parts.reduce((lastIndex, part, index) => {
+            if (
+                part.type === 'tool-invocation' &&
+                part.toolInvocation?.toolName === 'getINatTaxonData' &&
+                part.toolInvocation?.state === 'result'
+            ) {
+                return index
+            }
+            return lastIndex
+        }, -1)
+
+        if (lastTaxonDataIndex === -1 || currentIndex !== lastTaxonDataIndex) {
+            return false
+        }
+
+        for (let i = lastTaxonDataIndex + 1; i < message.parts.length; i++) {
+            const part = message.parts[i]
+            if (
+                part.type === 'tool-invocation' &&
+                part.toolInvocation?.toolName === 'getINatObservationData' &&
+                part.toolInvocation?.state === 'result'
+            ) {
+                return false
+            }
+        }
+
+        return true
+    }
 
     return (
-        <div className='flex flex-col h-screen'> {/* Add a container to manage layout */}
-            <div className='flex-1 overflow-y-auto p-4'> {/* This div will scroll */}
+        <div className='flex flex-col h-screen'>
+            <div className='flex-1 overflow-y-auto p-4'>
                 {messages.map((message) => (
                     <div
                         key={message.id}
@@ -38,35 +73,19 @@ export default function Chatbot() {
                                     : 'bg-white text-left border-2 border-black shadow-shadow'
                             }`}
                         >
-                            {/* Render message parts */}
                             {message.parts?.map((part, i) => {
                                 switch (part.type) {
                                     case 'text': {
-                                        let displayText = part.text
-
-                                        // // If there's a related tool result (e.g., TaxonCards) and the text includes a list, trim it
-                                        // const hasObservationResult = message.parts?.some(
-                                        //     (p) =>
-                                        //         p.type === 'tool-invocation' &&
-                                        //         p.toolInvocation?.toolName === 'getINatObservationData' &&
-                                        //         p.toolInvocation?.state === 'result',
-                                        // )
-                                        //
-                                        // if (hasObservationResult && displayText.includes('\n\n')) {
-                                        //     // Keep only the first paragraph (the intro), discard the list
-                                        //     displayText = displayText.split('\n\n')[0]
-                                        // }
-
+                                        // This part is now mostly for the initial text response from the model
+                                        // before any tools are called or if no tools are called.
                                         return (
-
-                                            <Markdown key={i}>{displayText}</Markdown>
-
+                                            <Markdown key={i}>{part.text}</Markdown>
                                         )
                                     }
 
                                     case 'tool-invocation': {
                                         const { toolInvocation } = part
-                                        const { toolName, toolCallId, state } = toolInvocation
+                                        const { toolName, state } = toolInvocation
 
                                         if (state === 'result') {
                                             if (toolName === 'getINatObservationData') {
@@ -89,45 +108,63 @@ export default function Chatbot() {
                                                         ),
                                                     )
 
+                                                    // Find the corresponding text part that should accompany this tool result
+                                                    // This assumes the model provides relevant text before or after the tool invocation.
+                                                    const textPart = message.parts?.find(
+                                                        (p, idx) => p.type === 'text' && idx < i,
+                                                    ) as { type: 'text'; text: string } | undefined
+
                                                     return (
                                                         <div key={i}>
-                                                            "Observation results"
-                                                            <ul className='m-6 gap-8 grid grid-cols-2'>
+                                                            {textPart && <Markdown>{textPart.text}</Markdown>}
+                                                            <p className='my-2 text-gray-700'>Here are some recent
+                                                                observations:</p>
+                                                            <ul className='m-6 gap-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3'>
                                                                 {observationList}
                                                             </ul>
                                                         </div>
                                                     )
                                                 }
                                             } else if (toolName === 'getINatTaxonData') {
-                                                return ('Retrieving taxon data...')
-                                                // const { result } = toolInvocation as { result: INatTaxon[] }
-                                                // if (result.length > 0) {
-                                                //     const uniqueTaxaMap = new Map<number, INatTaxon>()
-                                                //     result.forEach((taxon) => {
-                                                //         const taxonId = taxon?.id
-                                                //         if (taxonId && !uniqueTaxaMap.has(taxonId)) {
-                                                //             uniqueTaxaMap.set(taxonId, taxon)
-                                                //         }
-                                                //     })
-                                                //
-                                                //     const taxonList = Array.from(uniqueTaxaMap.values()).map(
-                                                //         (taxon) => (
-                                                //             <TaxonCard
-                                                //                 key={taxon?.id}
-                                                //                 item={taxon}
-                                                //             />
-                                                //         )
-                                                //     )
-                                                //
-                                                //     return (
-                                                //         <div key={i}>
-                                                //             "Taxon results"
-                                                //             <ul className='m-6 gap-8 grid grid-cols-2'>
-                                                //                 {taxonList}
-                                                //             </ul>
-                                                //         </div>
-                                                //     )
-                                                // }
+                                                if (shouldShowTaxonCards(message, i)) {
+                                                    const { result } = toolInvocation as { result: INatTaxon[] }
+                                                    if (result.length > 0) {
+                                                        const uniqueTaxaMap = new Map<number, INatTaxon>()
+                                                        result.forEach((taxon) => {
+                                                            const taxonId = taxon?.id
+                                                            if (taxonId && !uniqueTaxaMap.has(taxonId)) {
+                                                                uniqueTaxaMap.set(taxonId, taxon)
+                                                            }
+                                                        })
+
+                                                        const taxonList = Array.from(uniqueTaxaMap.values()).map(
+                                                            (taxon) => (
+                                                                <TaxonCard
+                                                                    key={taxon?.id}
+                                                                    item={taxon}
+                                                                />
+                                                            ),
+                                                        )
+
+                                                        const textPart = message.parts?.find(
+                                                            (p, idx) => p.type === 'text' && idx < i,
+                                                        ) as { type: 'text'; text: string } | undefined
+
+                                                        return (
+                                                            <div key={i}>
+                                                                {textPart && <Markdown>{textPart.text}</Markdown>}
+                                                                <p className='my-2 text-gray-700'>Here's what I found
+                                                                    about that taxon:</p>
+                                                                <ul className='m-6 gap-8 grid grid-cols-2'>
+                                                                    {taxonList}
+                                                                </ul>
+                                                            </div>
+                                                        )
+                                                    }
+                                                } else {
+                                                    // This is an interim step, so we might still show some text
+                                                    return (<div key={i}>Retrieving taxon data...</div>)
+                                                }
                                             } else if (toolName === 'getGeoLocationResults') {
                                                 const { result } = toolInvocation as { result: LocationIQPlace[] }
                                                 if (result.length > 0) {
@@ -136,7 +173,7 @@ export default function Chatbot() {
                                                             <div className='flex justify-between items-center'>
                                                                 <Button
                                                                     onClick={() => {
-                                                                        setSelectedLocation(location.display_name) // Corrected to use display_name
+                                                                        setSelectedLocation(location.display_name)
                                                                         append({
                                                                             role: 'user',
                                                                             content: `I choose the location: ${location.display_name}`,
@@ -149,7 +186,19 @@ export default function Chatbot() {
                                                             </div>
                                                         </li>
                                                     ))
-                                                    return <ul key={i}>{locationList}</ul>
+
+                                                    const textPart = message.parts?.find(
+                                                        (p, idx) => p.type === 'text' && idx < i,
+                                                    ) as { type: 'text'; text: string } | undefined
+
+                                                    return (
+                                                        <div key={i}>
+                                                            {textPart && <Markdown>{textPart.text}</Markdown>}
+                                                            <p className='my-2 text-gray-700'>Please select a
+                                                                location:</p>
+                                                            <ul key={i}>{locationList}</ul>
+                                                        </div>
+                                                    )
                                                 }
                                             }
 
@@ -204,13 +253,11 @@ export default function Chatbot() {
                                 }
                             })}
 
-                            {/* Fallback for backward compatibility - remove once fully migrated */}
                             {!message.parts && message.content && <div>{message.content}</div>}
                         </div>
                     </div>
                 ))}
                 <div ref={messagesEndRef} />
-                {/* This empty div will be scrolled into view */}
             </div>
 
             {(status === 'submitted' || status === 'streaming') && (

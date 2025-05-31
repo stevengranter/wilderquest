@@ -12,9 +12,11 @@ import { INatObservation, INatTaxon } from '../../shared/types/iNatTypes'
 export default function TaxonCard({
     item,
     onClick,
-}: {
+
+                                  }: {
     item: INatTaxon
     onClick?: (item: INatTaxon | INatObservation) => void
+
 }) {
     const { taxonId } = useParams()
     const isAlreadySelected = Number(taxonId) === item.id
