@@ -4,24 +4,31 @@ import axios from 'axios'
 import { INatObservation, INatTaxon } from '../../../../shared/types/iNatTypes.js'
 
 export const getINatTaxonData = tool({
-    description: 'Get taxon data (including id) from iNaturalist database using common name or scientific name',
+    description: 'Get taxon data from iNaturalist using either a common/scientific name or an array of taxon IDs',
     parameters: z.object({
-        common_name: z.string().min(3),
-    }),
-    execute: async ({ common_name: name }) => {
+        common_name: z.string().min(3).optional(),
+        taxon_ids: z.array(z.number()).nonempty().optional(),
+    }).refine(
+        (data) => data.common_name || data.taxon_ids,
+        { message: 'You must provide either a common name or taxon IDs' },
+    ),
+    execute: async ({ common_name, taxon_ids }) => {
         try {
-            console.log('Fetching taxon data for:', name)
+            let results
 
-            const encodedName = encodeURIComponent(name)
-            const results = await axios.get(`https://api.inaturalist.org/v1/taxa?q=${encodedName}&per_page=20`)
-
-
-            // console.log('Axios response:', results)
+            if (common_name) {
+                console.log('Fetching taxon data by name:', common_name)
+                const encodedName = encodeURIComponent(common_name)
+                results = await axios.get(`https://api.inaturalist.org/v1/taxa?q=${encodedName}&per_page=20`)
+            } else if (taxon_ids) {
+                console.log('Fetching taxon data by IDs:', taxon_ids)
+                const idList = taxon_ids.join(',')
+                results = await axios.get(`https://api.inaturalist.org/v1/taxa?per_page=20&id=${idList}`)
+            } else {
+                return { error: 'No valid input provided' }
+            }
 
             if (results.status === 200 && results.data.results.length > 0) {
-                // const { id, name } = results.data.results[0];
-                // return { id, name };
-                // return results.data.results[0]
                 const simplifiedResults = results.data.results.map((result: INatTaxon) => {
                     return {
                         id: result.id,
@@ -38,7 +45,6 @@ export const getINatTaxonData = tool({
                 })
                 return simplifiedResults
             } else {
-                console.warn('No results found or bad response status')
                 return { error: 'No matching taxa found' }
             }
         } catch (error) {

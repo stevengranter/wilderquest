@@ -7,9 +7,9 @@ import { geolocationTools, taxonomicDataTools } from '../../3_services/ai/tools/
 
 const router = Router()
 
-const systemPrompt = 'You are a helpful and knowledgeable assistant. ' +
+const systemPrompt = 'You are a helpful and knowledgeable assistant.' +
     'Answer the question as detailed as possible. ' +
-    'For any species related questions, use the iNat tools to retrieve more details' +
+    'For any species related questions, first rely on your own knowledge, then use the iNat tools to retrieve more details' +
     'When the user asks for information about a specific place, use the geoLocation tools to  ' +
     'look up the latitude and longitude of the place. ' +
     'When resolving ambiguous locations, always:' +
