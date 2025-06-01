@@ -10,12 +10,23 @@ import type { LocationIQPlace } from '../../shared/types/LocationIQPlace'
 import Markdown from 'react-markdown'
 import type { Message } from 'ai'
 
+type UserLocation = {
+    lat?: number
+    lng?: number
+    displayName?: string
+}
+
 export default function Chatbot() {
-    const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
+    const [selectedLocation, setSelectedLocation] = useState<UserLocation | null>(null)
+    // Add this state to track when location is granted
+    const [locationGranted, setLocationGranted] = useState(false)
     const { messages, input, handleInputChange, handleSubmit, status, stop, error, reload, append } = useChat({
         async onToolCall({ toolCall }) {
             if (toolCall.toolName === 'getUserLocationTool') {
-                return new Promise((resolve, reject) => {
+                // Reset location granted state for new requests
+                setLocationGranted(false)
+
+                return new Promise((resolve) => {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             const coords = {
@@ -23,10 +34,24 @@ export default function Chatbot() {
                                 longitude: position.coords.longitude,
                                 message: `Location coordinates obtained: ${position.coords.latitude}, ${position.coords.longitude}`,
                             }
+                            setSelectedLocation((prev) => ({
+                                ...prev,
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude,
+                            }))
+
+                            // Return location data directly to the AI model - don't use append()
                             resolve(coords)
                         },
                         (error) => {
-                            reject({ error: error.message })
+                            console.log('Geolocation denied or failed, falling back to IP-based location')
+
+                            // Return error info that will trigger the AI to use IP-based location
+                            resolve({
+                                error: error.message,
+                                fallback: 'ip-location',
+                                message: 'Location access denied, please use IP-based location detection instead',
+                            })
                         },
                         {
                             enableHighAccuracy: true,
@@ -36,16 +61,49 @@ export default function Chatbot() {
                     )
                 })
             }
+
+            if (toolCall.toolName === 'getLocationByIPTool') {
+                // This tool should be handled server-side
+                return null
+            }
         },
     })
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
+
 
     useEffect(() => {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
         }
     }, [messages])
+
+    // Add this useEffect after the existing useEffect for scrolling
+    useEffect(() => {
+        // Check if location was just granted by looking at the latest message
+        const lastMessage = messages[messages.length - 1]
+        if (lastMessage?.role === 'assistant' && lastMessage.parts) {
+            const hasLocationGranted = lastMessage.parts.some(
+                (part) =>
+                    part.type === 'tool-invocation' &&
+                    part.toolInvocation?.toolName === 'getUserLocationTool' &&
+                    part.toolInvocation?.state === 'result' &&
+                    part.toolInvocation?.result &&
+                    !(part.toolInvocation.result as any)?.fallback,
+            )
+
+            if (hasLocationGranted && !locationGranted) {
+                setLocationGranted(true)
+                // Tell the AI to use the location data
+                setTimeout(() => {
+                    append({
+                        role: 'user',
+                        content: 'Great! Now that you have my location, please use it to help with my request.',
+                    })
+                }, 500) // Small delay to ensure the tool call is fully processed
+            }
+        }
+    }, [messages, locationGranted, append])
 
     // Helper function to determine if TaxonCards should be shown
     const shouldShowTaxonCards = (message: Message, currentIndex: number) => {
