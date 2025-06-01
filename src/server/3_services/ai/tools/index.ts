@@ -18,7 +18,7 @@ export const dateTools = {
 
 export const taxonomicDataTools = {
     displayTaxonomicData,
-    getINatObservationData: getINatObservationData,
+    getINatObservationData,
 }
 
 export const geolocationTools = {

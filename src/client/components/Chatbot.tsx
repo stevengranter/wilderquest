@@ -105,38 +105,6 @@ export default function Chatbot() {
         }
     }, [messages, locationGranted, append])
 
-    // Helper function to determine if TaxonCards should be shown
-    const shouldShowTaxonCards = (message: Message, currentIndex: number) => {
-        if (!message.parts) return false
-
-        const lastTaxonDataIndex = message.parts.reduce((lastIndex, part, index) => {
-            if (
-                part.type === 'tool-invocation' &&
-                part.toolInvocation?.toolName === 'getINatTaxonData' &&
-                part.toolInvocation?.state === 'result'
-            ) {
-                return index
-            }
-            return lastIndex
-        }, -1)
-
-        if (lastTaxonDataIndex === -1 || currentIndex !== lastTaxonDataIndex) {
-            return false
-        }
-
-        for (let i = lastTaxonDataIndex + 1; i < message.parts.length; i++) {
-            const part = message.parts[i]
-            if (
-                part.type === 'tool-invocation' &&
-                part.toolInvocation?.toolName === 'getINatObservationData' &&
-                part.toolInvocation?.state === 'result'
-            ) {
-                return false
-            }
-        }
-
-        return true
-    }
 
     return (
         <div className='flex flex-col h-screen'>
@@ -197,7 +165,7 @@ export default function Chatbot() {
                                                         return (
                                                             <div key={i}>
                                                                 {textPart && <Markdown>{textPart.text}</Markdown>}
-                                                                <p className='my-2 text-gray-700'>Here are some recent
+                                                                <p className='my-2'>Here are some recent
                                                                     observations:</p>
                                                                 <ul className='m-6 gap-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3'>
                                                                     {observationList}
@@ -208,42 +176,38 @@ export default function Chatbot() {
                                                 }
                                                 break
 
-                                            case 'getINatTaxonData':
+                                            case 'displayTaxonomicData':
                                                 switch (state) {
                                                     case 'result':
-                                                        if (shouldShowTaxonCards(message, i)) {
-                                                            const { result } = toolInvocation as { result: INatTaxon[] }
-                                                            if (result.length > 0) {
-                                                                const uniqueTaxaMap = new Map<number, INatTaxon>()
-                                                                result.forEach((taxon) => {
-                                                                    const taxonId = taxon?.id
-                                                                    if (taxonId && !uniqueTaxaMap.has(taxonId)) {
-                                                                        uniqueTaxaMap.set(taxonId, taxon)
-                                                                    }
-                                                                })
+                                                        const { result } = toolInvocation as { result: INatTaxon[] }
+                                                        if (result?.length > 0) {
+                                                            const uniqueTaxaMap = new Map<number, INatTaxon>()
+                                                            result.forEach((taxon) => {
+                                                                const taxonId = taxon?.id
+                                                                if (taxonId && !uniqueTaxaMap.has(taxonId)) {
+                                                                    uniqueTaxaMap.set(taxonId, taxon)
+                                                                }
+                                                            })
 
-                                                                const taxonList = Array.from(uniqueTaxaMap.values()).map((taxon) => (
-                                                                    <TaxonCard key={taxon?.id} item={taxon} />
-                                                                ))
+                                                            const taxonList = Array.from(uniqueTaxaMap.values()).map((taxon) => (
+                                                                <TaxonCard key={taxon?.id} item={taxon} />
+                                                            ))
 
-                                                                const textPart = message.parts?.find((p, idx) => p.type === 'text' && idx < i) as
-                                                                    | { type: 'text'; text: string }
-                                                                    | undefined
+                                                            const textPart = message.parts?.find((p, idx) => p.type === 'text' && idx < i) as
+                                                                | { type: 'text'; text: string }
+                                                                | undefined
 
-                                                                return (
-                                                                    <div key={i}>
-                                                                        {textPart &&
-                                                                            <Markdown>{textPart.text}</Markdown>}
-                                                                        <p className='my-2 text-gray-700'>Here's what I
-                                                                            found about that taxon:</p>
-                                                                        <ul className='m-6 gap-8 grid grid-cols-2'>{taxonList}</ul>
-                                                                    </div>
-                                                                )
-                                                            }
+                                                            return (
+                                                                <div key={i}>
+                                                                    {textPart && <Markdown>{textPart.text}</Markdown>}
+                                                                    <p className='my-2'>Here's what I found about that
+                                                                        taxon:</p>
+                                                                    <ul className='m-6 gap-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 '>{taxonList}</ul>
+                                                                </div>
+                                                            )
                                                         } else {
-                                                            return <div key={i}>Retrieving taxon data...</div>
+                                                            return <div key={i}>No taxon data found.</div>
                                                         }
-                                                        break
 
                                                     case 'call':
                                                         return <div key={i}>Loading taxon data...</div>
