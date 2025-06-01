@@ -3,22 +3,22 @@ import { z } from 'zod'
 import axios from 'axios'
 import { INatObservation, INatTaxon } from '../../../../shared/types/iNatTypes.js'
 
-export const getINatTaxonData = tool({
-    description: 'Get taxon data from iNaturalist using either a common/scientific name or an array of taxon IDs',
+export const displayTaxonomicData = tool({
+    description: 'Display cards containing species information from iNaturalist using either common name, scientific name or an array of taxon IDs',
     parameters: z.object({
-        common_name: z.string().min(3).optional(),
-        taxon_ids: z.array(z.number()).nonempty().optional(),
+        name: z.string().min(3).optional().describe('Common name or scientific name'),
+        taxon_ids: z.array(z.number()).nonempty().optional().describe('List of Taxon IDs from iNaturalist, separated by commas'),
     }).refine(
-        (data) => data.common_name || data.taxon_ids,
+        (data) => data.name || data.taxon_ids,
         { message: 'You must provide either a common name or taxon IDs' },
     ),
-    execute: async ({ common_name, taxon_ids }) => {
+    execute: async ({ name, taxon_ids }) => {
         try {
             let results
 
-            if (common_name) {
-                console.log('Fetching taxon data by name:', common_name)
-                const encodedName = encodeURIComponent(common_name)
+            if (name) {
+                console.log('Fetching taxon data by name:', name)
+                const encodedName = encodeURIComponent(name)
                 results = await axios.get(`https://api.inaturalist.org/v1/taxa?q=${encodedName}&per_page=20`)
             } else if (taxon_ids) {
                 console.log('Fetching taxon data by IDs:', taxon_ids)

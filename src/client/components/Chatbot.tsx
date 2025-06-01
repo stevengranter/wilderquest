@@ -5,17 +5,39 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import TaxonCard from '@/components/TaxonCard'
 import { useState, useEffect, useRef } from 'react'
-import { INatObservation, INatTaxon } from '../../shared/types/iNatTypes'
-import { LocationIQPlace } from '../../shared/types/LocationIQPlace'
+import type { INatObservation, INatTaxon } from '../../shared/types/iNatTypes'
+import type { LocationIQPlace } from '../../shared/types/LocationIQPlace'
 import Markdown from 'react-markdown'
-import { Message } from 'ai' // Import Message type from 'ai'
-
-
-
+import type { Message } from 'ai'
 
 export default function Chatbot() {
     const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
-    const { messages, input, handleInputChange, handleSubmit, status, stop, error, reload, append } = useChat({})
+    const { messages, input, handleInputChange, handleSubmit, status, stop, error, reload, append } = useChat({
+        async onToolCall({ toolCall }) {
+            if (toolCall.toolName === 'getUserLocationTool') {
+                return new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const coords = {
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude,
+                                message: `Location coordinates obtained: ${position.coords.latitude}, ${position.coords.longitude}`,
+                            }
+                            resolve(coords)
+                        },
+                        (error) => {
+                            reject({ error: error.message })
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 60000,
+                        },
+                    )
+                })
+            }
+        },
+    })
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -62,10 +84,8 @@ export default function Chatbot() {
         <div className='flex flex-col h-screen'>
             <div className='flex-1 overflow-y-auto p-4'>
                 {messages.map((message) => (
-                    <div
-                        key={message.id}
-                        className={`flex mb-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
+                    <div key={message.id}
+                         className={`flex mb-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div
                             className={`px-4 py-2 my-1 rounded-lg max-w-[80%] whitespace-pre-wrap ${
                                 message.role === 'user'
@@ -78,146 +98,192 @@ export default function Chatbot() {
                                     case 'text': {
                                         // This part is now mostly for the initial text response from the model
                                         // before any tools are called or if no tools are called.
-                                        return (
-                                            <Markdown key={i}>{part.text}</Markdown>
-                                        )
+                                        return <Markdown key={i}>{part.text}</Markdown>
                                     }
 
                                     case 'tool-invocation': {
                                         const { toolInvocation } = part
                                         const { toolName, state } = toolInvocation
 
-                                        if (state === 'result') {
-                                            if (toolName === 'getINatObservationData') {
-                                                const { result } = toolInvocation as { result: INatObservation[] }
-                                                if (result.length > 0) {
-                                                    const uniqueTaxaMap = new Map<number, INatObservation>()
-                                                    result.forEach((observation) => {
-                                                        const taxonId = observation.taxon?.id
-                                                        if (taxonId && !uniqueTaxaMap.has(taxonId)) {
-                                                            uniqueTaxaMap.set(taxonId, observation)
-                                                        }
-                                                    })
-
-                                                    const observationList = Array.from(uniqueTaxaMap.values()).map(
-                                                        (observation) => (
-                                                            <TaxonCard
-                                                                key={observation?.taxon?.id}
-                                                                item={observation.taxon}
-                                                            />
-                                                        ),
-                                                    )
-
-                                                    // Find the corresponding text part that should accompany this tool result
-                                                    // This assumes the model provides relevant text before or after the tool invocation.
-                                                    const textPart = message.parts?.find(
-                                                        (p, idx) => p.type === 'text' && idx < i,
-                                                    ) as { type: 'text'; text: string } | undefined
-
-                                                    return (
-                                                        <div key={i}>
-                                                            {textPart && <Markdown>{textPart.text}</Markdown>}
-                                                            <p className='my-2 text-gray-700'>Here are some recent
-                                                                observations:</p>
-                                                            <ul className='m-6 gap-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3'>
-                                                                {observationList}
-                                                            </ul>
-                                                        </div>
-                                                    )
+                                        switch (toolName) {
+                                            case 'getUserLocationTool':
+                                                switch (state) {
+                                                    case 'call':
+                                                        return 'Requesting user location:'
+                                                    case 'result':
+                                                        return <div key={i}>Location access allowed:</div>
                                                 }
-                                            } else if (toolName === 'getINatTaxonData') {
-                                                if (shouldShowTaxonCards(message, i)) {
-                                                    const { result } = toolInvocation as { result: INatTaxon[] }
+                                                break
+
+                                            case 'getINatObservationData':
+                                                if (state === 'result') {
+                                                    const { result } = toolInvocation as { result: INatObservation[] }
                                                     if (result.length > 0) {
-                                                        const uniqueTaxaMap = new Map<number, INatTaxon>()
-                                                        result.forEach((taxon) => {
-                                                            const taxonId = taxon?.id
+                                                        const uniqueTaxaMap = new Map<number, INatObservation>()
+                                                        result.forEach((observation) => {
+                                                            const taxonId = observation.taxon?.id
                                                             if (taxonId && !uniqueTaxaMap.has(taxonId)) {
-                                                                uniqueTaxaMap.set(taxonId, taxon)
+                                                                uniqueTaxaMap.set(taxonId, observation)
                                                             }
                                                         })
 
-                                                        const taxonList = Array.from(uniqueTaxaMap.values()).map(
-                                                            (taxon) => (
-                                                                <TaxonCard
-                                                                    key={taxon?.id}
-                                                                    item={taxon}
-                                                                />
-                                                            ),
-                                                        )
+                                                        const observationList = Array.from(uniqueTaxaMap.values()).map((observation) => (
+                                                            <TaxonCard key={observation?.taxon?.id}
+                                                                       item={observation.taxon} />
+                                                        ))
 
-                                                        const textPart = message.parts?.find(
-                                                            (p, idx) => p.type === 'text' && idx < i,
-                                                        ) as { type: 'text'; text: string } | undefined
+                                                        const textPart = message.parts?.find((p, idx) => p.type === 'text' && idx < i) as
+                                                            | { type: 'text'; text: string }
+                                                            | undefined
 
                                                         return (
                                                             <div key={i}>
                                                                 {textPart && <Markdown>{textPart.text}</Markdown>}
-                                                                <p className='my-2 text-gray-700'>Here's what I found
-                                                                    about that taxon:</p>
-                                                                <ul className='m-6 gap-8 grid grid-cols-2'>
-                                                                    {taxonList}
+                                                                <p className='my-2 text-gray-700'>Here are some recent
+                                                                    observations:</p>
+                                                                <ul className='m-6 gap-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3'>
+                                                                    {observationList}
                                                                 </ul>
                                                             </div>
                                                         )
                                                     }
-                                                } else {
-                                                    // This is an interim step, so we might still show some text
-                                                    return (<div key={i}>Retrieving taxon data...</div>)
                                                 }
-                                            } else if (toolName === 'getGeoLocationResults') {
-                                                const { result } = toolInvocation as { result: LocationIQPlace[] }
-                                                if (result.length > 0) {
-                                                    const locationList = result.map((location) => (
-                                                        <li key={location.place_id} className='mb-2'>
-                                                            <div className='flex justify-between items-center'>
-                                                                <Button
-                                                                    onClick={() => {
-                                                                        setSelectedLocation(location.display_name)
-                                                                        append({
-                                                                            role: 'user',
-                                                                            content: `I choose the location: ${location.display_name}`,
-                                                                        })
-                                                                    }}
-                                                                    className='whitespace-normal break-words max-w-full text-left'
-                                                                >
-                                                                    {location.display_name}
-                                                                </Button>
+                                                break
+
+                                            case 'getINatTaxonData':
+                                                switch (state) {
+                                                    case 'result':
+                                                        if (shouldShowTaxonCards(message, i)) {
+                                                            const { result } = toolInvocation as { result: INatTaxon[] }
+                                                            if (result.length > 0) {
+                                                                const uniqueTaxaMap = new Map<number, INatTaxon>()
+                                                                result.forEach((taxon) => {
+                                                                    const taxonId = taxon?.id
+                                                                    if (taxonId && !uniqueTaxaMap.has(taxonId)) {
+                                                                        uniqueTaxaMap.set(taxonId, taxon)
+                                                                    }
+                                                                })
+
+                                                                const taxonList = Array.from(uniqueTaxaMap.values()).map((taxon) => (
+                                                                    <TaxonCard key={taxon?.id} item={taxon} />
+                                                                ))
+
+                                                                const textPart = message.parts?.find((p, idx) => p.type === 'text' && idx < i) as
+                                                                    | { type: 'text'; text: string }
+                                                                    | undefined
+
+                                                                return (
+                                                                    <div key={i}>
+                                                                        {textPart &&
+                                                                            <Markdown>{textPart.text}</Markdown>}
+                                                                        <p className='my-2 text-gray-700'>Here's what I
+                                                                            found about that taxon:</p>
+                                                                        <ul className='m-6 gap-8 grid grid-cols-2'>{taxonList}</ul>
+                                                                    </div>
+                                                                )
+                                                            }
+                                                        } else {
+                                                            return <div key={i}>Retrieving taxon data...</div>
+                                                        }
+                                                        break
+
+                                                    case 'call':
+                                                        return <div key={i}>Loading taxon data...</div>
+                                                }
+                                                break
+
+                                            case 'forwardGeocodeTool':
+                                                if (state === 'result') {
+                                                    const { result } = toolInvocation as { result: LocationIQPlace[] }
+                                                    if (result.length > 0) {
+                                                        const locationList = result.map((location) => (
+                                                            <li key={location.place_id} className='mb-2'>
+                                                                <div className='flex justify-between items-center'>
+                                                                    <Button
+                                                                        onClick={() => {
+                                                                            setSelectedLocation(location.display_name)
+                                                                            append({
+                                                                                role: 'user',
+                                                                                content: `I choose the location: ${location.display_name}`,
+                                                                            })
+                                                                        }}
+                                                                        className='whitespace-normal break-words max-w-full text-left'
+                                                                    >
+                                                                        {location.display_name}
+                                                                    </Button>
+                                                                </div>
+                                                            </li>
+                                                        ))
+
+                                                        const textPart = message.parts?.find((p, idx) => p.type === 'text' && idx < i) as
+                                                            | { type: 'text'; text: string }
+                                                            | undefined
+
+                                                        return (
+                                                            <div key={i}>
+                                                                {textPart && <Markdown>{textPart.text}</Markdown>}
+                                                                <p className='my-2'>Please select a location:</p>
+                                                                <ul>{locationList}</ul>
                                                             </div>
-                                                        </li>
-                                                    ))
-
-                                                    const textPart = message.parts?.find(
-                                                        (p, idx) => p.type === 'text' && idx < i,
-                                                    ) as { type: 'text'; text: string } | undefined
-
-                                                    return (
-                                                        <div key={i}>
-                                                            {textPart && <Markdown>{textPart.text}</Markdown>}
-                                                            <p className='my-2'>Please select a
-                                                                location:</p>
-                                                            <ul key={i}>{locationList}</ul>
-                                                        </div>
-                                                    )
+                                                        )
+                                                    }
                                                 }
-                                            }
+                                                break
 
-                                            return <div key={i}>Tool {toolName} completed</div>
-                                        } else if (state === 'call') {
-                                            return (
-                                                <div key={i}>
-                                                    {toolName === 'getInatTaxonData' ? (
-                                                        <div>Loading taxon data...</div>
-                                                    ) : toolName === 'displayWeather' ? (
-                                                        <div>Loading weather...</div>
-                                                    ) : (
-                                                        <div>Calling {toolName}...</div>
-                                                    )}
-                                                </div>
-                                            )
-                                        } else if (state === 'partial-call') {
-                                            return <div key={i}>Preparing {toolName}...</div>
+                                            case 'reverseGeocodeTool':
+                                                switch (state) {
+                                                    case 'call':
+                                                        return <div key={i}>Getting location information...</div>
+                                                    case 'result':
+                                                        const { result } = toolInvocation as {
+                                                            result: {
+                                                                display_name?: string
+                                                                city?: string
+                                                                state?: string
+                                                                country?: string
+                                                                error?: string
+                                                            }
+                                                        }
+
+                                                        if (result.error) {
+                                                            return (
+                                                                <div key={i} className='text-red-600'>
+                                                                    Error: {result.error}
+                                                                </div>
+                                                            )
+                                                        }
+
+                                                        return (
+                                                            <div key={i} className='bg-blue-50 p-3 rounded-lg border'>
+                                                                <h4 className='font-semibold text-blue-800'>📍 Your
+                                                                    Location</h4>
+                                                                <p className='text-sm text-gray-700'>
+                                                                    {result.city && result.state
+                                                                        ? `${result.city}, ${result.state}, ${result.country}`
+                                                                        : result.display_name}
+                                                                </p>
+                                                            </div>
+                                                        )
+                                                }
+                                                break
+
+                                            case 'displayWeather':
+                                                if (state === 'call') {
+                                                    return <div key={i}>Loading weather...</div>
+                                                }
+                                                break
+
+                                            default:
+                                                switch (state) {
+                                                    case 'call':
+                                                        return <div key={i}>Calling {toolName}...</div>
+                                                    case 'partial-call':
+                                                        return <div key={i}>Preparing {toolName}...</div>
+                                                    case 'result':
+                                                        return <div key={i}>Tool {toolName} completed</div>
+                                                }
                                         }
+
                                         break
                                     }
 

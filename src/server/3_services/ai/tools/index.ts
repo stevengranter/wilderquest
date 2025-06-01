@@ -1,9 +1,14 @@
 import { getCurrentDateTool, getDateInfoTool } from './date-tools.js'
-import { getINatTaxonData, getINatObservationData } from './taxonomic-data-tools.js'
-import { getGeoLocationResults } from './geolocation-tools.js'
+import { displayTaxonomicData, getINatObservationData } from './taxonomic-data-tools.js'
+import {
+    forwardGeocodeTool,
+    reverseGeocodeTool,
+    getLocationByIPTool,
+    getUserLocationTool,
+} from './geolocation-tools.js'
 
 // Export individual tools
-export { getCurrentDateTool, getDateInfoTool, getINatTaxonData, getGeoLocationResults }
+export { getCurrentDateTool, getDateInfoTool, displayTaxonomicData, forwardGeocodeTool }
 
 // Export tool collections
 export const dateTools = {
@@ -12,12 +17,15 @@ export const dateTools = {
 }
 
 export const taxonomicDataTools = {
-    getINatTaxonData: getINatTaxonData,
+    displayTaxonomicData,
     getINatObservationData: getINatObservationData,
 }
 
 export const geolocationTools = {
-    getGeoLocationResults: getGeoLocationResults,
+    forwardGeocodeTool,
+    reverseGeocodeTool,
+    // getLocationByIPTool,
+    getUserLocationTool,
 }
 
 export const allTools = {
