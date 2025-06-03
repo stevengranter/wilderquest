@@ -101,6 +101,7 @@ export default function ChatSidebar() {
 
     // Update the chat context when cards or selected card changes
     useEffect(() => {
+        console.log('Cards: ', cards)
         // This would ideally be handled by updating the chat context
         // but for simplicity, we'll just add a system message
         if (cards.length > 0 && messages.length > 0) {

@@ -11,7 +11,7 @@ export default function App() {
 
             {/*<ChatbotOld />*/}
             <RouterProvider router={router}>
-                <Tabletop />
+
             </RouterProvider>
         </AppProviders>
     )

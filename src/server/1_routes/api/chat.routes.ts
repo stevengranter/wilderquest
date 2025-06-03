@@ -4,6 +4,7 @@ import { streamText } from 'ai'
 import { Router } from 'express'
 import { Request, Response } from 'express'
 import { geolocationTools, taxonomicDataTools } from '../../3_services/ai/tools/index.js'
+import z from 'zod'
 
 const router = Router()
 
@@ -26,7 +27,8 @@ const systemPrompt = 'You are a helpful and knowledgeable assistant. ' +
 
 
 router.post('/', async (req: Request, res: Response) => {
-    const { messages } = req.body
+    const { messages, currentCards, selectedCard, filters } = req.body
+    console.log(req.body)
     try {
 
         const result = streamText({
@@ -34,7 +36,30 @@ router.post('/', async (req: Request, res: Response) => {
             system: systemPrompt,
             maxSteps: 8,
             messages,
-            tools: { ...taxonomicDataTools, ...geolocationTools },
+            tools: {
+                ...taxonomicDataTools,
+                ...geolocationTools,
+                getInterfaceState: {
+                    description: 'Get the current state of the user interface including displayed cards and selected card',
+                    parameters: z.object({}),
+                    execute: async () => {
+                        return {
+                            success: true,
+                            message: 'Retrieved current interface state',
+                            data: {
+                                currentCards: currentCards || [],
+                                selectedCard: selectedCard || null,
+                                totalCards: currentCards?.length || 0,
+                                filters: filters || {
+                                    category: null,
+                                    searchTerm: null,
+                                },
+
+                            },
+                        }
+                    },
+                },
+            },
         })
         result.pipeDataStreamToResponse(res)
     } catch (error) {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useAppContext } from '@/contexts/app-context'
+import { AppProvider, useAppContext } from '@/contexts/app-context'
 import Dashboard from '../components/dashboard/Dashboard'
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar'
 import ChatSidebar from '@/components/chat_sidebar/ChatSidebar'
@@ -31,6 +31,7 @@ export function AppLayout() {
     }, [setCards, setIsLoading])
 
     return (
+        <AppProvider>
         <SidebarProvider defaultOpen={true}>
             <div className='flex h-screen'>
                 <ChatSidebar />
@@ -45,5 +46,6 @@ export function AppLayout() {
                 </SidebarInset>
             </div>
         </SidebarProvider>
+        </AppProvider>
     )
 }

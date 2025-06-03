@@ -102,6 +102,7 @@
     "zod": "3.25.39"
   },
   "devDependencies": {
+    "@ai-sdk/openai-compatible": "^0.2.14",
     "@eslint/js": "^9.21.0",
     "@tailwindcss/vite": "^4.0.15",
     "@types/body-parser": "^1.19.5",
