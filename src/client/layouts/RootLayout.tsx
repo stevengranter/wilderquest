@@ -1,4 +1,9 @@
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+mport
+{
+    Tabs, TabsList, TabsTrigger
+}
+from
+'@/components/ui/tabs'
 
 import LocationIndicator from '@/components/location/LocationIndicator'
 import { Outlet, useLocation, useNavigate } from 'react-router'
@@ -17,7 +22,7 @@ export default function RootLayout() {
     }
 
     return (
-        <>
+        <cvh>
             <LocationIndicator className='flex justify-end mb-2 text-xs' />
             <Tabs value={currentTab} onValueChange={handleTabChange}>
                 <TabsList className='grid w-full grid-cols-3'>
@@ -27,6 +32,6 @@ export default function RootLayout() {
                 </TabsList>
                 <Outlet />
             </Tabs>
-        </>
+        </cvh>
     )
 }

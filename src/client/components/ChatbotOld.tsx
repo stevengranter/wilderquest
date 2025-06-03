@@ -16,7 +16,7 @@ type UserLocation = {
     displayName?: string
 }
 
-export default function Chatbot() {
+export default function ChatbotOld() {
     const [selectedLocation, setSelectedLocation] = useState<UserLocation | null>(null)
     // Add this state to track when location is granted
     const [locationGranted, setLocationGranted] = useState(false)
