@@ -27,8 +27,14 @@ const systemPrompt = 'You are a helpful and knowledgeable assistant. ' +
 
 
 router.post('/', async (req: Request, res: Response) => {
+
+    console.log('Received at /api/chat:', {
+        currentCards: req.body.currentCards?.length,
+        selectedCard: req.body.selectedCard,
+        filters: req.body.filters,
+    })
+
     const { messages, currentCards, selectedCard, filters } = req.body
-    console.log(req.body)
     try {
 
         const result = streamText({

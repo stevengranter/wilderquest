@@ -183,10 +183,17 @@ export default function ChatSidebar() {
     const handleLocalSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (inputValue.trim()) {
-            handleSubmit(e)
+            handleSubmit(e, {
+                body: {
+                    currentCards: filteredCards || cards,
+                    selectedCard,
+                    filters,
+                },
+            })
             setInputValue('')
         }
     }
+
 
     return (
         <Sidebar>
