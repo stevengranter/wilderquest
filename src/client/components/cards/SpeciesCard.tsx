@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils'
 import { ExternalLink } from 'lucide-react'
 import { type INatTaxon } from '../../../shared/types/iNatTypes'
 import getKingdomIcon from '@/components/search/getKingdomIcon'
+import titleCase from '@/components/search/titleCase'
+import { motion } from 'motion/react'
 
 interface SpeciesCardProps {
     species: INatTaxon
@@ -30,30 +32,50 @@ export function SpeciesCard({ species, className }: SpeciesCardProps) {
             addToSelection([id])
         }
     }
+    const handleInteractiveClick = (e: React.MouseEvent, action: string) => {
+        // Prevent card selection when clicking interactive elements
+        e.stopPropagation()
+        console.log(`${action} clicked`)
+    }
 
 
 
     return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+                default: { duration: 0.5 },
+                rotate: { type: 'spring', duration: 0.4 },
+                scale: { type: 'spring', duration: 0.4 },
+            }}
+            whileHover={{ scale: 1.1, rotate: 2 }}
+            // whileTap={isAlreadySelected ? {} : { scale: 0.95 }}
+        >
         <Card
             className={cn(
                 'cursor-pointer transition-all duration-200 hover:shadow-md',
-                isSelected && 'ring-2 ring-blue-500 bg-blue-50',
+                isSelected && 'ring-2 ring-blue-500',
+                'py-0 gap-0',
                 className,
             )}
             onClick={handleClick}
         >
+            <CardContent className='m-0 p-0'>
+                {species.default_photo && (
+                    <img
+                        src={species.default_photo.medium_url}
+                        alt={species.name}
+                        className='aspect-square w-full object-cover rounded-t-md' />)}
+
+            </CardContent>
             <CardContent className='p-4'>
                 <div className='space-y-2'>
-                    {/* Photo */}
-
-                    {species.default_photo && (
-                        <img
-                            src={species.default_photo.medium_url}
-                            alt={species.name}
-                            className='aspect-square w-full object-cover' />)}
 
                     {/* Main name */}
-                    <div className='font-semibold text-lg'>{species.preferred_common_name || species.name}</div>
+                    <div
+                        className='font-semibold text-lg'>{titleCase(species.preferred_common_name) || species.name}</div>
 
                     {/* Scientific name if different */}
                     {species.preferred_common_name &&
@@ -62,12 +84,12 @@ export function SpeciesCard({ species, className }: SpeciesCardProps) {
                     {/* Kingdom and rank badges */}
                     <div className='flex gap-2 flex-wrap'>
                         {species.iconic_taxon_name && (
-                            <Badge variant='secondary' className='text-xs'>
+                            <Badge variant='default' className='text-xs'>
                                 {getKingdomIcon(species.iconic_taxon_name)} {species.iconic_taxon_name}
                             </Badge>
                         )}
                         {species.rank && (
-                            <Badge variant='outline' className='text-xs capitalize'>
+                            <Badge variant='neutral' className='text-xs capitalize'>
                                 {species.rank}
                             </Badge>
                         )}
@@ -76,8 +98,13 @@ export function SpeciesCard({ species, className }: SpeciesCardProps) {
                     {/* Wikipedia link */}
                     {species.wikipedia_url && (
                         <div className='flex items-center gap-1 text-xs text-blue-600'>
-                            <ExternalLink className='h-3 w-3' />
-                            <span>Wikipedia</span>
+                            <ExternalLink
+                                className='h-3 w-3'
+                            />
+                            <a
+                                href={species.wikipedia_url}
+                                onClick={(e) => handleInteractiveClick(e, 'Wikipedia')}
+                            >Wikipedia</a>
                         </div>
                     )}
 
@@ -86,5 +113,6 @@ export function SpeciesCard({ species, className }: SpeciesCardProps) {
                 </div>
             </CardContent>
         </Card>
+        </motion.div>
     )
 }
