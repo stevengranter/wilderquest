@@ -3,6 +3,38 @@ import { google } from '@ai-sdk/google'
 import { streamText } from 'ai'
 import type { RequestHandler } from 'express'
 import { z } from 'zod'
+import type { CoreMessage } from 'ai'
+
+// 1. Define Card Interface
+interface Card {
+    id: string
+    name?: string
+    type?: string
+    wikipedia_url?: string
+}
+
+// 2. Define FilterState Interface
+interface FilterState {
+    kingdoms: string[]
+    ranks: string[]
+    hasPhotos: boolean | null
+    dateRange: { start: string; end: string }
+    location: string
+}
+
+// 3. Define ApparatusState Interface for req.body
+interface ApparatusState {
+    query: string
+    messages: CoreMessage[]
+    currentCards: Card[]
+    filteredCards: Card[]
+    selectedCards: Card[]
+    selectedCount: number
+    filters: FilterState
+    viewMode: 'list' | 'grid' | 'map'
+    searchType: 'taxa' | 'observations' | 'collections'
+    currentLocation: { latitude: number; longitude: number } | null
+}
 
 const systemPrompt = `
 You are a helpful assistant for an iNaturalist-like application. Be conversational and friendly.
@@ -33,12 +65,11 @@ When working with filters:
 When providing information from a Wikipedia article (obtained via the 'fetchWikipediaArticle' tool using a card's 'wikipedia_url'), you *must* synthesize and present **comprehensive and relevant details** from the fetched content.
 Focus on key facts, definitions, characteristics, historical context, and notable aspects.
 
-Use rich text liberally including bold, italic, links, headings, lists, emojis and more. 
+Use rich text liberally including bold, italic, links, headings, lists, emojis and more.
 Return Markdown.
 `
 
-const chatController: RequestHandler = async (req, res) => {
-    // Destructure the new multi-selection state and filters from req.body
+const chatController: RequestHandler<object, never, ApparatusState> = async (req, res) => {
     const {
         query,
         messages,
@@ -55,7 +86,6 @@ const chatController: RequestHandler = async (req, res) => {
     try {
         const result = streamText({
             model: google('gemini-2.5-flash-preview-04-17'),
-            // model: lmstudio("llama3.2/llama3.2-latest"),
             system: systemPrompt,
             messages,
             maxSteps: 5,
@@ -89,25 +119,17 @@ const chatController: RequestHandler = async (req, res) => {
                     },
                 },
 
-                // Web search tools
                 searchWeb: {
                     description:
                         'Search the web for current information, research, news, or any topic not covered by other tools',
                     parameters: z.object({
-                        query: z
-                            .string()
-                            .describe('The search query to look up on the web'),
-                        maxResults: z
-                            .number()
-                            .optional()
-                            .default(5)
-                            .describe('Maximum number of results to return (1-10)'),
+                        query: z.string().describe('The search query to look up on the web'),
+                        maxResults: z.number().optional().default(5).describe('Maximum number of results to return (1-10)'),
                     }),
                     execute: async ({ query, maxResults = 5 }) => {
                         try {
                             console.log(`AI requested web search for: "${query}"`)
 
-                            // Using DuckDuckGo Instant Answer API (free, no API key required)
                             const searchUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`
 
                             const response = await fetch(searchUrl)
@@ -115,43 +137,51 @@ const chatController: RequestHandler = async (req, res) => {
                                 throw new Error(`HTTP error! status: ${response.status}`)
                             }
 
-                            const data = await response.json()
+                            const data: {
+                                Abstract?: string
+                                Heading?: string
+                                AbstractURL?: string
+                                AbstractSource?: string
+                                RelatedTopics?: Array<{ Text?: string; FirstURL?: string }>
+                                Definition?: string
+                                DefinitionURL?: string
+                                DefinitionSource?: string
+                            } = await response.json()
 
-                            // Extract useful information from DuckDuckGo response
-                            const results = []
+                            const results: {
+                                title: string
+                                snippet: string
+                                url: string
+                                source: string
+                            }[] = []
 
-                            // Add abstract if available
                             if (data.Abstract) {
                                 results.push({
                                     title: data.Heading || 'Summary',
                                     snippet: data.Abstract,
-                                    url: data.AbstractURL,
+                                    url: data.AbstractURL || '',
                                     source: data.AbstractSource || 'DuckDuckGo',
                                 })
                             }
 
-                            // Add related topics
                             if (data.RelatedTopics && data.RelatedTopics.length > 0) {
-                                data.RelatedTopics.slice(0, maxResults - 1).forEach(
-                                    (topic: any) => {
-                                        if (topic.Text && topic.FirstURL) {
-                                            results.push({
-                                                title: topic.Text.split(' - ')[0] || 'Related Topic',
-                                                snippet: topic.Text,
-                                                url: topic.FirstURL,
-                                                source: 'DuckDuckGo',
-                                            })
-                                        }
-                                    },
-                                )
+                                data.RelatedTopics.slice(0, maxResults - 1).forEach((topic) => {
+                                    if (topic.Text && topic.FirstURL) {
+                                        results.push({
+                                            title: topic.Text.split(' - ')[0] || 'Related Topic',
+                                            snippet: topic.Text,
+                                            url: topic.FirstURL,
+                                            source: 'DuckDuckGo',
+                                        })
+                                    }
+                                })
                             }
 
-                            // Add definition if available
                             if (data.Definition) {
                                 results.push({
                                     title: 'Definition',
                                     snippet: data.Definition,
-                                    url: data.DefinitionURL,
+                                    url: data.DefinitionURL || '',
                                     source: data.DefinitionSource || 'DuckDuckGo',
                                 })
                             }
@@ -170,8 +200,7 @@ const chatController: RequestHandler = async (req, res) => {
                             return {
                                 success: false,
                                 error: 'Failed to perform web search.',
-                                message:
-                                    'Web search is currently unavailable. Please try again later.',
+                                message: 'Web search is currently unavailable. Please try again later.',
                             }
                         }
                     },
@@ -181,18 +210,12 @@ const chatController: RequestHandler = async (req, res) => {
                     description: 'Search for recent news articles about a specific topic',
                     parameters: z.object({
                         query: z.string().describe('The news search query'),
-                        maxResults: z
-                            .number()
-                            .optional()
-                            .default(3)
-                            .describe('Maximum number of news results to return'),
+                        maxResults: z.number().optional().default(3).describe('Maximum number of news results to return'),
                     }),
                     execute: async ({ query, maxResults = 3 }) => {
                         try {
                             console.log(`AI requested news search for: "${query}"`)
 
-                            // Using a simple RSS feed approach for news (you can replace with a proper news API)
-                            // For now, we'll use DuckDuckGo with news-specific query
                             const newsQuery = `${query} news recent`
                             const searchUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(newsQuery)}&format=json&no_html=1&skip_disambig=1`
 
@@ -201,25 +224,30 @@ const chatController: RequestHandler = async (req, res) => {
                                 throw new Error(`HTTP error! status: ${response.status}`)
                             }
 
-                            const data = await response.json()
+                            const data: {
+                                RelatedTopics?: Array<{ Text?: string; FirstURL?: string }>
+                            } = await response.json()
 
-                            const newsResults = []
+                            const newsResults: {
+                                title: string
+                                snippet: string
+                                url: string
+                                source: string
+                                publishedAt: string
+                            }[] = []
 
-                            // Extract news-related information
                             if (data.RelatedTopics && data.RelatedTopics.length > 0) {
-                                data.RelatedTopics.slice(0, maxResults).forEach(
-                                    (topic: any) => {
-                                        if (topic.Text && topic.FirstURL) {
-                                            newsResults.push({
-                                                title: topic.Text.split(' - ')[0] || 'News Article',
-                                                snippet: topic.Text,
-                                                url: topic.FirstURL,
-                                                source: 'News Search',
-                                                publishedAt: new Date().toISOString(), // Placeholder - real news API would have actual dates
-                                            })
-                                        }
-                                    },
-                                )
+                                data.RelatedTopics.slice(0, maxResults).forEach((topic) => {
+                                    if (topic.Text && topic.FirstURL) {
+                                        newsResults.push({
+                                            title: topic.Text.split(' - ')[0] || 'News Article',
+                                            snippet: topic.Text,
+                                            url: topic.FirstURL,
+                                            source: 'News Search',
+                                            publishedAt: new Date().toISOString(),
+                                        })
+                                    }
+                                })
                             }
 
                             return {
@@ -236,37 +264,27 @@ const chatController: RequestHandler = async (req, res) => {
                             return {
                                 success: false,
                                 error: 'Failed to perform news search.',
-                                message:
-                                    'News search is currently unavailable. Please try again later.',
+                                message: 'News search is currently unavailable. Please try again later.',
                             }
                         }
                     },
                 },
 
                 searchScientificPapers: {
-                    description:
-                        'Search for scientific papers and research about a specific topic',
+                    description: 'Search for scientific papers and research about a specific topic',
                     parameters: z.object({
                         query: z.string().describe('The scientific research query'),
-                        maxResults: z
-                            .number()
-                            .optional()
-                            .default(3)
-                            .describe('Maximum number of paper results to return'),
+                        maxResults: z.number().optional().default(3).describe('Maximum number of paper results to return'),
                     }),
                     execute: async ({ query, maxResults = 3 }) => {
                         try {
-                            console.log(
-                                `AI requested scientific paper search for: "${query}"`,
-                            )
+                            console.log(`AI requested scientific paper search for: "${query}"`)
 
-                            // Using CrossRef API for scientific papers (free, no API key required)
                             const searchUrl = `https://api.crossref.org/works?query=${encodeURIComponent(query)}&rows=${maxResults}&sort=relevance&order=desc`
 
                             const response = await fetch(searchUrl, {
                                 headers: {
-                                    'User-Agent':
-                                        'iNaturalist-AI-Assistant/1.0 (mailto:your-email@example.com)', // Required by CrossRef
+                                    'User-Agent': 'iNaturalist-AI-Assistant/1.0 (mailto:your-email@example.com)',
                                 },
                             })
 
@@ -274,26 +292,40 @@ const chatController: RequestHandler = async (req, res) => {
                                 throw new Error(`HTTP error! status: ${response.status}`)
                             }
 
-                            const data = await response.json()
+                            const data: {
+                                message?: {
+                                    items?: Array<{
+                                        title?: string[]
+                                        author?: Array<{ given?: string; family?: string }>
+                                        'container-title'?: string[]
+                                        published?: { 'date-parts': number[][] }
+                                        DOI?: string
+                                        URL?: string
+                                        abstract?: string
+                                    }>
+                                }
+                            } = await response.json()
 
-                            const papers = []
+                            const papers: {
+                                title: string
+                                authors: string
+                                journal: string
+                                publishedDate: string
+                                doi: string
+                                url: string
+                                abstract: string
+                            }[] = []
 
                             if (data.message && data.message.items) {
-                                data.message.items.forEach((item: any) => {
+                                data.message.items.forEach((item) => {
                                     papers.push({
                                         title: item.title ? item.title[0] : 'Untitled Paper',
                                         authors: item.author
-                                            ? item.author
-                                                .map((a: any) => `${a.given || ''} ${a.family || ''}`)
-                                                .join(', ')
+                                            ? item.author.map((a) => `${a.given || ''} ${a.family || ''}`).join(', ')
                                             : 'Unknown Authors',
-                                        journal: item['container-title']
-                                            ? item['container-title'][0]
-                                            : 'Unknown Journal',
-                                        publishedDate: item.published
-                                            ? `${item.published['date-parts'][0][0]}`
-                                            : 'Unknown Date',
-                                        doi: item.DOI,
+                                        journal: item['container-title'] ? item['container-title'][0] : 'Unknown Journal',
+                                        publishedDate: item.published ? `${item.published['date-parts'][0][0]}` : 'Unknown Date',
+                                        doi: item.DOI || 'N/A',
                                         url: item.URL || `https://doi.org/${item.DOI}`,
                                         abstract: item.abstract || 'No abstract available',
                                     })
@@ -314,14 +346,12 @@ const chatController: RequestHandler = async (req, res) => {
                             return {
                                 success: false,
                                 error: 'Failed to search scientific papers.',
-                                message:
-                                    'Scientific paper search is currently unavailable. Please try again later.',
+                                message: 'Scientific paper search is currently unavailable. Please try again later.',
                             }
                         }
                     },
                 },
 
-                // New filter-related tools
                 setFilters: {
                     description: 'Set filters to narrow down search results',
                     parameters: z.object({
@@ -329,38 +359,23 @@ const chatController: RequestHandler = async (req, res) => {
                             kingdoms: z
                                 .array(z.string())
                                 .optional()
-                                .describe(
-                                    'Array of kingdoms to filter by (e.g., Plantae, Animalia, Fungi)',
-                                ),
+                                .describe('Array of kingdoms to filter by (e.g., Plantae, Animalia, Fungi)'),
                             ranks: z
                                 .array(z.string())
                                 .optional()
-                                .describe(
-                                    'Array of taxonomic ranks to filter by (e.g., species, genus, family)',
-                                ),
+                                .describe('Array of taxonomic ranks to filter by (e.g., species, genus, family)'),
                             hasPhotos: z
                                 .boolean()
                                 .nullable()
                                 .optional()
-                                .describe(
-                                    'Filter by presence of photos (true, false, or null for no filter)',
-                                ),
+                                .describe('Filter by presence of photos (true, false, or null for no filter)'),
                             dateRange: z
                                 .object({
-                                    start: z
-                                        .string()
-                                        .optional()
-                                        .describe('Start date in YYYY-MM-DD format'),
-                                    end: z
-                                        .string()
-                                        .optional()
-                                        .describe('End date in YYYY-MM-DD format'),
+                                    start: z.string().optional().describe('Start date in YYYY-MM-DD format'),
+                                    end: z.string().optional().describe('End date in YYYY-MM-DD format'),
                                 })
                                 .optional(),
-                            location: z
-                                .string()
-                                .optional()
-                                .describe('Location text to filter by'),
+                            location: z.string().optional().describe('Location text to filter by'),
                         }),
                     }),
                     execute: async ({ filters }) => {
@@ -389,17 +404,11 @@ const chatController: RequestHandler = async (req, res) => {
                 suggestFilters: {
                     description: 'Suggest relevant filters based on current results',
                     parameters: z.object({
-                        interest: z
-                            .string()
-                            .describe(
-                                'User\'s expressed interest (e.g., \'plants\', \'endangered species\')',
-                            ),
+                        interest: z.string().describe('User\'s expressed interest (e.g., \'plants\', \'endangered species\')'),
                     }),
                     execute: async ({ interest }) => {
                         console.log('AI has requested filter suggestions for:', interest)
 
-                        // In a real implementation, you would analyze currentCards to find relevant filters
-                        // For now, return placeholder suggestions
                         const suggestions = {
                             interest,
                             suggestedFilters: {
@@ -410,9 +419,7 @@ const chatController: RequestHandler = async (req, res) => {
                                         : interest.toLowerCase().includes('fungi')
                                             ? ['Fungi']
                                             : [],
-                                ranks: interest.toLowerCase().includes('species')
-                                    ? ['species']
-                                    : [],
+                                ranks: interest.toLowerCase().includes('species') ? ['species'] : [],
                             },
                         }
 
@@ -429,9 +436,7 @@ const chatController: RequestHandler = async (req, res) => {
                     parameters: z.object({
                         searchText: z
                             .string()
-                            .describe(
-                                'A valid common or scientific name for a species, genus, family, or class.',
-                            ),
+                            .describe('A valid common or scientific name for a species, genus, family, or class.'),
                     }),
                     execute: async ({ searchText }) => {
                         return {
@@ -446,9 +451,7 @@ const chatController: RequestHandler = async (req, res) => {
                     parameters: z.object({
                         searchText: z
                             .string()
-                            .describe(
-                                'A valid common or scientific name for a species, genus, family, or class.',
-                            ),
+                            .describe('A valid common or scientific name for a species, genus, family, or class.'),
                     }),
                     execute: async ({ searchText }) => {
                         return {
@@ -458,19 +461,13 @@ const chatController: RequestHandler = async (req, res) => {
                     },
                 },
 
-                // New selection management tools
                 selectCards: {
-                    description:
-                        'Select specific cards by their IDs, replacing any current selection',
+                    description: 'Select specific cards by their IDs, replacing any current selection',
                     parameters: z.object({
-                        cardIds: z
-                            .array(z.string())
-                            .describe('Array of card IDs to select'),
+                        cardIds: z.array(z.string()).describe('Array of card IDs to select'),
                     }),
                     execute: async ({ cardIds }) => {
-                        console.log(
-                            `AI has requested to select cards: ${cardIds.join(', ')}`,
-                        )
+                        console.log(`AI has requested to select cards: ${cardIds.join(', ')}`)
                         return {
                             success: true,
                             data: { selectedIds: cardIds },
@@ -482,14 +479,10 @@ const chatController: RequestHandler = async (req, res) => {
                 addToSelection: {
                     description: 'Add specific cards to the current selection',
                     parameters: z.object({
-                        cardIds: z
-                            .array(z.string())
-                            .describe('Array of card IDs to add to selection'),
+                        cardIds: z.array(z.string()).describe('Array of card IDs to add to selection'),
                     }),
                     execute: async ({ cardIds }) => {
-                        console.log(
-                            `AI has requested to add cards to selection: ${cardIds.join(', ')}`,
-                        )
+                        console.log(`AI has requested to add cards to selection: ${cardIds.join(', ')}`)
                         return {
                             success: true,
                             data: { selectedIds: cardIds },
@@ -501,14 +494,10 @@ const chatController: RequestHandler = async (req, res) => {
                 removeFromSelection: {
                     description: 'Remove specific cards from the current selection',
                     parameters: z.object({
-                        cardIds: z
-                            .array(z.string())
-                            .describe('Array of card IDs to remove from selection'),
+                        cardIds: z.array(z.string()).describe('Array of card IDs to remove from selection'),
                     }),
                     execute: async ({ cardIds }) => {
-                        console.log(
-                            `AI has requested to remove cards from selection: ${cardIds.join(', ')}`,
-                        )
+                        console.log(`AI has requested to remove cards from selection: ${cardIds.join(', ')}`)
                         return {
                             success: true,
                             data: { selectedIds: cardIds },
@@ -535,12 +524,7 @@ const chatController: RequestHandler = async (req, res) => {
                         'Select cards based on specific criteria (e.g., all taxa of a certain rank, observations from a date range)',
                     parameters: z.object({
                         criteria: z.object({
-                            rank: z
-                                .string()
-                                .optional()
-                                .describe(
-                                    'For taxa: select by taxonomic rank (species, genus, family, etc.)',
-                                ),
+                            rank: z.string().optional().describe('For taxa: select by taxonomic rank (species, genus, family, etc.)'),
                             dateRange: z
                                 .object({
                                     start: z.string().optional(),
@@ -548,20 +532,12 @@ const chatController: RequestHandler = async (req, res) => {
                                 })
                                 .optional()
                                 .describe('For observations: select by date range'),
-                            location: z
-                                .string()
-                                .optional()
-                                .describe('Select by location/place'),
-                            hasPhotos: z
-                                .boolean()
-                                .optional()
-                                .describe('For observations: select only those with photos'),
+                            location: z.string().optional().describe('Select by location/place'),
+                            hasPhotos: z.boolean().optional().describe('For observations: select only those with photos'),
                         }),
                     }),
                     execute: async ({ criteria }) => {
                         console.log('AI has requested to select by criteria:', criteria)
-                        // In a real implementation, you would filter currentCards based on criteria
-                        // For now, return a placeholder response
                         return {
                             success: true,
                             data: { criteria },
@@ -573,9 +549,7 @@ const chatController: RequestHandler = async (req, res) => {
                 fetchWikipediaArticle: {
                     description: 'Fetch a Wikipedia article by title',
                     parameters: z.object({
-                        title: z
-                            .string()
-                            .describe('The title of the Wikipedia article to fetch.'),
+                        title: z.string().describe('The title of the Wikipedia article to fetch.'),
                     }),
                     execute: async ({ title }) => {
                         try {
@@ -585,8 +559,8 @@ const chatController: RequestHandler = async (req, res) => {
                             if (!response.ok) {
                                 throw new Error(`HTTP error! status: ${response.status}`)
                             }
-                            const data = await response.json()
-                            return { success: true, data: data.extract } // Returns a summary of the article
+                            const data: { extract?: string } = await response.json()
+                            return { success: true, data: data.extract }
                         } catch (error) {
                             console.error('Error fetching Wikipedia article:', error)
                             return {
@@ -598,12 +572,9 @@ const chatController: RequestHandler = async (req, res) => {
                 },
 
                 setViewMode: {
-                    description:
-                        'Sets the display mode for search results (list, grid, or map).',
+                    description: 'Sets the display mode for search results (list, grid, or map).',
                     parameters: z.object({
-                        mode: z
-                            .enum(['list', 'grid', 'map'])
-                            .describe('The desired view mode for the search results.'),
+                        mode: z.enum(['list', 'grid', 'map']).describe('The desired view mode for the search results.'),
                     }),
                     execute: async ({ mode }) => {
                         console.log(`AI has requested to set view mode to: ${mode}`)
@@ -616,12 +587,9 @@ const chatController: RequestHandler = async (req, res) => {
                 },
 
                 setSearchType: {
-                    description:
-                        'Sets the type of search to perform (taxa, observations, or collections/projects).',
+                    description: 'Sets the type of search to perform (taxa, observations, or collections/projects).',
                     parameters: z.object({
-                        type: z
-                            .enum(['taxa', 'observations', 'collections'])
-                            .describe('The desired search type.'),
+                        type: z.enum(['taxa', 'observations', 'collections']).describe('The desired search type.'),
                     }),
                     execute: async ({ type }) => {
                         console.log(`AI has requested to set search type to: ${type}`)
@@ -633,21 +601,16 @@ const chatController: RequestHandler = async (req, res) => {
                     },
                 },
 
-                // Enhanced analysis tools for multiple selections
                 analyzeSelection: {
-                    description:
-                        'Analyze the currently selected cards to provide insights, patterns, or summaries',
+                    description: 'Analyze the currently selected cards to provide insights, patterns, or summaries',
                     parameters: z.object({
                         analysisType: z
                             .enum(['summary', 'comparison', 'patterns', 'geographic'])
                             .describe('Type of analysis to perform'),
                     }),
                     execute: async ({ analysisType }) => {
-                        console.log(
-                            `AI has requested to analyze selection with type: ${analysisType}`,
-                        )
+                        console.log(`AI has requested to analyze selection with type: ${analysisType}`)
 
-                        // In a real implementation, you would analyze the selectedCards based on analysisType
                         const analysisResults = {
                             summary: `Analysis of ${selectedCount || 0} selected items`,
                             selectedCards: selectedCards || [],
@@ -664,41 +627,21 @@ const chatController: RequestHandler = async (req, res) => {
 
                 getUserLocationTool: {
                     description:
-                        'Request the user\'s current location for location-based searches and filtering',
+                        'Gets the user\'s current geographical location if available. This tool does not require any parameters and returns the user\'s current latitude and longitude.',
                     parameters: z.object({}),
                     execute: async () => {
-                        console.log('AI has requested user location')
-                        // This will be handled by the frontend
-                        return {
-                            success: true,
-                            data: { requestLocation: true },
-                            message: 'Requesting user location...',
-                        }
-                    },
-                },
-
-                // Optional: Export functionality
-                exportSelection: {
-                    description: 'Export the selected cards in a specified format',
-                    parameters: z.object({
-                        format: z.enum(['csv', 'json', 'txt']).describe('Export format'),
-                        includeImages: z
-                            .boolean()
-                            .optional()
-                            .describe('Whether to include image URLs in export'),
-                    }),
-                    execute: async ({ format, includeImages = false }) => {
-                        console.log(
-                            `AI has requested to export selection in ${format} format`,
-                        )
-                        return {
-                            success: true,
-                            data: {
-                                format,
-                                includeImages,
-                                selectedCount: selectedCount || 0,
-                            },
-                            message: `Prepared export of ${selectedCount || 0} selected items in ${format} format.`,
+                        if (currentLocation) {
+                            return {
+                                success: true,
+                                data: currentLocation,
+                                message: `User's current location: Latitude ${currentLocation.latitude}, Longitude ${currentLocation.longitude}`,
+                            }
+                        } else {
+                            return {
+                                success: false,
+                                error: 'User location not available.',
+                                message: 'Could not determine user\'s current location.',
+                            }
                         }
                     },
                 },
@@ -706,8 +649,11 @@ const chatController: RequestHandler = async (req, res) => {
         })
 
         result.pipeDataStreamToResponse(res)
+
     } catch (error) {
-        console.error('Streaming error:', error)
+        console.error('Error in chatController:', error)
+        // TODO: Figure out how to fix this
+        // @ts-expect-error :  error TS2345: Argument of type '{ error: string; }' is not assignable to parameter of type 'undefined'.
         res.status(500).json({ error: 'Internal server error' })
     }
 }
