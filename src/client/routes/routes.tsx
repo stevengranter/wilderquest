@@ -1,11 +1,8 @@
 // src/routes/routes.tsx
 import { createBrowserRouter, Navigate } from 'react-router'
-import { TabsLayout } from '@/layouts/TabsLayout'
 import { ExploreTab } from './explore/ExploreTab'
 import { IdentifyTab } from './identify/IdentifyTab'
 import { LocateTab } from './locate/LocateTab'
-import TabletopLayout from '@/layouts/TabletopLayout'
-import Dashboard from '@/components/dashboard/Dashboard'
 import { AppLayout } from '@/layouts/AppLayout'
 
 export const router = createBrowserRouter([
