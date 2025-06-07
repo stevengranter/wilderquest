@@ -1,15 +1,17 @@
 'use client'
 
-import type React from 'react'
+import React from 'react'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAppContext } from '@/contexts/app-context'
 import { cn } from '@/lib/utils'
 import { ExternalLink } from 'lucide-react'
+import { type INatTaxon } from '../../../shared/types/iNatTypes'
+import getKingdomIcon from '@/components/search/getKingdomIcon'
 
 interface SpeciesCardProps {
-    species: any
+    species: INatTaxon
     className?: string
 }
 
@@ -29,18 +31,7 @@ export function SpeciesCard({ species, className }: SpeciesCardProps) {
         }
     }
 
-    const getKingdomIcon = (kingdom: string) => {
-        const icons: Record<string, string> = {
-            Plantae: '🌱',
-            Animalia: '🐾',
-            Fungi: '🍄',
-            Chromista: '🦠',
-            Protozoa: '🔬',
-            Bacteria: '🦠',
-            Archaea: '🦠',
-        }
-        return icons[kingdom] || '🔬'
-    }
+
 
     return (
         <Card
@@ -53,6 +44,14 @@ export function SpeciesCard({ species, className }: SpeciesCardProps) {
         >
             <CardContent className='p-4'>
                 <div className='space-y-2'>
+                    {/* Photo */}
+
+                    {species.default_photo && (
+                        <img
+                            src={species.default_photo.medium_url}
+                            alt={species.name}
+                            className='aspect-square w-full object-cover' />)}
+
                     {/* Main name */}
                     <div className='font-semibold text-lg'>{species.preferred_common_name || species.name}</div>
 

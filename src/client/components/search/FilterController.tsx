@@ -13,13 +13,13 @@ import { Separator } from '@/components/ui/separator'
 import { useAppContext } from '@/contexts/app-context'
 import { ChevronDown, Filter, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import getKingdomIcon from '@/components/search/getKingdomIcon'
 
 export default function FilterController() {
     const {
         results,
         searchType,
         filters,
-        setFilters,
         updateFilter,
         clearFilters,
         setFilteredResults,
@@ -157,18 +157,6 @@ export default function FilterController() {
         (filters.dateRange.start || filters.dateRange.end ? 1 : 0) +
         (filters.location ? 1 : 0)
 
-    const getKingdomIcon = (kingdom: string) => {
-        const icons: Record<string, string> = {
-            Plantae: '🌱',
-            Animalia: '🐾',
-            Fungi: '🍄',
-            Chromista: '🦠',
-            Protozoa: '🔬',
-            Bacteria: '🦠',
-            Archaea: '🦠',
-        }
-        return icons[kingdom] || '🔬'
-    }
 
     if (!results || results.length === 0) return null
 
