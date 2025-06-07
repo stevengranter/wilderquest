@@ -82,7 +82,21 @@ export interface INatObservation {
     identifications_most_agree: boolean;
     identifications_most_disagree: boolean;
     comments_count: number;
+    photos: Photo[];
     // Add other relevant fields as needed
+}
+
+export interface Photo {
+    id: number;
+    license_code: string | null;
+    attribution: string;
+    url: string; // URL for the original size photo. Can be very large.
+
+    // For practical use, the API provides several pre-sized image URLs.
+    original_dimensions: {
+        width: number;
+        height: number;
+    };
 }
 
 // Interface representing the API response

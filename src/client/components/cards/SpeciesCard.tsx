@@ -95,6 +95,12 @@ export function SpeciesCard({ species, className }: SpeciesCardProps) {
                         )}
                     </div>
 
+                    <div>
+                        <div className='text-xs text-muted-foreground'>
+                            {species.observations_count} observations
+                        </div>
+                    </div>
+
                     {/* Wikipedia link */}
                     {species.wikipedia_url && (
                         <div className='flex items-center gap-1 text-xs text-blue-600'>

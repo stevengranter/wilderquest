@@ -38,8 +38,8 @@ function ensureSet(value: any): Set<string> {
 // Define the main app state
 type AppState = {
 	query: string;
-	results: any[];
-	filteredResults: any[];
+	results: unknown[];
+	filteredResults: unknown[];
 	viewMode: 'grid' | 'list' | 'map';
 	searchType: 'species' | 'observations' | 'collections';
 	selectedIds: Set<string>;
@@ -300,7 +300,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 					endpoint = `https://api.inaturalist.org/v1/taxa?q=${searchQuery}`
 					break
 				case 'observations':
-					endpoint = `https://api.inaturalist.org/v1/observations?q=${searchQuery}&photos=true`
+					endpoint = `https://api.inaturalist.org/v1/observations?q=${searchQuery}&photos=true&extra=photos`
 					break
 				case 'collections':
 					endpoint = `https://api.inaturalist.org/v1/projects?q=${searchQuery}`
@@ -316,6 +316,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 					throw new Error(`HTTP error! status: ${response.status}`)
 				}
 				const data = await response.json()
+				console.log('Response data:', data)
 				dispatch({ type: 'SET_RESULTS', payload: data.results })
 			} catch (error) {
 				console.error('Error fetching data:', error)
