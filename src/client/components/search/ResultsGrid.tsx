@@ -1,16 +1,19 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { useAppContext } from '@/contexts/app-context'
-import { Grid, List, Map } from 'lucide-react'
 import { CollectionCard } from '../cards/CollectionCard'
 import { ObservationCard } from '../cards/ObservationCard'
 import { SpeciesCard } from '../cards/SpeciesCard'
+import {
+    type INatObservation,
+    type INatObservationsResponse,
+    type INatTaxon,
+    type INatTaxaResponse,
+} from '../../../shared/types/iNatTypes'
 
 export function ResultsGrid({ searchCategory, viewMode, data }: {
     searchCategory: string,
     viewMode: string,
-    data: any
+    data: INatTaxaResponse | INatObservationsResponse
 }) {
     // const {
     //     filteredResults,
@@ -32,7 +35,7 @@ export function ResultsGrid({ searchCategory, viewMode, data }: {
         )
     }
 
-    const renderCard = (item: any, index: number) => {
+    const renderCard = (item: INatTaxon | INatObservation, index: number) => {
         const key = `${searchCategory}-${item.id}-${index}`
 
         switch (searchCategory) {
@@ -67,11 +70,9 @@ export function ResultsGrid({ searchCategory, viewMode, data }: {
                     {/*)}*/}
                 </div>
 
-                {/* View mode controls */}
-
             </div>
 
-            {/* Results grid */}
+            {/* Results list/grid */}
             <div
                 className={
                     viewMode === 'grid'
