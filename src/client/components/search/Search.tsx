@@ -1,22 +1,21 @@
 'use client'
 
 import type React from 'react'
-import { useEffect, useState } from 'react'
-
+import { useEffect, useState, useCallback } from 'react' // Import useCallback
 import FilterController from '@/components/search/FilterController'
 import { ResultsGrid } from '@/components/search/ResultsGrid'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import ViewModeController from '@/components/search/ViewModeController'
-import { INatObservationsResponse } from '../../../shared/types/iNatTypes'
+import { INatObservationsResponse, iNatTaxaResult, INatTaxaResponse } from '../../../shared/types/iNatTypes' // Import iNatTaxaResult
 import SearchCategorySelect, { SearchCategory } from '@/components/search/SearchCategorySelect'
+import SearchAutoComplete from '@/components/SearchAutoComplete'
 
 
 // Your API fetching function, now dynamic
-const fetchINaturalistData = async (category: string, query: string): Promise<INatTaxaResponse | INatObservationsResponse> => {
+const fetchINaturalistData = async (category: string, query: string, taxon_id?: string): Promise<INatTaxaResponse | INatObservationsResponse> => {
     let endpoint: string
     switch (category) {
         case 'species':
@@ -26,23 +25,19 @@ const fetchINaturalistData = async (category: string, query: string): Promise<IN
             endpoint = 'observations'
             break
         default:
-            endpoint = 'observations' // Default to observations
+            endpoint = 'species' // Default to species
     }
 
     const url = new URL(`/api/iNatAPI/${endpoint}`, window.location.origin)
 
 
-    if (query) {
-        if (category === 'species') {
-            url.searchParams.append('q', query)
-        } else {
-            url.searchParams.append('q', query)
-        }
+    if (category === 'species' && taxon_id) {
+        url.searchParams.append('taxon_id', taxon_id) // Add taxon_id for species search
+    } else if (query) {
+        url.searchParams.append('q', query)
     }
-    url.searchParams.append('per_page', '10') // Default limit
 
-    // You might also need to append other filters from searchParams later
-    // For example, if FilterController adds filters to the URL, you'd merge them here.
+    url.searchParams.append('per_page', '30') // Default limit
 
     const response = await fetch(url.toString())
     if (!response.ok) {
@@ -52,64 +47,79 @@ const fetchINaturalistData = async (category: string, query: string): Promise<IN
 }
 
 export default function SearchInterface() {
-    // Initialize state from URL params
     const [searchParams, setSearchParams] = useSearchParams()
-    const searchCategory = searchParams.get('category') || 'observations' // Default to 'observations'
-
-
-    // use local useState for viewMode
+    const searchCategory = searchParams.get('category') || 'observations'
     const [viewMode, setViewMode] = useState('grid')
     const [localQuery, setLocalQuery] = useState(searchParams.get('q') || '')
+    // New state to hold the selected item from SearchAutoComplete
+    const [selectedTaxaItem, setSelectedTaxaItem] = useState<iNatTaxaResult | null>(null)
 
     // Effect to synchronize local state with URL on initial load and URL changes
     useEffect(() => {
-        setLocalQuery(searchParams.get('q') || '')
-    }, [searchParams])
+        const queryFromUrl = searchParams.get('q') || ''
+        setLocalQuery(queryFromUrl)
+        // If the query from the URL changes, it might mean a new search, so clear selected item.
+        if (selectedTaxaItem && selectedTaxaItem.name !== queryFromUrl) {
+            setSelectedTaxaItem(null)
+        }
+    }, [searchParams, selectedTaxaItem]);
 
 
-    // Function to update the 'category' parameter in the URL
     const handleSearchCategoryChange = (newCategory: SearchCategory) => {
         const newSearchParams = new URLSearchParams(searchParams)
         newSearchParams.set('category', newCategory)
-        newSearchParams.set('page', '1') // Reset page when changing search type
+        newSearchParams.set('page', '1')
         setSearchParams(newSearchParams)
     }
 
+    // Callback function to handle selection from SearchAutoComplete
+    const handleAutoCompleteSelection = useCallback((item: iNatTaxaResult) => {
+        setSelectedTaxaItem(item)
+        setLocalQuery(item.name) // Update the local query with the selected item's name
+        // Optionally, you might want to trigger a search immediately after selection
+        // by updating the URL search params here.
+        const newSearchParams = new URLSearchParams(searchParams)
+        newSearchParams.set('q', item.name)
+        if (searchCategory === 'species' && item.id) {
+            // If searching species, you might want to include the taxon_id for more precise results
+            newSearchParams.set('taxon_id', item.id.toString())
+        } else {
+            newSearchParams.delete('taxon_id') // Clear if not a species search
+        }
+        setSearchParams(newSearchParams)
 
-    // This object holds the parameters that affect the data fetching.
-    // It's crucial for the `queryKey`.
+    }, [searchParams, searchCategory, setSearchParams])
+
+
     const queryParamsForFetch = {
-        category: searchCategory, // This will determine the endpoint
-        q: localQuery,    // This is the search term
-        // Add other URL parameters that your API call might depend on,
-        // e.g., 'page', 'filters', etc., extracted from searchParams.
-        // For simplicity, we're just using category and q here.
+        category: searchCategory,
+        q: localQuery,
+        // If a species is selected, you might want to pass its ID to the API.
+        // This depends on whether your fetchINaturalistData can utilize a taxon_id.
+        taxon_id: selectedTaxaItem?.id?.toString() || undefined,
     }
 
     const { data, isLoading, isError, error } = useQuery({
-        // The queryKey uniquely identifies the data.
-        // When any part of this array changes, React Query knows to re-fetch.
-        queryKey: ['inaturalist', queryParamsForFetch.category, queryParamsForFetch.q],
-        // The queryFn now calls your dynamic fetcher
+        queryKey: ['inaturalist', queryParamsForFetch.category, queryParamsForFetch.q, queryParamsForFetch.taxon_id],
         queryFn: () => fetchINaturalistData(queryParamsForFetch.category, queryParamsForFetch.q),
-        // `enabled` ensures the query only runs when `localQuery` is not empty
-        // if `q` is mandatory for your API calls.
-        enabled: !!queryParamsForFetch.q, // Only fetch if `q` is not empty
-        // Optional: Keep previous data while fetching new data for smoother transitions
-        placeholderData: (previousData) => previousData, // Use this instead
-        // Refetch on mount only if new query key is different from last successful one
-        refetchOnMount: 'always', // Or 'stale' depending on desired behavior
-        // You might want to adjust staleTime, cacheTime based on iNaturalist API rate limits and data freshness needs
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        gcTime: 10 * 60 * 1000, // 10 minutes
+        enabled: !!queryParamsForFetch.q,
+        placeholderData: (previousData) => previousData,
+        refetchOnMount: 'always',
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
     })
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        // Update URL search parameters. This will automatically trigger the useQuery refetch.
         const newSearchParams = new URLSearchParams(searchParams)
         newSearchParams.set('category', searchCategory)
         newSearchParams.set('q', localQuery)
+        // Ensure taxon_id is also updated or cleared on manual submission
+        if (selectedTaxaItem && searchCategory === 'species') {
+            newSearchParams.set('taxon_id', selectedTaxaItem.id.toString())
+        } else {
+            newSearchParams.delete('taxon_id')
+        }
         setSearchParams(newSearchParams)
     }
 
@@ -118,11 +128,9 @@ export default function SearchInterface() {
             {/* Search form */}
             <form onSubmit={handleSubmit} className='flex gap-2'>
                 <div className='flex flex-col w-full'>
-                    <Input
-                        value={localQuery}
-                        onChange={(e) => setLocalQuery(e.target.value)}
-                        placeholder={`Search ${searchCategory}...`}
-                        className='flex-1'
+                    <SearchAutoComplete
+                        selectionHandler={handleAutoCompleteSelection}
+                        selectedItemName={localQuery} // Pass the current query to keep the input in sync
                     />
                     <SearchCategorySelect
                         searchCategory={searchCategory as SearchCategory}
@@ -144,25 +152,7 @@ export default function SearchInterface() {
                     <ViewModeController viewMode={viewMode} setViewMode={setViewMode} />
                     <ResultsGrid searchCategory={searchCategory} viewMode={viewMode} data={data} />
                 </>
-                // <div>
-                //     <h2>Results for "{localQuery}" ({searchCategory}):</h2>
-                //
-                //     {/* You'll need to map over data.results or data.data depending on iNat's response structure */}
-                //     {data.results && data.results.length > 0 ? (
-                //         <ul>
-                //             {data.results.map((item: INatTaxon | INatObservation) => (
-                //                 <li key={item.id}>
-                //                     {/* Adjust how you display based on `searchCategory` */}
-                //                     {searchCategory === 'species' ? (item as INatTaxon).name : (item as INatObservation).species_guess}
-                //                 </li>
-                //             ))}
-                //         </ul>
-                //     ) : (
-                //         <p>No results found.</p>
-                //     )}
-                // </div>
             )}
-
         </div>
     )
 }
