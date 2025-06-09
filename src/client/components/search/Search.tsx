@@ -15,8 +15,6 @@ import { INatObservationsResponse } from '../../../shared/types/iNatTypes'
 import SearchCategorySelect, { SearchCategory } from '@/components/search/SearchCategorySelect'
 
 
-
-
 // Your API fetching function, now dynamic
 const fetchINaturalistData = async (category: string, query: string): Promise<INatTaxaResponse | INatObservationsResponse> => {
     let endpoint: string
@@ -66,7 +64,7 @@ export default function SearchInterface() {
     // Effect to synchronize local state with URL on initial load and URL changes
     useEffect(() => {
         setLocalQuery(searchParams.get('q') || '')
-    }, [searchParams]);
+    }, [searchParams])
 
 
     // Function to update the 'category' parameter in the URL
@@ -120,16 +118,15 @@ export default function SearchInterface() {
             {/* Search form */}
             <form onSubmit={handleSubmit} className='flex gap-2'>
                 <div className='flex flex-col w-full'>
-
-
-                <Input
-                    value={localQuery}
-                    onChange={(e) => setLocalQuery(e.target.value)}
-                    placeholder={`Search ${searchCategory}...`}
-                    className='flex-1'
-                />
-                    <SearchCategorySelect searchCategory={searchCategory as 'species' | 'observations' | 'collections'}
-                                          setSearchCategory={handleSearchCategoryChange} className='w-20' />
+                    <Input
+                        value={localQuery}
+                        onChange={(e) => setLocalQuery(e.target.value)}
+                        placeholder={`Search ${searchCategory}...`}
+                        className='flex-1'
+                    />
+                    <SearchCategorySelect
+                        searchCategory={searchCategory as SearchCategory}
+                        setSearchCategory={handleSearchCategoryChange} />
                 </div>
                 <Button type='submit'>
                     <Search className='h-4 w-4' />
@@ -167,5 +164,5 @@ export default function SearchInterface() {
             )}
 
         </div>
-    );
+    )
 }
