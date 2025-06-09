@@ -7,17 +7,21 @@ import { CollectionCard } from '../cards/CollectionCard'
 import { ObservationCard } from '../cards/ObservationCard'
 import { SpeciesCard } from '../cards/SpeciesCard'
 
-export function ResultsGrid() {
-    const {
-        filteredResults,
-        searchType,
-        viewMode,
-        setViewMode,
-        selectedIds,
-        clearSelection,
-    } = useAppContext()
+export function ResultsGrid({ searchCategory, viewMode, data }: {
+    searchCategory: string,
+    viewMode: string,
+    data: any
+}) {
+    // const {
+    //     filteredResults,
+    //     searchCategory,
+    //     viewMode,
+    //     setViewMode,
+    //     selectedIds,
+    //     clearSelection,
+    // } = useAppContext()
 
-    if (!filteredResults || filteredResults.length === 0) {
+    if (!data?.results || data?.results.length === 0) {
         return (
             <div className='flex items-center justify-center h-64 text-muted-foreground'>
                 <div className='text-center'>
@@ -29,9 +33,9 @@ export function ResultsGrid() {
     }
 
     const renderCard = (item: any, index: number) => {
-        const key = `${searchType}-${item.id}-${index}`
+        const key = `${searchCategory}-${item.id}-${index}`
 
-        switch (searchType) {
+        switch (searchCategory) {
             case 'species':
                 return <SpeciesCard key={key} species={item} />
             case 'observations':
@@ -49,44 +53,22 @@ export function ResultsGrid() {
             <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-4'>
                     <h2 className='text-lg font-semibold'>
-                        {filteredResults.length} {searchType} found
+                        {data.results.length} {searchCategory} found
                     </h2>
-                    {selectedIds.size > 0 && (
-                        <div className='flex items-center gap-2'>
-							<span className='text-sm text-muted-foreground'>
-								{selectedIds.size} selected
-							</span>
-                            <Button variant='outline' size='sm' onClick={clearSelection}>
-                                Clear Selection
-                            </Button>
-                        </div>
-                    )}
+                    {/*{selectedIds.size > 0 && (*/}
+                    {/*    <div className='flex items-center gap-2'>*/}
+                    {/*		<span className='text-sm text-muted-foreground'>*/}
+                    {/*			{selectedIds.size} selected*/}
+                    {/*		</span>*/}
+                    {/*        <Button variant='outline' size='sm' onClick={clearSelection}>*/}
+                    {/*            Clear Selection*/}
+                    {/*        </Button>*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
                 </div>
 
                 {/* View mode controls */}
-                <div className='flex items-center gap-1 rounded-md p-1'>
-                    <Button
-                        variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                        size='sm'
-                        onClick={() => setViewMode('grid')}
-                    >
-                        <Grid className='h-4 w-4' />
-                    </Button>
-                    <Button
-                        variant={viewMode === 'list' ? 'default' : 'ghost'}
-                        size='sm'
-                        onClick={() => setViewMode('list')}
-                    >
-                        <List className='h-4 w-4' />
-                    </Button>
-                    <Button
-                        variant={viewMode === 'map' ? 'default' : 'ghost'}
-                        size='sm'
-                        onClick={() => setViewMode('map')}
-                    >
-                        <Map className='h-4 w-4' />
-                    </Button>
-                </div>
+
             </div>
 
             {/* Results grid */}
@@ -97,7 +79,7 @@ export function ResultsGrid() {
                         : 'space-y-2'
                 }
             >
-                {filteredResults.map(renderCard)}
+                {data.results.map(renderCard)}
             </div>
         </div>
     )
