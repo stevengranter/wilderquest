@@ -19,6 +19,9 @@ ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName
 interface ToggleGroupItemProps
     extends React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Item> {
     icon?: React.ReactNode;
+    children?: React.ReactNode;
+    className?: string;
+    value?: string;
 }
 
 const ToggleGroupItem = React.forwardRef<

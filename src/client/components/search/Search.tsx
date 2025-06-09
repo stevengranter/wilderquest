@@ -7,32 +7,20 @@ import FilterController from '@/components/search/FilterController'
 import { ResultsGrid } from '@/components/search/ResultsGrid'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Search } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import ViewModeController from '@/components/search/ViewModeController'
 import { INatObservationsResponse } from '../../../shared/types/iNatTypes'
+import SearchCategorySelect, { SearchCategory } from '@/components/search/SearchCategorySelect'
 
 
-// interface Observation {
-//     id: number;
-//     // Add other observation properties you expect
-//     species_guess: string;
-//     // ...
-// }
-//
-// interface Taxon {
-//     id: number;
-//     // Add other taxon properties you expect
-//     name: string;
-//     // ...
-// }
+
 
 // Your API fetching function, now dynamic
-const fetchINaturalistData = async (type: string, query: string): Promise<INatTaxaResponse | INatObservationsResponse> => {
+const fetchINaturalistData = async (category: string, query: string): Promise<INatTaxaResponse | INatObservationsResponse> => {
     let endpoint: string
-    switch (type) {
+    switch (category) {
         case 'species':
             endpoint = 'taxa' // iNaturalist API for species search is /taxa
             break
@@ -43,11 +31,11 @@ const fetchINaturalistData = async (type: string, query: string): Promise<INatTa
             endpoint = 'observations' // Default to observations
     }
 
-    const apiUrl = `https://api.inaturalist.org/v1/${endpoint}`
-    const url = new URL(apiUrl)
+    const url = new URL(`/api/iNatAPI/${endpoint}`, window.location.origin)
+
 
     if (query) {
-        if (type === 'species') {
+        if (category === 'species') {
             url.searchParams.append('q', query)
         } else {
             url.searchParams.append('q', query)
@@ -66,35 +54,46 @@ const fetchINaturalistData = async (type: string, query: string): Promise<INatTa
 }
 
 export default function SearchInterface() {
-    const [searchParams, setSearchParams] = useSearchParams()
-    const [viewMode, setViewMode] = useState('grid')
-
     // Initialize state from URL params
-    const [searchCategory, setSearchCategory] = useState(searchParams.get('type') || 'observations') // Default to 'observations'
+    const [searchParams, setSearchParams] = useSearchParams()
+    const searchCategory = searchParams.get('category') || 'observations' // Default to 'observations'
+
+
+    // use local useState for viewMode
+    const [viewMode, setViewMode] = useState('grid')
     const [localQuery, setLocalQuery] = useState(searchParams.get('q') || '')
 
     // Effect to synchronize local state with URL on initial load and URL changes
     useEffect(() => {
-        setSearchCategory(searchParams.get('type') || 'observations')
         setLocalQuery(searchParams.get('q') || '')
-    }, [searchParams])
+    }, [searchParams]);
+
+
+    // Function to update the 'category' parameter in the URL
+    const handleSearchCategoryChange = (newCategory: SearchCategory) => {
+        const newSearchParams = new URLSearchParams(searchParams)
+        newSearchParams.set('category', newCategory)
+        newSearchParams.set('page', '1') // Reset page when changing search type
+        setSearchParams(newSearchParams)
+    }
+
 
     // This object holds the parameters that affect the data fetching.
     // It's crucial for the `queryKey`.
     const queryParamsForFetch = {
-        type: searchCategory, // This will determine the endpoint
+        category: searchCategory, // This will determine the endpoint
         q: localQuery,    // This is the search term
         // Add other URL parameters that your API call might depend on,
         // e.g., 'page', 'filters', etc., extracted from searchParams.
-        // For simplicity, we're just using type and q here.
+        // For simplicity, we're just using category and q here.
     }
 
     const { data, isLoading, isError, error } = useQuery({
         // The queryKey uniquely identifies the data.
         // When any part of this array changes, React Query knows to re-fetch.
-        queryKey: ['inaturalist', queryParamsForFetch.type, queryParamsForFetch.q],
+        queryKey: ['inaturalist', queryParamsForFetch.category, queryParamsForFetch.q],
         // The queryFn now calls your dynamic fetcher
-        queryFn: () => fetchINaturalistData(queryParamsForFetch.type, queryParamsForFetch.q),
+        queryFn: () => fetchINaturalistData(queryParamsForFetch.category, queryParamsForFetch.q),
         // `enabled` ensures the query only runs when `localQuery` is not empty
         // if `q` is mandatory for your API calls.
         enabled: !!queryParamsForFetch.q, // Only fetch if `q` is not empty
@@ -111,7 +110,7 @@ export default function SearchInterface() {
         e.preventDefault()
         // Update URL search parameters. This will automatically trigger the useQuery refetch.
         const newSearchParams = new URLSearchParams(searchParams)
-        newSearchParams.set('type', searchCategory)
+        newSearchParams.set('category', searchCategory)
         newSearchParams.set('q', localQuery)
         setSearchParams(newSearchParams)
     }
@@ -120,22 +119,18 @@ export default function SearchInterface() {
         <div className='space-y-4'>
             {/* Search form */}
             <form onSubmit={handleSubmit} className='flex gap-2'>
-                <Select value={searchCategory} onValueChange={setSearchCategory}>
-                    <SelectTrigger className='w-40'>
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value='species'>Species</SelectItem>
-                        <SelectItem value='observations'>Observations</SelectItem>
-                        {/* <SelectItem value='collections'>Collections</SelectItem> */}
-                    </SelectContent>
-                </Select>
+                <div className='flex flex-col w-full'>
+
+
                 <Input
                     value={localQuery}
                     onChange={(e) => setLocalQuery(e.target.value)}
                     placeholder={`Search ${searchCategory}...`}
                     className='flex-1'
                 />
+                    <SearchCategorySelect searchCategory={searchCategory as 'species' | 'observations' | 'collections'}
+                                          setSearchCategory={handleSearchCategoryChange} className='w-20' />
+                </div>
                 <Button type='submit'>
                     <Search className='h-4 w-4' />
                 </Button>

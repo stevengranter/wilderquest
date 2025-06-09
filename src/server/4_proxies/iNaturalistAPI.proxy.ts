@@ -5,7 +5,7 @@ const API_URL = 'https://api.inaturalist.org/v1'
 
 const iNaturalistAPIProxy = async (req: Request, res: Response) => {
   console.log('iNaturalist API Proxy')
-
+  console.log(req.url)
   try {
     const result = await axios.get(API_URL + req.url)
 
