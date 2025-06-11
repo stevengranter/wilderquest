@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useContext, useState } from 'react'
 import { ViewMode, SearchContextType, SearchResults } from '@/contexts/search/SearchContext.types'
-import { useSelectionState } from '@/contexts/search/SearchContext.utils'
+import { useSelectionState } from '@/hooks/useSelectionState'
 
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined)
