@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import SearchForm from '@/components/SearchForm'
 import { Button } from '@/components/ui/button'
+import SearchInterface from '@/components/search/Search'
+import { SearchProvider } from '@/contexts/search/SearchContext'
 
 export function ExploreTab() {
     return (
@@ -13,7 +14,9 @@ export function ExploreTab() {
             </CardHeader>
             <CardContent className='grid gap-6'>
                 <div className='grid gap-3'>
-                    <SearchForm />
+                    <SearchProvider>
+                        <SearchInterface />
+                    </SearchProvider>
                 </div>
             </CardContent>
             <CardFooter>

@@ -2,16 +2,16 @@
 
 import type React from 'react'
 import { useEffect, useState, useCallback } from 'react' // Import useCallback
-import FilterController from '@/components/search/FilterController'
 import { ResultsGrid } from '@/components/search/ResultsGrid'
 import { Button } from '@/components/ui/button'
 import { Search } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import ViewModeController from '@/components/search/ViewModeController'
-import { INatObservationsResponse, iNatTaxaResult, INatTaxaResponse } from '../../../shared/types/iNatTypes' // Import iNatTaxaResult
+import { INatObservationsResponse, INatTaxaResponse } from '../../../shared/types/iNatTypes'
 import SearchCategorySelect, { SearchCategory } from '@/components/search/SearchCategorySelect'
 import SearchAutoComplete from '@/components/SearchAutoComplete'
+import { useSearchContext } from '@/contexts/search/SearchContext'
 
 
 // Your API fetching function, now dynamic
@@ -49,7 +49,7 @@ const fetchINaturalistData = async (category: string, query: string, taxon_id?: 
 export default function SearchInterface() {
     const [searchParams, setSearchParams] = useSearchParams()
     const searchCategory = searchParams.get('category') || 'observations'
-    const [viewMode, setViewMode] = useState('grid')
+    const { viewMode, setViewMode } = useSearchContext()
     const [localQuery, setLocalQuery] = useState(searchParams.get('q') || '')
     // New state to hold the selected item from SearchAutoComplete
     const [selectedTaxaItem, setSelectedTaxaItem] = useState<iNatTaxaResult | null>(null)
@@ -74,10 +74,13 @@ export default function SearchInterface() {
 
     // Callback function to handle selection from SearchAutoComplete
     const handleAutoCompleteSelection = useCallback((item: iNatTaxaResult) => {
+
         setSelectedTaxaItem(item)
-        setLocalQuery(item.name) // Update the local query with the selected item's name
-        // Optionally, you might want to trigger a search immediately after selection
-        // by updating the URL search params here.
+        // Update the local query with the selected item's name
+        setLocalQuery(item.name)
+
+        // Trigger a search immediately after selection
+        // by updating the URL search params
         const newSearchParams = new URLSearchParams(searchParams)
         newSearchParams.set('q', item.name)
         if (searchCategory === 'species' && item.id) {
@@ -94,8 +97,6 @@ export default function SearchInterface() {
     const queryParamsForFetch = {
         category: searchCategory,
         q: localQuery,
-        // If a species is selected, you might want to pass its ID to the API.
-        // This depends on whether your fetchINaturalistData can utilize a taxon_id.
         taxon_id: selectedTaxaItem?.id?.toString() || undefined,
     }
 
@@ -142,7 +143,7 @@ export default function SearchInterface() {
             </form>
 
             {/* Filter controller */}
-            <FilterController />
+            {/*<FilterController />*/}
 
             {/* Display Results */}
             {isLoading && <div>Loading...</div>}

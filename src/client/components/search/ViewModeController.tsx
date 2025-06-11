@@ -1,9 +1,11 @@
 import { Button } from '@/components/ui/button'
 import { Grid, List, Map } from 'lucide-react'
 
+type ViewMode = 'grid' | 'list' | 'map'
+
 export default function ViewModeController({ viewMode, setViewMode }: {
-    viewMode: string,
-    setViewMode: (viewMode: string) => void
+    viewMode: ViewMode,
+    setViewMode: (viewMode: ViewMode) => void
 }) {
     return (<div className='flex items-center gap-1 rounded-md p-1'>
         <Button

@@ -4,13 +4,13 @@ import React from 'react'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { useAppContext } from '@/contexts/app-context'
 import { cn } from '@/lib/utils'
 import { ExternalLink } from 'lucide-react'
 import { type INatTaxon } from '../../../shared/types/iNatTypes'
 import getKingdomIcon from '@/components/search/getKingdomIcon'
 import titleCase from '@/components/search/titleCase'
 import { motion } from 'motion/react'
+import { useSearchContext } from '@/contexts/search/SearchContext'
 
 interface SpeciesCardProps {
     species: INatTaxon
@@ -18,18 +18,18 @@ interface SpeciesCardProps {
 }
 
 export function SpeciesCard({ species, className }: SpeciesCardProps) {
-    const { selectedIds, addToSelection, removeFromSelection } = useAppContext()
+    const { selectedIds, addIdToSelection, removeIdFromSelection } = useSearchContext()
 
-    const isSelected = selectedIds.has(species.id.toString())
+    const isSelected = selectedIds.includes(species.id.toString())
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault()
         const id = species.id.toString()
 
         if (isSelected) {
-            removeFromSelection([id])
+            removeIdFromSelection(id)
         } else {
-            addToSelection([id])
+            addIdToSelection(id)
         }
     }
     const handleInteractiveClick = (e: React.MouseEvent, action: string) => {
