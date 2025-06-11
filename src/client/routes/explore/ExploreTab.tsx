@@ -14,9 +14,9 @@ export function ExploreTab() {
             </CardHeader>
             <CardContent className='grid gap-6'>
                 <div className='grid gap-3'>
-                    <SearchProvider>
-                        <SearchInterface />
-                    </SearchProvider>
+
+                <SearchInterface />
+
                 </div>
             </CardContent>
             <CardFooter>

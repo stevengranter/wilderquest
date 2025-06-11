@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from 'react'
-import { useLocalStorage } from '@uidotdev/usehooks'
+import { useLocalStorage } from 'react-use'
 
 // Extracted interface with required fields
 export interface GeoLocationData {

@@ -1,6 +1,6 @@
 'use client'
 
-import type React from 'react'
+import React, { useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -17,7 +17,7 @@ interface ObservationCardProps {
 export function ObservationCard({ observation, className }: ObservationCardProps) {
     const { selectedIds, removeIdFromSelection, addIdToSelection } = useSearchContext()
 
-    const isSelected = selectedIds.includes(observation.id.toString())
+    const isSelected = selectedIds.includes(Number(observation.id))
 
     // --- FIX 1: Safely get the photo URL using optional chaining ---
     // This will be undefined if `photos` is missing or the array is empty, without causing an error.
@@ -25,7 +25,7 @@ export function ObservationCard({ observation, className }: ObservationCardProps
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault()
-        const id = observation.id.toString()
+        const id = Number(observation.id)
 
         if (isSelected) {
             removeIdFromSelection(id)
@@ -33,6 +33,7 @@ export function ObservationCard({ observation, className }: ObservationCardProps
             addIdToSelection(id)
         }
     }
+
 
     return (
         <Card

@@ -20,11 +20,11 @@ interface SpeciesCardProps {
 export function SpeciesCard({ species, className }: SpeciesCardProps) {
     const { selectedIds, addIdToSelection, removeIdFromSelection } = useSearchContext()
 
-    const isSelected = selectedIds.includes(species.id.toString())
+    const isSelected = selectedIds.includes(Number(species.id))
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault()
-        const id = species.id.toString()
+        const id = Number(species.id)
 
         if (isSelected) {
             removeIdFromSelection(id)

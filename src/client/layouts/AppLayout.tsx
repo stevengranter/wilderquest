@@ -7,12 +7,14 @@ import {
     SidebarTrigger,
 } from '@/components/ui/sidebar'
 
-import AiAssistant from '@/components/chat/aiAssistant'
+import AiAssistant from '@/components/chat/AiAssistant'
 import { Outlet } from 'react-router'
+import { SearchProvider } from '@/contexts/search/SearchContext'
 
 
 export function AppLayout() {
     return (
+        <SearchProvider>
         <SidebarProvider defaultOpen={true}>
             <div className='flex flex-row'>
                 <AiAssistant />
@@ -22,6 +24,7 @@ export function AppLayout() {
                 </SidebarInset>
             </div>
         </SidebarProvider>
+        </SearchProvider>
     )
 }
 

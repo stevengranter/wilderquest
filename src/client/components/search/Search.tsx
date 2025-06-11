@@ -49,7 +49,8 @@ const fetchINaturalistData = async (category: string, query: string, taxon_id?: 
 export default function SearchInterface() {
     const [searchParams, setSearchParams] = useSearchParams()
     const searchCategory = searchParams.get('category') || 'observations'
-    const { viewMode, setViewMode } = useSearchContext()
+
+    const { viewMode, setViewMode, response, setResponse } = useSearchContext()
     const [localQuery, setLocalQuery] = useState(searchParams.get('q') || '')
     // New state to hold the selected item from SearchAutoComplete
     const [selectedTaxaItem, setSelectedTaxaItem] = useState<iNatTaxaResult | null>(null)
@@ -100,6 +101,7 @@ export default function SearchInterface() {
         taxon_id: selectedTaxaItem?.id?.toString() || undefined,
     }
 
+
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['inaturalist', queryParamsForFetch.category, queryParamsForFetch.q, queryParamsForFetch.taxon_id],
         queryFn: () => fetchINaturalistData(queryParamsForFetch.category, queryParamsForFetch.q),
@@ -123,6 +125,12 @@ export default function SearchInterface() {
         }
         setSearchParams(newSearchParams)
     }
+
+    useEffect(() => {
+        if (!data) return
+        setResponse(data)
+    }, [data])
+
 
     return (
         <div className='space-y-4'>

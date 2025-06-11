@@ -6,20 +6,20 @@ export enum ViewMode {
     Map = 'map'
 }
 
-export type SearchResults = INatTaxaResponse | INatObservationsResponse;
+export type INatResponse = INatTaxaResponse | INatObservationsResponse;
 
 interface SearchContextState {
-    selectedIds: (number | string)[];
+    selectedIds: number[];
     viewMode: ViewMode;
-    results: SearchResults | undefined;
+    response: INatResponse | undefined;
 }
 
 interface SearchContextActions {
-    setSelectedIds: (ids: (number | string)[]) => void;
-    addIdToSelection: (id: number | string) => void;
-    removeIdFromSelection: (id: number | string) => void;
+    setSelectedIds: (ids: number[]) => void;
+    addIdToSelection: (id: number) => void;
+    removeIdFromSelection: (id: number) => void;
     setViewMode: (mode: ViewMode) => void;
-    setResults: (results: SearchResults) => void;
+    setResponse: (results: INatResponse) => void;
 }
 
 export type SearchContextType = SearchContextState & SearchContextActions;

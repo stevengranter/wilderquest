@@ -9,20 +9,24 @@ import {
     type INatTaxon,
     type INatTaxaResponse,
 } from '../../../shared/types/iNatTypes'
+import { useSelectionState } from '@/hooks/useSelectionState'
+import { Button } from '@/components/ui/button'
+import { useEffect } from 'react'
 
 export function ResultsGrid({ searchCategory, viewMode, data }: {
     searchCategory: string,
     viewMode: string,
     data: INatTaxaResponse | INatObservationsResponse
 }) {
-    // const {
-    //     filteredResults,
-    //     searchCategory,
-    //     viewMode,
-    //     setViewMode,
-    //     selectedIds,
-    //     clearSelection,
-    // } = useAppContext()
+    const {
+        selectedIds,
+        addIdToSelection,
+        removeIdFromSelection,
+    } = useSelectionState()
+
+    useEffect(() => {
+        console.log(selectedIds)
+    }, [selectedIds])
 
     if (!data?.results || data?.results.length === 0) {
         return (
@@ -54,20 +58,24 @@ export function ResultsGrid({ searchCategory, viewMode, data }: {
         <div className='space-y-4'>
             {/* Header with view controls and selection info */}
             <div className='flex items-center justify-between'>
+                <h1>Results</h1>
                 <div className='flex items-center gap-4'>
                     <h2 className='text-lg font-semibold'>
                         {data.results.length} {searchCategory} found
                     </h2>
-                    {/*{selectedIds.size > 0 && (*/}
-                    {/*    <div className='flex items-center gap-2'>*/}
-                    {/*		<span className='text-sm text-muted-foreground'>*/}
-                    {/*			{selectedIds.size} selected*/}
-                    {/*		</span>*/}
-                    {/*        <Button variant='outline' size='sm' onClick={clearSelection}>*/}
-                    {/*            Clear Selection*/}
-                    {/*        </Button>*/}
-                    {/*    </div>*/}
-                    {/*)}*/}
+                    {selectedIds.length > 0 && (
+                        <div className='flex items-center gap-2'>
+                    		<span className='text-sm text-muted-foreground'>
+                    			{selectedIds.length} selected
+                    		</span>
+                            <Button variant='outline'
+                                    size='sm'
+                                // onClick={clearSelection}
+                            >
+                                Clear Selection
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
             </div>

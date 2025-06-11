@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useContext, useState } from 'react'
-import { ViewMode, SearchContextType, SearchResults } from '@/contexts/search/SearchContext.types'
+import { ViewMode, SearchContextType, INatResponse } from '@/contexts/search/SearchContext.types'
 import { useSelectionState } from '@/hooks/useSelectionState'
 
 
@@ -11,15 +11,15 @@ interface SearchProviderProps {
 
 const SearchProvider = ({ children }: SearchProviderProps) => {
     const selectionState = useSelectionState()
-    const [results, setResults] = useState<SearchResults | undefined>(undefined)
+    const [response, setResponse] = useState<INatResponse | undefined>(undefined)
     const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Grid)
 
     const contextValue: SearchContextType = {
         ...selectionState,
         viewMode,
-        results,
+        response,
         setViewMode,
-        setResults,
+        setResponse,
     }
 
     return (
