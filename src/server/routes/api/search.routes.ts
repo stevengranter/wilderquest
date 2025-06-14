@@ -1,4 +1,4 @@
-import { search } from '../../2_controllers/search.controller.js'
+import { search } from '../../controllers/search.controller.js'
 import { Router } from 'express'
 
 const router = Router()

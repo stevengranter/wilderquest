@@ -1,16 +1,27 @@
 import BaseRepository from './BaseRepository.js'
-import {Collection, CollectionToTaxaSchema} from '../../types/types.js'
-import {ResultSetHeader, RowDataPacket} from 'mysql2/promise'
+import { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
+import { type Collection } from '../models/Collection.js'
+import { type CollectionToTaxa } from '../models/CollectionToTaxa.js'
+import { CollectionSchema } from '../schemas/collection.schemas.js'
 
-class CollectionsRepository extends BaseRepository<Collection> {
-    constructor() {
-        super('collections')
+// Instantiate a InstanceType for TypeScript completions
+type CollectionRepositoryConstructor = typeof CollectionRepository;
+export type CollectionRepositoryInstance = InstanceType<CollectionRepositoryConstructor>;
+
+export default class CollectionRepository extends BaseRepository<Collection> {
+    constructor(tableName: string, dbPool: Pool) {
+        super(tableName, dbPool)
+        console.log(
+            `CollectionsRepository constructed for table '${tableName}' with dbPool:`,
+            dbPool ? 'exists' : 'does not exist',
+        )
     }
 
     async create(data: Partial<Collection>): Promise<number> {
         const created_at: Date = new Date()
         const updated_at: Date = new Date()
-        const newData = {...data, created_at, updated_at}
+        const parsed = CollectionSchema.parse(data)
+        const newData = { ...parsed, created_at, updated_at }
         return await super.create(newData)
     }
 
@@ -18,10 +29,10 @@ class CollectionsRepository extends BaseRepository<Collection> {
         try {
             const [rows] = await this.getDb().execute<RowDataPacket[]>(
                 `SELECT *
-                 FROM collections
+                 FROM ${this.getTableName()}
                  WHERE user_id = ?`,
                 [user_id]
-            )
+            );
             console.log('rows', rows)
             return rows as Collection[]
         } catch (error) {
@@ -30,16 +41,14 @@ class CollectionsRepository extends BaseRepository<Collection> {
         }
     }
 
-    async getTaxaByCollectionId(
-        collection_id: number
-    ): Promise<CollectionToTaxaSchema[]> {
+    async getTaxaByCollectionId(collection_id: number): Promise<CollectionToTaxa[]> {
         try {
             const [rows] = await this.getDb().execute<RowDataPacket[]>(
                 `SELECT taxon_id FROM collections_to_taxa WHERE collection_id = ?`,
                 [collection_id]
-            )
+            );
             console.log('rows', rows)
-            return rows as CollectionToTaxaSchema[]
+            return rows as CollectionToTaxa[]
         } catch (error) {
             console.error('Error fetching taxa by collection_id:', error)
             throw error
@@ -52,14 +61,16 @@ class CollectionsRepository extends BaseRepository<Collection> {
         description: string
     ): Promise<{ success: boolean }> {
         // TODO: verify collection exists
+        const updated_at = new Date()
         const [result] = await this.getDb().execute<ResultSetHeader>(
-            'UPDATE collections SET name = ?, description = ? WHERE id = ?',
-            [name, description, collectionId]
-        )
+            'UPDATE collections SET name = ?, description = ?, updated_at = ? WHERE id = ?',
+            [name, description, updated_at, collectionId],
+        );
+
         if (result.affectedRows === 0) {
             throw Error
         }
-        return {success: true}
+        return { success: true }
     }
 
     async updateCollectionTaxa(
@@ -72,10 +83,10 @@ class CollectionsRepository extends BaseRepository<Collection> {
                     await this.getDb().execute(
                         'INSERT INTO collections_to_taxa (collection_id, taxon_id) VALUES (?,?)',
                         [collectionId, taxaIds[i]]
-                    )
+                    );
                 }
             }
-            return {success: true}
+            return { success: true }
         } catch (error) {
             console.error('Error updating collection taxa:', error)
             throw error
@@ -83,4 +94,3 @@ class CollectionsRepository extends BaseRepository<Collection> {
     }
 }
 
-export default new CollectionsRepository() // Export a single instance

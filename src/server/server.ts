@@ -6,28 +6,21 @@ import path from 'path'
 
 // Internal imports
 import ViteExpress from 'vite-express'
-import errorHandler from './_middleware/errorHandler.js'
-import cors from 'cors'
-import corsConfig from './_config/cors.config.js'
-import { apiRouter } from './1_routes/api/_.routes.js'
-import { getDbPool, initializeDb } from './db.js'
+import errorHandler from './middlewares/errorHandler.js'
 
 import { SCRIPT_DIR } from './constants.js'
-import appConfig from './_config/app.config.js'
+import appConfig from './config/app.config.js'
+import { initApp } from './init.js'
+import { buildApp } from './app.js'
+
 
 async function startServer() {
     try {
-        // 🛢️ Initialise db connection
-        await initializeDb()
+        // 🛢️ Initialise database pool and repositories via initApp()
+        const deps = await initApp()
 
-        // ☕️ Initialize express app
-        const app = express()
-
-        // 📎 Middleware
-        app.use(cors(corsConfig))
-        app.use(express.json({ limit: '10mb' }))
-        app.use(express.urlencoded({ extended: true, limit: '10mb' }))
-        app.use('/api', apiRouter)
+        // ☕️ Initialize routes and controllers via buildApp()
+        const app = buildApp(deps)
 
         //  Server setup  //
         if (process.env.NODE_ENV !== 'production') {

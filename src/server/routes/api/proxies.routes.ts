@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import iNaturalistAPIProxy from '../../4_proxies/iNaturalistAPI.proxy.js'
-import pexelsAPIProxy from '../../4_proxies/pexelsAPI.proxy.js'
-import { rateLimiter } from '../../_middleware/rateLimiter.js'
+import iNaturalistAPIProxy from '../../proxies/iNaturalistAPI.proxy.js'
+import pexelsAPIProxy from '../../proxies/pexelsAPI.proxy.js'
+import { rateLimiter } from '../../middlewares/rateLimiter.js'
 
 const iNatRouter = Router()
 

@@ -8,8 +8,8 @@ import {createNameId} from 'mnemonic-id'
 import weighted from 'weighted'
 import {genSaltSync, hashSync} from 'bcrypt-ts'
 import fs from 'fs'
-import dbConfig from './_config/app.config.js'
-import appConfig from './_config/app.config.js'
+import dbConfig from './config/app.config.js'
+import appConfig from './config/app.config.js'
 
 type User = {
     username: string

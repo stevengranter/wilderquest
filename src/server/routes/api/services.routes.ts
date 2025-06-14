@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { getGeoCodeForward, getGeoCodeReverse } from '../../2_controllers/services.controller.js'
-import { rateLimiter } from '../../_middleware/rateLimiter.js'
+import { getGeoCodeForward, getGeoCodeReverse } from '../../controllers/services.controller.js'
+import { rateLimiter } from '../../middlewares/rateLimiter.js'
 
 const router = Router()
 

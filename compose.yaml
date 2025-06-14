@@ -31,6 +31,36 @@ services:
       db:
         condition: service_healthy
 
+    # --- WATCH CONFIGURATION START ---
+    develop:
+      watch:
+        # Watch the entire context directory.
+        # This is a common setup for development where you want changes in your source code
+        # to trigger a rebuild or restart.
+        - path: .
+          action: rebuild # Or 'sync' depending on your specific needs
+
+        # Example of watching specific files or directories and triggering a specific command
+        # if your build process is more granular or you want to run tests on changes.
+        # You might not need this if 'rebuild' on the whole context is sufficient.
+        # - path: ./src
+        #   target: /app/src # Where it goes inside the container
+        #   action: sync
+
+        # If your Node.js application uses a tool like nodemon, you might configure watch
+        # to restart the service on changes.
+        # In this case, you might not use 'rebuild' directly for every change,
+        # but instead let nodemon handle it internally after a 'sync'.
+        # For this to work, your Dockerfile or entrypoint would need to run nodemon.
+        # Example:
+        # - path: .
+        #   action: rebuild
+        #   # This 'watch' entry itself doesn't directly restart the running app within the container.
+        #   # It dictates what `docker compose watch` does.
+        #   # If you want to automatically restart your Node.js app inside the container on file changes,
+        #   # ensure your server's startup command (in Dockerfile or entrypoint) uses something like `nodemon`.
+    # --- WATCH CONFIGURATION END ---
+
   db:
     image: mysql:8.0
     restart: always

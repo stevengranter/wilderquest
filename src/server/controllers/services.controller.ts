@@ -1,5 +1,5 @@
 import { Request, Response, RequestHandler } from 'express'
-import { getForwardGeocode, getReverseGeocode } from '../3_services/geoCodingService.js'
+import { getForwardGeocode, getReverseGeocode } from '../services/geoCodingService.js'
 
 const getGeoCodeForward: RequestHandler = async (
     req: Request,
