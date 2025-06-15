@@ -1,11 +1,9 @@
 import { Request, Response } from 'express'
-import { UserRepositoryInstance } from '../repositories/UserRepository.js' // adjust import path
+import { UserRepositoryInstance } from '../repositories/UserRepository.js'
 
 export interface UserController {
     getUserById(req: Request, res: Response): void | Promise<void>
-
     getUserByEmail(req: Request, res: Response): void | Promise<void>
-
     getUserByUsername(req: Request, res: Response): void | Promise<void>
 }
 

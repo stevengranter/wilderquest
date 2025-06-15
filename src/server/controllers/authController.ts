@@ -1,34 +1,26 @@
 // src/controllers/authController.ts
 import { Request, Response } from 'express'
-import jwt from 'jsonwebtoken'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 import { genSaltSync, hashSync, compareSync } from 'bcrypt-ts'
 import { createId } from '@paralleldrive/cuid2'
-import { LoginRequestSchema, RegisterRequestSchema } from '../../shared/schemas/Auth.js'
+import {
+    LoginRequestSchema,
+    RegisterRequestSchema,
+    RefreshReqBodySchema,
+} from '../../shared/schemas/Auth.js'
 import type { LoginRequestBody } from '../../types/types.js'
 import type { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
-import type { User } from '../models/User.js'
-import { UserRepositoryInstance } from '../repositories/UserRepository.js'
-
-// interface IUserRepository {
-//     getUsersByEmail(email: string): Promise<User[]>
-//     getUsersByUsername(username: string): Promise<User[]>
-//     create(user: Partial<User>): Promise<number | undefined>
-//     findOne(query: { id?: number; username?: string }): Promise<User | null>
-//     update(id: number, data: Partial<User>): Promise<User>
-// }
+import type { UserRepositoryInstance } from '../repositories/UserRepository.js'
 
 export interface AuthController {
     register: (req: Request, res: Response) => Promise<void>
     login: (req: Request, res: Response) => Promise<void>
     logout: (req: AuthenticatedRequest, res: Response) => Promise<void>
+    handleRefreshToken: (req: Request, res: Response) => Promise<void>
 }
 
-interface AuthControllerDependencies {
-    userRepository: UserRepositoryInstance
-}
-
-export function createAuthController({ userRepository }: AuthControllerDependencies): AuthController {
-    return {
+export function createAuthController(userRepository: UserRepositoryInstance): AuthController {
+    const controller: AuthController = {
         async register(req, res) {
             const parsed = RegisterRequestSchema.safeParse(req.body)
             if (!parsed.success) {
@@ -71,9 +63,9 @@ export function createAuthController({ userRepository }: AuthControllerDependenc
                 return
             }
 
-            // Perform login
-            req.body = { username, password } as LoginRequestBody
-            return this.login(req, res)
+            // Forward to login manually to preserve correct `this`
+            const loginReq = { ...req, body: { username, password } as LoginRequestBody } as Request
+            return controller.login(loginReq, res)
         },
 
         async login(req, res) {
@@ -107,6 +99,7 @@ export function createAuthController({ userRepository }: AuthControllerDependenc
                 res.status(400).json({ message: 'No user authenticated' })
                 return
             }
+
             await userRepository.update(user.id, { refresh_token })
 
             res.status(200).json({
@@ -123,7 +116,7 @@ export function createAuthController({ userRepository }: AuthControllerDependenc
             })
         },
 
-        async logout(req, res) {
+        async logout(req: AuthenticatedRequest, res) {
             if (!req.user?.id) {
                 res.status(400).json({ message: 'No user authenticated' })
                 return
@@ -132,5 +125,53 @@ export function createAuthController({ userRepository }: AuthControllerDependenc
             await userRepository.update(req.user.id, { refresh_token: null })
             res.status(200).json({ message: 'Logged out successfully' })
         },
+
+        async handleRefreshToken(req, res) {
+            const parsedBody = RefreshReqBodySchema.safeParse(req.body)
+
+            if (!parsedBody.success) {
+                res.status(400).send(parsedBody.error.message)
+                return
+            }
+
+            const { user_cuid, refresh_token } = parsedBody.data
+
+            if (!user_cuid || !refresh_token) {
+                res.status(400).send({ message: 'Invalid refresh token or user not found' })
+                return
+            }
+
+            const foundUser = await userRepository.findOne({ user_cuid, refresh_token })
+
+            if (!foundUser) {
+                res.status(403).send({ message: 'Invalid refresh token or user not found' })
+                return
+            }
+
+            jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET!, (err, decoded) => {
+                if (
+                    err ||
+                    typeof decoded !== 'object' ||
+                    decoded === null ||
+                    !('cuid' in decoded) ||
+                    foundUser.user_cuid !== (decoded as JwtPayload).cuid
+                ) {
+                    res.status(403).send({ message: 'Refresh token expired or invalid' })
+                    return
+                }
+
+                const payload = decoded as JwtPayload
+
+                const access_token = jwt.sign(
+                    { cuid: payload.cuid, role_id: payload.role_id },
+                    process.env.ACCESS_TOKEN_SECRET!,
+                    { expiresIn: '30s' },
+                )
+
+                res.json({ access_token })
+            })
+        },
     }
+
+    return controller
 }

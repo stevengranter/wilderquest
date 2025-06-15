@@ -8,7 +8,7 @@ interface AuthController {
     handleRefreshToken: RequestHandler
 }
 
-export function authRoutes(controller: AuthController) {
+export function authRouter(controller: AuthController) {
     const router = Router()
 
     router.post('/register', controller.register)

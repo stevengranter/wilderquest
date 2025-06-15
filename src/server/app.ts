@@ -1,15 +1,20 @@
 import express from 'express'
-import { createUserController } from './controllers/userController.js'
-import { userRoutes } from './routes/userRoutes.js'
-import { collectionRoutes } from './routes/collectionRoutes.js'
+
 import cors from 'cors'
 import corsConfig from './config/cors.config.js'
+
+import { authRouter } from './routes/authRouter.js'
+import { userRouter } from './routes/userRouter.js'
+import { collectionRouter } from './routes/collectionRouter.js'
+
+import { createCollectionController } from './controllers/collectionController.js'
+import { createAuthController } from './controllers/authController.js'
+import { createUserController } from './controllers/userController.js'
+
 import { type UserRepositoryInstance } from './repositories/UserRepository.js'
 import { type CollectionRepositoryInstance } from './repositories/CollectionRepository.js'
-import { createCollectionController } from './controllers/collectionController.js'
-import { createRefreshTokenController } from './controllers/refreshTokenController.js'
-import { createAuthController } from './controllers/authController.js'
-import { authRoutes } from './routes/authRoutes.js'
+import { createChatController } from './controllers/chatController.js'
+import { chatRouter } from './routes/chatRouter.js'
 
 export function buildApp(
     {
@@ -24,17 +29,16 @@ export function buildApp(
     app.use(express.json())
 
     const userController = createUserController(userRepository)
-    app.use('/users', userRoutes(userController))
+    app.use('/users', userRouter(userController))
 
     const collectionController = createCollectionController(collectionRepository)
-    app.use('/collections', collectionRoutes(collectionController))
+    app.use('/collections', collectionRouter(collectionController))
 
-    const refreshTokenController = createRefreshTokenController(userRepository)
-    const authController = {
-        ...createAuthController({ userRepository }),
-        ...refreshTokenController,
-    }
-    app.use('/auth', authRoutes(authController))
+    const authController = createAuthController(userRepository)
+    app.use('/auth', authRouter(authController))
+
+    const chatController = createChatController()
+    app.use('/chat', chatRouter(chatController))
 
     // 📎 Middleware
     app.use(cors(corsConfig))

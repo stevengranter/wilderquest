@@ -1,8 +1,8 @@
-// src/routes/userRoutes.ts
+// src/routes/userRouter.ts
 import { Router } from 'express'
 import type { UserController } from '../controllers/userController.js'
 
-export function userRoutes(controller: UserController) {
+export function userRouter(controller: UserController) {
     const router = Router()
 
     router.get('/id/:id', controller.getUserById)

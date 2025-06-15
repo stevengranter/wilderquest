@@ -8,5 +8,6 @@ export const RegisterRequestSchema = UserSchema.pick({
 
 export const LoginRequestSchema = UserSchema.pick({
     username: true,
-    password: true,
+    user_cuid: true,
+    refresh_token: true,
 })

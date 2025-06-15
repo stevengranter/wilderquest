@@ -1,9 +1,9 @@
-// src/routes/collectionRoutes.ts
+// src/routes/collectionRouter.ts
 import { Router } from 'express'
 import type { CollectionController } from '../controllers/collectionController.js'
 import verifyJWT from '../middlewares/verifyJWT.js'
 
-export function collectionRoutes(controller: CollectionController) {
+export function collectionRouter(controller: CollectionController) {
     const router = Router()
 
     router.get('/:id', controller.getCollectionById)
