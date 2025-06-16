@@ -3,6 +3,10 @@ import { RequestHandler } from 'express'
 
 const INATURALIST_API_BASE_URL = 'https://api.inaturalist.org/v1'
 
+export const createINaturalistAPIController = () => {
+    return iNaturalistAPIController
+}
+
 const iNaturalistAPIController: RequestHandler = async (req, res) => {
     try {
         // req.path is everything *after* /api/inaturalistproxy

@@ -1,5 +1,5 @@
 -- migrate:up
-ALTER TABLE user_data
+ALTER TABLE users
     ADD UNIQUE (username),
     ADD UNIQUE (email);
 -- migrate:down

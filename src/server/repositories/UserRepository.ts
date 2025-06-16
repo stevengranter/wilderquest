@@ -36,29 +36,6 @@ export default class UserRepository extends BaseRepository<User> {
     }
 
 
-    async getUserByField<K extends keyof typeof allowedFields>(
-        field: K,
-        value: string | number,
-    ): Promise<User[]> {
-        const column = allowedFields[field]
-        const [rows] = await this.getDb().execute<RowDataPacket[]>(
-            `SELECT * FROM ${this.getTableName()} WHERE ${column} = ?`,
-            [value],
-        )
-        // Cast the raw database rows to the User type.
-        // It's assumed here that the database columns directly map to the User interface properties.
-        return rows as User[]
-    }
-
-
-    async getUsersByEmail(email: string): Promise<User[]> {
-        // Call the instance method 'getUserByField' and await its result.
-        return await this.getUserByField('email', email)
-    }
-
-    async getUsersByUsername(username: string): Promise<User[]> {
-        return await this.getUserByField('username', username)
-    }
 
 
 }

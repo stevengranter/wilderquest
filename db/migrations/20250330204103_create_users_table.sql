@@ -1,6 +1,7 @@
 -- migrate:up
 CREATE TABLE
-    user_data (
+    users
+(
        id INT AUTO_INCREMENT PRIMARY KEY,
        email VARCHAR(60),
        username VARCHAR(24),
@@ -11,4 +12,4 @@ CREATE TABLE
        refresh_token VARCHAR(255)
     );
 -- migrate:down
-drop table user_data;
+drop table users;

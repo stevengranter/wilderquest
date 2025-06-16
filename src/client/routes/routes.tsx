@@ -4,6 +4,9 @@ import { ExploreTab } from './explore/ExploreTab'
 import { IdentifyTab } from './identify/IdentifyTab'
 import { LocateTab } from './locate/LocateTab'
 import { AppLayout } from '@/layouts/AppLayout'
+import Login from '@/components/pages/Login'
+import Welcome from '@/components/pages/Welcome'
+import Register from '@/components/pages/Register'
 
 export const router = createBrowserRouter([
     {
@@ -34,6 +37,18 @@ export const router = createBrowserRouter([
             {
                 path: 'locate',
                 element: <LocateTab />,
+            },
+            {
+                path: 'login',
+                element: <Login />,
+            },
+            {
+                path: 'register',
+                element: <Register />,
+            },
+            {
+                path: 'welcome',
+                element: <Welcome />,
             },
         ],
     },

@@ -1,4 +1,5 @@
-import { RowDataPacket, Pool, ResultSetHeader } from 'mysql2/promise' // Import Pool type
+import { RowDataPacket, Pool, ResultSetHeader } from 'mysql2/promise'
+import { User } from '../models/User.js' // Import Pool type
 
 export type getColumnsOptions = {
     orderByColumn: string;
@@ -22,6 +23,60 @@ class BaseRepository<T> {
 
     public getTableName(): string {
         return this.tableName
+    }
+
+    async create(data: Partial<T>): Promise<number> {
+        const columns = Object.keys(data).join(', ')
+        const values = Object.values(data)
+        const placeholders = values.map(() => '?').join(', ')
+
+        try {
+            const [result] = await this.dbPool.execute<ResultSetHeader>(
+                `INSERT INTO ${this.tableName} (${columns})
+                 VALUES (${placeholders})`,
+                values,
+            )
+            return result.insertId
+        } catch (error) {
+            console.error(`Error creating record in ${this.tableName}:`, error)
+            throw error
+        }
+    }
+
+    async update(id: number, data: Partial<T>): Promise<boolean> {
+        const columns = Object.keys(data)
+        const values = Object.values(data)
+
+        const setClause = columns.map((col) => `${col} = ?`).join(', ')
+        console.log(setClause)
+        console.log({ values })
+        try {
+            const [result] = await this.dbPool.execute<ResultSetHeader>(
+                `UPDATE ${this.tableName}
+                 SET ${setClause}
+                 WHERE id = ?`,
+                [...values, id],
+            )
+            return result.affectedRows > 0
+        } catch (error) {
+            console.error(`Error updating record in ${this.tableName}:`, error)
+            throw error
+        }
+    }
+
+    async delete(id: number): Promise<boolean> {
+        try {
+            const [result] = await this.dbPool.execute<ResultSetHeader>(
+                `DELETE
+                                                                 FROM ${this.tableName}
+                                                                 WHERE id = ?`,
+                [id],
+            )
+            return result.affectedRows > 0
+        } catch (error) {
+            console.error(`Error deleting record from ${this.tableName}:`, error)
+            throw error
+        }
     }
 
     public async findOne(conditions: Partial<T>): Promise<T | null> {
@@ -101,7 +156,18 @@ class BaseRepository<T> {
         }
     }
 
-    async getAll(): Promise<T[]> {
+    async findRowByColumnAndValue<K>(
+        column: K,
+        value: string | number,
+    ): Promise<unknown[]> {
+        const [rows] = await this.getDb().execute<RowDataPacket[]>(
+            `SELECT * FROM ${this.getTableName()} WHERE ${column} = ?`,
+            [value],
+        )
+        return rows
+    }
+
+    async findAll(): Promise<T[]> {
         try {
             const [rows] = await this.dbPool.execute<RowDataPacket[]>(`SELECT *
                                                                  FROM ${this.tableName}`)
@@ -135,71 +201,7 @@ class BaseRepository<T> {
         }
     }
 
-    async getById(id: number): Promise<T | undefined> {
-        try {
-            const [rows] = await this.dbPool.execute<RowDataPacket[]>(
-                `SELECT *
-                                                                 FROM ${this.tableName}
-                                                                 WHERE id = ?`,
-                [id]
-            );
-            return rows[0] as T | undefined
-        } catch (error) {
-            console.error(`Error fetching record by ID from ${this.tableName}:`, error)
-            throw error
-        }
-    }
 
-    async create(data: Partial<T>): Promise<number> {
-        const columns = Object.keys(data).join(', ')
-        const values = Object.values(data)
-        const placeholders = values.map(() => '?').join(', ')
-
-        try {
-            const [result] = await this.dbPool.execute<ResultSetHeader>(
-                `INSERT INTO ${this.tableName} (${columns}) VALUES (${placeholders})`,
-                values
-            );
-            return result.insertId
-        } catch (error) {
-            console.error(`Error creating record in ${this.tableName}:`, error)
-            throw error
-        }
-    }
-
-    async update(id: number, data: Partial<T>): Promise<boolean> {
-        const columns = Object.keys(data)
-        const values = Object.values(data)
-
-        const setClause = columns.map((col) => `${col} = ?`).join(', ')
-        console.log(setClause)
-        console.log({ values })
-        try {
-            const [result] = await this.dbPool.execute<ResultSetHeader>(
-                `UPDATE ${this.tableName} SET ${setClause} WHERE id = ?`,
-                [...values, id]
-            );
-            return result.affectedRows > 0
-        } catch (error) {
-            console.error(`Error updating record in ${this.tableName}:`, error)
-            throw error
-        }
-    }
-
-    async delete(id: number): Promise<boolean> {
-        try {
-            const [result] = await this.dbPool.execute<ResultSetHeader>(
-                `DELETE
-                                                                 FROM ${this.tableName}
-                                                                 WHERE id = ?`,
-                [id]
-            );
-            return result.affectedRows > 0
-        } catch (error) {
-            console.error(`Error deleting record from ${this.tableName}:`, error)
-            throw error
-        }
-    }
 }
 
 export default BaseRepository

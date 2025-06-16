@@ -15,7 +15,7 @@ export function createCollectionController(collectionRepo: CollectionRepositoryI
     return {
         async getAllPublicCollections(req: Request, res: Response): Promise<void> {
             try {
-                const allCollections = await collectionRepo.getAllPublicCollections()
+                const allCollections = await collectionRepo.findAll()
                 res.json(allCollections)
             } catch (err: unknown) {
                 if (err instanceof Error) {
@@ -39,7 +39,7 @@ export function createCollectionController(collectionRepo: CollectionRepositoryI
         async getCollectionsByUserId(req: Request, res: Response) {
             try {
                 const user_id = Number(req.params.user_id)
-                const collections = await collectionRepo.getCollectionsByUserId(user_id)
+                const collections = await collectionRepo.findByUserId(user_id)
                 res.json(collections)
             } catch (_error) {
                 res.status(500).json({ error: 'Failed to fetch collections by user ID' })
@@ -81,7 +81,7 @@ export function createCollectionController(collectionRepo: CollectionRepositoryI
                 const { name, description, taxa } = req.body
 
                 try {
-                    // const userCollections = await collectionRepo.getCollectionsByUserId(user_id)
+                    // const userCollections = await collectionRepo.findByUserId(user_id)
                     const collection = await collectionRepo.findOne({ user_id, id })
                     // console.log(userCollections)
                     // res.status(200).json(userCollections)
@@ -91,10 +91,10 @@ export function createCollectionController(collectionRepo: CollectionRepositoryI
                         })
                         return
                     }
-                    const detailsResult = await collectionRepo.updateCollection(id, name, description)
+                    const detailsResult = await collectionRepo.update(id, name, description)
 
                     if (taxa) {
-                        await collectionRepo.updateCollectionTaxa(id, taxa)
+                        await collectionRepo.updateCollectionItems(id, taxa)
                     }
 
                     res.json({ message: 'Collection updated successfully' })

@@ -17,51 +17,27 @@ export default class CollectionRepository extends BaseRepository<Collection> {
         )
     }
 
-    async create(data: Partial<Collection>): Promise<number> {
-        const created_at: Date = new Date()
-        const updated_at: Date = new Date()
-        const parsed = CollectionSchema.parse(data)
-        const newData = { ...parsed, created_at, updated_at }
-        return await super.create(newData)
-    }
-
-    async getAllPublicCollections(): Promise<Collection[]> {
-        try {
-            const [rows] = await this.getDb().execute<RowDataPacket[]>(
-                `SELECT *
-            FROM ${this.getTableName()}
-            WHERE is_private = 0
-            `,
-            )
-            console.log('rows: ', rows)
-            return rows as Collection[]
-        } catch (err) {
-            console.log(err)
-            throw err
-        }
-    }
-
-    async getCollectionsByUserId(user_id: number): Promise<Collection[]> {
+    async findByUserId(userId: number): Promise<Collection[]> {
         try {
             const [rows] = await this.getDb().execute<RowDataPacket[]>(
                 `SELECT *
                  FROM ${this.getTableName()}
                  WHERE user_id = ?`,
-                [user_id]
+                [userId],
             );
             console.log('rows', rows)
             return rows as Collection[]
         } catch (error) {
-            console.error('Error fetching collections by user_id:', error)
+            console.error('Error fetching collections by userId:', error)
             throw error
         }
     }
 
-    async getTaxaByCollectionId(collection_id: number): Promise<CollectionToTaxa[]> {
+    async findCollectionItemsById(collectionId: number): Promise<CollectionToTaxa[]> {
         try {
             const [rows] = await this.getDb().execute<RowDataPacket[]>(
                 `SELECT taxon_id FROM collections_to_taxa WHERE collection_id = ?`,
-                [collection_id]
+                [collectionId],
             );
             console.log('rows', rows)
             return rows as CollectionToTaxa[]
@@ -71,25 +47,7 @@ export default class CollectionRepository extends BaseRepository<Collection> {
         }
     }
 
-    async updateCollection(
-        collectionId: number,
-        name: string,
-        description: string
-    ): Promise<{ success: boolean }> {
-        // TODO: verify collection exists
-        const updated_at = new Date()
-        const [result] = await this.getDb().execute<ResultSetHeader>(
-            'UPDATE collections SET name = ?, description = ?, updated_at = ? WHERE id = ?',
-            [name, description, updated_at, collectionId],
-        );
-
-        if (result.affectedRows === 0) {
-            throw Error
-        }
-        return { success: true }
-    }
-
-    async updateCollectionTaxa(
+    async updateCollectionItems(
         collectionId: number,
         taxaIds: number[]
     ): Promise<{ success: boolean }> {

@@ -15,15 +15,19 @@ import { type UserRepositoryInstance } from './repositories/UserRepository.js'
 import { type CollectionRepositoryInstance } from './repositories/CollectionRepository.js'
 import { createChatController } from './controllers/chatController.js'
 import { chatRouter } from './routes/chatRouter.js'
+import { createINaturalistAPIController } from './controllers/iNaturalistAPIController.js'
 
 export function buildApp(
     {
         userRepository,
         collectionRepository,
+        authService,
     }:
     {
         userRepository: UserRepositoryInstance,
         collectionRepository: CollectionRepositoryInstance
+        authService: AuthServiceInstance
+
     }) {
     const app = express()
     app.use(express.json())
@@ -36,11 +40,15 @@ export function buildApp(
     const collectionController = createCollectionController(collectionRepository)
     apiRouter.use('/collections', collectionRouter(collectionController))
 
-    const authController = createAuthController(userRepository)
+
+    const authController = createAuthController(authService)
     apiRouter.use('/auth', authRouter(authController))
 
     const chatController = createChatController()
     apiRouter.use('/chat', chatRouter(chatController))
+
+    const iNatController = createINaturalistAPIController()
+    apiRouter.use('/iNatAPI', iNatController)
 
     apiRouter.get('/health', (req, res) => {
         res.status(200).json({ status: 'ok', timestamp: Date.now() })

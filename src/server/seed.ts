@@ -86,7 +86,7 @@ const logRawUserData = (user: User) => {
     // Append the data to a CSV file
     const csvRow = rawUserData.join(',') + '\n'
 
-    fs.appendFile('raw_user_data.dev.csv', csvRow, (err) => {
+    fs.appendFile('raw_users.dev.csv', csvRow, (err) => {
         if (err) {
             console.error('Error logging user data:', err)
         } else {
@@ -158,12 +158,17 @@ const createFakeCollection = (animal = faker.animal.type()) => {
         from: '2020-01-01',
         to: Date.now(),
     })
+    const is_private = faker.number.int({ min: 0, max: 1 })
+    console.log(
+        `Creating collection for user ${user_id} with name ${name} and emoji ${animalEmoji?.emoji}`,
+    )
     return {
         name,
         user_id,
         emoji: animalEmoji?.emoji || '🐾',
         created_at,
         updated_at,
+        is_private,
     }
 }
 
@@ -207,7 +212,7 @@ async function addUserToDatabase(user: User) {
     const {password: UNSAFEPassword} = user
     const securePassword = hashSync(UNSAFEPassword, genSaltSync(10))
     const safeUser = {...user, password: securePassword}
-    return await addRowToTable('user_data', safeUser)
+    return await addRowToTable('users', safeUser)
 }
 
 async function addRowToTable<T extends object>(tableName: string, data: T) {
