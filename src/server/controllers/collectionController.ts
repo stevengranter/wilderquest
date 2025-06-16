@@ -4,6 +4,7 @@ import { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
 import { CollectionSchema } from '../schemas/collection.schemas.js'
 
 export interface CollectionController {
+    getAllPublicCollections: (req: Request, res: Response) => Promise<void>
     getCollectionById: (req: Request, res: Response) => Promise<void>
     getCollectionsByUserId: (req: Request, res: Response) => Promise<void>
     createCollection: (req: AuthenticatedRequest, res: Response) => Promise<void>
@@ -12,12 +13,26 @@ export interface CollectionController {
 
 export function createCollectionController(collectionRepo: CollectionRepositoryInstance) {
     return {
+        async getAllPublicCollections(req: Request, res: Response): Promise<void> {
+            try {
+                const allCollections = await collectionRepo.getAllPublicCollections()
+                res.json(allCollections)
+            } catch (err: unknown) {
+                if (err instanceof Error) {
+                    res.status(400).send(err.message)
+                } else {
+                    res.status(500).send({ message: 'Internal error' })
+                }
+
+            }
+        },
+
         async getCollectionById(req: Request, res: Response) {
             try {
-                const collection = await collectionRepo.findOne({ id: Number(req.params.id) })
+                const collection = await collectionRepo.findOne({ id: Number(req.params.id), is_private: false })
                 res.json(collection)
-            } catch (error) {
-                res.status(500).json({ error: 'Failed to fetch collection by ID' })
+            } catch (_error) {
+                res.status(404).json({ error: 'No collection found' })
             }
         },
 
@@ -26,7 +41,7 @@ export function createCollectionController(collectionRepo: CollectionRepositoryI
                 const user_id = Number(req.params.user_id)
                 const collections = await collectionRepo.getCollectionsByUserId(user_id)
                 res.json(collections)
-            } catch (error) {
+            } catch (_error) {
                 res.status(500).json({ error: 'Failed to fetch collections by user ID' })
             }
         },
@@ -50,7 +65,7 @@ export function createCollectionController(collectionRepo: CollectionRepositoryI
                         message: 'Collection created successfully!',
                     })
                 }
-            } catch (error) {
+            } catch (_error) {
                 res.status(500).json({ error: 'Internal server error' })
             }
         },
@@ -88,7 +103,7 @@ export function createCollectionController(collectionRepo: CollectionRepositoryI
                     console.error('Error updating collection:', error)
                     res.status(500).json({ error: 'Internal server error' })
                 }
-            } catch (error) {
+            } catch (_error) {
                 res.status(500).json({ error: 'Internal server error' })
             }
         },

@@ -25,6 +25,22 @@ export default class CollectionRepository extends BaseRepository<Collection> {
         return await super.create(newData)
     }
 
+    async getAllPublicCollections(): Promise<Collection[]> {
+        try {
+            const [rows] = await this.getDb().execute<RowDataPacket[]>(
+                `SELECT *
+            FROM ${this.getTableName()}
+            WHERE is_private = 0
+            `,
+            )
+            console.log('rows: ', rows)
+            return rows as Collection[]
+        } catch (err) {
+            console.log(err)
+            throw err
+        }
+    }
+
     async getCollectionsByUserId(user_id: number): Promise<Collection[]> {
         try {
             const [rows] = await this.getDb().execute<RowDataPacket[]>(

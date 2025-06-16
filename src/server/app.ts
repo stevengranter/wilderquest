@@ -28,17 +28,31 @@ export function buildApp(
     const app = express()
     app.use(express.json())
 
+    const apiRouter = express.Router()
+
     const userController = createUserController(userRepository)
-    app.use('/users', userRouter(userController))
+    apiRouter.use('/users', userRouter(userController))
 
     const collectionController = createCollectionController(collectionRepository)
-    app.use('/collections', collectionRouter(collectionController))
+    apiRouter.use('/collections', collectionRouter(collectionController))
 
     const authController = createAuthController(userRepository)
-    app.use('/auth', authRouter(authController))
+    apiRouter.use('/auth', authRouter(authController))
 
     const chatController = createChatController()
-    app.use('/chat', chatRouter(chatController))
+    apiRouter.use('/chat', chatRouter(chatController))
+
+    apiRouter.get('/health', (req, res) => {
+        res.status(200).json({ status: 'ok', timestamp: Date.now() })
+    })
+
+    apiRouter.use('/*splat', (req, res) => {
+        res.status(404).json({ error: 'No such endpoint' })
+    })
+
+// Mount /api
+    app.use('/api', apiRouter)
+
 
     // 📎 Middleware
     app.use(cors(corsConfig))

@@ -14,6 +14,18 @@ export default tseslint.config(
         },
         rules: {
             'react-compiler/react-compiler': 'error',
+            // First, disable the base no-unused-vars rule
+            'no-unused-vars': 'off',
+
+            // Then, enable the TypeScript-specific rule with the desired options
+            '@typescript-eslint/no-unused-vars': [
+                'warn', // or "error"
+                {
+                    'argsIgnorePattern': '^_',
+                    'varsIgnorePattern': '^_',
+                    'caughtErrorsIgnorePattern': '^_',
+                },
+            ],
         },
     },
     eslintConfigPrettier
