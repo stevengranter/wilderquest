@@ -33,6 +33,37 @@ export default class CollectionRepository extends BaseRepository<Collection> {
         }
     }
 
+    async findAllPublic(): Promise<Collection[]> {
+        try {
+            const [rows] = await this.getDb().execute<RowDataPacket[]>(
+                `SELECT *
+                 FROM ${this.getTableName()}
+                 WHERE is_private = 0`,
+            )
+            console.log('rows', rows)
+            return rows as Collection[]
+        } catch (error) {
+            console.error('Error fetching public collections: ', error)
+            // Crucial change: Return an empty array on error
+            return []
+        }
+    }
+
+    async findPublicByUserId(userId: number): Promise<Collection[]> {
+        try {
+            const [rows] = await this.getDb().execute<RowDataPacket[]>(
+                `SELECT *
+                 FROM ${this.getTableName()}
+                 WHERE user_id = ? AND is_private = 0`,
+                [userId],
+            )
+            return rows as Collection[]
+        } catch (error) {
+            console.error('Error fetching collections by userId:', error)
+            throw error
+        }
+    }
+
     async findCollectionItemsById(collectionId: number): Promise<CollectionToTaxa[]> {
         try {
             const [rows] = await this.getDb().execute<RowDataPacket[]>(
