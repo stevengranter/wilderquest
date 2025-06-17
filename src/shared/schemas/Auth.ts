@@ -1,4 +1,5 @@
 import {UserSchema} from './UserSchema.js'
+import { z } from 'zod'
 
 export const RegisterRequestSchema = UserSchema.pick({
     username: true,
@@ -11,9 +12,7 @@ export const LoginRequestSchema = UserSchema.pick({
     password: true,
 })
 
-export const RefreshReqBodySchema = UserSchema.pick({
-    username: true,
-    email: true,
-    refresh_token: true,
-    user_cuid: true,
+export const RefreshReqBodySchema = z.object({
+    user_cuid: z.string().cuid2(),
+    refresh_token: z.string(),
 })

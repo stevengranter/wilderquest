@@ -13,8 +13,8 @@ export function authRouter(controller: AuthController) {
 
     router.post('/register', controller.register)
     router.post('/login', controller.login)
-    // router.post('/logout', controller.logout)
-    // router.post('/refresh', controller.handleRefreshToken)
+    router.post('/logout', controller.logout)
+    router.post('/refresh', controller.handleRefreshToken)
 
     return router
 }

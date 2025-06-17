@@ -3,7 +3,7 @@
 import axios from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { handleError } from '@/helpers/errorHandler.js'
-import { DecodedTokenSchema } from '@/models/token.js'
+import { DecodedToken, DecodedTokenSchema } from '@/models/token.js'
 import {
     LoginRequestSchema,
     RegisterRequestSchema,
@@ -71,7 +71,7 @@ export const authApi = {
         }
 
         try {
-            const { data, status } = await axios.post('/api/refresh', {
+            const { data, status } = await axios.post('/api/auth/refresh', {
                 user_cuid,
                 refresh_token: refreshToken,
             })
@@ -94,7 +94,7 @@ export const authApi = {
     verifyToken(token: string | null): boolean {
         if (!token) return false
 
-        const decoded: any = jwtDecode(token)
+        const decoded: DecodedToken = jwtDecode(token)
         const parsed = DecodedTokenSchema.safeParse(decoded)
 
         if (!parsed.success) {
@@ -110,7 +110,7 @@ export const authApi = {
                 .then(() => {
                     this.verifyToken(tokenManager.getAccessToken())
                 })
-                .catch((err) => {
+                .catch((_err) => {
                     tokenManager.clearAll()
                     alert('Session expired. Please log in again.')
                 })
