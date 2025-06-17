@@ -80,6 +80,18 @@ export default class AuthService {
         return createdUser
     }
 
+    login = async (username, password) => {
+        return ('Not yet implemented')
+    }
+
+    logout = async (username, password) => {
+        return ('Not yet implemented')
+    }
+
+    refreshToken = async (username, password) => {
+        return ('Not yet implemented')
+    }
+
     // You might also consider adding a login method here if it's part of auth service
     // login = async (username: string, password: string) => {
     //     // ... login logic, throw errors or return user on success
