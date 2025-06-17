@@ -11,7 +11,7 @@ export function createUserController(userRepo: UserRepositoryInstance) {
     return {
         async getUserById(req: Request, res: Response) {
             try {
-                const user = await userRepo.findRowByColumn('id', Number(req.params.id))
+                const user = await userRepo.findRowByColumnAndValue('id', Number(req.params.id))
                 res.json(user)
             } catch (error) {
                 res.status(500).json({ error: 'Failed to fetch user by ID' })
@@ -20,7 +20,7 @@ export function createUserController(userRepo: UserRepositoryInstance) {
 
         async getUserByEmail(req: Request, res: Response) {
             try {
-                const user = await userRepo.findRowByColumn('email', req.params.email)
+                const user = await userRepo.findRowByColumnAndValue('email', req.params.email)
                 res.json(user)
             } catch (error) {
                 res.status(500).json({ error: 'Failed to fetch user by email' })
@@ -29,7 +29,7 @@ export function createUserController(userRepo: UserRepositoryInstance) {
 
         async getUserByUsername(req: Request, res: Response) {
             try {
-                const user = await userRepo.findRowByColumn('username', req.params.username)
+                const user = await userRepo.findRowByColumnAndValue('username', req.params.username)
                 res.json(user)
             } catch (error) {
                 res.status(500).json({ error: 'Failed to fetch user by username' })

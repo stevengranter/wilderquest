@@ -3,7 +3,7 @@
 import {AxiosResponse} from 'axios'
 
 export interface RegisterResponseData {
-    user_cuid: string
+    userCuid: string
     message: string
 }
 
@@ -16,8 +16,16 @@ export interface LoginRequest {
     password: string
 }
 
+export type LoggedInUser = {
+    id: number,
+    username: string,
+    email: string,
+    role: number,
+    cuid: string,
+}
+
 export interface LoginResponseData {
-    user_cuid: string
+    user: LoggedInUser
     access_token: string
     refresh_token: string
 }

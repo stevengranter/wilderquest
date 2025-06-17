@@ -91,7 +91,7 @@ export function createCollectionController(collectionRepo: CollectionRepositoryI
                         })
                         return
                     }
-                    const detailsResult = await collectionRepo.update(id, name, description)
+                    const detailsResult = await collectionRepo.update(id, name)
 
                     if (taxa) {
                         await collectionRepo.updateCollectionItems(id, taxa)

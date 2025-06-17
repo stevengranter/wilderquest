@@ -38,7 +38,7 @@ type inatApiParams = {
 }
 
 const generateFakeTaxa = (quantity: number) => {
-    let taxa = []
+    const taxa = []
     for (let i = 0; i < quantity; i++) {
         taxa.push(getRandomInt(5000, 999999))
     }
@@ -98,7 +98,7 @@ const logRawUserData = (user: User) => {
 // Function to ensure the CSV header is written to the file
 const writeCsvHeader = () => {
     const header = 'username,email,password,created_at,updated_at,user_cuid\n'
-    fs.writeFile('raw_user_data.dev.csv', header, (err) => {
+    fs.writeFile('raw_users.dev.csv', header, (err) => {
         if (err) {
             console.error('Error writing CSV header:', err)
         }

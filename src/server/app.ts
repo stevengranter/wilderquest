@@ -16,6 +16,7 @@ import { type CollectionRepositoryInstance } from './repositories/CollectionRepo
 import { createChatController } from './controllers/chatController.js'
 import { chatRouter } from './routes/chatRouter.js'
 import { createINaturalistAPIController } from './controllers/iNaturalistAPIController.js'
+import { AuthServiceInstance } from './services/authService.js'
 
 export function buildApp(
     {

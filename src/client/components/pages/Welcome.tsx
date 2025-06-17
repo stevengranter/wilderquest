@@ -1,16 +1,16 @@
 import {jwtDecode} from 'jwt-decode'
 import { Button } from '@/components/ui/button.js'
-import authService from '@/services/authService.js'
+import { authApi } from '@/services/authApi'
 import {useEffect, useState} from 'react'
 import {Link} from 'react-router'
 
 const Welcome = () => {
-    const {refreshAccessToken} = authService
+    const { refreshAccessToken } = authApi
     const user = localStorage.getItem('user')
     const [token, setToken] = useState<string | null>(null)
 
     useEffect(() => {
-        const storedToken = localStorage.getItem('access_token')
+        const storedToken = localStorage.getItem('accessToken')
         setToken(storedToken)
     })
 

@@ -5,122 +5,92 @@ import {
     useEffect,
     useState,
 } from 'react'
-import authService from '@/services/authService.js'
-import {handleError} from '@/helpers/errorHandler.js'
+import { authApi } from '@/services/authApi.js'
+import { tokenManager } from '@/services/tokenManager.js'
+import { handleError } from '@/helpers/errorHandler.js'
+import { toast } from '@/hooks/use-toast.js'
 import {
-    LoginRequest,
+    LoginRequestBody,
+    RegisterRequestBody,
+} from '../../types/types.js'
+import type {
+    LoggedInUser,
     LoginResponseData,
     RegisterResponseData,
-} from '@shared/types/authTypes.js'
-import {toast} from '@/hooks/use-toast.js'
-import {LoginRequestBody, RegisterRequestBody} from '../../types/types.js'
+} from '../../shared/types/authTypes.js'
 
 type AuthContextType = {
-    // State management
-    userId: string | null
     isAuthenticated: boolean
-    // Methods
-    login: (
-        credentials: LoginRequestBody
-    ) => Promise<LoginResponseData | undefined>
-    logout: (userId?: string) => void
+    login: (credentials: LoginRequestBody) => Promise<LoginResponseData | undefined>
+    logout: () => void
     register: (
         registrationData: RegisterRequestBody
     ) => Promise<RegisterResponseData | undefined>
 }
+
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
-type User = {
-    id: string
-    email: string
-    username: string
-    cuid: string
-}
 
-export const AuthProvider = ({children}: { children: ReactNode }) => {
-    const [user, setUser] = useState<User | null>(null)
-    const [userId, setUserId] = useState<string | null>(null)
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+    const [_user, setUser] = useState<LoggedInUser | null>(null)
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
 
     useEffect(() => {
-        const storedUserJSON = localStorage.getItem('user')
-        const storedUserId = localStorage.getItem('user_cuid')
-        const storedAccessToken = localStorage.getItem('access_token')
+        const storedUser = tokenManager.getUser()
+        const token = tokenManager.getAccessToken()
 
-        if (
-            storedUserId &&
-            storedAccessToken &&
-            storedUserJSON &&
-            authService.verifyToken(storedAccessToken)
-        ) {
-            setUser(JSON.parse(storedUserJSON))
-            setUserId(storedUserId)
+        if (storedUser && token && authApi.verifyToken(token)) {
+            setUser(storedUser)
             setIsAuthenticated(true)
         } else {
             setUser(null)
-            setUserId(null)
             setIsAuthenticated(false)
         }
     }, [])
 
     const login = async (credentials: LoginRequestBody) => {
         try {
-            // console.log(credentials)
-            const response = await authService.login(credentials)
-
+            const response = await authApi.login(credentials)
+            console.log({ response })
             if (!response) {
                 setIsAuthenticated(false)
-                setUserId(null)
-                console.log('LoginRequestBody error')
-                handleError({data: 'Could not login user'})
+                handleError('Login failed')
                 return
-            } else if (response.user_cuid.length) {
-                console.log('Authenticated')
-                setIsAuthenticated(true)
-                setUserId(response.user_cuid)
-                return response
-            } else {
-                console.log('Why here?')
             }
+
+            setUser(response.user)
+            setIsAuthenticated(true)
+            return response
         } catch (error) {
             setIsAuthenticated(false)
-            setUserId(null)
             handleError(`Login error in AuthProvider: ${error}`)
-            throw error // Re-throw so the component using login knows it failed
+            throw error
         }
     }
 
     const logout = async () => {
         try {
-            const userId = localStorage.getItem('user_cuid')
-            if (userId) {
-                await authService.logout(userId)
-            }
-            localStorage.removeItem('user_cuid')
-            localStorage.removeItem('access_token')
-            localStorage.removeItem('refresh_token')
-            setIsAuthenticated(false)
-            setUserId(null)
+            await authApi.logout()
         } catch (error) {
             console.error('Logout error:', error)
+        } finally {
+            setUser(null)
+            setIsAuthenticated(false)
         }
     }
 
     const register = async (registrationData: RegisterRequestBody) => {
         try {
-            toast({title: 'Hello there'})
-            return await authService.register(registrationData)
-            // TODO: Log in user if successfully registered
+            toast({ title: 'Welcome!' })
+            return await authApi.register(registrationData)
         } catch (error) {
             console.error('Registration error:', error)
-            throw error // Let the component handle the error
+            throw error
         }
     }
 
     return (
-        <AuthContext.Provider
-            value={{isAuthenticated, userId, login, logout, register}}
-        >
+        <AuthContext.Provider value={{ isAuthenticated, login, logout, register }}>
             {children}
         </AuthContext.Provider>
     )
@@ -134,4 +104,4 @@ const useAuth = (): AuthContextType => {
     return context
 }
 
-export {useAuth}
+export { useAuth }

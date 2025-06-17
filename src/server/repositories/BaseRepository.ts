@@ -43,7 +43,7 @@ class BaseRepository<T> {
         }
     }
 
-    async update(id: number, data: Partial<T>): Promise<boolean> {
+    async update(id: number | undefined, data: { refresh_token: string }): Promise<boolean> {
         const columns = Object.keys(data)
         const values = Object.values(data)
 
