@@ -9,9 +9,25 @@ export const tokenManager = {
     setRefreshToken: (token: string) => localStorage.setItem('refreshToken', token),
     removeRefreshToken: () => localStorage.removeItem('refreshToken'),
 
-    getUser: () => {
-        const user = localStorage.getItem('user')
-        return user ? JSON.parse(user) : null
+    getUser: (): LoggedInUser | null => { // Explicitly type the return
+        const userString = localStorage.getItem('user')
+        if (userString) { // Check if a string value exists
+            try {
+                // Attempt to parse. If it's "undefined" or not valid JSON, it will throw.
+                const parsedUser = JSON.parse(userString)
+                // Optional: Add a check here if parsedUser matches LoggedInUser structure
+                // if (typeof parsedUser === 'object' && parsedUser !== null && 'id' in parsedUser && 'username' in parsedUser) {
+                //    return parsedUser as LoggedInUser;
+                // }
+                return parsedUser as LoggedInUser // Cast it
+            } catch (error) {
+                console.error('Error parsing user from localStorage:', error)
+                // If parsing fails, remove the invalid item to prevent future errors
+                localStorage.removeItem('user')
+                return null
+            }
+        }
+        return null // If userString is null (item doesn't exist)
     },
     setUser: (user: LoggedInUser) => localStorage.setItem('user', JSON.stringify(user)),
     removeUser: () => localStorage.removeItem('user'),

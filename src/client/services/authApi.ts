@@ -81,8 +81,8 @@ export const authApi = {
                 handleError(`Token refresh failed with status: ${status}`)
                 return
             }
-
             tokenManager.setAccessToken(data.access_token)
+            tokenManager.setRefreshToken(data.refresh_token)
             axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`
         } catch (error) {
             console.error('Error during token refresh:', error)

@@ -24,7 +24,7 @@ export function createCollectionController(collectionService: CollectionServiceI
             try {
                 const collectionId = Number(req.params.id)
                 if (isNaN(collectionId)) {
-                    res.status(400).json({ error: 'Invalid collection ID' })
+                    res.status(400).json({ message: 'Invalid collection ID' })
                     return
                 }
                 // Delegate to the service to find a public collection by ID
@@ -32,10 +32,10 @@ export function createCollectionController(collectionService: CollectionServiceI
                 if (collection) {
                     res.json(collection)
                 } else {
-                    res.status(404).json({ error: 'Collection not found or is private' })
+                    res.status(404).json({ message: 'Collection not found or is private' })
                 }
             } catch (error) {
-                res.status(500).json({ error: 'Failed to fetch collection by ID' })
+                res.status(500).json({ message: 'Failed to fetch collection by ID' })
             }
         },
 
@@ -49,7 +49,7 @@ export function createCollectionController(collectionService: CollectionServiceI
                 const authenticatedUserId = req.user.id
 
                 if (isNaN(targetUserId)) {
-                    res.status(400).json({ error: 'Invalid user ID' })
+                    res.status(400).json({ message: 'Invalid user ID' })
                     return
                 }
 
@@ -58,9 +58,9 @@ export function createCollectionController(collectionService: CollectionServiceI
                 res.json(collections)
             } catch (error: unknown) {
                 if (error instanceof Error) {
-                    res.status(403).json({ error: error.message }) // Use 403 for forbidden access
+                    res.status(403).json({ message: error.message }) // Use 403 for forbidden access
                 } else {
-                    res.status(500).json({ error: 'Failed to fetch collections by user ID' })
+                    res.status(500).json({ message: 'Failed to fetch collections by user ID' })
                 }
             }
         },
@@ -90,9 +90,9 @@ export function createCollectionController(collectionService: CollectionServiceI
                 })
             } catch (error: unknown) {
                 if (error instanceof Error) {
-                    res.status(500).json({ error: 'Internal server error', details: error.message })
+                    res.status(500).json({ message: 'Internal server error', details: error.message })
                 } else {
-                    res.status(500).json({ error: 'Internal server error' })
+                    res.status(500).json({ message: 'Internal server error' })
                 }
             }
         },
@@ -106,7 +106,7 @@ export function createCollectionController(collectionService: CollectionServiceI
 
                 const collectionId = Number(req.params.id)
                 if (isNaN(collectionId)) {
-                    res.status(400).json({ error: 'Invalid collection ID' })
+                    res.status(400).json({ message: 'Invalid collection ID' })
                     return
                 }
 
@@ -128,13 +128,13 @@ export function createCollectionController(collectionService: CollectionServiceI
                         collection: updatedCollection,
                     })
                 } else {
-                    res.status(404).json({ error: 'Collection not found or unauthorized to update' })
+                    res.status(404).json({ message: 'Collection not found or unauthorized to update' })
                 }
             } catch (error: unknown) {
                 if (error instanceof Error) {
-                    res.status(500).json({ error: 'Internal server error', details: error.message })
+                    res.status(500).json({ message: 'Internal server error', details: error.message })
                 } else {
-                    res.status(500).json({ error: 'Internal server error' })
+                    res.status(500).json({ message: 'Internal server error' })
                 }
             }
         },
@@ -148,7 +148,7 @@ export function createCollectionController(collectionService: CollectionServiceI
 
                 const collectionId = Number(req.params.id)
                 if (isNaN(collectionId)) {
-                    res.status(400).json({ error: 'Invalid collection ID' })
+                    res.status(400).json({ message: 'Invalid collection ID' })
                     return
                 }
 
@@ -160,13 +160,13 @@ export function createCollectionController(collectionService: CollectionServiceI
                 if (success) {
                     res.status(204).send() // 204 No Content for successful deletion
                 } else {
-                    res.status(404).json({ error: 'Collection not found or unauthorized to delete' })
+                    res.status(404).json({ message: 'Collection not found or unauthorized to delete' })
                 }
             } catch (error: unknown) {
                 if (error instanceof Error) {
-                    res.status(500).json({ error: 'Internal server error', details: error.message })
+                    res.status(500).json({ message: 'Internal server error', details: error.message })
                 } else {
-                    res.status(500).json({ error: 'Internal server error' })
+                    res.status(500).json({ message: 'Internal server error' })
                 }
             }
         },

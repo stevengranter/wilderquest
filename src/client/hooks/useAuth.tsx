@@ -26,13 +26,14 @@ type AuthContextType = {
     register: (
         registrationData: RegisterRequestBody
     ) => Promise<RegisterResponseData | undefined>
+    user: LoggedInUser | null
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [_user, setUser] = useState<LoggedInUser | null>(null)
+    const [user, setUser] = useState<LoggedInUser | null>(null)
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
 
     useEffect(() => {
@@ -90,7 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, logout, register }}>
+        <AuthContext.Provider value={{ isAuthenticated, login, logout, register, user }}>
             {children}
         </AuthContext.Provider>
     )

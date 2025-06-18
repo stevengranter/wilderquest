@@ -7,6 +7,8 @@ import { AppLayout } from '@/layouts/AppLayout'
 import Login from '@/components/pages/Login'
 import Welcome from '@/components/pages/Welcome'
 import Register from '@/components/pages/Register'
+import CollectionDetail from '@/components/collections/CollectionDetail'
+import Collections from '@/components/collections/Collections'
 
 export const router = createBrowserRouter([
     {
@@ -49,6 +51,19 @@ export const router = createBrowserRouter([
             {
                 path: 'welcome',
                 element: <Welcome />,
+            },
+            {
+                path: 'collections',
+                children: [
+                    {
+                        index: true, // For /collection (no ID)
+                        element: <Collections />, // Or a component that shows all collections
+                    },
+                    {
+                        path: ':collectionId',
+                        element: <CollectionDetail />,
+                    },
+                ],
             },
         ],
     },
