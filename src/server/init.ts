@@ -10,13 +10,11 @@ export async function initApp() {
     const userRepository = new UserRepository('users', dbPool)
     const collectionRepository = new CollectionRepository('collections', dbPool)
     const authService = new AuthService(userRepository)
-    const collectionService = new CollectionService(collectionRepository)
     return {
         dbPool,
         userRepository,
         collectionRepository,
         authService,
-        collectionService,
         // add more shared deps here (e.g., services, cache, etc.)
     }
 }

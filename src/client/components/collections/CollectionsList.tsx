@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import api from '@/api/api'
 
 interface Collection {
     id: string
@@ -35,14 +36,11 @@ export default function CollectionsList({ propUserId }: CollectionsListProps) {
 
                 if (viewingOwnCollections && token) {
                     // Authenticated user's private/public collections
-                    response = await axios.get<Collection[]>(`${API_BASE_URL}/mine`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    })
+                    response = await api.get<Collection[]>(`/collections/mine`)
+                    console.log(response.data)
                 } else if (propUserId) {
                     // Public collections for another user
-                    response = await axios.get<Collection[]>(`${API_BASE_URL}/public/${propUserId}`)
+                    response = await api.get<Collection[]>(`$/collections/public/${propUserId}`)
                 } else {
                     throw new Error('User ID is required to view public collections.')
                 }

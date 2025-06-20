@@ -7,7 +7,7 @@ import { authRouter } from './routes/authRouter.js'
 import { userRouter } from './routes/userRouter.js'
 import { collectionRouter } from './routes/collectionRouter.js'
 
-import { createCollectionController } from './controllers/collectionController.js'
+import { CollectionController, createCollectionController } from './controllers/collectionController.js'
 import { createAuthController } from './controllers/authController.js'
 import { createUserController } from './controllers/userController.js'
 
@@ -16,17 +16,17 @@ import { createChatController } from './controllers/chatController.js'
 import { chatRouter } from './routes/chatRouter.js'
 import { createINaturalistAPIController } from './controllers/iNaturalistAPIController.js'
 import { AuthServiceInstance } from './services/authService.js'
-import { CollectionServiceInstance } from './services/CollectionService.js'
+import { CollectionRepositoryInstance } from './repositories/CollectionRepository.js'
 
 export function buildApp(
     {
         userRepository,
-        collectionService,
+        collectionRepository,
         authService,
     }:
     {
         userRepository: UserRepositoryInstance,
-        collectionService: CollectionServiceInstance
+        collectionRepository: CollectionRepositoryInstance,
         authService: AuthServiceInstance
 
     }) {
@@ -38,7 +38,7 @@ export function buildApp(
     const userController = createUserController(userRepository)
     apiRouter.use('/users', userRouter(userController))
 
-    const collectionController = createCollectionController(collectionService)
+    const collectionController = createCollectionController(collectionRepository)
     apiRouter.use('/collections', collectionRouter(collectionController))
 
 

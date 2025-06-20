@@ -1,22 +1,18 @@
 import { Request, Response } from 'express'
 import { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
 import { CollectionSchema } from '../schemas/collection.schemas.js'
-import { CollectionServiceInstance } from '../services/CollectionService.js'
+import { CollectionRepositoryInstance } from '../repositories/CollectionRepository.js'
+import { CollectionService } from '../services/CollectionService.js'
 
-export function createCollectionController(collectionService: CollectionServiceInstance) {
+export function createCollectionController(collectionRepo: CollectionRepositoryInstance) {
     return {
         async getAllPublicCollections(req: Request, res: Response): Promise<void> {
             try {
-                // Delegate to the service to fetch public collections
-                const allCollections = await collectionService.getAllPublicCollections()
+                const service = new CollectionService(collectionRepo, null)
+                const allCollections = await service.getAllPublicCollections()
                 res.json(allCollections)
             } catch (err: unknown) {
-                if (err instanceof Error) {
-                    // Send a 400 for client-side errors, 500 for unexpected server errors
-                    res.status(400).send(err.message)
-                } else {
-                    res.status(500).send({ message: 'Internal server error' })
-                }
+                res.status(500).json({ message: 'Internal server error', error: (err as Error).message })
             }
         },
 
@@ -27,8 +23,11 @@ export function createCollectionController(collectionService: CollectionServiceI
                     res.status(400).json({ message: 'Invalid collection ID' })
                     return
                 }
-                // Delegate to the service to find a public collection by ID
-                const collection = await collectionService.getPublicCollectionById(collectionId)
+
+                const userId = (req as AuthenticatedRequest).user?.id ?? null
+                const service = new CollectionService(collectionRepo, userId)
+                const collection = await service.getPublicCollectionById(collectionId)
+
                 if (collection) {
                     res.json(collection)
                 } else {
@@ -41,68 +40,60 @@ export function createCollectionController(collectionService: CollectionServiceI
 
         async getCollectionsByUserId(req: AuthenticatedRequest, res: Response): Promise<void> {
             console.log(req.user)
-            console.log(req.params)
             try {
-                if (!req.user || !req.user.id) {
-                    res.status(401).json({ message: 'Unauthorized: User not authenticated.' })
+                const authenticatedUserId = req.user?.id
+                if (!authenticatedUserId) {
+                    res.status(401).json({ message: 'Unauthorized' })
                     return
                 }
-                const targetUserId = Number(req.params.user_id) | req.user.id
-                const authenticatedUserId = req.user.id
+
+                const targetUserId = Number(req.params.user_id) || authenticatedUserId
 
                 if (isNaN(targetUserId)) {
                     res.status(400).json({ message: 'Invalid user ID' })
                     return
                 }
 
-                // Delegate to the service to find collections by user ID, with authorization check
-                const collections = await collectionService.findCollectionsByUserId(targetUserId, authenticatedUserId)
+                const service = new CollectionService(collectionRepo, authenticatedUserId)
+                const collections = await service.findCollectionsByUserId(targetUserId)
+                console.log(collections)
                 res.json(collections)
             } catch (error: unknown) {
-                if (error instanceof Error) {
-                    res.status(403).json({ message: error.message }) // Use 403 for forbidden access
-                } else {
-                    res.status(500).json({ message: 'Failed to fetch collections by user ID' })
-                }
+                res.status(500).json({
+                    message: 'Failed to fetch collections by user ID',
+                    error: (error as Error).message,
+                })
             }
         },
 
         async createCollection(req: AuthenticatedRequest, res: Response): Promise<void> {
             try {
-                if (!req.user || !req.user.id) {
-                    res.status(401).json({ message: 'Unauthorized: User not authenticated.' })
+                const userId = req.user?.id
+                if (!userId) {
+                    res.status(401).json({ message: 'Unauthorized' })
                     return
                 }
 
                 const parsedBody = CollectionSchema.safeParse(req.body)
-                if (parsedBody.error) {
-                    res.status(400).send(parsedBody.error.issues) // Send detailed Zod errors
+                if (!parsedBody.success) {
+                    res.status(400).send(parsedBody.error.issues)
                     return
                 }
 
-                const userId = req.user.id
-                const collectionData = parsedBody.data
+                const service = new CollectionService(collectionRepo, userId)
+                const newCollection = await service.createCollection(parsedBody.data)
 
-                // Delegate to the service to handle the creation logic
-                const newCollection = await collectionService.createCollection(collectionData, userId)
-
-                res.status(201).json({
-                    message: 'Collection created successfully!',
-                    collection: newCollection, // Return the created collection data
-                })
+                res.status(201).json({ message: 'Collection created successfully!', collection: newCollection })
             } catch (error: unknown) {
-                if (error instanceof Error) {
-                    res.status(500).json({ message: 'Internal server error', details: error.message })
-                } else {
-                    res.status(500).json({ message: 'Internal server error' })
-                }
+                res.status(500).json({ message: 'Internal server error', error: (error as Error).message })
             }
         },
 
         async updateCollection(req: AuthenticatedRequest, res: Response): Promise<void> {
             try {
-                if (!req.user || !req.user.id) {
-                    res.status(401).json({ message: 'Unauthorized: User not authenticated.' })
+                const userId = req.user?.id
+                if (!userId) {
+                    res.status(401).json({ message: 'Unauthorized' })
                     return
                 }
 
@@ -112,17 +103,14 @@ export function createCollectionController(collectionService: CollectionServiceI
                     return
                 }
 
-                const parsedBody = CollectionSchema.partial().safeParse(req.body) // Use partial for updates
-                if (parsedBody.error) {
+                const parsedBody = CollectionSchema.partial().safeParse(req.body)
+                if (!parsedBody.success) {
                     res.status(400).send(parsedBody.error.issues)
                     return
                 }
 
-                const userId = req.user.id
-                const updateData = parsedBody.data
-
-                // Delegate to the service to handle the update logic
-                const updatedCollection = await collectionService.updateCollection(collectionId, updateData, userId)
+                const service = new CollectionService(collectionRepo, userId)
+                const updatedCollection = await service.updateCollection(collectionId, parsedBody.data)
 
                 if (updatedCollection) {
                     res.status(200).json({
@@ -133,18 +121,15 @@ export function createCollectionController(collectionService: CollectionServiceI
                     res.status(404).json({ message: 'Collection not found or unauthorized to update' })
                 }
             } catch (error: unknown) {
-                if (error instanceof Error) {
-                    res.status(500).json({ message: 'Internal server error', details: error.message })
-                } else {
-                    res.status(500).json({ message: 'Internal server error' })
-                }
+                res.status(500).json({ message: 'Internal server error', error: (error as Error).message })
             }
         },
 
         async deleteCollection(req: AuthenticatedRequest, res: Response): Promise<void> {
             try {
-                if (!req.user || !req.user.id) {
-                    res.status(401).json({ message: 'Unauthorized: User not authenticated.' })
+                const userId = req.user?.id
+                if (!userId) {
+                    res.status(401).json({ message: 'Unauthorized' })
                     return
                 }
 
@@ -154,22 +139,16 @@ export function createCollectionController(collectionService: CollectionServiceI
                     return
                 }
 
-                const userId = req.user.id
-
-                // Delegate to the service to handle the deletion logic
-                const success = await collectionService.deleteCollection(collectionId, userId)
+                const service = new CollectionService(collectionRepo, userId)
+                const success = await service.deleteCollection(collectionId)
 
                 if (success) {
-                    res.status(204).send() // 204 No Content for successful deletion
+                    res.status(204).send()
                 } else {
                     res.status(404).json({ message: 'Collection not found or unauthorized to delete' })
                 }
             } catch (error: unknown) {
-                if (error instanceof Error) {
-                    res.status(500).json({ message: 'Internal server error', details: error.message })
-                } else {
-                    res.status(500).json({ message: 'Internal server error' })
-                }
+                res.status(500).json({ message: 'Internal server error', error: (error as Error).message })
             }
         },
     }

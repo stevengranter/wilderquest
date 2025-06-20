@@ -238,7 +238,7 @@ function CollectionPicker() {
     }, [selectedCollection])
 
     const handleAddAllToCollection = () => {
-        console.log('Selected collection: ', selectedCollection)
+        // console.log('Selected collection: ', selectedCollection)
 
         // Delay to next frame so layout settles before animation starts
         requestAnimationFrame(() => {
@@ -254,7 +254,6 @@ function CollectionPicker() {
                 setCollections={setCollections}
                 selectedCollection={selectedCollection}
                 setSelectedCollection={setSelectedCollection}
-
             />
             <Button disabled={isAnimating} onClick={handleAddAllToCollection}>
                 Add all to collection
@@ -280,6 +279,7 @@ function CollectionSelect({
             onValueChange={(value) => {
                 const collection = collections.find((c) => c.name === value)
                 setSelectedCollection(collection ?? null)
+                console.log('Selected collection: ', collection)
             }}
             value={selectedCollection?.name ?? ''}
         >
