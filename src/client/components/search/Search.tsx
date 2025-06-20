@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react' // Import useCallback
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react' // Import useCallback
 import { ResultsGrid } from '@/components/search/ResultsGrid'
 import { Button } from '@/components/ui/button'
 import { Search } from 'lucide-react'
@@ -25,6 +25,7 @@ import { useAuth } from '@/hooks/useAuth'
 import axios from 'axios'
 import { Collection } from '../../../types/types'
 import api from '@/api/api'
+import { useReward } from 'react-rewards'
 
 // Your API fetching function, now dynamic
 const fetchINaturalistData = async (category: string, query: string, taxon_id?: string): Promise<INatTaxaResponse | INatObservationsResponse> => {
@@ -207,40 +208,62 @@ function SelectionToolbar() {
             <div className='flex'>Selected items: {selectedResults.map(result => <MiniCard data={result}
                                                                                            className='w-32 h-auto' />)}</div>
 
-            <AddToCollectionInput />
+            <CollectionPicker />
         </div>
     )
 }
 
-function AddToCollectionInput() {
+
+function CollectionPicker() {
     const [collections, setCollections] = useState<Collection[]>([])
     const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null)
+    const [currentEmoji, setCurrentEmoji] = useState('🙌')
 
-    async function getCollectionsByUser() {
-        const collections = await api.get(`/collections/mine`)
-        return collections.data
-    }
+    const { reward, isAnimating } = useReward('rewardId', 'emoji', {
+        emoji: [currentEmoji],
+        // rotate: false,
+        elementCount: 30,
+        spread: 60,
+        lifetime: 100,
+    })
 
     useEffect(() => {
-        getCollectionsByUser().then(collections => setCollections(collections))
+        api.get(`/collections/mine`).then(res => setCollections(res.data))
     }, [])
 
-    // useEffect(()=>{
-    //     console.log('Selected collection: ', selectedCollection)
-    // },[selectedCollection])
+    useEffect(() => {
+        if (selectedCollection?.emoji) {
+            setCurrentEmoji(selectedCollection.emoji)
+        }
+    }, [selectedCollection])
 
     const handleAddAllToCollection = () => {
         console.log('Selected collection: ', selectedCollection)
+
+        // Delay to next frame so layout settles before animation starts
+        requestAnimationFrame(() => {
+            reward()
+        })
     }
 
-    return (<>
-            <CollectionSelect collections={collections} setCollections={setCollections}
-                              selectedCollection={selectedCollection} setSelectedCollection={setSelectedCollection} />
-            <Button onClick={handleAddAllToCollection}>Add all to collection</Button>
+    return (
+        <>
+            <div id='rewardId' className='ml-20'></div>
+            <CollectionSelect
+                collections={collections}
+                setCollections={setCollections}
+                selectedCollection={selectedCollection}
+                setSelectedCollection={setSelectedCollection}
+
+            />
+            <Button disabled={isAnimating} onClick={handleAddAllToCollection}>
+                Add all to collection
+            </Button>
+
         </>
     )
-
 }
+
 
 function CollectionSelect({
                               collections,
@@ -275,15 +298,21 @@ function CollectionSelect({
 }
 
 
+import clsx from 'clsx'
+
 function MiniCard({ data, className }: { data?: any, className?: string }) {
     return (
-        <Card className='m-2 p-0'>
+        <Card className={clsx(className, 'm-0 p-0')}>
             <CardContent className='flex flex-col items-center gap-2 p-0'>
-                <img src={data.default_photo?.medium_url} alt={data.name}
-                     className='h-full object-cover aspect-square' />
-                <div>{data.id}</div>
-                <div>{data.name}</div>
+                <img
+                    src={data?.default_photo?.medium_url}
+                    alt={data?.name}
+                    className='h-full object-cover aspect-square'
+                />
+                <div>{data?.id}</div>
+                <div>{data?.name}</div>
             </CardContent>
         </Card>
-    )
+    );
 }
+
