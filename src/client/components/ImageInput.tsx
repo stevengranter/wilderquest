@@ -1,6 +1,7 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { blobToBase64, resizeImage } from '@/lib/utils'
+import api from '@/api/api'
 
 interface DetectedSubject {
     scientific_name: string
@@ -33,8 +34,8 @@ export default function ImageInput({
         if (!file) return
         console.log('Sending file as JSON...')
 
-        axios
-            .post('/api/ai/identify', {
+        api
+            .post('/ai/identify', {
                 image: file.base64,
             })
             .then((result) => {

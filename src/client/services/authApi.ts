@@ -14,11 +14,12 @@ import type {
 } from '../../shared/types/authTypes.js'
 import { z } from 'zod'
 import { tokenManager } from './tokenManager'
+import api from '@/api/api'
 
 export const authApi = {
     async register(credentials: z.infer<typeof RegisterRequestSchema>) {
         try {
-            const { data, status } = await axios.post('/api/auth/register', credentials)
+            const { data, status } = await api.post('/auth/register', credentials)
             if (status === 201) return data as RegisterResponseData
             handleError(Error(`Unexpected response status: ${status}`))
         } catch (err) {
@@ -28,7 +29,7 @@ export const authApi = {
 
     async login(credentials: z.infer<typeof LoginRequestSchema>) {
         try {
-            const { data, status } = await axios.post('/api/auth/login', credentials)
+            const { data, status } = await api.post('/auth/login', credentials)
             if (status !== 200 || !data) {
                 handleError({ data: 'Could not login user' })
                 return null
@@ -50,7 +51,7 @@ export const authApi = {
         try {
             const user = tokenManager.getUser()
             if (user?.cuid) {
-                await axios.post('/api/auth/logout', { user_cuid: user.cuid })
+                await api.post('/auth/logout', { user_cuid: user.cuid })
             }
         } catch (err) {
             handleError(err)
@@ -71,7 +72,7 @@ export const authApi = {
         }
 
         try {
-            const { data, status } = await axios.post('/api/auth/refresh', {
+            const { data, status } = await api.post('/auth/refresh', {
                 user_cuid,
                 refresh_token: refreshToken,
             })

@@ -9,7 +9,7 @@ export default function UserCollectionsView({userId}: { userId: number }) {
         if (!userId) {
             return
         }
-        axios.get(`/api/users/${userId}/collections`).then((response) => {
+        api.get(`/users/${userId}/collections`).then((response) => {
             setCollections(response.data)
         })
     }, [])

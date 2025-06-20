@@ -1,7 +1,17 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router' // Corrected import for useParams from 'react-router-dom'
-import { Collection } from '../../../server/models/Collection'
+
+type Collection = {
+    id: string;
+    name: string;
+    description: string;
+    taxon_ids: number[];
+    is_private: boolean;
+    user_id: string;
+    created_at: string;
+    updated_at: string;
+}
 
 const API_URL = '/api/collections'
 
@@ -42,7 +52,7 @@ export default function CollectionDetail({ collectionId: propCollectionId }: Col
 
             try {
                 const response = await axios.get(`${API_URL}/${activeCollectionId.toString()}`)
-                console.table(response.data)
+                console.log(response.data)
                 setCollectionData(response.data)
             } catch (err: unknown) {
                 if (axios.isAxiosError(err)) {
@@ -94,6 +104,15 @@ export default function CollectionDetail({ collectionId: propCollectionId }: Col
             {propCollectionId && <p> (Rendered via **prop** with ID: {propCollectionId})</p>}
             {!propCollectionId && urlCollectionId &&
                 <p> (Rendered via **URL parameter** with ID: {urlCollectionId})</p>}
+            <p>
+                <a href={`/collections/${collectionData.id}/edit`}>Edit Collection</a>
+            </p>
+            <h2>Taxa</h2>
+            <ul>
+                {collectionData.taxon_ids?.map((taxonId) => (
+                    <li key={taxonId}>{taxonId}</li>
+                ))}
+            </ul>
         </div>
     )
 }

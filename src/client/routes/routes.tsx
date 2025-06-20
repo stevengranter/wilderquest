@@ -8,7 +8,7 @@ import Login from '@/components/pages/Login'
 import Welcome from '@/components/pages/Welcome'
 import Register from '@/components/pages/Register'
 import CollectionDetail from '@/components/collections/CollectionDetail'
-import Collections from '@/components/collections/Collections'
+import CollectionsList from '@/components/collections/CollectionsList'
 
 export const router = createBrowserRouter([
     {
@@ -57,7 +57,7 @@ export const router = createBrowserRouter([
                 children: [
                     {
                         index: true, // For /collection (no ID)
-                        element: <Collections />, // Or a component that shows all collections
+                        element: <CollectionsList />, // Or a component that shows all collections
                     },
                     {
                         path: ':collectionId',

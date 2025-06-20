@@ -2,6 +2,7 @@
 import { CollectionRepositoryInstance } from '../repositories/CollectionRepository.js'
 import { CollectionSchema } from '../schemas/collection.schemas.js'
 import { z } from 'zod'
+import { CollectionToTaxa } from '../models/CollectionToTaxa.js'
 
 // Define types for inputs and outputs
 type CreateCollectionInput = z.infer<typeof CollectionSchema>
@@ -21,7 +22,7 @@ export class CollectionService {
      * Fetches all public collections.
      * @returns A list of public collections.
      */
-    async findAllPublicCollections(): Promise<CollectionModel[]> {
+    async getAllPublicCollections(): Promise<CollectionModel[]> {
         // The repository should handle filtering by `is_private: false`
         return this.collectionRepo.findAllPublic()
     }
@@ -31,9 +32,24 @@ export class CollectionService {
      * @param collectionId The ID of the collection to find.
      * @returns The collection if found and public, otherwise null.
      */
-    async findPublicCollectionById(collectionId: number): Promise<CollectionModel | null> {
+    async getPublicCollectionById(collectionId: number): Promise<CollectionModel | null> {
         // Ensure the repository method also checks for `is_private: false`
-        return this.collectionRepo.findOne({ id: collectionId, is_private: false })
+        const collection = await this.collectionRepo.findOne({ id: collectionId, is_private: false })
+        // Guard: if collection isn't found or marked as private, return early
+        if (!collection) {
+            return null
+        }
+        const taxaInCollection = await this.getTaxaByCollectionId(collectionId)
+        if (!taxaInCollection) {
+            return collection
+        }
+        const taxaIds = taxaInCollection.map(t => t.taxon_id)
+        const enrichedCollection = { ...collection, taxon_ids: taxaIds }
+        return enrichedCollection
+    }
+
+    async getTaxaByCollectionId(collectionId: number): Promise<CollectionToTaxa[] | null> {
+        return this.collectionRepo.findTaxaByCollectionId(collectionId)
     }
 
     /**
@@ -51,7 +67,7 @@ export class CollectionService {
             return this.collectionRepo.findByUserId(targetUserId)
         } else {
             // If another user is requesting, only return public collections belonging to the target user
-            return this.collectionRepo.findPublicByUserId(targetUserId)
+            return this.collectionRepo.findPublicCollectionsByUserId(targetUserId)
         }
     }
 

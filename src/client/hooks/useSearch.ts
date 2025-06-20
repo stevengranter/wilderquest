@@ -21,8 +21,8 @@ export function useSearch(
     return useQuery<SearchResult[], Error>({
         queryKey: ['search', searchType, searchTerm],
         queryFn: async () => {
-            const response = await axios.post<SearchResponse>(
-                '/api/search',
+            const response = await api.post<SearchResponse>(
+                '/search',
                 requestBody
             )
             return response.data.results

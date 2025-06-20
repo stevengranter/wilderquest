@@ -49,7 +49,21 @@ export default class CollectionRepository extends BaseRepository<Collection> {
         }
     }
 
-    async findPublicByUserId(userId: number): Promise<Collection[]> {
+    async findTaxaByCollectionId(collectionId: number): Promise<CollectionToTaxa[]> {
+        try {
+            const [rows] = await this.getDb().execute<RowDataPacket[]>(
+                `SELECT taxon_id FROM collections_to_taxa WHERE collection_id = ?`,
+                [collectionId],
+            )
+            console.log('rows', rows)
+            return rows as CollectionToTaxa[]
+        } catch (error) {
+            console.error('Error fetching taxa by collection_id:', error)
+            throw error
+        }
+    }
+
+    async findPublicCollectionsByUserId(userId: number): Promise<Collection[]> {
         try {
             const [rows] = await this.getDb().execute<RowDataPacket[]>(
                 `SELECT *

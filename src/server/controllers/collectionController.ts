@@ -8,7 +8,7 @@ export function createCollectionController(collectionService: CollectionServiceI
         async getAllPublicCollections(req: Request, res: Response): Promise<void> {
             try {
                 // Delegate to the service to fetch public collections
-                const allCollections = await collectionService.findAllPublicCollections()
+                const allCollections = await collectionService.getAllPublicCollections()
                 res.json(allCollections)
             } catch (err: unknown) {
                 if (err instanceof Error) {
@@ -28,7 +28,7 @@ export function createCollectionController(collectionService: CollectionServiceI
                     return
                 }
                 // Delegate to the service to find a public collection by ID
-                const collection = await collectionService.findPublicCollectionById(collectionId)
+                const collection = await collectionService.getPublicCollectionById(collectionId)
                 if (collection) {
                     res.json(collection)
                 } else {
@@ -40,12 +40,14 @@ export function createCollectionController(collectionService: CollectionServiceI
         },
 
         async getCollectionsByUserId(req: AuthenticatedRequest, res: Response): Promise<void> {
+            console.log(req.user)
+            console.log(req.params)
             try {
                 if (!req.user || !req.user.id) {
                     res.status(401).json({ message: 'Unauthorized: User not authenticated.' })
                     return
                 }
-                const targetUserId = Number(req.params.user_id)
+                const targetUserId = Number(req.params.user_id) | req.user.id
                 const authenticatedUserId = req.user.id
 
                 if (isNaN(targetUserId)) {

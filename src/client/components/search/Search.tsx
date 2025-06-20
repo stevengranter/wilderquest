@@ -1,7 +1,6 @@
 'use client'
 
-import type React from 'react'
-import { useEffect, useState, useCallback } from 'react' // Import useCallback
+import { useEffect, useState, useCallback, useMemo } from 'react' // Import useCallback
 import { ResultsGrid } from '@/components/search/ResultsGrid'
 import { Button } from '@/components/ui/button'
 import { Search } from 'lucide-react'
@@ -12,7 +11,20 @@ import { INatObservationsResponse, INatTaxaResponse } from '../../../shared/type
 import SearchCategorySelect, { SearchCategory } from '@/components/search/SearchCategorySelect'
 import SearchAutoComplete from '@/components/SearchAutoComplete'
 import { useSearchContext } from '@/contexts/search/SearchContext'
-
+import { Card, CardContent } from '@/components/ui/card'
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
+import { useAuth } from '@/hooks/useAuth'
+import axios from 'axios'
+import { Collection } from '../../../types/types'
+import api from '@/api/api'
 
 // Your API fetching function, now dynamic
 const fetchINaturalistData = async (category: string, query: string, taxon_id?: string): Promise<INatTaxaResponse | INatObservationsResponse> => {
@@ -49,10 +61,11 @@ const fetchINaturalistData = async (category: string, query: string, taxon_id?: 
 export default function SearchInterface() {
     const [searchParams, setSearchParams] = useSearchParams()
     const searchCategory = searchParams.get('category') || 'observations'
-    const { viewMode, setViewMode } = useSearchContext()
+    const { viewMode, setViewMode, selectedIds, results, setResults } = useSearchContext()
     const [localQuery, setLocalQuery] = useState(searchParams.get('q') || '')
     // New state to hold the selected item from SearchAutoComplete
     const [selectedTaxaItem, setSelectedTaxaItem] = useState<iNatTaxaResult | null>(null)
+
 
     // Effect to synchronize local state with URL on initial load and URL changes
     useEffect(() => {
@@ -110,6 +123,13 @@ export default function SearchInterface() {
         gcTime: 10 * 60 * 1000,
     })
 
+
+    useEffect(() => {
+        if (data) {
+            setResults(data)
+        }
+    }, [data, setResults])
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         const newSearchParams = new URLSearchParams(searchParams)
@@ -145,15 +165,125 @@ export default function SearchInterface() {
             {/* Filter controller */}
             {/*<FilterController />*/}
 
+
             {/* Display Results */}
             {isLoading && <div>Loading...</div>}
             {isError && <div>Error: {error?.message}</div>}
             {data && (<>
                     <p>Total results: {data.total_results}</p>
+
+
+                    <SelectionToolbar selectedIds={selectedIds} />
                     <ViewModeController viewMode={viewMode} setViewMode={setViewMode} />
                     <ResultsGrid searchCategory={searchCategory} viewMode={viewMode} data={data} />
                 </>
             )}
         </div>
+    )
+}
+
+function SelectionToolbar() {
+    const { results, selectedIds, _setSelectedIds, _removeIdFromSelection } = useSearchContext()
+
+    const selectedResults = useMemo(() => {
+        if (!results) return []
+        const resultsArray = results.results.filter(result => selectedIds.includes(result.id.toString()))
+        return resultsArray
+    }, [selectedIds, results])
+
+    useEffect(() => {
+        console.log('Selected IDs:', selectedIds)
+        console.log('Results:', results)
+        console.log(results)
+    }, [selectedIds])
+
+
+    function handleAddAllToCollection() {
+        console.log('handleAddAllToCollection not yet implemented')
+    }
+
+    return (
+        <div>
+            <div className='flex'>Selected items: {selectedResults.map(result => <MiniCard data={result}
+                                                                                           className='w-32 h-auto' />)}</div>
+
+            <AddToCollectionInput />
+        </div>
+    )
+}
+
+function AddToCollectionInput() {
+    const [collections, setCollections] = useState<Collection[]>([])
+    const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null)
+
+    async function getCollectionsByUser() {
+        const collections = await api.get(`/collections/mine`)
+        return collections.data
+    }
+
+    useEffect(() => {
+        getCollectionsByUser().then(collections => setCollections(collections))
+    }, [])
+
+    // useEffect(()=>{
+    //     console.log('Selected collection: ', selectedCollection)
+    // },[selectedCollection])
+
+    const handleAddAllToCollection = () => {
+        console.log('Selected collection: ', selectedCollection)
+    }
+
+    return (<>
+            <CollectionSelect collections={collections} setCollections={setCollections}
+                              selectedCollection={selectedCollection} setSelectedCollection={setSelectedCollection} />
+            <Button onClick={handleAddAllToCollection}>Add all to collection</Button>
+        </>
+    )
+
+}
+
+function CollectionSelect({
+                              collections,
+                              selectedCollection,
+                              setSelectedCollection,
+                          }: {
+    collections: Collection[]
+    setCollections: (collections: Collection[]) => void
+    selectedCollection: Collection | null
+    setSelectedCollection: (collection: Collection | null) => void
+}) {
+    return (
+        <Select
+            onValueChange={(value) => {
+                const collection = collections.find((c) => c.name === value)
+                setSelectedCollection(collection ?? null)
+            }}
+            value={selectedCollection?.name ?? ''}
+        >
+            <SelectTrigger className='w-[180px]'>
+                <SelectValue placeholder='Select a collection' />
+            </SelectTrigger>
+            <SelectContent>
+                {collections.map((collection) => (
+                    <SelectItem value={collection.name} key={collection.id}>
+                        {collection.name}
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+    )
+}
+
+
+function MiniCard({ data, className }: { data?: any, className?: string }) {
+    return (
+        <Card className='m-2 p-0'>
+            <CardContent className='flex flex-col items-center gap-2 p-0'>
+                <img src={data.default_photo?.medium_url} alt={data.name}
+                     className='h-full object-cover aspect-square' />
+                <div>{data.id}</div>
+                <div>{data.name}</div>
+            </CardContent>
+        </Card>
     )
 }

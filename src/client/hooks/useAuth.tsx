@@ -27,6 +27,7 @@ type AuthContextType = {
         registrationData: RegisterRequestBody
     ) => Promise<RegisterResponseData | undefined>
     user: LoggedInUser | null
+    token: string | null
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
@@ -34,6 +35,7 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<LoggedInUser | null>(null)
+    const [token, setToken] = useState<string | null>(null)
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
 
     useEffect(() => {
@@ -42,9 +44,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (storedUser && token && authApi.verifyToken(token)) {
             setUser(storedUser)
+            setToken(token)
             setIsAuthenticated(true)
         } else {
             setUser(null)
+            setToken(null)
             setIsAuthenticated(false)
         }
     }, [])
@@ -91,7 +95,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, logout, register, user }}>
+        <AuthContext.Provider value={{ isAuthenticated, login, logout, register, user, token }}>
             {children}
         </AuthContext.Provider>
     )

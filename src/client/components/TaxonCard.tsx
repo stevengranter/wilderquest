@@ -8,6 +8,7 @@ import _ from 'lodash'
 import { Badge } from '@/components/ui/badge'
 import { useParams } from 'react-router'
 import { INatObservation, INatTaxon } from '../../shared/types/iNatTypes'
+import api from '@/api/api'
 
 export default function TaxonCard({
     item,
@@ -37,8 +38,8 @@ export default function TaxonCard({
     })
 
     async function fetchAncestorData(ancestorIds: number[]) {
-        const result = await axios.get(
-            `/api/iNatAPI/taxa/${ancestorIds.join()}`
+        const result = await api.get(
+            `/iNatAPI/taxa/${ancestorIds.join()}`,
         )
         console.log(result.data)
         setAncestors(result.data.results)

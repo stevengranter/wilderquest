@@ -13,14 +13,14 @@ export default function UserProfile() {
     useEffect(() => {
         if (!id) return
         try {
-            axios.get(`/api/users/${id}`).then((res) => {
+            api.get(`/users/${id}`).then((res) => {
                 setUser(res.data)
             })
         } catch (error) {
             console.log(error)
         }
         try {
-            axios.get(`/api/users/${id}/collections`).then((res) => {
+            api.get(`/users/${id}/collections`).then((res) => {
                 setCollections(res.data)
             })
         } catch (error) {
