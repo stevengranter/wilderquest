@@ -8,6 +8,7 @@ import { Calendar, MapPin, Camera } from 'lucide-react'
 import { type INatObservation } from '../../../shared/types/iNatTypes'
 import titleCase from '@/components/search/titleCase'
 import { useSearchContext } from '@/contexts/search/SearchContext'
+import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 
 interface ObservationCardProps {
     observation: INatObservation
@@ -16,7 +17,7 @@ interface ObservationCardProps {
 }
 
 export function ObservationCard({ observation, className, viewMode }: ObservationCardProps) {
-    const { selectedIds, removeIdFromSelection, addIdToSelection } = useSearchContext()
+    const { isSelectionMode, selectedIds, addIdToSelection, removeIdFromSelection } = useSelectionContext()
 
     const isSelected = selectedIds.includes(observation.id.toString())
 

@@ -11,22 +11,8 @@ import { INatObservationsResponse, INatTaxaResponse } from '../../../shared/type
 import SearchCategorySelect, { SearchCategory } from '@/components/search/SearchCategorySelect'
 import SearchAutoComplete from '@/components/SearchAutoComplete'
 import { useSearchContext } from '@/contexts/search/SearchContext'
-import { Card, CardContent } from '@/components/ui/card'
-import { Drawer, DrawerTrigger, DrawerContent } from '@/components/ui/drawer'
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
-import { useAuth } from '@/hooks/useAuth'
-import axios from 'axios'
-import { Collection } from '../../../types/types'
-import api from '@/api/api'
-import { useReward } from 'react-rewards'
+import { useSelectionContext } from '@/contexts/selection/SelectionContext'
+
 
 // Your API fetching function, now dynamic
 const fetchINaturalistData = async (category: string, query: string, taxon_id?: string): Promise<INatTaxaResponse | INatObservationsResponse> => {
@@ -66,12 +52,10 @@ export default function SearchInterface() {
     const {
         viewMode,
         setViewMode,
-        selectedIds,
         results,
         setResults,
-        isSelectionMode,
-        setIsSelectionMode,
     } = useSearchContext()
+    const { isSelectionMode, setIsSelectionMode } = useSelectionContext()
     const [localQuery, setLocalQuery] = useState(searchParams.get('q') || '')
     // New state to hold the selected item from SearchAutoComplete
     const [selectedTaxaItem, setSelectedTaxaItem] = useState<iNatTaxaResult | null>(null)

@@ -1,6 +1,6 @@
 import cx from 'clsx'
 import CollectionsList from '@/components/collections/CollectionsList'
-import { useSearchContext } from '@/contexts/search/SearchContext'
+import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 import { useEffect, useMemo, useState } from 'react'
 import { Collection } from '../../../types/types'
 import { useReward } from 'react-rewards'
@@ -13,7 +13,7 @@ type CollectionsDrawerProps = {
 };
 
 export default function SelectionDrawer({ isVisible }: CollectionsDrawerProps) {
-    const { isSelectionMode } = useSearchContext()
+    const { isSelectionMode } = useSelectionContext()
 
     return (
         <div
@@ -36,7 +36,8 @@ export default function SelectionDrawer({ isVisible }: CollectionsDrawerProps) {
 }
 
 function SelectionToolbar() {
-    const { results, selectedIds, setSelectedIds, removeIdFromSelection } = useSearchContext()
+    const { results } = useSearchContext()
+    const { selectedIds, setSelectedIds, removeIdFromSelection } = useSelectionContext()
 
     const selectedResults = useMemo(() => {
         if (!results) return []
@@ -154,6 +155,7 @@ function CollectionSelect({
 
 import clsx from 'clsx'
 import { Card, CardContent } from '@/components/ui/card'
+import { useSearchContext } from '@/contexts/search/SearchContext'
 
 function MiniCard({ data, className }: { data?: any, className?: string }) {
     return (

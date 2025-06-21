@@ -9,8 +9,7 @@ import { type INatTaxon } from '../../../shared/types/iNatTypes'
 import getKingdomIcon from '@/components/search/getKingdomIcon'
 import titleCase from '@/components/search/titleCase'
 import { motion, AnimatePresence } from 'motion/react'
-import { useSearchContext } from '@/contexts/search/SearchContext'
-import { useSelectionState } from '@/hooks/useSelectionState'
+import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 
 interface SpeciesCardProps {
     species: INatTaxon
@@ -21,7 +20,7 @@ interface SpeciesCardProps {
 
 export function SpeciesCard({ species, className, viewMode }: SpeciesCardProps) {
 
-    const { isSelectionMode, selectedIds, addIdToSelection, removeIdFromSelection } = useSearchContext()
+    const { isSelectionMode, selectedIds, addIdToSelection, removeIdFromSelection } = useSelectionContext()
     const cardRef = useRef<HTMLDivElement>(null)
     const isSelected = selectedIds.includes(species.id.toString())
 

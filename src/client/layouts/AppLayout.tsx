@@ -10,13 +10,15 @@ import {
 import AiAssistant from '@/components/chat/aiAssistant'
 import { Outlet } from 'react-router'
 import SelectionDrawer from '@/components/collections/SelectionDrawer'
-import { SearchProvider, useSearchContext } from '@/contexts/search/SearchContext'
+import { SearchProvider } from '@/contexts/search/SearchContext'
+import { SelectionProvider } from '@/contexts/selection/SelectionContext'
 
 
 export function AppLayout() {
 
     return (
         <SearchProvider>
+            <SelectionProvider>
             <SidebarProvider defaultOpen={true}>
                 <div className='flex flex-row'>
                     <AiAssistant />
@@ -27,6 +29,7 @@ export function AppLayout() {
                 </div>
             </SidebarProvider>
             <SelectionDrawer />
+            </SelectionProvider>
         </SearchProvider>
     )
 }
