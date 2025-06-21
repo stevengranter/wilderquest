@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useContext, useState } from 'react'
-import { ViewMode, SearchContextType, SearchResults } from '@/contexts/search/SearchContext.types'
+import { ViewMode, SearchResults, SearchContextType } from '@/contexts/search/SearchContext.types'
 import { useSelectionState } from '@/hooks/useSelectionState'
 
 
@@ -14,7 +14,7 @@ const SearchProvider = ({ children }: SearchProviderProps) => {
     const [results, setResults] = useState<SearchResults | undefined>(undefined)
     const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Grid)
 
-    const contextValue: SearchContextType = {
+    const contextValue = {
         ...selectionState,
         viewMode,
         results,

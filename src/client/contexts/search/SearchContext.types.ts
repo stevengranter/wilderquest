@@ -1,4 +1,5 @@
 import { INatObservationsResponse, INatTaxaResponse } from '../../../shared/types/iNatTypes'
+import { SelectionState } from '@/hooks/useSelectionState'
 
 export enum ViewMode {
     Grid = 'grid',
@@ -22,5 +23,5 @@ interface SearchContextActions {
     setResults: (results: SearchResults) => void;
 }
 
-export type SearchContextType = SearchContextState & SearchContextActions;
+export type SearchContextType = SearchContextState & SearchContextActions & SelectionState;
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 export const useSelectionState = () => {
     const [selectedIds, setSelectedIds] = useState<(number | string)[]>([])
+    const [isSelectionMode, setIsSelectionMode] = useState(false)
 
     const addIdToSelection = (id: number | string) => {
         setSelectedIds(prev => [...prev, id])
@@ -11,5 +12,7 @@ export const useSelectionState = () => {
         setSelectedIds(prev => prev.filter(item => item !== id))
     }
 
-    return { selectedIds, setSelectedIds, addIdToSelection, removeIdFromSelection }
+    return { isSelectionMode, setIsSelectionMode, selectedIds, setSelectedIds, addIdToSelection, removeIdFromSelection }
 }
+
+export type SelectionState = ReturnType<typeof useSelectionState>

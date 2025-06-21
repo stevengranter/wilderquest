@@ -10,17 +10,18 @@ import getKingdomIcon from '@/components/search/getKingdomIcon'
 import titleCase from '@/components/search/titleCase'
 import { motion, AnimatePresence } from 'motion/react'
 import { useSearchContext } from '@/contexts/search/SearchContext'
+import { useSelectionState } from '@/hooks/useSelectionState'
 
 interface SpeciesCardProps {
     species: INatTaxon
     className?: string
     viewMode?: 'list' | 'grid'
+    isSelectionMode?: boolean
 }
 
 export function SpeciesCard({ species, className, viewMode }: SpeciesCardProps) {
 
-
-    const { selectedIds, addIdToSelection, removeIdFromSelection } = useSearchContext()
+    const { isSelectionMode, selectedIds, addIdToSelection, removeIdFromSelection } = useSearchContext()
     const cardRef = useRef<HTMLDivElement>(null)
     const isSelected = selectedIds.includes(species.id.toString())
 
@@ -28,15 +29,12 @@ export function SpeciesCard({ species, className, viewMode }: SpeciesCardProps) 
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault()
-        // It's usually not recommended to mix click handlers and drag handlers on the same element.
-        // If you want the card to be clickable AND draggable, you might need to differentiate
-        // between a drag event and a click event, or wrap the draggable in another element
-        // that handles clicks. For now, I'm assuming you want click to primarily select/toggle fullscreen
-        // when *not* dragging.
-        if (viewMode !== 'list') {
+        if (viewMode !== 'list' && !isSelectionMode) {
             toggleFullScreen()
+        } else if (viewMode !== 'list' && isSelectionMode) {
+            selectCard()
         }
-        selectCard()
+
     }
 
     const selectCard = () => {
