@@ -18,24 +18,24 @@ export default function SelectionDrawer({ isVisible }: CollectionsDrawerProps) {
     return (
         <div
             className={cx(
-                'fixed bottom-0 left-0 right-0 p-4 flex justify-around items-center',
-                'bg-main', // Assuming 'bg-main' is a custom color defined in your Tailwind config
+                'fixed bottom-0 left-0 right-0 p-4 flex justify-between items-center',
+                'bg-main',
                 {
                     'hidden': !isSelectionMode, // Hide when not visible
                     // Add other visibility/animation classes here if needed, e.g., for transitions
-                    'translate-y-full': !isSelectionMode, // To slide out of view
-                    'translate-y-0': isSelectionMode,    // To slide into view
+                    // 'translate-y-full': !isSelectionMode, // To slide out of view
+                    // 'translate-y-0': isSelectionMode,    // To slide into view
                     'transition-transform duration-300 ease-out': true, // For the transition effect
                 },
             )}
         >
-            <SelectionToolbar />
+            <SelectionToolbar className='flex flex-col' />
             <CollectionPicker />
         </div>
     )
 }
 
-function SelectionToolbar() {
+function SelectionToolbar({ className }: { className?: string }) {
     const { results } = useSearchContext()
     const { selectedIds, setSelectedIds, removeIdFromSelection } = useSelectionContext()
 
@@ -56,13 +56,13 @@ function SelectionToolbar() {
         console.log('handleAddAllToCollection not yet implemented')
     }
 
-    return (
-        <div>
-            <div className='flex'>Selected items: {selectedResults.map(result => <MiniCard data={result}
-                                                                                           className='w-32 h-auto' />)}</div>
+    return (<div className={className}>
 
-            <CollectionPicker />
+            <h3 className='dark:text-main-foreground'>Selected items:</h3>
+            <div className='flex'>{selectedResults.map(result => <MiniCard data={result}
+                                                                           className='w-20' />)}</div>
         </div>
+
     )
 }
 
@@ -103,6 +103,7 @@ function CollectionPicker() {
         <>
 
             <div id='rewardId' className='ml-20'></div>
+            <div className='flex flex-col'>
             <CollectionSelect
                 collections={collections}
                 setCollections={setCollections}
@@ -112,7 +113,7 @@ function CollectionPicker() {
             <Button disabled={isAnimating} onClick={handleAddAllToCollection}>
                 Add all to collection
             </Button>
-
+            </div>
 
         </>
     )
@@ -153,22 +154,25 @@ function CollectionSelect({
 }
 
 
-import clsx from 'clsx'
-import { Card, CardContent } from '@/components/ui/card'
 import { useSearchContext } from '@/contexts/search/SearchContext'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import { SpeciesCard } from '@/components/cards/SpeciesCard'
 
 function MiniCard({ data, className }: { data?: any, className?: string }) {
     return (
-        <Card className={clsx(className, 'm-0 p-0')}>
-            <CardContent className='flex flex-col items-center gap-2 p-0'>
+        <Dialog>
+            <DialogTrigger>
                 <img
                     src={data?.default_photo?.medium_url}
                     alt={data?.name}
-                    className='h-full object-cover aspect-square'
+                    className='mx-3 my-1 h-15 object-cover aspect-square rounded-lg border-black border-2 shadow-shadow'
                 />
-                <div>{data?.id}</div>
-                <div>{data?.name}</div>
-            </CardContent>
-        </Card>
+            </DialogTrigger>
+            <DialogContent>
+                <SpeciesCard species={data} />
+            </DialogContent>
+        </Dialog>
+
+
     )
 }

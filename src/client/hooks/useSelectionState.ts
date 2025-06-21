@@ -15,4 +15,4 @@ export const useSelectionState = () => {
     return { isSelectionMode, setIsSelectionMode, selectedIds, setSelectedIds, addIdToSelection, removeIdFromSelection }
 }
 
-export type SelectionState = ReturnType<typeof useSelectionState>
+export type SelectionStae = ReturnType<typeof useSelectionState>
