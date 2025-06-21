@@ -35,36 +35,7 @@ export default function SelectionDrawer({ isVisible }: CollectionsDrawerProps) {
     )
 }
 
-function SelectionToolbar({ className }: { className?: string }) {
-    const { results } = useSearchContext()
-    const { selectedIds, setSelectedIds, removeIdFromSelection } = useSelectionContext()
 
-    const selectedResults = useMemo(() => {
-        if (!results) return []
-        const resultsArray = results.results.filter(result => selectedIds.includes(result.id.toString()))
-        return resultsArray
-    }, [selectedIds, results])
-
-    useEffect(() => {
-        console.log('Selected IDs:', selectedIds)
-        console.log('Results:', results)
-        console.log(results)
-    }, [selectedIds])
-
-
-    function handleAddAllToCollection() {
-        console.log('handleAddAllToCollection not yet implemented')
-    }
-
-    return (<div className={className}>
-
-            <h3 className='dark:text-main-foreground'>Selected items:</h3>
-            <div className='flex'>{selectedResults.map(result => <MiniCard data={result}
-                                                                           className='w-20' />)}</div>
-        </div>
-
-    )
-}
 
 
 function CollectionPicker() {
@@ -154,6 +125,38 @@ function CollectionSelect({
 }
 
 
+function SelectionToolbar({ className }: { className?: string }) {
+    const { results } = useSearchContext()
+    const { selectedIds, setSelectedIds, removeIdFromSelection } = useSelectionContext()
+
+    const selectedResults = useMemo(() => {
+        if (!results) return []
+        const resultsArray = results.results.filter(result => selectedIds.includes(result.id.toString()))
+        return resultsArray
+    }, [selectedIds, results])
+
+    useEffect(() => {
+        console.log('Selected IDs:', selectedIds)
+        console.log('Results:', results)
+        console.log(results)
+    }, [selectedIds])
+
+
+    function handleAddAllToCollection() {
+        console.log('handleAddAllToCollection not yet implemented')
+    }
+
+    return (<div className={className}>
+
+            <h3 className='dark:text-main-foreground'>Selected items:</h3>
+            <div className='grid grid-cols-6 md:grid-cols-8 lg:grid-cols-12'>{selectedResults.map(result => <MiniCard
+                data={result}
+                className='w-20' />)}</div>
+        </div>
+
+    )
+}
+
 import { useSearchContext } from '@/contexts/search/SearchContext'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { SpeciesCard } from '@/components/cards/SpeciesCard'
@@ -165,7 +168,7 @@ function MiniCard({ data, className }: { data?: any, className?: string }) {
                 <img
                     src={data?.default_photo?.medium_url}
                     alt={data?.name}
-                    className='mx-3 my-1 h-15
+                    className='mx-3 my-1 sm:h-10  md:h-15
                     object-cover aspect-square rounded-lg
                     border-black border-2 shadow-shadow
                     '
