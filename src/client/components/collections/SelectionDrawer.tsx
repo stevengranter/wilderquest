@@ -168,7 +168,7 @@ function MiniCard({ data, className }: { data?: any, className?: string }) {
                 <img
                     src={data?.default_photo?.medium_url}
                     alt={data?.name}
-                    className='mx-3 my-1 sm:h-10  md:h-15
+                    className='mx-3 ml-0 mr-2sm:h-10  md:h-15
                     object-cover aspect-square rounded-lg
                     border-black border-2 shadow-shadow
                     '
