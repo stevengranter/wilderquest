@@ -16,9 +16,10 @@ interface SpeciesCardProps {
     className?: string
     viewMode?: 'list' | 'grid'
     isSelectionMode?: boolean
+    isSelectable?: boolean
 }
 
-export function SpeciesCard({ species, className, viewMode }: SpeciesCardProps) {
+export function SpeciesCard({ species, className, viewMode, isSelectable = true }: SpeciesCardProps) {
 
     const { isSelectionMode, selectedIds, addIdToSelection, removeIdFromSelection } = useSelectionContext()
     const cardRef = useRef<HTMLDivElement>(null)
@@ -30,7 +31,7 @@ export function SpeciesCard({ species, className, viewMode }: SpeciesCardProps) 
         e.preventDefault()
         if (viewMode !== 'list' && !isSelectionMode) {
             // toggleFullScreen()
-        } else if (viewMode !== 'list' && isSelectionMode) {
+        } else if (viewMode !== 'list' && isSelectionMode && isSelectable === true) {
             selectCard()
         }
 
@@ -45,33 +46,10 @@ export function SpeciesCard({ species, className, viewMode }: SpeciesCardProps) 
             addIdToSelection(id) // Corrected from addIdFromSelection
         }
     }
-
-    // const toggleFullScreen = () => {
-    //     setIsFullScreen(prev => !prev)
-    //     if (!isFullScreen) {
-    //         document.body.style.overflow = 'hidden'
-    //     } else {
-    //         document.body.style.overflow = ''
-    //     }
-    // }
-
     const handleInteractiveClick = (e: React.MouseEvent, action: string) => {
         e.stopPropagation()
         console.log(`${action} clicked`)
     }
-
-    // Tailwind classes for the *fixed* position when full screen.
-    // const fullScreenTailwindClasses = isFullScreen
-    //     ? `
-    //         fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-    //         w-[90vw] h-[90vh] max-w-none max-h-none
-    //         z-50 p-4 bg-white/95 backdrop-blur-sm
-    //         shadow-2xl rounded-lg
-    //     `
-    //     : `
-    //         relative
-    //         hover:shadow-md
-    //     `
 
     // --- List View Rendering (no changes needed here for zoom issue) ---
     if (viewMode === 'list') {
@@ -84,16 +62,18 @@ export function SpeciesCard({ species, className, viewMode }: SpeciesCardProps) 
     // --- Default (Grid) View Rendering ---
     return (
         <SpeciesGridItem species={species} className={className} cardRef={cardRef} isSelected={isSelected}
+                         isSelectable={isSelectable}
                          handleClick={handleClick} />
     )
 }
 
-function SpeciesGridItem({ species, className, cardRef, isSelected, handleClick }: {
+function SpeciesGridItem({ species, className, cardRef, isSelected, isSelectable = true, handleClick }: {
     species: INatTaxon,
     className?: string,
     cardRef: React.RefObject<HTMLDivElement | null>,
     isSelected: boolean,
     handleClick: (e: React.MouseEvent) => void
+    isSelectable?: boolean
 }) {
     return (<AnimatePresence mode='wait'>
         <motion.div
@@ -114,7 +94,7 @@ function SpeciesGridItem({ species, className, cardRef, isSelected, handleClick 
             className={cn(
                 'w-full',
                 'cursor-pointer rounded-lg overflow-hidden',
-                isSelected && 'ring-2 ring-blue-500',
+                isSelected && isSelectable && 'ring-2 ring-blue-500',
                 // fullScreenTailwindClasses,
                 className,
             )}

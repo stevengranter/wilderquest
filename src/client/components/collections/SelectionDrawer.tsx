@@ -165,11 +165,14 @@ function MiniCard({ data, className }: { data?: any, className?: string }) {
                 <img
                     src={data?.default_photo?.medium_url}
                     alt={data?.name}
-                    className='mx-3 my-1 h-15 object-cover aspect-square rounded-lg border-black border-2 shadow-shadow'
+                    className='mx-3 my-1 h-15
+                    object-cover aspect-square rounded-lg
+                    border-black border-2 shadow-shadow
+                    '
                 />
             </DialogTrigger>
             <DialogContent>
-                <SpeciesCard species={data} />
+                <SpeciesCard species={data} isSelectable={false} />
             </DialogContent>
         </Dialog>
 
