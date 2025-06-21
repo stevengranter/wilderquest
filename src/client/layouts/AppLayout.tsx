@@ -9,10 +9,13 @@ import {
 
 import AiAssistant from '@/components/chat/aiAssistant'
 import { Outlet } from 'react-router'
+import CollectionsDrawer from '@/components/collections/CollectionsDrawer'
+import { DndContext } from '@dnd-kit/core'
 
 
 export function AppLayout() {
     return (
+        <DndContext>
         <SidebarProvider defaultOpen={true}>
             <div className='flex flex-row'>
                 <AiAssistant />
@@ -22,6 +25,8 @@ export function AppLayout() {
                 </SidebarInset>
             </div>
         </SidebarProvider>
+            <CollectionsDrawer isVisible={true} />
+        </DndContext>
     )
 }
 

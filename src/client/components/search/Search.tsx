@@ -12,6 +12,7 @@ import SearchCategorySelect, { SearchCategory } from '@/components/search/Search
 import SearchAutoComplete from '@/components/SearchAutoComplete'
 import { useSearchContext } from '@/contexts/search/SearchContext'
 import { Card, CardContent } from '@/components/ui/card'
+import { Drawer, DrawerTrigger, DrawerContent } from '@/components/ui/drawer'
 import {
     Select,
     SelectContent,
@@ -63,6 +64,7 @@ export default function SearchInterface() {
     const [searchParams, setSearchParams] = useSearchParams()
     const searchCategory = searchParams.get('category') || 'observations'
     const { viewMode, setViewMode, selectedIds, results, setResults } = useSearchContext()
+    const [selectModeOn, setSelectModeOn] = useState<boolean>(false)
     const [localQuery, setLocalQuery] = useState(searchParams.get('q') || '')
     // New state to hold the selected item from SearchAutoComplete
     const [selectedTaxaItem, setSelectedTaxaItem] = useState<iNatTaxaResult | null>(null)
@@ -145,6 +147,14 @@ export default function SearchInterface() {
         setSearchParams(newSearchParams)
     }
 
+    const toggleSelectMode = () => {
+        if (selectModeOn) {
+            setSelectModeOn(false)
+        } else {
+            setSelectModeOn(true)
+        }
+    }
+
     return (
         <div className='space-y-4'>
             {/* Search form */}
@@ -176,6 +186,7 @@ export default function SearchInterface() {
 
                     <SelectionToolbar selectedIds={selectedIds} />
                     <ViewModeController viewMode={viewMode} setViewMode={setViewMode} />
+                    <Button onClick={toggleSelectMode}>Select mode: {(selectModeOn) ? 'ON' : 'OFF'}</Button>
                     <ResultsGrid searchCategory={searchCategory} viewMode={viewMode} data={data} />
                 </>
             )}
@@ -248,6 +259,9 @@ function CollectionPicker() {
 
     return (
         <>
+
+            <Button>Open Collections Drawer</Button>
+
             <div id='rewardId' className='ml-20'></div>
             <CollectionSelect
                 collections={collections}
@@ -258,6 +272,7 @@ function CollectionPicker() {
             <Button disabled={isAnimating} onClick={handleAddAllToCollection}>
                 Add all to collection
             </Button>
+
 
         </>
     )

@@ -12,16 +12,16 @@ import { useSearchContext } from '@/contexts/search/SearchContext'
 interface ObservationCardProps {
     observation: INatObservation
     className?: string
+    viewMode?: 'list' | 'grid' // Added viewMode prop
 }
 
-export function ObservationCard({ observation, className }: ObservationCardProps) {
+export function ObservationCard({ observation, className, viewMode }: ObservationCardProps) {
     const { selectedIds, removeIdFromSelection, addIdToSelection } = useSearchContext()
 
     const isSelected = selectedIds.includes(observation.id.toString())
 
-    // --- FIX 1: Safely get the photo URL using optional chaining ---
-    // This will be undefined if `photos` is missing or the array is empty, without causing an error.
     const imageUrl = observation.photos?.[0]?.url?.replace('square.jpg', 'medium.jpg')
+    const squareImageUrl = observation.photos?.[0]?.url?.replace('medium.jpg', 'square.jpg') // For list view
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault()
@@ -34,23 +34,73 @@ export function ObservationCard({ observation, className }: ObservationCardProps
         }
     }
 
+    // --- List View Rendering ---
+    if (viewMode === 'list') {
+        return (
+            <div
+                className={cn(
+                    'flex items-center gap-4 p-3 rounded-md transition-all duration-200 hover:bg-gray-100',
+                    isSelected && 'ring-2 ring-blue-500 bg-blue-50',
+                    className,
+                )}
+                onClick={handleClick}
+            >
+                {squareImageUrl ? (
+                    <img
+                        src={squareImageUrl}
+                        alt={observation.species_guess ?? 'Observation photo'}
+                        className='h-16 w-16 object-cover rounded-md flex-shrink-0'
+                    />
+                ) : (
+                    <div className='h-16 w-16 flex items-center justify-center rounded-md bg-gray-100 flex-shrink-0'>
+                        <Camera className='h-8 w-8 text-gray-300' />
+                    </div>
+                )}
+                <div className='flex-grow'>
+                    <div className='font-semibold text-base'>
+                        {titleCase(observation.species_guess || 'Unknown Species')}
+                    </div>
+                    <div className='flex items-center gap-1 text-sm text-muted-foreground mt-1'>
+                        <Calendar className='h-3 w-3' />
+                        <span>{observation.observed_on || 'Date Unknown'}</span>
+                    </div>
+                    {observation.place_guess && (
+                        <div className='flex items-center gap-1 text-sm text-muted-foreground'>
+                            <MapPin className='h-3 w-3' />
+                            <span>{observation.place_guess}</span>
+                        </div>
+                    )}
+                </div>
+                <div className='flex flex-col items-end flex-shrink-0'>
+                    <Badge variant={imageUrl ? 'default' : 'neutral'} className='text-xs'>
+                        <Camera className='h-3 w-3 mr-1' />
+                        {imageUrl ? `${observation.photos.length} photo(s)` : 'No photos'}
+                    </Badge>
+                    {isSelected && <div className='text-xs text-blue-600 font-medium mt-1'>✓ Selected</div>}
+                </div>
+            </div>
+        )
+    }
+
+    // --- Default (Grid) View Rendering ---
     return (
         <Card
             className={cn(
                 'cursor-pointer transition-all duration-200 hover:shadow-md',
                 isSelected && 'ring-2 ring-blue-500 bg-blue-50',
-                'p-4 rotate-2 aspec-ratio-[3.5/4/2]',
+                // Removed 'rotate-2' and 'aspect-ratio' for better control in both modes,
+                // you can add them back if you only want them in grid mode.
+                'p-4',
                 className,
             )}
             onClick={handleClick}
         >
             <CardContent className='m-0 p-0'>
-                {/* --- FIX 2: Use a single ternary for cleaner and more robust rendering --- */}
                 {imageUrl ? (
                     <img
                         src={imageUrl}
                         alt={observation.species_guess ?? 'Observation photo'}
-                        className='aspect-square w-full object-cover'
+                        className='aspect-square w-full object-cover rounded-t-md' // Added rounded-t-md for top corners
                     />
                 ) : (
                     <div
@@ -66,7 +116,6 @@ export function ObservationCard({ observation, className }: ObservationCardProps
                         className='font-semibold text-lg'>{titleCase(observation.species_guess || 'Unknown Species')}</div>
 
                     {/* Date observed */}
-                    {/* Using observed_on_string is often more reliable than observed_on */}
                     {observation.observed_on && (
                         <div className='flex items-center gap-1 text-sm text-muted-foreground'>
                             <Calendar className='h-3 w-3' />
@@ -82,7 +131,7 @@ export function ObservationCard({ observation, className }: ObservationCardProps
                         </div>
                     )}
 
-                    {/*Photo indicator*/}
+                    {/* Photo indicator */}
                     <div className='flex gap-2 flex-wrap'>
                         <Badge variant={imageUrl ? 'default' : 'neutral'} className='text-xs'>
                             <Camera className='h-3 w-3 mr-1' />

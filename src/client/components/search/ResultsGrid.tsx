@@ -40,9 +40,9 @@ export function ResultsGrid({ searchCategory, viewMode, data }: {
 
         switch (searchCategory) {
             case 'species':
-                return <SpeciesCard key={key} species={item} />
+                return <SpeciesCard key={key} species={item} viewMode={viewMode} />
             case 'observations':
-                return <ObservationCard key={key} observation={item} />
+                return <ObservationCard key={key} observation={item} viewMode={viewMode} />
             case 'collections':
                 return <CollectionCard key={key} collection={item} />
             default:
@@ -76,7 +76,7 @@ export function ResultsGrid({ searchCategory, viewMode, data }: {
             <div
                 className={
                     viewMode === 'grid'
-                        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xxl:grid-cols-5 gap-6'
                         : 'space-y-2'
                 }
             >

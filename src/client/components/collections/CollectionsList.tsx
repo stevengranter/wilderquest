@@ -2,6 +2,7 @@ import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import api from '@/api/api'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface Collection {
     id: string
@@ -68,16 +69,18 @@ export default function CollectionsList({ propUserId }: CollectionsListProps) {
 
     return (
         <div>
-            <h2>{viewingOwnCollections ? 'Your Collections' : 'Public Collections'}</h2>
-            <ul>
+            {/*<h2>{viewingOwnCollections ? 'Your Collections' : 'Public Collections'}</h2>*/}
+            <div className='flex'>
                 {collectionsListData.map((collection) => (
-                    <li key={collection.id}>
+                    <Card key={collection.id}>
+                        <CardContent>
                         <strong>{collection.name}</strong> (ID: {collection.id})
                         {collection.is_private ? ' (Private)' : ' (Public)'}
                         <p>{collection.description}</p>
-                    </li>
+                        </CardContent>
+                    </Card>
                 ))}
-            </ul>
+            </div>
         </div>
     )
 }
