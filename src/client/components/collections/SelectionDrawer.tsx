@@ -149,7 +149,9 @@ function SelectionToolbar({ className }: { className?: string }) {
     return (<div className={className}>
 
             <h3 className='dark:text-main-foreground'>Selected items:</h3>
-            <div className='grid grid-cols-6 md:grid-cols-8 lg:grid-cols-12'>{selectedResults.map(result => <MiniCard
+            <div
+                className='grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12'>{selectedResults.map(result =>
+                <MiniCard
                 data={result}
                 className='w-20' />)}</div>
         </div>
@@ -168,7 +170,7 @@ function MiniCard({ data, className }: { data?: any, className?: string }) {
                 <img
                     src={data?.default_photo?.medium_url}
                     alt={data?.name}
-                    className='mx-3 ml-0 mr-2sm:h-10  md:h-15
+                    className='mx-3 ml-0 my-2 mr-3 h-8 sm:h-10  md:h-14
                     object-cover aspect-square rounded-lg
                     border-black border-2 shadow-shadow
                     '
