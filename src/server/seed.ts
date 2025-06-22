@@ -10,6 +10,7 @@ import { genSaltSync, hashSync } from 'bcrypt-ts'
 import fs from 'fs'
 import dbConfig from './config/app.config.js'
 import appConfig from './config/app.config.js'
+import * as os from 'node:os'
 
 type User = {
     username: string
@@ -77,9 +78,9 @@ const logRawUserData = (user: User) => {
     const rawUserData = [
         user.username,
         user.email,
-        user.password, // Log the password before hashing
-        user.created_at ? user.created_at.toISOString() : '', // Convert Date to ISO string
-        user.updated_at ? user.updated_at.toISOString() : '', // Convert Date to ISO string
+        user.password,
+        user.created_at ? user.created_at.toISOString() : '',
+        user.updated_at ? user.updated_at.toISOString() : '',
         user.user_cuid,
     ]
 
@@ -90,8 +91,19 @@ const logRawUserData = (user: User) => {
     const day = now.getDate().toString().padStart(2, '0')
     const dateString = `${year}.${month}.${day}`
 
-    // Construct the filename
-    const filename = `users_table_data_${dateString}.dev.csv`
+    // Get the OS name and release version
+    const osPlatform = os.platform() // e.g., 'darwin', 'win32', 'linux'
+    const osRelease = os.release() // e.g., '23.5.0', '10.0.19045', '6.5.0-35-generic'
+
+    // Combine and sanitize for filename
+    // Replace non-alphanumeric, non-hyphen, non-dot characters with underscores
+    // And convert dots in release to underscores to prevent issues with file extensions
+    const osIdentifier = `${osPlatform}_${osRelease}`
+        .replace(/[^a-zA-Z0-9-.]/g, '_')
+        .replace(/\./g, '_')
+
+    // Construct the filename with the OS identifier
+    const filename = `users_table_data_${dateString}.${osIdentifier}.dev.csv`
 
     // Append the data to a CSV file
     const csvRow = rawUserData.join(',') + '\n'
