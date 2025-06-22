@@ -1,12 +1,12 @@
 import 'dotenv/config'
 import mysql from 'mysql2/promise'
-import {faker} from '@faker-js/faker'
+import { faker } from '@faker-js/faker'
 import * as emoji from 'node-emoji'
 import pluralize from 'pluralize'
-import {createId} from '@paralleldrive/cuid2'
-import {createNameId} from 'mnemonic-id'
+import { createId } from '@paralleldrive/cuid2'
+import { createNameId } from 'mnemonic-id'
 import weighted from 'weighted'
-import {genSaltSync, hashSync} from 'bcrypt-ts'
+import { genSaltSync, hashSync } from 'bcrypt-ts'
 import fs from 'fs'
 import dbConfig from './config/app.config.js'
 import appConfig from './config/app.config.js'
@@ -78,19 +78,29 @@ const logRawUserData = (user: User) => {
         user.username,
         user.email,
         user.password, // Log the password before hashing
-        user.created_at,
-        user.updated_at,
+        user.created_at ? user.created_at.toISOString() : '', // Convert Date to ISO string
+        user.updated_at ? user.updated_at.toISOString() : '', // Convert Date to ISO string
         user.user_cuid,
     ]
+
+    // Get the current date in YYYY.MM.DD format
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = (now.getMonth() + 1).toString().padStart(2, '0') // Months are 0-indexed
+    const day = now.getDate().toString().padStart(2, '0')
+    const dateString = `${year}.${month}.${day}`
+
+    // Construct the filename
+    const filename = `users_table_data_${dateString}.dev.csv`
 
     // Append the data to a CSV file
     const csvRow = rawUserData.join(',') + '\n'
 
-    fs.appendFile('raw_users.dev.csv', csvRow, (err) => {
+    fs.appendFile(filename, csvRow, (err) => {
         if (err) {
             console.error('Error logging user data:', err)
         } else {
-            console.log('User data logged to file.')
+            console.log(`User data logged to ${filename}.`)
         }
     })
 }
@@ -111,9 +121,9 @@ writeCsvHeader()
 const createFakeUser = () => {
     const firstName = faker.person.firstName()
     const lastName = faker.person.lastName()
-    const username = createNameId({capitalize: true, delimiter: ''})
+    const username = createNameId({ capitalize: true, delimiter: '' })
     const email = username.toLowerCase() + '@' + faker.internet.domainName()
-    const password = faker.internet.password({length: 8, memorable: true})
+    const password = faker.internet.password({ length: 8, memorable: true })
     const role_id = 1
     const created_at = faker.date.between({
         from: '2020-01-01',
@@ -160,7 +170,7 @@ const createFakeCollection = (animal = faker.animal.type()) => {
     })
     const is_private = faker.number.int({ min: 0, max: 1 })
     console.log(
-        `Creating collection for user ${user_id} with name ${name} and emoji ${animalEmoji?.emoji}`,
+        `Creating collection for user ${user_id} with name ${name} and emoji ${animalEmoji?.emoji}`
     )
     return {
         name,
@@ -209,9 +219,9 @@ const dropTable = async (tableName: string) => {
 }
 
 async function addUserToDatabase(user: User) {
-    const {password: UNSAFEPassword} = user
+    const { password: UNSAFEPassword } = user
     const securePassword = hashSync(UNSAFEPassword, genSaltSync(10))
-    const safeUser = {...user, password: securePassword}
+    const safeUser = { ...user, password: securePassword }
     return await addRowToTable('users', safeUser)
 }
 
