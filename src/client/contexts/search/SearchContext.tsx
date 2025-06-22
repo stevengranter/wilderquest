@@ -1,45 +1,17 @@
-import {
-    createContext,
-    ReactNode,
-    useCallback,
-    useContext,
-    useState,
-} from 'react'
-import {
-    SearchContextType,
-    SearchResults,
-    ViewMode,
-} from '@/contexts/search/SearchContext.types'
-import { SearchCategory } from '@/components/search/SearchCategorySelect'
-import { INatObservationsResponse } from '../../../shared/types/iNatTypes'
+import { createContext, ReactNode, useContext, useState } from 'react'
+import { ViewMode, SearchResults, SearchContextType } from '@/contexts/search/SearchContext.types'
+
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined)
 
 interface SearchProviderProps {
-    children: ReactNode
+    children: ReactNode;
 }
 
 const SearchProvider = ({ children }: SearchProviderProps) => {
     // const selectionState = useSelectionState()
-    const [results, setResultsState] = useState<SearchResults>({
-        observations: null,
-        species: null,
-    })
+    const [results, setResults] = useState<SearchResults | undefined>(undefined)
     const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Grid)
-
-    // This function will now update specific category results
-    const setResults = useCallback(
-        (
-            category: SearchCategory,
-            data: INatObservationsResponse | INatTaxaResponse
-        ) => {
-            setResultsState((prevResults) => ({
-                ...prevResults,
-                [category]: data,
-            }))
-        },
-        []
-    )
 
     const contextValue = {
         // ...selectionState,
