@@ -7,8 +7,8 @@ import { AppLayout } from '@/layouts/AppLayout'
 import Login from '@/components/pages/Login'
 import Welcome from '@/components/pages/Welcome'
 import Register from '@/components/pages/Register'
-import CollectionDetail from '@/components/collections/CollectionDetail'
-import CollectionsList from '@/components/collections/CollectionsList'
+import CollectionDetail from '@/features/collections/CollectionDetail'
+import CollectionsList from '@/features/collections/CollectionsList'
 
 export const router = createBrowserRouter([
     {

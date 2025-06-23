@@ -9,7 +9,7 @@ import {
 
 import AiAssistant from '@/components/chat/aiAssistant'
 import { Outlet } from 'react-router'
-import SelectionDrawer from '@/components/collections/SelectionDrawer'
+import SelectionDrawer from '@/features/collections/SelectionDrawer'
 import { SearchProvider } from '@/contexts/search/SearchContext'
 import { SelectionProvider } from '@/contexts/selection/SelectionContext'
 

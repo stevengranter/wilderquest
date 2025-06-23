@@ -1,5 +1,5 @@
 import cx from 'clsx'
-import CollectionsList from '@/components/collections/CollectionsList'
+import CollectionsList from '@/features/collections/CollectionsList'
 import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 import { useEffect, useMemo, useState } from 'react'
 import { Collection } from '../../../types/types'
