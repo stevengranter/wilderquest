@@ -1,8 +1,8 @@
-import axios from 'axios' // Import axios for error checking
+import axios from 'axios'
 import { useEffect, useState } from 'react'
 import api from '@/api/api'
 import { useAuth } from '@/hooks/useAuth'
-import { Collection } from '../../../types/types'
+import { Collection } from './collection.types'
 
 export function useCollections(
     userIdFromProps?: string | number | null | undefined
@@ -11,6 +11,32 @@ export function useCollections(
     const [collections, setCollections] = useState<Collection[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [isError, setIsError] = useState<string | null>(null)
+    const [taxa, setTaxa] = useState<number[] | null>(null)
+
+    useEffect(() => {
+        if (!collections) return
+
+        const taxon_ids = collections.map((collection) => {
+            return collection.taxon_ids
+        })
+
+        if (taxon_ids.length === 0) {
+            setTaxa(null) // Set to null if there are no taxon_ids
+            return
+        }
+
+        const flattenedTaxa = taxon_ids.flat() as (number | undefined)[] // Explicitly type after flat() for clarity
+
+        // Filter out undefined values and assert the type
+        const uniqueTaxa: number[] = [
+            ...new Set(
+                flattenedTaxa.filter((id): id is number => id !== undefined),
+            ),
+        ]
+
+        console.log(uniqueTaxa)
+        setTaxa(uniqueTaxa)
+    }, [collections])
 
     useEffect(() => {
         const fetchCollections = async () => {
@@ -47,6 +73,7 @@ export function useCollections(
                 const endpoint = `/collections/user/${targetUserId}`
                 const response = await api.get(endpoint)
                 setCollections(response.data)
+                console.log(response.data)
                 setIsError(null)
             } catch (err: unknown) {
                 if (axios.isAxiosError(err)) {
@@ -64,7 +91,7 @@ export function useCollections(
         }
 
         fetchCollections()
-    }, [userIdFromProps, token, user]) // Depend on userIdFromProps, token, and user
+    }, [userIdFromProps, token, user])
 
-    return { collections, isError, isLoading }
+    return { collections, taxa, isError, isLoading }
 }

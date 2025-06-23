@@ -1,115 +1,98 @@
-import BaseRepository from './BaseRepository.js'
-import { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
+import { Pool, RowDataPacket } from 'mysql2/promise'
 import { type Collection } from '../models/Collection.js'
 import { type CollectionToTaxa } from '../models/CollectionToTaxa.js'
-import { CollectionSchema } from '../schemas/collection.schemas.js'
+import BaseRepository from './BaseRepository.js'
 
-// Instantiate a InstanceType for TypeScript completions
-type CollectionRepositoryConstructor = typeof CollectionRepository;
-export type CollectionRepositoryInstance = InstanceType<CollectionRepositoryConstructor>;
+// Type export for usage elsewhere
+export type CollectionRepositoryInstance = InstanceType<
+    typeof CollectionRepository
+>
 
 export default class CollectionRepository extends BaseRepository<Collection> {
     constructor(tableName: string, dbPool: Pool) {
         super(tableName, dbPool)
         console.log(
-            `CollectionsRepository constructed for table '${tableName}' with dbPool:`,
-            dbPool ? 'exists' : 'does not exist',
+            `[CollectionRepository] Initialized for table '${tableName}'`,
         )
     }
 
-    async findByUserId(userId: number): Promise<Collection[]> {
+    private async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
         try {
             const [rows] = await this.getDb().execute<RowDataPacket[]>(
-                `SELECT *
-                 FROM ${this.getTableName()}
-                 WHERE user_id = ?`,
-                [userId],
-            );
-            console.log('rows', rows)
-            return rows as Collection[]
+                sql,
+                params,
+            )
+            return rows as T[]
         } catch (error) {
-            console.error('Error fetching collections by userId:', error)
+            console.error(`[CollectionRepository] SQL Error:`, {
+                sql,
+                params,
+                error,
+            })
             throw error
         }
+    }
+
+    async findByUserId(userId: number): Promise<Collection[]> {
+        return this.query<Collection>(
+            `SELECT * FROM ${this.getTableName()} WHERE user_id = ?`,
+            [userId],
+        )
     }
 
     async findAllPublic(): Promise<Collection[]> {
         try {
-            const [rows] = await this.getDb().execute<RowDataPacket[]>(
-                `SELECT *
-                 FROM ${this.getTableName()}
-                 WHERE is_private = 0`,
+            return await this.query<Collection>(
+                `SELECT * FROM ${this.getTableName()} WHERE is_private = 0`,
             )
-            console.log('rows', rows)
-            return rows as Collection[]
         } catch (error) {
-            console.error('Error fetching public collections: ', error)
-            // Crucial change: Return an empty array on error
-            return []
-        }
-    }
-
-    async findTaxaByCollectionId(collectionId: number): Promise<CollectionToTaxa[]> {
-        try {
-            const [rows] = await this.getDb().execute<RowDataPacket[]>(
-                `SELECT taxon_id FROM collections_to_taxa WHERE collection_id = ?`,
-                [collectionId],
-            )
-            console.log('rows', rows)
-            return rows as CollectionToTaxa[]
-        } catch (error) {
-            console.error('Error fetching taxa by collection_id:', error)
-            throw error
+            return [] // Silent failure fallback
         }
     }
 
     async findPublicCollectionsByUserId(userId: number): Promise<Collection[]> {
-        try {
-            const [rows] = await this.getDb().execute<RowDataPacket[]>(
-                `SELECT *
-                 FROM ${this.getTableName()}
-                 WHERE user_id = ? AND is_private = 0`,
-                [userId],
-            )
-            return rows as Collection[]
-        } catch (error) {
-            console.error('Error fetching collections by userId:', error)
-            throw error
-        }
+        return this.query<Collection>(
+            `SELECT * FROM ${this.getTableName()} WHERE user_id = ? AND is_private = 0`,
+            [userId],
+        )
     }
 
-    async findCollectionItemsById(collectionId: number): Promise<CollectionToTaxa[]> {
-        try {
-            const [rows] = await this.getDb().execute<RowDataPacket[]>(
-                `SELECT taxon_id FROM collections_to_taxa WHERE collection_id = ?`,
-                [collectionId],
-            );
-            console.log('rows', rows)
-            return rows as CollectionToTaxa[]
-        } catch (error) {
-            console.error('Error fetching taxa by collection_id:', error)
-            throw error
-        }
+    async findTaxaByCollectionId(
+        collectionId: number,
+    ): Promise<CollectionToTaxa[]> {
+        return this.query<CollectionToTaxa>(
+            `SELECT taxon_id FROM collections_to_taxa WHERE collection_id = ?`,
+            [collectionId],
+        )
+    }
+
+    // Alias for findTaxaByCollectionId
+    async findCollectionItemsById(
+        collectionId: number,
+    ): Promise<CollectionToTaxa[]> {
+        return this.findTaxaByCollectionId(collectionId)
     }
 
     async updateCollectionItems(
         collectionId: number,
         taxaIds: number[]
     ): Promise<{ success: boolean }> {
+        if (!taxaIds?.length) return { success: true }
+
+        const values = taxaIds.map((taxonId) => [collectionId, taxonId])
+        const placeholders = values.map(() => '(?, ?)').join(', ')
+
         try {
-            if (taxaIds && taxaIds.length > 0) {
-                for (let i = 0; i < taxaIds.length; i++) {
-                    await this.getDb().execute(
-                        'INSERT INTO collections_to_taxa (collection_id, taxon_id) VALUES (?,?)',
-                        [collectionId, taxaIds[i]]
-                    );
-                }
-            }
+            await this.getDb().execute(
+                `INSERT INTO collections_to_taxa (collection_id, taxon_id)
+                VALUES
+                ${placeholders}`,
+                values.flat(),
+            )
             return { success: true }
         } catch (error) {
-            console.error('Error updating collection taxa:', error)
+            console.error('Error bulk inserting collection taxa:', error)
             throw error
         }
     }
 }
-
