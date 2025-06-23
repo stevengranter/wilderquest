@@ -1,14 +1,17 @@
 // src/routes/routes.tsx
+
+import { User } from 'lucide-react'
 import { createBrowserRouter, Navigate } from 'react-router'
+import Login from '@/components/pages/Login'
+import Register from '@/components/pages/Register'
+import Welcome from '@/components/pages/Welcome'
+import CollectionDetail from '@/features/collections/CollectionDetail'
+import CollectionsList from '@/features/collections/CollectionsList'
+import UserCollectionsManager from '@/features/collections/UserCollectionsManager'
+import { AppLayout } from '@/layouts/AppLayout'
 import { ExploreTab } from './explore/ExploreTab'
 import { IdentifyTab } from './identify/IdentifyTab'
 import { LocateTab } from './locate/LocateTab'
-import { AppLayout } from '@/layouts/AppLayout'
-import Login from '@/components/pages/Login'
-import Welcome from '@/components/pages/Welcome'
-import Register from '@/components/pages/Register'
-import CollectionDetail from '@/features/collections/CollectionDetail'
-import CollectionsList from '@/features/collections/CollectionsList'
 
 export const router = createBrowserRouter([
     {
@@ -17,7 +20,7 @@ export const router = createBrowserRouter([
         children: [
             {
                 index: true, // Match the root path exactly
-                element: <Navigate to='/explore' replace />, // Redirect to /explore
+                element: <Navigate to="/explore" replace />, // Redirect to /explore
             },
             {
                 path: 'explore',
@@ -57,7 +60,7 @@ export const router = createBrowserRouter([
                 children: [
                     {
                         index: true, // For /collection (no ID)
-                        element: <CollectionsList />, // Or a component that shows all collections
+                        element: <UserCollectionsManager />, // Or a component that shows all collections
                     },
                     {
                         path: ':collectionId',
