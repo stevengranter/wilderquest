@@ -48,7 +48,7 @@ const fetchINaturalistData = async (category: string, query: string, taxon_id?: 
 
 export default function SearchInterface() {
     const [searchParams, setSearchParams] = useSearchParams()
-    const searchCategory = searchParams.get('category') || 'observations'
+    const searchCategory = searchParams.get('category') || 'species'
     const {
         viewMode,
         setViewMode,
