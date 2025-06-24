@@ -7,10 +7,10 @@ export function ExploreTab() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Explore</CardTitle>
-                <CardDescription>
-                    Explore the world of nature
-                </CardDescription>
+                {/*<CardTitle>Explore</CardTitle>*/}
+                {/*<CardDescription>*/}
+                {/*    Explore the world of nature*/}
+                {/*</CardDescription>*/}
             </CardHeader>
             <CardContent className='grid gap-6'>
                 <div className='grid gap-3'>
@@ -19,11 +19,11 @@ export function ExploreTab() {
 
                 </div>
             </CardContent>
-            <CardFooter>
-                <Button className='w-full' variant='neutral'>
-                    Save changes
-                </Button>
-            </CardFooter>
+            {/*<CardFooter>*/}
+            {/*    <Button className='w-full' variant='neutral'>*/}
+            {/*        Save changes*/}
+            {/*    </Button>*/}
+            {/*</CardFooter>*/}
         </Card>
     )
 }

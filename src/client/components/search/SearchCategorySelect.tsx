@@ -40,13 +40,13 @@ export default function SearchCategorySelect({
             >
                 Observations
             </ToggleGroupItem>
-            <ToggleGroupItem
-                className='justify-center'
-                value='collections'
-                icon={<FolderHeart size={16} />}
-            >
-                Collections
-            </ToggleGroupItem>
+            {/*<ToggleGroupItem*/}
+            {/*    className='justify-center'*/}
+            {/*    value='collections'*/}
+            {/*    icon={<FolderHeart size={16} />}*/}
+            {/*>*/}
+            {/*    Collections*/}
+            {/*</ToggleGroupItem>*/}
         </ToggleGroup>
     )
 }
