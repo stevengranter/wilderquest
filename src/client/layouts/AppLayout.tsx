@@ -19,15 +19,16 @@ export function AppLayout() {
     return (
         <SearchProvider>
             <SelectionProvider>
-            <SidebarProvider defaultOpen={true}>
-                <div className='flex flex-row'>
-                    <AiAssistant />
-                    <SidebarInset className='p-6'>
-                        <SidebarTrigger className='mr-2' />
-                        <Outlet />
-                    </SidebarInset>
-                </div>
-            </SidebarProvider>
+                <Outlet />
+                {/*<SidebarProvider defaultOpen={true}>*/}
+                {/*    <div className='flex flex-row'>*/}
+                {/*        /!*<AiAssistant />*!/*/}
+                {/*        <SidebarInset className='p-6'>*/}
+                {/*            <SidebarTrigger className='mr-2' />*/}
+                {/*            <Outlet />*/}
+                {/*        </SidebarInset>*/}
+                {/*    </div>*/}
+                {/*</SidebarProvider>*/}
             <SelectionDrawer />
             </SelectionProvider>
         </SearchProvider>
