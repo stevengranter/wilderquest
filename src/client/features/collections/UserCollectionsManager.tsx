@@ -1,11 +1,13 @@
 import { DndContext, DragEndEvent, DragOverEvent } from '@dnd-kit/core'
-import { useState } from 'react'
+import { toast } from 'sonner'
 import CollectionsList from '@/features/collections/CollectionsList'
 import TaxaList from '@/features/collections/TaxaList'
 import { useCollections } from '@/features/collections/useCollections'
 
 export default function UserCollectionsManager() {
-    const { collections, isLoading, isError } = useCollections()
+    const { collections, updateCollectionTaxa, isLoading, isError } =
+        useCollections()
+
     const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event
         if (over) {
@@ -13,10 +15,44 @@ export default function UserCollectionsManager() {
         }
     }
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event
         if (over && active.id !== over.id) {
-            console.log(`Dropped ${active.id} on ${over.id}`)
+            const overCollectionId = Number(
+                over.id.toString().replace('collection-', ''),
+            )
+            const activeTaxonId = Number(
+                active.id.toString().replace('taxon-', ''),
+            )
+
+            const targetCollection = collections.find(
+                (collection) => collection.id === overCollectionId,
+            )
+
+            if (!targetCollection) return
+
+            const currentTaxaIds = targetCollection.taxon_ids || []
+
+            // Check if taxon already exists
+            if (currentTaxaIds.includes(activeTaxonId)) {
+                toast('ℹ️ Taxon is already in the collection')
+                return
+            }
+
+            const updatedTaxaIds = [...currentTaxaIds, activeTaxonId]
+
+            const result = await updateCollectionTaxa(
+                overCollectionId,
+                updatedTaxaIds,
+            )
+
+            if (result.success) {
+                toast.success(
+                    `✅ Added taxon ${activeTaxonId} to "${targetCollection.name}"`,
+                )
+            } else {
+                toast.error(`❌ Failed to update collection: ${result.error}`)
+            }
         }
     }
 

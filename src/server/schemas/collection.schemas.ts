@@ -1,17 +1,14 @@
-import {z} from 'zod'
+import { z } from 'zod'
 
 export const CollectionSchema = z.object({
-    id: z.number().min(1),
-    user_id: z.number().min(1),
-    name: z.string().min(1),
-    description: z.string().min(10).max(128).optional(),
-    emoji: z.string().emoji().optional(),
-    // taxon_ids: z.number().array().optional(),
-    is_private: z.boolean(),
+    name: z.string(),
+    description: z.string().optional(),
+    is_private: z.boolean().default(false),
+    taxon_ids: z.array(z.number()).optional(),
+    emoji: z.string().optional(),
 })
 
-export const CollectionToTaxaSchema = z.object({
-    id: z.number().min(1),
-    collection_id: z.number().min(1),
-    taxon_id: z.number().min(1),
-})
+export type Collection = z.infer<typeof CollectionSchema> & {
+    id: number
+    user_id: number
+}

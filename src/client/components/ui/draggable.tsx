@@ -5,14 +5,14 @@ import React from 'react'
 type DraggableProps = {
     children: React.ReactNode
     className?: string
-    uniqueId: string | number
+    uniqueId: string
 }
 
 export default function Draggable({
-                                      children,
-                                      className,
-                                      uniqueId,
-                                  }: DraggableProps) {
+    children,
+    className,
+    uniqueId,
+}: DraggableProps) {
     const { attributes, listeners, setNodeRef, transform } = useDraggable({
         id: uniqueId.toString(),
     })

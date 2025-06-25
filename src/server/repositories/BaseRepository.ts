@@ -1,10 +1,10 @@
-import { RowDataPacket, Pool, ResultSetHeader } from 'mysql2/promise'
+import { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import { User } from '../models/User.js' // Import Pool type
 
 export type getColumnsOptions = {
-    orderByColumn: string;
-    order: 'desc' | 'asc';
-};
+    orderByColumn: string
+    order: 'desc' | 'asc'
+}
 
 class BaseRepository<T> {
     private tableName: string
@@ -46,7 +46,9 @@ class BaseRepository<T> {
     async update(id: number | undefined, data: object): Promise<boolean> {
         const columns = Object.keys(data)
         const values = Object.values(data)
-
+        console.log('data: ', data)
+        console.log('columns: ', columns)
+        console.log('values: ', values)
         const setClause = columns.map((col) => `${col} = ?`).join(', ')
         console.log(setClause)
         console.log({ values })
@@ -74,7 +76,10 @@ class BaseRepository<T> {
             )
             return result.affectedRows > 0
         } catch (error) {
-            console.error(`Error deleting record from ${this.tableName}:`, error)
+            console.error(
+                `Error deleting record from ${this.tableName}:`,
+                error,
+            )
             throw error
         }
     }
@@ -98,9 +103,12 @@ class BaseRepository<T> {
             const query = `SELECT *
                            FROM ${this.tableName}
                            WHERE ${whereSql}
-                           LIMIT 1`;
+                           LIMIT 1`
 
-            const [rows] = await this.dbPool.execute<RowDataPacket[]>(query, values) // Use this.dbPool directly
+            const [rows] = await this.dbPool.execute<RowDataPacket[]>(
+                query,
+                values,
+            ) // Use this.dbPool directly
 
             return rows.length > 0 ? (rows[0] as T) : null
         } catch (error) {
@@ -113,10 +121,10 @@ class BaseRepository<T> {
     async findMany(
         conditions: Partial<T>,
         options?: {
-            limit?: number;
-            offset?: number;
-            orderByColumn?: string;
-            order?: 'asc' | 'desc';
+            limit?: number
+            offset?: number
+            orderByColumn?: string
+            order?: 'asc' | 'desc'
         }
     ): Promise<T[]> {
         try {
@@ -148,7 +156,10 @@ class BaseRepository<T> {
 
             const query = `SELECT * FROM ${this.tableName} ${whereSql} ${orderBySql} ${limitSql}`
 
-            const [rows] = await this.dbPool.execute<RowDataPacket[]>(query, values)
+            const [rows] = await this.dbPool.execute<RowDataPacket[]>(
+                query,
+                values,
+            )
             return rows as T[]
         } catch (error) {
             console.error('Error in findMany method:', error)
@@ -173,35 +184,44 @@ class BaseRepository<T> {
                                                                  FROM ${this.tableName}`)
             return rows as T[]
         } catch (error) {
-            console.error(`Error fetching all records from ${this.tableName}:`, error)
+            console.error(
+                `Error fetching all records from ${this.tableName}:`,
+                error,
+            )
             throw error
         }
     }
 
-    async getColumns(columns: string[], options: getColumnsOptions): Promise<Partial<T>[]> {
+    async getColumns(
+        columns: string[],
+        options: getColumnsOptions,
+    ): Promise<Partial<T>[]> {
         try {
             const columnString = columns.join(', ')
             const order = options.order.toUpperCase() || 'ASC'
-            const [rows] = await this.dbPool.execute<RowDataPacket[]>(`SELECT ${columnString}
+            const [rows] = await this.dbPool.execute<
+                RowDataPacket[]
+            >(`SELECT ${columnString}
                                                                  FROM ${this.tableName}
                                                                  ORDER BY ${options.orderByColumn} ${order}`)
 
             return rows.map((row) => {
                 const partialT: Partial<T> = {}
                 columns.forEach((column) => {
-                    if (Object.prototype.hasOwnProperty.call(row, column)) {
+                    if (Object.hasOwn(row, column)) {
                         partialT[column as keyof T] = row[column]
                     }
-                });
+                })
                 return partialT
-            });
+            })
         } catch (error) {
-            console.error(`Error fetching columns ${columns.join(', ')} from ${this.tableName}:`, error)
+            console.error(
+                `Error fetching columns ${columns.join(', ')} from ${this.tableName}:`,
+                error,
+            )
             throw error
         }
     }
-
-
 }
 
 export default BaseRepository

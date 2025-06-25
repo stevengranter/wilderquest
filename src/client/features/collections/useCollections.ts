@@ -33,8 +33,6 @@ export function useCollections(
                 flattenedTaxa.filter((id): id is number => id !== undefined),
             ),
         ]
-
-        console.log(uniqueTaxa)
         setTaxa(uniqueTaxa)
     }, [collections])
 
@@ -93,5 +91,94 @@ export function useCollections(
         fetchCollections()
     }, [userIdFromProps, token, user])
 
-    return { collections, taxa, isError, isLoading }
+    const updateCollection = async (
+        collectionId: number | string,
+        updatedData: Partial<Collection>,
+    ): Promise<
+        | { success: true; data: Collection; message: string }
+        | { success: false; error: string }
+    > => {
+        try {
+            const response = await api.put(
+                `/collections/${collectionId}/`,
+                updatedData,
+            )
+
+            // Update local state
+            setCollections((prev) =>
+                prev.map((collection) =>
+                    collection.id === collectionId
+                        ? { ...collection, ...response.data }
+                        : collection,
+                ),
+            )
+
+            return {
+                success: true,
+                data: response.data,
+                message: 'Collection updated successfully',
+            }
+        } catch (error) {
+            const errorMsg = axios.isAxiosError(error)
+                ? error.response?.data?.message || error.message
+                : 'An unexpected error occurred.'
+            console.error('Failed to update collection:', errorMsg)
+
+            return {
+                success: false,
+                error: errorMsg,
+            }
+        }
+    }
+
+    const updateCollectionTaxa = async (
+        collectionId: number,
+        taxonIds: number[],
+    ): Promise<
+        | { success: true; data: Collection; message: string }
+        | { success: false; error: string }
+    > => {
+        try {
+            const response = await api.put(
+                `/collections/${collectionId}/taxa`,
+                {
+                    taxon_ids: taxonIds,
+                },
+            )
+
+            setCollections((prev) =>
+                prev.map((collection) =>
+                    collection.id === collectionId
+                        ? { ...collection, taxon_ids: taxonIds }
+                        : collection,
+                ),
+            )
+
+            return {
+                success: true,
+                data: response.data,
+                message: 'Taxa updated successfully in collection',
+            }
+        } catch (error) {
+            const errorMsg = axios.isAxiosError(error)
+                ? error.response?.data?.message || error.message
+                : 'An unexpected error occurred.'
+            console.error('Failed to update collection taxa:', errorMsg)
+
+            return {
+                success: false,
+                error: errorMsg,
+            }
+        }
+    }
+
+    // Add to return value
+    return {
+        collections,
+        updateCollection,
+        updateCollectionTaxa,
+        taxa,
+        isError,
+        isLoading,
+    }
 }

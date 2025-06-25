@@ -79,20 +79,36 @@ export default class CollectionRepository extends BaseRepository<Collection> {
     ): Promise<{ success: boolean }> {
         if (!taxaIds?.length) return { success: true }
 
-        const values = taxaIds.map((taxonId) => [collectionId, taxonId])
-        const placeholders = values.map(() => '(?, ?)').join(', ')
+        const connection = await this.getDb().getConnection()
 
         try {
-            await this.getDb().execute(
+            await connection.beginTransaction()
+
+            // First, delete existing relationships
+            await connection.execute(
+                'DELETE FROM collections_to_taxa WHERE collection_id = ?',
+                [collectionId],
+            )
+
+            // Then insert new ones if there are any
+            const values = taxaIds.map((taxonId) => [collectionId, taxonId])
+            const placeholders = values.map(() => '(?, ?)').join(', ')
+
+            await connection.execute(
                 `INSERT INTO collections_to_taxa (collection_id, taxon_id)
                 VALUES
                 ${placeholders}`,
                 values.flat(),
             )
+
+            await connection.commit()
             return { success: true }
         } catch (error) {
-            console.error('Error bulk inserting collection taxa:', error)
+            await connection.rollback()
+            console.error('Error updating collection taxa:', error)
             throw error
+        } finally {
+            connection.release()
         }
     }
 }

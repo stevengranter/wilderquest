@@ -1,37 +1,37 @@
 'use client'
 
-
+import { Outlet } from 'react-router'
+import AiAssistant from '@/components/chat/aiAssistant'
 import {
     SidebarInset,
     SidebarProvider,
     SidebarTrigger,
 } from '@/components/ui/sidebar'
-
-import AiAssistant from '@/components/chat/aiAssistant'
-import { Outlet } from 'react-router'
-import SelectionDrawer from '@/features/collections/SelectionDrawer'
+import { Toaster } from '@/components/ui/sonner'
 import { SearchProvider } from '@/contexts/search/SearchContext'
 import { SelectionProvider } from '@/contexts/selection/SelectionContext'
-
+import SelectionDrawer from '@/features/collections/SelectionDrawer'
 
 export function AppLayout() {
-
     return (
-        <SearchProvider>
-            <SelectionProvider>
-                <Outlet />
-                {/*<SidebarProvider defaultOpen={true}>*/}
-                {/*    <div className='flex flex-row'>*/}
-                {/*        /!*<AiAssistant />*!/*/}
-                {/*        <SidebarInset className='p-6'>*/}
-                {/*            <SidebarTrigger className='mr-2' />*/}
-                {/*            <Outlet />*/}
-                {/*        </SidebarInset>*/}
-                {/*    </div>*/}
-                {/*</SidebarProvider>*/}
-            <SelectionDrawer />
-            </SelectionProvider>
-        </SearchProvider>
+        <>
+            <SearchProvider>
+                <SelectionProvider>
+                    <Outlet />
+                    {/*<SidebarProvider defaultOpen={true}>*/}
+                    {/*    <div className='flex flex-row'>*/}
+                    {/*        /!*<AiAssistant />*!/*/}
+                    {/*        <SidebarInset className='p-6'>*/}
+                    {/*            <SidebarTrigger className='mr-2' />*/}
+                    {/*            <Outlet />*/}
+                    {/*        </SidebarInset>*/}
+                    {/*    </div>*/}
+                    {/*</SidebarProvider>*/}
+                    <SelectionDrawer />
+                </SelectionProvider>
+            </SearchProvider>
+            <Toaster />
+        </>
     )
 }
 

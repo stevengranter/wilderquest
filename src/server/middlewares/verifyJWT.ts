@@ -1,6 +1,6 @@
 import 'dotenv/config'
+import { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
-import { Request, Response, NextFunction } from 'express'
 
 export interface AuthenticatedRequest extends Request {
     headers: {
@@ -11,8 +11,8 @@ export interface AuthenticatedRequest extends Request {
 
 type TokenUserData = {
     id: number
-    cuid: string,
-    role_id: number,
+    cuid: string
+    role_id: number
 }
 
 const verifyJWT = (
@@ -20,6 +20,7 @@ const verifyJWT = (
     res: Response,
     next: NextFunction
 ) => {
+    console.log('req.body: ', req.body)
     if (!req.headers.authorization) {
         console.error('Authorization header is missing')
     }
@@ -67,7 +68,9 @@ export const optionalAuthMiddleware = (
     const authHeader = req.headers.authorization
 
     if (!authHeader) {
-        console.log('Authorization header is missing — proceeding as unauthenticated')
+        console.log(
+            'Authorization header is missing — proceeding as unauthenticated',
+        )
         return next()
     }
 

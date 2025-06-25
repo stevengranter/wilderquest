@@ -33,11 +33,9 @@ export default function CollectionsList({
                     <Droppable
                         uniqueId={`collection-${collection.id}`}
                         onOverClassName="border-2 border-pink-500"
+                        key={collection.id}
                     >
-                        <Link
-                            to={`/collections/${collection.id}`}
-                            key={collection.id}
-                        >
+                        <Link to={`/collections/${collection.id}`}>
                             <Card>
                                 <CardContent>
                                     <strong>{collection.name}</strong> (ID:{' '}

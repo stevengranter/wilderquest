@@ -20,6 +20,9 @@ export function collectionRouter(controller: CollectionController) {
     // Public: Get a single collection by ID (if it's public or user owns it)
     router.get('/:id', optionalAuthMiddleware, controller.getCollectionById)
 
+    router.put('/:id/taxa', verifyJWT, controller.updateCollectionTaxa)
+    router.patch('/:id/taxa', verifyJWT, controller.updateCollectionTaxa)
+
     router.post('/', verifyJWT, controller.createCollection)
     router.put('/:id', verifyJWT, controller.updateCollection)
     router.patch('/:id', verifyJWT, controller.updateCollection)

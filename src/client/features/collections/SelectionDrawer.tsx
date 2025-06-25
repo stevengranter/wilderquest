@@ -1,16 +1,25 @@
 import cx from 'clsx'
-import CollectionsList from '@/features/collections/CollectionsList'
-import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 import { useEffect, useMemo, useState } from 'react'
-import { Collection } from '../../../types/types'
 import { useReward } from 'react-rewards'
-import api from '@/api/api'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select' // You might need to install 'clsx' or 'cx' if you haven't already
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
+import { useSearchContext } from '@/contexts/search/SearchContext'
+import { useSelectionContext } from '@/contexts/selection/SelectionContext'
+import CollectionsList from '@/features/collections/CollectionsList'
+import MiniCard from '@/features/collections/MiniCard'
+import { useCollections } from '@/features/collections/useCollections'
+import { Collection } from '../../../types/types'
 
 type CollectionsDrawerProps = {
-    isVisible?: boolean;
-};
+    isVisible?: boolean
+}
 
 export default function SelectionDrawer({ isVisible }: CollectionsDrawerProps) {
     const { isSelectionMode } = useSelectionContext()
@@ -21,12 +30,9 @@ export default function SelectionDrawer({ isVisible }: CollectionsDrawerProps) {
                 'fixed bottom-0 left-0 right-0 p-4 flex justify-between items-center',
                 'bg-main',
                 {
-                    'hidden': !isSelectionMode, // Hide when not visible
-                    // Add other visibility/animation classes here if needed, e.g., for transitions
-                    // 'translate-y-full': !isSelectionMode, // To slide out of view
-                    // 'translate-y-0': isSelectionMode,    // To slide into view
-                    'transition-transform duration-300 ease-out': true, // For the transition effect
-                },
+                    hidden: !isSelectionMode,
+                    'transition-transform duration-300 ease-out': true,
+                }
             )}
         >
             <SelectionToolbar className='flex flex-col' />
@@ -35,25 +41,19 @@ export default function SelectionDrawer({ isVisible }: CollectionsDrawerProps) {
     )
 }
 
-
-
-
 function CollectionPicker() {
-    const [collections, setCollections] = useState<Collection[]>([])
-    const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null)
+    const { collections, updateCollectionTaxa } = useCollections()
+    const [selectedCollection, setSelectedCollection] =
+        useState<Collection | null>(null)
     const [currentEmoji, setCurrentEmoji] = useState('🙌')
+    const { selectedIds } = useSelectionContext()
 
     const { reward, isAnimating } = useReward('rewardId', 'emoji', {
         emoji: [currentEmoji],
-        // rotate: false,
         elementCount: 30,
         spread: 60,
         lifetime: 100,
     })
-
-    useEffect(() => {
-        api.get(`/collections/mine`).then(res => setCollections(res.data))
-    }, [])
 
     useEffect(() => {
         if (selectedCollection?.emoji) {
@@ -61,35 +61,59 @@ function CollectionPicker() {
         }
     }, [selectedCollection])
 
-    const handleAddAllToCollection = () => {
-        // console.log('Selected collection: ', selectedCollection)
+    const handleAddAllToCollection = async () => {
+        if (!selectedCollection) {
+            toast.error('Please select a collection first')
+            return
+        }
 
-        // Delay to next frame so layout settles before animation starts
-        requestAnimationFrame(() => {
+        // Convert selectedIds strings to numbers and filter out any invalid conversions
+        const taxonIds = selectedIds
+            .map((id) => parseInt(id))
+            .filter((id) => !isNaN(id))
+
+        // Get current taxon_ids from selected collection and merge with new ones
+        const currentTaxonIds = selectedCollection.taxon_ids || []
+        const uniqueTaxonIds = [...new Set([...currentTaxonIds, ...taxonIds])]
+
+        const result = await updateCollectionTaxa(
+            selectedCollection.id,
+            uniqueTaxonIds,
+        )
+
+        if (result.success) {
             reward()
-        })
+            toast.success(
+                `Added ${taxonIds.length} items to "${selectedCollection.name}"`,
+            )
+        } else {
+            toast.error(`Failed to update collection: ${result.error}`)
+        }
     }
 
     return (
         <>
-
             <div id='rewardId' className='ml-20'></div>
             <div className='flex flex-col'>
-            <CollectionSelect
-                collections={collections}
-                setCollections={setCollections}
-                selectedCollection={selectedCollection}
-                setSelectedCollection={setSelectedCollection}
-            />
-            <Button disabled={isAnimating} onClick={handleAddAllToCollection}>
-                Add all to collection
-            </Button>
+                <CollectionSelect
+                    collections={collections}
+                    selectedCollection={selectedCollection}
+                    setSelectedCollection={setSelectedCollection}
+                />
+                <Button
+                    disabled={
+                        isAnimating ||
+                        !selectedCollection ||
+                        selectedIds.length === 0
+                    }
+                    onClick={handleAddAllToCollection}
+                >
+                    Add all to collection
+                </Button>
             </div>
-
         </>
     )
 }
-
 
 function CollectionSelect({
                               collections,
@@ -97,7 +121,6 @@ function CollectionSelect({
                               setSelectedCollection,
                           }: {
     collections: Collection[]
-    setCollections: (collections: Collection[]) => void
     selectedCollection: Collection | null
     setSelectedCollection: (collection: Collection | null) => void
 }) {
@@ -106,7 +129,6 @@ function CollectionSelect({
             onValueChange={(value) => {
                 const collection = collections.find((c) => c.name === value)
                 setSelectedCollection(collection ?? null)
-                console.log('Selected collection: ', collection)
             }}
             value={selectedCollection?.name ?? ''}
         >
@@ -124,63 +146,27 @@ function CollectionSelect({
     )
 }
 
-
 function SelectionToolbar({ className }: { className?: string }) {
     const { results } = useSearchContext()
-    const { selectedIds, setSelectedIds, removeIdFromSelection } = useSelectionContext()
+    const { selectedIds, setSelectedIds, removeIdFromSelection } =
+        useSelectionContext()
 
     const selectedResults = useMemo(() => {
         if (!results) return []
-        const resultsArray = results.results.filter(result => selectedIds.includes(result.id.toString()))
+        const resultsArray = results.results.filter((result) =>
+            selectedIds.includes(result.id.toString()),
+        )
         return resultsArray
     }, [selectedIds, results])
 
-    useEffect(() => {
-        console.log('Selected IDs:', selectedIds)
-        console.log('Results:', results)
-        console.log(results)
-    }, [selectedIds])
-
-
-    function handleAddAllToCollection() {
-        console.log('handleAddAllToCollection not yet implemented')
-    }
-
-    return (<div className={className}>
-
-            <h3 className='dark:text-main-foreground'>Selected items:</h3>
-            <div
-                className='grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12'>{selectedResults.map(result =>
-                <MiniCard
-                data={result}
-                className='w-20' />)}</div>
-        </div>
-
-    )
-}
-
-import { useSearchContext } from '@/contexts/search/SearchContext'
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
-import { SpeciesCard } from '@/components/cards/SpeciesCard'
-
-function MiniCard({ data, className }: { data?: any, className?: string }) {
     return (
-        <Dialog>
-            <DialogTrigger>
-                <img
-                    src={data?.default_photo?.medium_url}
-                    alt={data?.name}
-                    className='mx-3 ml-0 my-2 mr-3 h-8 sm:h-10  md:h-14
-                    object-cover aspect-square rounded-lg
-                    border-black border-2 shadow-shadow
-                    '
-                />
-            </DialogTrigger>
-            <DialogContent>
-                <SpeciesCard species={data} isSelectable={false} />
-            </DialogContent>
-        </Dialog>
-
-
+        <div className={className}>
+            <h3 className='dark:text-main-foreground'>Selected items:</h3>
+            <div className='grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12'>
+                {selectedResults.map((result) => (
+                    <MiniCard key={result.id} data={result} className='w-20' />
+                ))}
+            </div>
+        </div>
     )
 }

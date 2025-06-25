@@ -59,7 +59,9 @@ export class CollectionService {
         collectionId: number,
         updateData: UpdateCollectionInput,
     ): Promise<CollectionModel | null> {
-        const collection = await this.requireOwnedCollection(collectionId)
+        const authorized = await this.requireOwnedCollection(collectionId)
+        if (!authorized) return null
+        console.log('update data: ', updateData)
         const success = await this.collectionRepo.update(
             collectionId,
             updateData,
@@ -67,6 +69,24 @@ export class CollectionService {
         return success
             ? this.collectionRepo.findOne({ id: collectionId })
             : null
+    }
+
+    async updateCollectionTaxa(
+        collectionId: number,
+        taxon_ids: number[],
+    ): Promise<CollectionModel | null> {
+        const authorized = await this.requireOwnedCollection(collectionId)
+        if (!authorized) return null
+
+        console.log('Updating collection taxa:', { collectionId, taxon_ids })
+        await this.collectionRepo.updateCollectionItems(collectionId, taxon_ids)
+
+        const collection = await this.collectionRepo.findOne({
+            id: collectionId,
+        })
+        if (!collection) return null
+
+        return this.addTaxaToCollection(collection)
     }
 
     async deleteCollection(collectionId: number): Promise<boolean> {
@@ -80,7 +100,8 @@ export class CollectionService {
         return this.collectionRepo.findTaxaByCollectionId(collectionId)
     }
 
-    private async addTaxaToCollection(
+    // Add this to the public methods
+    async addTaxaToCollection(
         collection: Collection,
     ): Promise<Collection & { taxon_ids: number[] }> {
         const taxa = await this.getTaxaByCollectionId(collection.id)

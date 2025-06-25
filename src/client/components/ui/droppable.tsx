@@ -5,7 +5,7 @@ type DroppableProps = {
     children: React.ReactNode
     className?: string
     onOverClassName?: string
-    uniqueId: string | number
+    uniqueId: string
 }
 
 export default function Droppable({
