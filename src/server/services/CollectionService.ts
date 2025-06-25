@@ -15,31 +15,30 @@ type CollectionModel = z.infer<typeof CollectionSchema> & {
 export class CollectionService {
     constructor(
         private collectionRepo: CollectionRepositoryInstance,
-        private userId: number | null,
-    ) {
-    }
+        private userId: number | null
+    ) {}
 
     async getAllPublicCollections(): Promise<CollectionModel[]> {
         return this.collectionRepo.findAllPublic()
     }
 
     async getPublicCollectionById(
-        collectionId: number,
+        collectionId: number
     ): Promise<(CollectionModel & { taxon_ids: number[] }) | null> {
         const collection = await this.collectionRepo.findOne({
             id: collectionId,
             is_private: false,
         })
-        return collection ? this.addTaxaToCollection(collection) : null
+        return collection ? this.enrichCollectionWithTaxa(collection) : null
     }
 
     async findCollectionsByUserId(userId: number) {
         const raw = await this.collectionRepo.findByUserId(userId)
-        return this.enrichCollectionsWithTaxa(raw)
+        return this.enrichAllCollectionsWithTaxa(raw)
     }
 
     async createCollection(
-        data: CreateCollectionInput,
+        data: CreateCollectionInput
     ): Promise<CollectionModel> {
         this.ensureAuthorized()
 
@@ -57,14 +56,14 @@ export class CollectionService {
 
     async updateCollection(
         collectionId: number,
-        updateData: UpdateCollectionInput,
+        updateData: UpdateCollectionInput
     ): Promise<CollectionModel | null> {
         const authorized = await this.requireOwnedCollection(collectionId)
         if (!authorized) return null
         console.log('update data: ', updateData)
         const success = await this.collectionRepo.update(
             collectionId,
-            updateData,
+            updateData
         )
         return success
             ? this.collectionRepo.findOne({ id: collectionId })
@@ -73,7 +72,7 @@ export class CollectionService {
 
     async updateCollectionTaxa(
         collectionId: number,
-        taxon_ids: number[],
+        taxon_ids: number[]
     ): Promise<CollectionModel | null> {
         const authorized = await this.requireOwnedCollection(collectionId)
         if (!authorized) return null
@@ -86,32 +85,35 @@ export class CollectionService {
         })
         if (!collection) return null
 
-        return this.addTaxaToCollection(collection)
+        return this.enrichCollectionWithTaxa(collection)
     }
 
     async deleteCollection(collectionId: number): Promise<boolean> {
-        const _ = await this.requireOwnedCollection(collectionId)
+        const authorized = await this.requireOwnedCollection(collectionId)
+        if (!authorized) return false
         return this.collectionRepo.delete(collectionId)
     }
 
     async getTaxaByCollectionId(
-        collectionId: number,
+        collectionId: number
     ): Promise<CollectionToTaxa[]> {
         return this.collectionRepo.findTaxaByCollectionId(collectionId)
     }
 
     // Add this to the public methods
-    async addTaxaToCollection(
-        collection: Collection,
+    async enrichCollectionWithTaxa(
+        collection: Collection
     ): Promise<Collection & { taxon_ids: number[] }> {
         const taxa = await this.getTaxaByCollectionId(collection.id)
         return { ...collection, taxon_ids: taxa.map((t) => t.taxon_id) }
     }
 
-    private async enrichCollectionsWithTaxa(
-        collections: Collection[],
+    private async enrichAllCollectionsWithTaxa(
+        collections: Collection[]
     ): Promise<(Collection & { taxon_ids: number[] })[]> {
-        return Promise.all(collections.map((c) => this.addTaxaToCollection(c)))
+        return Promise.all(
+            collections.map((c) => this.enrichCollectionWithTaxa(c))
+        )
     }
 
     private ensureAuthorized(): void {
@@ -123,7 +125,7 @@ export class CollectionService {
     }
 
     private async requireOwnedCollection(
-        collectionId: number,
+        collectionId: number
     ): Promise<CollectionModel> {
         const collection = await this.collectionRepo.findOne({
             id: collectionId,

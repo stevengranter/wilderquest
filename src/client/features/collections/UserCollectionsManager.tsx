@@ -19,14 +19,14 @@ export default function UserCollectionsManager() {
         const { active, over } = event
         if (over && active.id !== over.id) {
             const overCollectionId = Number(
-                over.id.toString().replace('collection-', ''),
+                over.id.toString().replace('collection-', '')
             )
             const activeTaxonId = Number(
-                active.id.toString().replace('taxon-', ''),
+                active.id.toString().replace('taxon-', '')
             )
 
             const targetCollection = collections.find(
-                (collection) => collection.id === overCollectionId,
+                (collection) => collection.id === overCollectionId
             )
 
             if (!targetCollection) return
@@ -35,7 +35,7 @@ export default function UserCollectionsManager() {
 
             // Check if taxon already exists
             if (currentTaxaIds.includes(activeTaxonId)) {
-                toast('ℹ️ Taxon is already in the collection')
+                toast.info('Taxon is already in the collection')
                 return
             }
 
@@ -43,15 +43,15 @@ export default function UserCollectionsManager() {
 
             const result = await updateCollectionTaxa(
                 overCollectionId,
-                updatedTaxaIds,
+                updatedTaxaIds
             )
 
             if (result.success) {
                 toast.success(
-                    `✅ Added taxon ${activeTaxonId} to "${targetCollection.name}"`,
+                    `Added taxon ${activeTaxonId} to "${targetCollection.name}"`
                 )
             } else {
-                toast.error(`❌ Failed to update collection: ${result.error}`)
+                toast.error(`Failed to update collection: ${result.error}`)
             }
         }
     }

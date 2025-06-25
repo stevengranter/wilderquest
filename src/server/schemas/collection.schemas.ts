@@ -1,6 +1,14 @@
 import { z } from 'zod'
 
+export const CollectionToTaxaSchema = z.object({
+    id: z.number(),
+    collection_id: z.number(),
+    taxon_id: z.number(),
+})
+
 export const CollectionSchema = z.object({
+    id: z.number(),
+    user_id: z.number(),
     name: z.string(),
     description: z.string().optional(),
     is_private: z.boolean().default(false),

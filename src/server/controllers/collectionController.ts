@@ -6,12 +6,12 @@ import { CollectionSchema } from '../schemas/collection.schemas.js'
 import { CollectionService } from '../services/CollectionService.js'
 
 export function createCollectionController(
-    collectionRepo: CollectionRepositoryInstance,
+    collectionRepo: CollectionRepositoryInstance
 ) {
     return {
         async getAllPublicCollections(
             req: Request,
-            res: Response,
+            res: Response
         ): Promise<void> {
             try {
                 const service = new CollectionService(collectionRepo, null)
@@ -58,7 +58,7 @@ export function createCollectionController(
 
                 // If we get here, either the collection is public or the user is authorized
                 const enrichedCollection =
-                    await service.addTaxaToCollection(collection)
+                    await service.enrichCollectionWithTaxa(collection)
                 res.json(enrichedCollection)
             } catch (error) {
                 res.status(500).json({
@@ -70,7 +70,7 @@ export function createCollectionController(
 
         async getCollectionsByUserId(
             req: AuthenticatedRequest,
-            res: Response,
+            res: Response
         ): Promise<void> {
             console.log(req.user)
             try {
@@ -90,7 +90,7 @@ export function createCollectionController(
 
                 const service = new CollectionService(
                     collectionRepo,
-                    authenticatedUserId,
+                    authenticatedUserId
                 )
                 const collections =
                     await service.findCollectionsByUserId(targetUserId)
@@ -106,7 +106,7 @@ export function createCollectionController(
 
         async createCollection(
             req: AuthenticatedRequest,
-            res: Response,
+            res: Response
         ): Promise<void> {
             try {
                 const userId = req.user?.id
@@ -123,7 +123,7 @@ export function createCollectionController(
 
                 const service = new CollectionService(collectionRepo, userId)
                 const newCollection = await service.createCollection(
-                    parsedBody.data,
+                    parsedBody.data
                 )
 
                 res.status(201).json({
@@ -140,12 +140,12 @@ export function createCollectionController(
 
         async updateCollection(
             req: AuthenticatedRequest,
-            res: Response,
+            res: Response
         ): Promise<void> {
             try {
                 console.log(
                     'from controller.updateCollection -- req.body: ',
-                    req.body,
+                    req.body
                 )
                 console.log('req.user: ', req.user)
                 const userId = req.user?.id
@@ -161,7 +161,7 @@ export function createCollectionController(
                 }
 
                 const parsedBody = CollectionSchema.partial().safeParse(
-                    req.body,
+                    req.body
                 )
                 if (!parsedBody.success) {
                     res.status(400).send(parsedBody.error.issues)
@@ -171,7 +171,7 @@ export function createCollectionController(
                 const service = new CollectionService(collectionRepo, userId)
                 const updatedCollection = await service.updateCollection(
                     collectionId,
-                    parsedBody.data,
+                    parsedBody.data
                 )
 
                 if (updatedCollection) {
@@ -195,7 +195,7 @@ export function createCollectionController(
 
         async deleteCollection(
             req: AuthenticatedRequest,
-            res: Response,
+            res: Response
         ): Promise<void> {
             try {
                 const userId = req.user?.id
@@ -230,7 +230,7 @@ export function createCollectionController(
         },
         async updateCollectionTaxa(
             req: AuthenticatedRequest,
-            res: Response,
+            res: Response
         ): Promise<void> {
             try {
                 const userId = req.user?.id
@@ -255,7 +255,7 @@ export function createCollectionController(
                 const service = new CollectionService(collectionRepo, userId)
                 const updatedCollection = await service.updateCollectionTaxa(
                     collectionId,
-                    parsedBody.data,
+                    parsedBody.data
                 )
 
                 if (updatedCollection) {
