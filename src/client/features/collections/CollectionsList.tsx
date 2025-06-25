@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import api from '@/api/api'
 import { Card, CardContent } from '@/components/ui/card'
+import Droppable from '@/components/ui/droppable'
 import { useCollections } from '@/features/collections/useCollections'
 import { useAuth } from '@/hooks/useAuth'
 import { Collection } from './collection.types'
@@ -29,21 +30,30 @@ export default function CollectionsList({
         <div>
             <div className="flex">
                 {collections?.map((collection) => (
-                    <Link
-                        to={`/collections/${collection.id}`}
-                        key={collection.id}
+                    <Droppable
+                        uniqueId={`collection-${collection.id}`}
+                        onOverClassName="border-2 border-pink-500"
                     >
-                        <Card>
-                            <CardContent>
-                                <strong>{collection.name}</strong> (ID:{' '}
-                                {collection.id})
-                                {collection.is_private
-                                    ? ' (Private)'
-                                    : ' (Public)'}
-                                <p>{collection.description}</p>
-                            </CardContent>
-                        </Card>
-                    </Link>
+                        <Link
+                            to={`/collections/${collection.id}`}
+                            key={collection.id}
+                        >
+                            <Card>
+                                <CardContent>
+                                    <strong>{collection.name}</strong> (ID:{' '}
+                                    {collection.id})
+                                    {collection.is_private
+                                        ? ' (Private)'
+                                        : ' (Public)'}
+                                    <p>{collection.description}</p>
+                                    <p>
+                                        Total taxa:
+                                        {collection?.taxon_ids?.length}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </Link>
+                    </Droppable>
                 ))}
             </div>
         </div>

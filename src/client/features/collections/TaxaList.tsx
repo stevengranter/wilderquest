@@ -1,3 +1,4 @@
+import Draggable from '@/components/ui/draggable'
 import { Collection } from './collection.types'
 
 export default function TaxaList({
@@ -23,16 +24,22 @@ export default function TaxaList({
         <>
             <h2>⚛️ TaxaList</h2>
             <p>Taxon IDs (with collections):</p>
-            <ul>
+            <ul className="flex flex-wrap gap-2 p-0">
                 {uniqueTaxonIds.map((taxon_id) => (
-                    <li key={taxon_id}>
-                        {taxon_id} —{' '}
-                        <em>
-                            {Array.from(
-                                taxonIdToCollections.get(taxon_id)!
-                            ).join(', ')}
-                        </em>
-                    </li>
+                    <Draggable
+                        key={taxon_id}
+                        uniqueId={`taxon-${taxon_id}`}
+                        className="w-max"
+                    >
+                        <li className="border border-red-200 px-2 py-1 rounded w-max list-none">
+                            {taxon_id} —{' '}
+                            <em>
+                                {Array.from(
+                                    taxonIdToCollections.get(taxon_id)!
+                                ).join(', ')}
+                            </em>
+                        </li>
+                    </Draggable>
                 ))}
             </ul>
         </>
