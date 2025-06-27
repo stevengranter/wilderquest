@@ -11,12 +11,14 @@ import { Toaster } from '@/components/ui/sonner'
 import { SearchProvider } from '@/contexts/search/SearchContext'
 import { SelectionProvider } from '@/contexts/selection/SelectionContext'
 import SelectionDrawer from '@/features/collections/SelectionDrawer'
+import UserToolbar from '@/features/login/UserToolbar'
 
 export function AppLayout() {
     return (
         <>
             <SearchProvider>
                 <SelectionProvider>
+                    <UserToolbar />
                     <Outlet />
                     {/*<SidebarProvider defaultOpen={true}>*/}
                     {/*    <div className='flex flex-row'>*/}

@@ -5,23 +5,21 @@ import {
     useEffect,
     useState,
 } from 'react'
+import { toast } from '@/hooks/use-toast.js'
 import { authApi } from '@/services/authApi.js'
 import { tokenManager } from '@/services/tokenManager.js'
-import { handleError } from '@/helpers/errorHandler.js'
-import { toast } from '@/hooks/use-toast.js'
-import {
-    LoginRequestBody,
-    RegisterRequestBody,
-} from '../../types/types.js'
 import type {
     LoggedInUser,
     LoginResponseData,
     RegisterResponseData,
 } from '../../shared/types/authTypes.js'
+import { LoginRequestBody, RegisterRequestBody } from '../../types/types.js'
 
 type AuthContextType = {
     isAuthenticated: boolean
-    login: (credentials: LoginRequestBody) => Promise<LoginResponseData | undefined>
+    login: (
+        credentials: LoginRequestBody
+    ) => Promise<LoginResponseData | undefined>
     logout: () => void
     register: (
         registrationData: RegisterRequestBody
@@ -31,7 +29,6 @@ type AuthContextType = {
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
-
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<LoggedInUser | null>(null)
@@ -56,10 +53,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const login = async (credentials: LoginRequestBody) => {
         try {
             const response = await authApi.login(credentials)
-            console.log({ response })
-            if (!response) {
+            console.log(response)
+            if (!response || !response.user) {
                 setIsAuthenticated(false)
-                handleError('Login failed')
+                // handleError('Could not log in')
                 return
             }
 
@@ -68,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return response
         } catch (error) {
             setIsAuthenticated(false)
-            handleError(`Login error in AuthProvider: ${error}`)
+            // handleError(`Login error in AuthProvider: ${error}`)
             throw error
         }
     }
@@ -95,7 +92,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, logout, register, user, token }}>
+        <AuthContext.Provider
+            value={{ isAuthenticated, login, logout, register, user, token }}
+        >
             {children}
         </AuthContext.Provider>
     )

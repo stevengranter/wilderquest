@@ -1,9 +1,10 @@
 // Define custom error classes for better error handling
-import { UserRepositoryInstance } from '../repositories/UserRepository.js'
-import { compareSync, genSaltSync, hashSync } from 'bcrypt-ts'
+
 import { createId } from '@paralleldrive/cuid2'
-import { User } from '../models/User.js'
+import { compareSync, genSaltSync, hashSync } from 'bcrypt-ts'
 import jwt from 'jsonwebtoken'
+import { User } from '../models/User.js'
+import { UserRepositoryInstance } from '../repositories/UserRepository.js'
 
 // Ensure your environment variables are correctly loaded
 // For a real application, consider a configuration library (e.g., dotenv)
@@ -16,7 +17,6 @@ type PublicUser = {
     user_cuid: string
     role_id: number
 }
-
 
 export class UserExistsError extends Error {
     constructor(message: string) {
@@ -69,30 +69,44 @@ export class TokenError extends Error {
 }
 
 // Instantiate a InstanceType for TypeScript completions
-type AuthServiceConstructor = typeof AuthService;
-export type AuthServiceInstance = InstanceType<AuthServiceConstructor>;
-
+type AuthServiceConstructor = typeof AuthService
+export type AuthServiceInstance = InstanceType<AuthServiceConstructor>
 
 export default class AuthService {
     constructor(private userRepository: UserRepositoryInstance) {
         // Ensure environment variables are set before proceeding
-        if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
-            console.error('Missing ACCESS_TOKEN_SECRET or REFRESH_TOKEN_SECRET environment variables.')
+        if (
+            !process.env.ACCESS_TOKEN_SECRET ||
+            !process.env.REFRESH_TOKEN_SECRET
+        ) {
+            console.error(
+                'Missing ACCESS_TOKEN_SECRET or REFRESH_TOKEN_SECRET environment variables.',
+            )
             // In a real app, you might want to throw an error or handle this more gracefully
             // For now, it's a console error to highlight the issue.
         }
     }
 
-
-    register = async (username: string, email: string, password: string): Promise<{
-        username: string;
-        email: string | undefined;
-        user_cuid: string;
+    register = async (
+        username: string,
+        email: string,
+        password: string,
+    ): Promise<{
+        username: string
+        email: string | undefined
+        user_cuid: string
         role_id: number
     }> => {
-
-        const emailExists = (await this.userRepository.findRowByColumnAndValue('email', email)).length > 0
-        const usernameExists = (await this.userRepository.findRowByColumnAndValue('username', username)).length > 0
+        const emailExists =
+            (await this.userRepository.findRowByColumnAndValue('email', email))
+                .length > 0
+        const usernameExists =
+            (
+                await this.userRepository.findRowByColumnAndValue(
+                    'username',
+                    username,
+                )
+            ).length > 0
 
         if (emailExists || usernameExists) {
             // Throw a custom error instead of sending a response
@@ -133,9 +147,13 @@ export default class AuthService {
         }
     }
 
-    login = async (username: string, password: string) => { // Added type annotations for clarity
+    login = async (username: string, password: string) => {
+        // Added type annotations for clarity
 
-        const foundUser = await this.userRepository.findRowByColumnAndValue('username', username) as User[]
+        const foundUser = (await this.userRepository.findRowByColumnAndValue(
+            'username',
+            username,
+        )) as User[]
         if (foundUser.length === 0) {
             throw new UserNotFoundError('User not found')
         }
@@ -167,7 +185,9 @@ export default class AuthService {
             })
 
             return {
-                user: { // Nest user details under a 'user' key for consistency with loginResult in controller
+                success: true,
+                user: {
+                    // Nest user details under a 'user' key for consistency with loginResult in controller
                     id: user.id,
                     username: user.username,
                     email: user.email,
@@ -187,7 +207,9 @@ export default class AuthService {
         const loggedInUser = await this.login(username, password)
 
         if (!loggedInUser) {
-            throw new AuthenticationError('User registered but failed to authenticate')
+            throw new AuthenticationError(
+                'User registered but failed to authenticate',
+            )
         }
 
         return loggedInUser
@@ -216,15 +238,21 @@ export default class AuthService {
      * @returns A new access token if the refresh token is valid.
      * @throws TokenError if the token is invalid or expired, or user not found.
      */
-    refreshToken = async (user_cuid: string, refreshToken: string): Promise<{
-        accessToken: string,
+    refreshToken = async (
+        user_cuid: string,
+        refreshToken: string,
+    ): Promise<{
+        accessToken: string
         refreshToken: string
     }> => {
         if (!user_cuid || !refreshToken) {
             throw new TokenError('Missing user CUID or refresh token.')
         }
 
-        const foundUser = await this.userRepository.findRowByColumnAndValue('user_cuid', user_cuid) as User[]
+        const foundUser = (await this.userRepository.findRowByColumnAndValue(
+            'user_cuid',
+            user_cuid,
+        )) as User[]
 
         if (foundUser.length === 0) {
             throw new UserNotFoundError('User not found for provided CUID.')
@@ -241,19 +269,23 @@ export default class AuthService {
         // 2. Verify the refresh token's authenticity and expiration
         let decoded: jwt.JwtPayload
         try {
-            decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as jwt.JwtPayload
+            decoded = jwt.verify(
+                refreshToken,
+                process.env.REFRESH_TOKEN_SECRET!,
+            ) as jwt.JwtPayload
 
             // Optional: Check if the decoded user ID/CUID matches the requested one,
             // though the initial DB lookup already ensures this.
             if (decoded.cuid !== user.user_cuid || decoded.id !== user.id) {
                 throw new TokenError('Refresh token payload mismatch.')
             }
-
         } catch (err) {
             // Token is expired, invalid, or malformed
             // Clear the refresh token from the database if it's expired or invalid
             await this.userRepository.update(user.id, { refresh_token: '' })
-            throw new TokenError('Refresh token is invalid or expired. Please log in again.')
+            throw new TokenError(
+                'Refresh token is invalid or expired. Please log in again.',
+            )
         }
 
         // 3. Generate a new Access Token
@@ -272,10 +304,11 @@ export default class AuthService {
             process.env.REFRESH_TOKEN_SECRET!,
             { expiresIn: '1d' },
         )
-        await this.userRepository.update(user.id, { refresh_token: newRefreshToken })
+        await this.userRepository.update(user.id, {
+            refresh_token: newRefreshToken,
+        })
 
         return { accessToken: newAccessToken, refreshToken: newRefreshToken }
-
 
         // return newAccessToken;
     }

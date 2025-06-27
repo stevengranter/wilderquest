@@ -1,6 +1,6 @@
 // types/authTypes.d.ts
 
-import {AxiosResponse} from 'axios'
+import { AxiosResponse } from 'axios'
 
 export interface RegisterResponseData {
     userCuid: string
@@ -17,14 +17,16 @@ export interface LoginRequest {
 }
 
 export type LoggedInUser = {
-    id: number,
-    username: string,
-    email: string,
-    role: number,
-    cuid: string,
+    id: number
+    username: string
+    email: string
+    role: number
+    cuid: string
 }
 
 export interface LoginResponseData {
+    success: boolean
+    message?: string
     user: LoggedInUser
     access_token: string
     refresh_token: string
