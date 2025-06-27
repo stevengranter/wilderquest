@@ -1,41 +1,64 @@
-// Based on ErrorHandler.tsx by teddysmithdev
-// https://github.com/teddysmithdev/FinShark/blob/master/frontend/src/Helpers/ErrorHandler.tsx
-
-import axios, { AxiosError } from 'axios'
-import { data } from 'react-router'
+import axios from 'axios'
 import { toast } from 'sonner'
-import { string } from 'zod'
 
-export const handleError = (error: AxiosError | { message?: string }) => {
+export const handleError = (error: unknown) => {
+    const isProduction = process.env.NODE_ENV === 'production'
+
+    // First, check if it's an AxiosError
     if (axios.isAxiosError(error)) {
         const err = error.response
         if (Array.isArray(err?.data.errors)) {
             for (const val of err.data.errors) {
-                // toast({
-                //     title: 'Error',
-                //     description: val.description,
-                // })
-                console.log(val.message)
+                if (!isProduction) {
+                    console.log('Axios validation error:', val.message)
+                }
+                toast.error(
+                    val.description ||
+                    val.message ||
+                    'A validation error occurred.',
+                )
             }
         } else if (typeof err?.data.errors === 'object') {
             for (const e in err?.data.errors) {
-                toast(err.data.errors[e][0])
-                console.log(err.data.errors[e][0])
+                const errorMessage = err.data.errors[e][0]
+                toast.error(errorMessage)
+                if (!isProduction) {
+                    console.log('Axios object error:', errorMessage)
+                }
             }
         } else if (err?.data) {
-            console.log(err)
-            toast.error(err.data.message)
-            // console.log(err.data.message)
-        } else if (err?.status == 401) {
-            // toast({ title: 'Error', description: 'Please login' })
-            console.log('Please login')
+            if (!isProduction) {
+                console.log('Axios data error:', err)
+            }
+            toast.error(err.data.message || 'An unexpected error occurred.')
+        } else if (err?.status === 401) {
+            if (!isProduction) {
+                console.log('Axios 401 error: Please login')
+            }
+            toast.error('Please login to continue.')
             window.history.pushState({}, 'LoginPage', '/login')
+        } else {
+            // Fallback for other Axios errors without specific data/status handling
+            if (!isProduction) {
+                console.log('Generic Axios error:', error.message || error)
+            }
+            toast.error(error.message || 'An Axios error occurred.')
         }
-    } else if (error?.message) {
-        console.log(error.message)
+    }
+    // Next, check if it's a standard JavaScript Error
+    else if (error instanceof Error) {
+        if (!isProduction) {
+            console.log('Standard Error:', error.message)
+        }
         toast.error(error.message)
-    } else if (error) {
-        // console.log(err)
-        toast.error(error)
+    }
+    // Finally, handle anything else (could be a string, number, null, undefined, etc.)
+    else {
+        const errorMessage =
+            typeof error === 'string' ? error : 'An unknown error occurred.'
+        if (!isProduction) {
+            console.log('Unknown Error:', error)
+        }
+        toast.error(errorMessage)
     }
 }

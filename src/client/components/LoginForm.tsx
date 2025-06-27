@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createNameId } from 'mnemonic-id'
-import React, { useState } from 'react'
+import React from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -16,13 +16,12 @@ import {
     FormMessage,
 } from '@/components/ui/form.js'
 import { Input } from '@/components/ui/input.js'
-import { handleError } from '@/helpers/errorHandler'
 import { useAuth } from '@/hooks/useAuth.js'
 import { LoginRequestSchema } from '../../shared/schemas/Auth'
 
 const LoginForm = React.forwardRef(() => {
     const navigate = useNavigate()
-    const { login } = useAuth()
+    const { isAuthenticated, login } = useAuth()
 
     const form = useForm<z.infer<typeof LoginRequestSchema>>({
         resolver: zodResolver(LoginRequestSchema),
@@ -39,17 +38,25 @@ const LoginForm = React.forwardRef(() => {
             // Use optional chaining here as well if 'response' can be undefined
             toast.success('Logged in successfully!')
             navigate('/welcome')
-        } else {
-            // If response is undefined, we'll hit the default message anyway
-            const errorMessage =
-                response?.message ?? 'Login failed. Please try again.'
-
+        } else if (
+            response?.message?.includes('User not found') ||
+            response?.message?.includes('Incorrect password')
+        ) {
             // Display on form
             form.setError('root.serverError', {
                 type: 'server',
-                message: errorMessage,
+                message: 'User not found or incorrect password.',
+            })
+        } else {
+            form.setError('root.serverError', {
+                type: 'server',
+                message: 'User not found or incorrect password.',
             })
         }
+    }
+
+    if (isAuthenticated) {
+        return 'Already logged in!'
     }
 
     return (

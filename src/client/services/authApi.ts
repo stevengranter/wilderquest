@@ -2,6 +2,8 @@
 
 import axios from 'axios'
 import { jwtDecode } from 'jwt-decode'
+import { z } from 'zod'
+import api from '@/api/api'
 import { handleError } from '@/helpers/errorHandler.js'
 import { DecodedToken, DecodedTokenSchema } from '@/models/token.js'
 import {
@@ -12,14 +14,15 @@ import type {
     LoginResponseData,
     RegisterResponseData,
 } from '../../shared/types/authTypes.js'
-import { z } from 'zod'
 import { tokenManager } from './tokenManager'
-import api from '@/api/api'
 
 export const authApi = {
     async register(credentials: z.infer<typeof RegisterRequestSchema>) {
         try {
-            const { data, status } = await api.post('/auth/register', credentials)
+            const { data, status } = await api.post(
+                '/auth/register',
+                credentials,
+            )
             if (status === 201) return data as RegisterResponseData
             handleError(Error(`Unexpected response status: ${status}`))
         } catch (err) {
@@ -39,11 +42,14 @@ export const authApi = {
             tokenManager.setUser(user)
             tokenManager.setAccessToken(accessToken)
             tokenManager.setRefreshToken(refreshToken)
-            axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
+            axios.defaults.headers.common['Authorization'] =
+                `Bearer ${accessToken}`
             return data as LoginResponseData
-        } catch (err) {
+        } catch (err: unknown) {
+            // Explicitly type err as unknown
+            // Now, safely check if it's an AxiosError or a generic Error
             handleError(err)
-            return null
+            return
         }
     },
 
@@ -53,8 +59,9 @@ export const authApi = {
             if (user?.cuid) {
                 await api.post('/auth/logout', { user_cuid: user.cuid })
             }
-        } catch (err) {
+        } catch (err: unknown) {
             handleError(err)
+            return
         } finally {
             tokenManager.clearAll()
             delete axios.defaults.headers.common['Authorization']
@@ -84,7 +91,8 @@ export const authApi = {
             }
             tokenManager.setAccessToken(data.access_token)
             tokenManager.setRefreshToken(data.refresh_token)
-            axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`
+            axios.defaults.headers.common['Authorization'] =
+                `Bearer ${data.access_token}`
         } catch (error) {
             console.error('Error during token refresh:', error)
             tokenManager.clearAll()
