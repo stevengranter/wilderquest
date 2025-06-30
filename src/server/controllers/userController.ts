@@ -1,6 +1,5 @@
-import { Request, Response } from 'express'
+import { type Request, type Response } from 'express'
 import { UserRepositoryInstance } from '../repositories/UserRepository.js'
-import { asyncHandler } from '../utils/asyncHandler.js'
 
 export interface UserController {
     getUserById(req: Request, res: Response): void | Promise<void>
@@ -10,33 +9,33 @@ export interface UserController {
 
 export function createUserController(userRepo: UserRepositoryInstance) {
     return {
-        getUserById: asyncHandler(async (req, res) => {
+        getUserById: async (req: Request, res: Response) => {
             const user = await userRepo.findRowByColumnAndValue(
                 'id',
-                Number(req.params.id),
+                Number(req.params.id)
             )
             res.json(user)
-        }),
+        },
 
-        getUserByEmail: asyncHandler(async (req, res) => {
+        getUserByEmail: async (req: Request, res: Response) => {
             const user = await userRepo.findRowByColumnAndValue(
                 'email',
-                req.params.email,
+                req.params.email
             )
             res.json(user)
-        }),
+        },
 
-        getUserByUsername: asyncHandler(async (req, res) => {
+        getUserByUsername: async (req: Request, res: Response) => {
             const user = await userRepo.findRowByColumnAndValue(
                 'username',
-                req.params.username,
+                req.params.username
             )
             res.json(user)
-        }),
+        },
 
-        createUser: asyncHandler(async (req, res) => {
+        createUser: async (req: Request, res: Response) => {
             const newUser = await userRepo.create(req.body)
             res.status(201).json(newUser)
-        }),
+        },
     }
 }
