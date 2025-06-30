@@ -34,7 +34,7 @@ class BaseRepository<T> {
             const [result] = await this.dbPool.execute<ResultSetHeader>(
                 `INSERT INTO ${this.tableName} (${columns})
                  VALUES (${placeholders})`,
-                values,
+                values
             )
             return result.insertId
         } catch (error) {
@@ -57,7 +57,7 @@ class BaseRepository<T> {
                 `UPDATE ${this.tableName}
                  SET ${setClause}
                  WHERE id = ?`,
-                [...values, id],
+                [...values, id]
             )
             return result.affectedRows > 0
         } catch (error) {
@@ -72,13 +72,13 @@ class BaseRepository<T> {
                 `DELETE
                                                                  FROM ${this.tableName}
                                                                  WHERE id = ?`,
-                [id],
+                [id]
             )
             return result.affectedRows > 0
         } catch (error) {
             console.error(
                 `Error deleting record from ${this.tableName}:`,
-                error,
+                error
             )
             throw error
         }
@@ -107,7 +107,7 @@ class BaseRepository<T> {
 
             const [rows] = await this.dbPool.execute<RowDataPacket[]>(
                 query,
-                values,
+                values
             ) // Use this.dbPool directly
 
             return rows.length > 0 ? (rows[0] as T) : null
@@ -158,7 +158,7 @@ class BaseRepository<T> {
 
             const [rows] = await this.dbPool.execute<RowDataPacket[]>(
                 query,
-                values,
+                values
             )
             return rows as T[]
         } catch (error) {
@@ -169,11 +169,11 @@ class BaseRepository<T> {
 
     async findRowByColumnAndValue<K>(
         column: K,
-        value: string | number,
+        value: string | number
     ): Promise<unknown[]> {
         const [rows] = await this.getDb().execute<RowDataPacket[]>(
             `SELECT * FROM ${this.getTableName()} WHERE ${column} = ?`,
-            [value],
+            [value]
         )
         return rows
     }
@@ -186,7 +186,7 @@ class BaseRepository<T> {
         } catch (error) {
             console.error(
                 `Error fetching all records from ${this.tableName}:`,
-                error,
+                error
             )
             throw error
         }
@@ -194,7 +194,7 @@ class BaseRepository<T> {
 
     async getColumns(
         columns: string[],
-        options: getColumnsOptions,
+        options: getColumnsOptions
     ): Promise<Partial<T>[]> {
         try {
             const columnString = columns.join(', ')
@@ -217,7 +217,7 @@ class BaseRepository<T> {
         } catch (error) {
             console.error(
                 `Error fetching columns ${columns.join(', ')} from ${this.tableName}:`,
-                error,
+                error
             )
             throw error
         }
