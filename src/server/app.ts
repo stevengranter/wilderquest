@@ -1,35 +1,32 @@
-import express from 'express'
-
 import cors from 'cors'
+import express from 'express'
 import corsConfig from './config/cors.config.js'
-
-import { authRouter } from './routes/authRouter.js'
-import { userRouter } from './routes/userRouter.js'
-import { collectionRouter } from './routes/collectionRouter.js'
-
-import { CollectionController, createCollectionController } from './controllers/collectionController.js'
 import { createAuthController } from './controllers/authController.js'
-import { createUserController } from './controllers/userController.js'
-
-import { type UserRepositoryInstance } from './repositories/UserRepository.js'
 import { createChatController } from './controllers/chatController.js'
-import { chatRouter } from './routes/chatRouter.js'
+import {
+    CollectionController,
+    createCollectionController,
+} from './controllers/collectionController.js'
 import { createINaturalistAPIController } from './controllers/iNaturalistAPIController.js'
-import { AuthServiceInstance } from './services/authService.js'
+import { createUserController } from './controllers/userController.js'
 import { CollectionRepositoryInstance } from './repositories/CollectionRepository.js'
 
-export function buildApp(
-    {
-        userRepository,
-        collectionRepository,
-        authService,
-    }:
-    {
-        userRepository: UserRepositoryInstance,
-        collectionRepository: CollectionRepositoryInstance,
-        authService: AuthServiceInstance
+import { type UserRepositoryInstance } from './repositories/UserRepository.js'
+import { authRouter } from './routes/authRouter.js'
+import { chatRouter } from './routes/chatRouter.js'
+import { collectionRouter } from './routes/collectionRouter.js'
+import { userRouter } from './routes/userRouter.js'
+import { AuthServiceInstance } from './services/authService.js'
 
-    }) {
+export function buildApp({
+                             userRepository,
+                             collectionRepository,
+                             authService,
+                         }: {
+    userRepository: UserRepositoryInstance
+    collectionRepository: CollectionRepositoryInstance
+    authService: AuthServiceInstance
+}) {
     const app = express()
     app.use(express.json())
 
@@ -38,9 +35,9 @@ export function buildApp(
     const userController = createUserController(userRepository)
     apiRouter.use('/users', userRouter(userController))
 
-    const collectionController = createCollectionController(collectionRepository)
+    const collectionController =
+        createCollectionController(collectionRepository)
     apiRouter.use('/collections', collectionRouter(collectionController))
-
 
     const authController = createAuthController(authService)
     apiRouter.use('/auth', authRouter(authController))
@@ -59,9 +56,8 @@ export function buildApp(
         res.status(404).json({ error: 'No such endpoint' })
     })
 
-// Mount /api
+    // Mount /api
     app.use('/api', apiRouter)
-
 
     // 📎 Middleware
     app.use(cors(corsConfig))
