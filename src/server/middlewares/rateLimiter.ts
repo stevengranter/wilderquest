@@ -31,12 +31,14 @@ import rateLimit from 'express-rate-limit'
 // limit associated with your account.
 // If on the free plan, this limit is 2/second.
 
-const DEFAULT_WINDOW_MS = 15 * 60 * 1000 // 15 minutes
-const DEFAULT_MAX = 100 // limit each IP to 100 requests per windowMs
+const DEFAULT_WINDOW_MS = 1000 // 1 minute
+const DEFAULT_MAX = 60 // limit each IP to 100 requests per windowMs
 
 export const rateLimiter = (
     windowMs: number = DEFAULT_WINDOW_MS,
-    max: number = DEFAULT_MAX) => rateLimit({
-    windowMs,
-    max,
-})
+    max: number = DEFAULT_MAX
+) =>
+    rateLimit({
+        windowMs,
+        max,
+    })

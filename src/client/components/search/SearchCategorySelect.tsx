@@ -1,22 +1,22 @@
+import { Bird, MapPinned } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { Bird, FolderHeart, MapPinned } from 'lucide-react'
 
 // Define the type for searchKind. Using a Union Type is good here.
-export type SearchCategory = 'species' | 'observations' | 'collections';
+export type SearchCategory = 'species' | 'observations' | 'collections'
 
 // Define the props for SearchCategorySelect
 type SearchCategoryToggleProps = {
-    searchCategory: SearchCategory; // Assuming these are your search types
-    setSearchCategory: (category: SearchCategory) => void; // <--- FIX IS HERE
-};
+    searchCategory: SearchCategory // Assuming these are your search types
+    setSearchCategory: (category: SearchCategory) => void // <--- FIX IS HERE
+}
 
 export default function SearchCategorySelect({
-                                                 searchCategory,
-                                                 setSearchCategory,
-                                             }: SearchCategoryToggleProps) {
+    searchCategory,
+    setSearchCategory,
+}: SearchCategoryToggleProps) {
     return (
         <ToggleGroup
-            type='single'
+            type="single"
             value={searchCategory} // Bind value to searchType prop
             onValueChange={(value) => {
                 // Only update if value is not null or undefined
@@ -24,21 +24,28 @@ export default function SearchCategorySelect({
                     setSearchCategory(value as SearchCategory) // Cast to SearchCategory if necessary, though TypeScript should infer it
                 }
             }}
-            className=' mt-4 text-center '
+            className=" mt-4 text-center "
         >
             <ToggleGroupItem
-                className='justify-center'
-                value='species'
+                className="justify-center"
+                value="species"
                 icon={<Bird size={16} />}
             >
                 Species
             </ToggleGroupItem>
             <ToggleGroupItem
-                className='justify-center'
-                value='observations'
+                className="justify-center"
+                value="observations"
                 icon={<MapPinned size={16} />}
             >
                 Observations
+            </ToggleGroupItem>
+            <ToggleGroupItem
+                className="justify-center"
+                value="map"
+                icon={<MapPinned size={16} />}
+            >
+                Map
             </ToggleGroupItem>
             {/*<ToggleGroupItem*/}
             {/*    className='justify-center'*/}
