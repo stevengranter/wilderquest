@@ -40,20 +40,6 @@ export default function SearchCategorySelect({
             >
                 Observations
             </ToggleGroupItem>
-            <ToggleGroupItem
-                className="justify-center"
-                value="map"
-                icon={<MapPinned size={16} />}
-            >
-                Map
-            </ToggleGroupItem>
-            {/*<ToggleGroupItem*/}
-            {/*    className='justify-center'*/}
-            {/*    value='collections'*/}
-            {/*    icon={<FolderHeart size={16} />}*/}
-            {/*>*/}
-            {/*    Collections*/}
-            {/*</ToggleGroupItem>*/}
         </ToggleGroup>
     )
 }
