@@ -12,7 +12,6 @@ const mapTilesRouter = Router()
 mapTilesRouter.get('/{*splat}', mapTilesProxy)
 
 export {
-    iNatRouter as iNaturalistProxyRouter,
     pexelsRouter as pexelsProxyRouter,
     mapTilesRouter as mapTilesProxyRouter,
 }
