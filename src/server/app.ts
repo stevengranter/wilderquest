@@ -9,9 +9,11 @@ import {
 } from './controllers/collectionController.js'
 import { createINaturalistAPIController } from './controllers/iNaturalistAPIController.js'
 import { createUserController } from './controllers/userController.js'
+import mapTilesProxy from './proxies/maptilesAPI.proxy.js'
+import maptilesAPIProxy from './proxies/maptilesAPI.proxy.js'
 import { CollectionRepositoryInstance } from './repositories/CollectionRepository.js'
-
 import { type UserRepositoryInstance } from './repositories/UserRepository.js'
+import { mapTilesProxyRouter } from './routes/api/proxies.routes.js'
 import { authRouter } from './routes/authRouter.js'
 import { chatRouter } from './routes/chatRouter.js'
 import { collectionRouter } from './routes/collectionRouter.js'
@@ -47,6 +49,7 @@ export function buildApp({
 
     const iNatController = createINaturalistAPIController()
     apiRouter.use('/iNatAPI', iNatController)
+    apiRouter.use('/tiles', mapTilesProxyRouter)
 
     apiRouter.get('/health', (req, res) => {
         res.status(200).json({ status: 'ok', timestamp: Date.now() })

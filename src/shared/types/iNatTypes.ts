@@ -47,64 +47,62 @@ export interface INatTaxaResponse {
     total_results: number
 }
 
-
 // Interface representing the user information
 interface INatUser {
-    id: number;
-    login: string;
-    name?: string;
-    user_icon_url?: string;
+    id: number
+    login: string
+    name?: string
+    user_icon_url?: string
     // Add other relevant fields as needed
 }
 
 // Interface representing a single observation
 export interface INatObservation {
-    id: number;
-    uuid: string;
-    species_guess?: string;
-    taxon?: INatTaxon;
-    user?: INatUser;
-    observed_on?: string;
-    time_observed_at?: string;
-    created_at: string;
-    updated_at: string;
-    description?: string;
-    place_guess?: string;
-    latitude?: number;
-    longitude?: number;
-    location: string;
-    positional_accuracy?: number;
-    public_positional_accuracy?: number;
-    geoprivacy?: string | null;
-    taxon_geoprivacy?: string | null;
-    quality_grade: string;
-    annotations: unknown[]; // Define a more specific type if available
-    identifications_most_agree: boolean;
-    identifications_most_disagree: boolean;
-    comments_count: number;
-    photos: Photo[];
+    geojson?: { type: string; coordinates: number[] }
+    id: number
+    uuid: string
+    species_guess?: string
+    taxon?: INatTaxon
+    user?: INatUser
+    observed_on?: string
+    time_observed_at?: string
+    created_at: string
+    updated_at: string
+    description?: string
+    place_guess?: string
+    latitude?: number
+    longitude?: number
+    location: string
+    positional_accuracy?: number
+    public_positional_accuracy?: number
+    geoprivacy?: string | null
+    taxon_geoprivacy?: string | null
+    quality_grade: string
+    annotations: unknown[] // Define a more specific type if available
+    identifications_most_agree: boolean
+    identifications_most_disagree: boolean
+    comments_count: number
+    photos: Photo[]
     // Add other relevant fields as needed
 }
 
 export interface Photo {
-    id: number;
-    license_code: string | null;
-    attribution: string;
-    url: string; // URL for the original size photo. Can be very large.
+    id: number
+    license_code: string | null
+    attribution: string
+    url: string // URL for the original size photo. Can be very large.
 
     // For practical use, the API provides several pre-sized image URLs.
     original_dimensions: {
-        width: number;
-        height: number;
-    };
+        width: number
+        height: number
+    }
 }
 
 // Interface representing the API response
 export interface INatObservationsResponse {
-    total_results: number;
-    page: number;
-    per_page: number;
-    results: INatObservation[];
+    total_results: number
+    page: number
+    per_page: number
+    results: INatObservation[]
 }
-
-

@@ -15,9 +15,11 @@ export function ResultsGrid({
     searchCategory,
     viewMode,
     data,
+    localQuery,
 }: {
     searchCategory: string
     viewMode: string
+    localQuery?: string
     data: INatTaxaResponse | INatObservationsResponse
 }) {
     // const {
@@ -98,7 +100,7 @@ export function ResultsGrid({
                     {data.results.map(renderCard)}
                 </div>
             ) : (
-                <MapView />
+                <MapView data={data} localQuery={localQuery} />
             )}
         </div>
     )
