@@ -33,11 +33,11 @@ body {
     --ring: oklch(0% 0 0);
     --overlay: oklch(0% 0 0 / 0.8);
     --shadow: 4px 4px 0px 0px var(--border);
-    --chart-1: #00D6BD;
-    --chart-2: #0099FF;
-    --chart-3: #7A83FF;
-    --chart-4: #FF4D50;
-    --chart-5: #FACC00;
+    --chart-1: #00d6bd;
+    --chart-2: #0099ff;
+    --chart-3: #7a83ff;
+    --chart-4: #ff4d50;
+    --chart-5: #facc00;
     --chart-active-dot: #000;
 }
 
@@ -50,11 +50,11 @@ body {
     --border: oklch(0% 0 0);
     --ring: oklch(100% 0 0);
     --shadow: 4px 4px 0px 0px var(--border);
-    --chart-1: #00BDA7;
-    --chart-2: #008AE5;
-    --chart-3: #7A83FF;
-    --chart-4: #FF6669;
-    --chart-5: #E0B700;
+    --chart-1: #00bda7;
+    --chart-2: #008ae5;
+    --chart-3: #7a83ff;
+    --chart-4: #ff6669;
+    --chart-5: #e0b700;
     --chart-active-dot: #fff;
 }
 
@@ -88,7 +88,47 @@ body {
         @apply text-foreground font-base bg-background;
     }
 
-    h1, h2, h3, h4, h5, h6 {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
         @apply font-heading;
     }
+}
+
+/* This wraps both the icon and the pin shape */
+.marker-wrapper {
+    position: relative;
+    width: 40px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Marker pin shape (teardrop-style) */
+.marker-pin {
+    width: 28px;
+    height: 28px;
+    background: var(--main); /* green by default */
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    position: absolute;
+    bottom: 0;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Icon centered above the pin */
+.marker-icon {
+    position: absolute;
+    top: 28px;
+    width: 16px;
+    height: 16px;
+    text-align: center;
+    line-height: 24px;
+    font-size: 16px;
+    color: white;
+    z-index: 2;
 }

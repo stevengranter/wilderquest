@@ -1,6 +1,7 @@
 import axios from 'axios'
-import { LatLngBounds } from 'leaflet'
+import L, { LatLngBounds } from 'leaflet'
 import { useEffect, useState } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import {
     MapContainer,
     Marker,
@@ -8,6 +9,7 @@ import {
     TileLayer,
     useMapEvents,
 } from 'react-leaflet'
+import getKingdomIcon from '@/components/search/getKingdomIcon'
 import {
     INatObservation,
     INatObservationsResponse,
@@ -16,6 +18,24 @@ import {
 type MapViewProps = {
     taxonId?: number
     localQuery: string
+}
+
+function createKingdomIcon(kingdom: string) {
+    const iconJSX = getKingdomIcon(kingdom) // React component like <FaLeaf />
+    const svgString = renderToStaticMarkup(iconJSX)
+
+    return new L.DivIcon({
+        className: 'kingdom-marker-icon',
+        html: `
+            <div class='marker-wrapper'>
+                <div class='marker-pin'></div>
+                <div class='marker-icon'>${svgString}</div>
+            </div>
+        `,
+        iconSize: [40, 50],
+        iconAnchor: [20, 50], // Bottom-center of pin aligns to lat/lng
+        popupAnchor: [0, -40],
+    })
 }
 
 function MapSyncHandler({
@@ -80,31 +100,41 @@ export default function MapView({ taxonId, localQuery }: MapViewProps) {
             <MapSyncHandler onBoundsChange={setBounds} />
 
             {/* Markers */}
-            {geoData.map(
-                (result) =>
-                    result.geojson && (
-                        <Marker
-                            key={result.id}
-                            position={[
-                                result.geojson.coordinates[1],
-                                result.geojson.coordinates[0],
-                            ]}
-                        >
-                            <Popup>
-                                <strong>
-                                    {result.taxon?.preferred_common_name ||
-                                        result.taxon?.name}
-                                </strong>
-                                <br />
-                                <img
-                                    src={result?.photos?.[0]?.url}
-                                    alt="observation"
-                                    style={{ width: '100px', height: 'auto' }}
-                                />
-                            </Popup>
-                        </Marker>
-                    )
-            )}
+            {geoData.map((result) => {
+                const photo = result?.photos?.[0]?.url
+                if (!result.geojson || !photo) return null
+
+                // const icon = createMarkerIcon(
+                //     photo,
+                //     result.taxon?.iconic_taxon_name || result.taxon?.name
+                // )
+
+                const icon = createKingdomIcon(result.taxon?.iconic_taxon_name)
+
+                return (
+                    <Marker
+                        key={result.id}
+                        position={[
+                            result.geojson.coordinates[1],
+                            result.geojson.coordinates[0],
+                        ]}
+                        icon={icon}
+                    >
+                        <Popup>
+                            <strong>
+                                {result.taxon?.preferred_common_name ||
+                                    result.taxon?.name}
+                            </strong>
+                            <br />
+                            <img
+                                src={photo}
+                                alt="observation"
+                                style={{ width: '100px', height: 'auto' }}
+                            />
+                        </Popup>
+                    </Marker>
+                )
+            })}
 
             {/* Optional overlay */}
             <TileLayer
