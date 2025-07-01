@@ -3,14 +3,10 @@ import express from 'express'
 import corsConfig from './config/cors.config.js'
 import { createAuthController } from './controllers/authController.js'
 import { createChatController } from './controllers/chatController.js'
-import {
-    CollectionController,
-    createCollectionController,
-} from './controllers/collectionController.js'
+import { createCollectionController } from './controllers/collectionController.js'
 import { createINaturalistAPIController } from './controllers/iNaturalistAPIController.js'
 import { createUserController } from './controllers/userController.js'
-import mapTilesProxy from './proxies/maptilesAPI.proxy.js'
-import maptilesAPIProxy from './proxies/maptilesAPI.proxy.js'
+import { rateLimiter } from './middlewares/rateLimiter.js'
 import { CollectionRepositoryInstance } from './repositories/CollectionRepository.js'
 import { type UserRepositoryInstance } from './repositories/UserRepository.js'
 import { mapTilesProxyRouter } from './routes/api/proxies.routes.js'
@@ -21,10 +17,10 @@ import { userRouter } from './routes/userRouter.js'
 import { AuthServiceInstance } from './services/authService.js'
 
 export function buildApp({
-                             userRepository,
-                             collectionRepository,
-                             authService,
-                         }: {
+    userRepository,
+    collectionRepository,
+    authService,
+}: {
     userRepository: UserRepositoryInstance
     collectionRepository: CollectionRepositoryInstance
     authService: AuthServiceInstance
@@ -48,7 +44,7 @@ export function buildApp({
     apiRouter.use('/chat', chatRouter(chatController))
 
     const iNatController = createINaturalistAPIController()
-    apiRouter.use('/iNatAPI', iNatController)
+    apiRouter.use('/iNatAPI', rateLimiter(1000, 1), iNatController)
     apiRouter.use('/tiles', mapTilesProxyRouter)
 
     apiRouter.get('/health', (req, res) => {
