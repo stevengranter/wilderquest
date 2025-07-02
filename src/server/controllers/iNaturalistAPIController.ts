@@ -1,5 +1,7 @@
 import axios from 'axios'
+import chalk from 'chalk'
 import { RequestHandler } from 'express'
+import { globalINaturalistRateLimiter } from '../utils/rateLimiterGlobal.js'
 
 const INATURALIST_API_BASE_URL = 'https://api.inaturalist.org/v1'
 
@@ -18,6 +20,17 @@ const iNaturalistAPIController: RequestHandler = async (req, res) => {
         const isTile = path.match(/\.(png|jpg|jpeg|webp)$/)
 
         console.log('Proxying to:', url)
+
+        await globalINaturalistRateLimiter.consume('global')
+        const status = await globalINaturalistRateLimiter.get('global')
+        console.log(
+            chalk.green(`Used: ${10_000 - (status?.remainingPoints ?? 0)}`) +
+                ', ' +
+                chalk.yellow(`Remaining: ${status?.remainingPoints ?? 0}`)
+        )
+        const ms = status?.msBeforeNext ?? 0
+        const days = ms / 1000 / 60 / 60 / 24
+        console.log('Resets in:', days.toFixed(2), 'days')
 
         if (isTile) {
             // ⛲ Image response (stream)

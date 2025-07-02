@@ -1,6 +1,8 @@
 import 'dotenv/config'
 import axios from 'axios'
+import chalk from 'chalk'
 import { NextFunction, type Request, type Response } from 'express'
+import { globalThunderForestRateLimiter } from '../utils/rateLimiterGlobal.js'
 
 const MAP_TILES_API_KEY = process.env.MAP_TILES_API_KEY
 const TILE_PROVIDER_BASE_URL = 'https://tile.thunderforest.com/atlas/'
@@ -16,6 +18,17 @@ const mapTilesProxy = async (
     const tileProviderUrl = `${TILE_PROVIDER_BASE_URL}/${tilePath}?apikey=${MAP_TILES_API_KEY}`
 
     console.log(`Proxying tile request to: ${tileProviderUrl}`)
+
+    await globalThunderForestRateLimiter.consume('global')
+    const status = await globalThunderForestRateLimiter.get('global')
+    console.log(
+        chalk.green(`Used: ${150_000 - (status?.remainingPoints ?? 0)}`) +
+            ', ' +
+            chalk.yellow(`Remaining: ${status?.remainingPoints ?? 0}`)
+    )
+    const ms = status?.msBeforeNext ?? 0
+    const days = ms / 1000 / 60 / 60 / 24
+    console.log('Resets in:', days.toFixed(2), 'days')
 
     const response = await axios.get(tileProviderUrl, {
         responseType: 'arraybuffer',
