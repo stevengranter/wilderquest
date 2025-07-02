@@ -3,11 +3,16 @@ import 'dotenv/config'
 import Redis from 'ioredis'
 import { RateLimiterRedis } from 'rate-limiter-flexible'
 
-const redisClient = new Redis.default({
-    host: process.env.REDIS_URL || 'localhost',
-    port: 6379,
-    enableOfflineQueue: false,
-})
+const redisClient = new Redis.default(
+    process.env.REDIS_URL || 'redis://localhost:6379'
+)
+
+// const redisClient = new Redis.default({
+//     host: process.env.REDIS_HOST || 'localhost',
+//     port: 6379,
+//     enableOfflineQueue: false,
+//     family: 6,
+// })
 
 export const globalINaturalistRateLimiter = new RateLimiterRedis({
     storeClient: redisClient,
