@@ -9,9 +9,11 @@ import ViteExpress from 'vite-express'
 import errorHandler from './middlewares/errorHandler.js'
 
 import { SCRIPT_DIR } from './constants.js'
-import appConfig from './config/app.config.js'
+import env from './config/app.config.js'
 import { initApp } from './init.js'
 import { buildApp } from './app.js'
+
+const PORT = env.PORT || 3000;
 
 
 async function startServer() {
@@ -26,9 +28,9 @@ async function startServer() {
         if (process.env.NODE_ENV !== 'production') {
             // Error Handler
             app.use(errorHandler)
-            ViteExpress.listen(app, appConfig.PORT, () => {
+            ViteExpress.listen(app, PORT, () => {
                 console.log(
-                    `Server running on ${appConfig.PROTOCOL}://${appConfig.HOST}:${appConfig.PORT} ✅ `
+                    `Server running on ${env.PROTOCOL}://${env.HOST}:${PORT} ✅ `
                 )
             })
         } else {
@@ -45,9 +47,9 @@ async function startServer() {
             // Error Handler
             app.use(errorHandler)
 
-            app.listen(appConfig.PORT, () => {
+            app.listen(PORT, () => {
                 console.log(
-                    `Server running on ${appConfig.PROTOCOL}://${appConfig.HOST}:${appConfig.PORT} ✅ `
+                    `Server running on ${PORT} ✅ `
                 ) //Log the actual port
             })
         }

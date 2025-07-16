@@ -5,11 +5,12 @@ import { compareSync, genSaltSync, hashSync } from 'bcrypt-ts'
 import jwt from 'jsonwebtoken'
 import { User } from '../models/User.js'
 import { UserRepositoryInstance } from '../repositories/UserRepository.js'
+import env from '../config/app.config.js'
 
 // Ensure your environment variables are correctly loaded
 // For a real application, consider a configuration library (e.g., dotenv)
-// process.env.ACCESS_TOKEN_SECRET
-// process.env.REFRESH_TOKEN_SECRET
+// env.ACCESS_TOKEN_SECRET
+// env.REFRESH_TOKEN_SECRET
 
 type PublicUser = {
     username: string
@@ -76,8 +77,8 @@ export default class AuthService {
     constructor(private userRepository: UserRepositoryInstance) {
         // Ensure environment variables are set before proceeding
         if (
-            !process.env.ACCESS_TOKEN_SECRET ||
-            !process.env.REFRESH_TOKEN_SECRET
+            !env.ACCESS_TOKEN_SECRET ||
+            !env.REFRESH_TOKEN_SECRET
         ) {
             console.error(
                 'Missing ACCESS_TOKEN_SECRET or REFRESH_TOKEN_SECRET environment variables.',
@@ -168,12 +169,12 @@ export default class AuthService {
             // Generate access and refresh tokens
             const accessToken = jwt.sign(
                 { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
-                process.env.ACCESS_TOKEN_SECRET!,
+                env.ACCESS_TOKEN_SECRET!,
                 { expiresIn: '300s' }, // 5 minutes
             )
             const refreshToken = jwt.sign(
                 { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
-                process.env.REFRESH_TOKEN_SECRET!,
+                env.REFRESH_TOKEN_SECRET!,
                 { expiresIn: '1d' }, // 1 day, common for refresh tokens
             )
 
@@ -271,7 +272,7 @@ export default class AuthService {
         try {
             decoded = jwt.verify(
                 refreshToken,
-                process.env.REFRESH_TOKEN_SECRET!,
+                env.REFRESH_TOKEN_SECRET!,
             ) as jwt.JwtPayload
 
             // Optional: Check if the decoded user ID/CUID matches the requested one,
@@ -291,7 +292,7 @@ export default class AuthService {
         // 3. Generate a new Access Token
         const newAccessToken = jwt.sign(
             { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
-            process.env.ACCESS_TOKEN_SECRET!,
+            env.ACCESS_TOKEN_SECRET!,
             { expiresIn: '300s' }, // 5 minutes
         )
 
@@ -301,7 +302,7 @@ export default class AuthService {
         // /*
         const newRefreshToken = jwt.sign(
             { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
-            process.env.REFRESH_TOKEN_SECRET!,
+            env.REFRESH_TOKEN_SECRET!,
             { expiresIn: '1d' },
         )
         await this.userRepository.update(user.id, {

@@ -1,39 +1,32 @@
-// src/server/_config/appConfig.ts
 import 'dotenv/config'
 import {z} from 'zod'
 
 const envSchema = z.object({
     // Express app variables
-    PROTOCOL: z.union([z.literal('http'), z.literal('https')]),
-    PORT: z.coerce.number().min(1000),
-    HOST: z.string(),
+    PROTOCOL: z.union([z.literal('http'), z.literal('https')]).optional(),
+    PORT: z.coerce.number().min(1000).optional(),
+    HOST: z.string().optional(),
 
-    // Database variables
-    MYSQL_HOST: z.string(),
+    // MySQL Database variables
+    MYSQL_HOST: z.string().optional(),
     MYSQL_PORT: z.coerce.number().min(1000),
     MYSQL_DATABASE: z.string(),
     MYSQL_USER: z.string(),
     MYSQL_PASSWORD: z.string(),
 
+    // Redis variables
+    REDIS_URL: z.string(),
+
     // Token secret variables
     ACCESS_TOKEN_SECRET: z.string(),
     REFRESH_TOKEN_SECRET: z.string(),
+
+    // API keys
+    MAP_TILES_API_KEY: z.string(),
 })
 
-const appConfig = envSchema.parse({
-    PROTOCOL: process.env.PROTOCOL || 'http',
-    PORT: process.env.PORT || 3000,
-    HOST: process.env.HOST || 'localhost',
+type Environment = z.infer<typeof envSchema>
 
-    MYSQL_HOST: process.env.MYSQL_HOST || 'localhost',
-    MYSQL_PORT: process.env.MYSQL_PORT || 3306,
-    MYSQL_DATABASE: process.env.MYSQL_DATABASE,
-    MYSQL_USER: process.env.MYSQL_USER,
-    MYSQL_PASSWORD: process.env.MYSQL_PASSWORD,
+const env = envSchema.parse(process.env)
 
-    // Token secret variables
-    ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
-    REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
-})
-
-export default appConfig
+export default env

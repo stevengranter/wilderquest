@@ -1,5 +1,5 @@
 import mysql, {Pool} from 'mysql2/promise'
-import appConfig from '../config/app.config.js'
+import env from '../config/app.config.js'
 import chalk from 'chalk'
 
 let dbPool: Pool | undefined
@@ -7,11 +7,11 @@ let dbPool: Pool | undefined
 export const initializeDb = async () => {
     try {
         dbPool = mysql.createPool({
-            host: appConfig.MYSQL_HOST,
-            port: appConfig.MYSQL_PORT,
-            database: appConfig.MYSQL_DATABASE,
-            user: appConfig.MYSQL_USER,
-            password: appConfig.MYSQL_PASSWORD,
+            host: env.MYSQL_HOST,
+            port: env.MYSQL_PORT,
+            database: env.MYSQL_DATABASE,
+            user: env.MYSQL_USER,
+            password: env.MYSQL_PASSWORD,
         })
         console.log('Database connection successful ✅ ')
         return dbPool

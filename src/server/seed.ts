@@ -9,7 +9,7 @@ import weighted from 'weighted'
 import { genSaltSync, hashSync } from 'bcrypt-ts'
 import fs from 'fs'
 import dbConfig from './config/app.config.js'
-import appConfig from './config/app.config.js'
+import env from './config/app.config.js'
 import * as os from 'node:os'
 
 type User = {
@@ -22,11 +22,11 @@ type User = {
 }
 
 const db = await mysql.createConnection({
-    host: appConfig.MYSQL_HOST,
-    port: appConfig.MYSQL_PORT,
-    database: appConfig.MYSQL_DATABASE,
-    user: appConfig.MYSQL_USER,
-    password: appConfig.MYSQL_PASSWORD,
+    host: env.MYSQL_HOST,
+    port: env.MYSQL_PORT,
+    database: env.MYSQL_DATABASE,
+    user: env.MYSQL_USER,
+    password: env.MYSQL_PASSWORD,
 })
 
 const API_URL = 'https://api.inaturalist.org/v1/taxa/'

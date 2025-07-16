@@ -1,10 +1,9 @@
 // rateLimiterGlobal.ts
-import 'dotenv/config'
 import Redis from 'ioredis'
 import { RateLimiterRedis } from 'rate-limiter-flexible'
+import env from '../config/app.config.js'
 
-const redisClient = new Redis.default(
-    process.env.REDIS_URL || 'redis://localhost:6379'
+const redisClient = new Redis.default(env.REDIS_URL || 'redis://localhost:6379'
 )
 
 // const redisClient = new Redis.default({
