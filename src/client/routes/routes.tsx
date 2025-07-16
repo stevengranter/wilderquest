@@ -12,6 +12,8 @@ import { AppLayout } from '@/layouts/AppLayout'
 import { ExploreTab } from './explore/ExploreTab'
 import { IdentifyTab } from './identify/IdentifyTab'
 import { LocateTab } from './locate/LocateTab'
+import {Home} from "../components/pages/Home"
+import { QuestsPage } from '@/features/quests/pages/QuestsPage'
 
 export const router = createBrowserRouter([
     {
@@ -20,7 +22,8 @@ export const router = createBrowserRouter([
         children: [
             {
                 index: true, // Match the root path exactly
-                element: <Navigate to="/explore" replace />, // Redirect to /explore
+                // element: <Navigate to="/explore" replace />, // Redirect to /explore
+                element: <Home />
             },
             {
                 path: 'explore',
@@ -66,6 +69,16 @@ export const router = createBrowserRouter([
                         path: ':collectionId',
                         element: <CollectionDetail />,
                     },
+                ],
+            },
+            {
+                path: 'quests',
+                children: [
+                    {
+                        index: true, // For /quests (no ID)
+                        element: <QuestsPage />,
+                    },
+
                 ],
             },
         ],
