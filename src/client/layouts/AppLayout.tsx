@@ -1,16 +1,9 @@
 'use client'
 
 import { Outlet } from 'react-router'
-import AiAssistant from '@/components/chat/aiAssistant'
-import {
-    SidebarInset,
-    SidebarProvider,
-    SidebarTrigger,
-} from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { SearchProvider } from '@/contexts/search/SearchContext'
 import { SelectionProvider } from '@/contexts/selection/SelectionContext'
-import SelectionDrawer from '@/features/collections/SelectionDrawer'
 import UserToolbar from '@/features/login/UserToolbar'
 
 export function AppLayout() {
@@ -29,7 +22,7 @@ export function AppLayout() {
                     {/*        </SidebarInset>*/}
                     {/*    </div>*/}
                     {/*</SidebarProvider>*/}
-                    <SelectionDrawer />
+                    {/*<SelectionDrawer />*/}
                 </SelectionProvider>
             </SearchProvider>
             <Toaster />

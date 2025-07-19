@@ -1,19 +1,18 @@
 // src/routes/routes.tsx
 
-import { User } from 'lucide-react'
-import { createBrowserRouter, Navigate } from 'react-router'
+import { createBrowserRouter } from 'react-router'
 import Login from '@/components/pages/Login'
 import Register from '@/components/pages/Register'
 import Welcome from '@/components/pages/Welcome'
 import CollectionDetail from '@/features/collections/CollectionDetail'
-import CollectionsList from '@/features/collections/CollectionsList'
 import UserCollectionsManager from '@/features/collections/UserCollectionsManager'
 import { AppLayout } from '@/layouts/AppLayout'
 import { ExploreTab } from './explore/ExploreTab'
 import { IdentifyTab } from './identify/IdentifyTab'
 import { LocateTab } from './locate/LocateTab'
-import {Home} from "../components/pages/Home"
+import { Home } from '@/components/pages/Home'
 import { QuestsPage } from '@/features/quests/pages/QuestsPage'
+import { CreateQuest } from '@/features/quests/pages/CreateQuest'
 
 export const router = createBrowserRouter([
     {
@@ -78,6 +77,10 @@ export const router = createBrowserRouter([
                         index: true, // For /quests (no ID)
                         element: <QuestsPage />,
                     },
+                    {
+                        path: 'create',
+                        element: <CreateQuest/>
+                    }
 
                 ],
             },

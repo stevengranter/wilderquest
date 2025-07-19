@@ -1,33 +1,70 @@
 import { useEffect, useState } from 'react'
 import api from '@/api/api'
-import axios from 'axios'
+import { Link } from 'react-router'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { useAuth } from '@/hooks/useAuth'
+import { toast } from 'sonner'
+import { Collection } from '../../../../types/types'
+import { Button } from '@/components/ui/button'
 
 export function QuestsPage() {
+    const { isAuthenticated, user } = useAuth()
+    const [quests, setQuests] = useState<Collection[]>([])
+    const [isMyQuests, setIsMyQuests] = useState<boolean>(false)
+
+    function handleChange() {
+        setIsMyQuests(!isMyQuests)
+    }
+
+    useEffect(() => {
+        if (!isMyQuests) {
+            api.get('/collections').then((response) => {
+                setQuests(response.data)
+            })
+        }
+    }, [isMyQuests])
+
+    useEffect(() => {
+        if (!isMyQuests) return
+        if (!isAuthenticated || !user) {
+            toast.error('You are not logged in!')
+            return
+        }
+
+        api.get(`/collections/user/${user.id}`).then((response) => {
+            setQuests(response.data)
+        })
+    }, [isMyQuests, isAuthenticated, user])
+
     return (
         <>
-            <QuestsList />
-       </>
-    )
-}
-
-function QuestsList() {
-    const [quests, setQuests] = useState([])
-    useEffect(()=> {
-        api.get('/collections').then((res) => {
-            console.log(res.data)
-            setQuests(res.data)
-        })
-    },[])
-
-    return quests && (
-        <>
-        <h1>Quests</h1>
-        <ul>
-            {quests.map((quest) => (
-                <li key={quest.id}>{quest.name}</li>
-            ))}
-        </ul>
+            <h1>Quests</h1>
+            <div className="flex items-center space-x-2">
+                <Switch
+                    id="airplane-mode"
+                    checked={isMyQuests}
+                    onCheckedChange={handleChange}
+                />
+                <Label htmlFor="airplane-mode">My Quests</Label>
+            </div>
+            <QuestsList quests={quests} />
+            <Button><Link to="/quests/create">Create Quest</Link></Button>
         </>
     )
-
 }
+
+function QuestsList({ quests }: { quests: Collection[] }) {
+    if (!quests || quests.length === 0) return <p>No quests found.</p>
+
+    return (
+        <ul>
+            {quests.map((quest) => (
+                <li key={quest.id}>
+                    <Link to={`/collections/${quest.id}`}>{quest.name}</Link>
+                </li>
+            ))}
+        </ul>
+    )
+}
+
