@@ -1,10 +1,16 @@
 import React, { useState } from 'react'
-import { Card } from '@/components/ui/card'
+import {
+    getCitySuggestions,
+    getGeoLocationFromBrowser,
+} from '@/components/location/locationUtils'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useGeoLocation } from '@/contexts/GeoLocationProvider'
-import { getGeoLocationFromBrowser, getCitySuggestions } from '@/components/location/locationUtils'
-import { LocationIQResults, LocationIQPlace } from '../../../shared/types/LocationIQPlace'
+import {
+    LocationIQPlace,
+    LocationIQResults,
+} from '../../../shared/types/LocationIQPlace'
 
 export default function LocationInput() {
     const { geoLocation, setGeoLocation } = useGeoLocation()
@@ -42,13 +48,21 @@ export default function LocationInput() {
     }
 
     return (
-        <Card className='p-4'>
-            <Button onClick={getGeoLocationFromBrowser}>Get Location</Button>
+        <Card className="p-4">
+            <Button
+                onClick={(e) => {
+                    e.preventDefault()
+                    getGeoLocationFromBrowser()
+                }}
+            >
+                Get Location
+            </Button>
 
             {geoLocation && (
                 <>
                     <div>
-                        Latitude: {geoLocation.latitude}, Longitude: {geoLocation.longitude}
+                        Latitude: {geoLocation.latitude}, Longitude:{' '}
+                        {geoLocation.longitude}
                     </div>
                     <div>
                         City:
@@ -57,27 +71,30 @@ export default function LocationInput() {
                 </>
             )}
 
-            <form onSubmit={handleSubmitCity} className='space-y-2'>
+            <form onSubmit={handleSubmitCity} className="space-y-2">
                 <Input
-                    type='text'
-                    placeholder='City'
-                    name='city'
+                    type="text"
+                    placeholder="City"
+                    name="city"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                 />
-                <Button type='submit'>Submit</Button>
+                <Button type="submit">Submit</Button>
             </form>
-            {results && results.length > 0 && (
+            {results &&
+                results.length > 0 &&
                 results.map((place) => (
                     <Button
                         key={place.place_id}
-                        onClick={() => handleChooseCity(place)}>
+                        onClick={(e) => {
+                            e.preventDefault()
+                            handleChooseCity(place)
+                        }}
+                    >
                         {place.display_name}
                     </Button>
-                ))
-            )
-            }
-            {error && <div className='text-red-500'>Error: {error}</div>}
+                ))}
+            {error && <div className="text-red-500">Error: {error}</div>}
         </Card>
     )
 }

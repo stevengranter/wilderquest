@@ -2,9 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react' // Import useCallback
+import { useCallback, useEffect, useRef, useState } from 'react' // Import useCallback
 import { useSearchParams } from 'react-router'
-import LocationInput from '@/components/location/LocationInput'
 import SearchAutoComplete from '@/components/SearchAutoComplete'
 import { ResultsGrid } from '@/components/search/ResultsGrid'
 import SearchCategorySelect, {
@@ -23,7 +22,7 @@ import {
 const fetchINaturalistData = async (
     category: string,
     query: string,
-    taxon_id?: string
+    taxon_id?: string,
 ): Promise<INatTaxaResponse | INatObservationsResponse> => {
     let endpoint: string
     switch (category) {
@@ -50,7 +49,7 @@ const fetchINaturalistData = async (
     const response = await fetch(url.toString())
     if (!response.ok) {
         throw new Error(
-            `Failed to fetch data from ${url.toString()}: ${response.statusText}`
+            `Failed to fetch data from ${url.toString()}: ${response.statusText}`,
         )
     }
     return await response.json()
@@ -111,7 +110,7 @@ export default function SearchInterface() {
             }
             setSearchParams(newSearchParams)
         },
-        [searchParams, searchCategory, setSearchParams]
+        [searchParams, searchCategory, setSearchParams],
     )
 
     const queryParamsForFetch = {
@@ -130,7 +129,7 @@ export default function SearchInterface() {
         queryFn: () =>
             fetchINaturalistData(
                 queryParamsForFetch.category,
-                queryParamsForFetch.q
+                queryParamsForFetch.q,
             ),
         enabled: !!queryParamsForFetch.q,
         placeholderData: (previousData) => previousData,

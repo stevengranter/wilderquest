@@ -39,8 +39,8 @@ function createKingdomIcon(kingdom: string) {
 }
 
 function MapSyncHandler({
-    onBoundsChange,
-}: {
+                            onBoundsChange,
+                        }: {
     onBoundsChange: (bounds: LatLngBounds) => void
 }) {
     useMapEvents({
@@ -93,7 +93,7 @@ export default function MapView({ taxonId, localQuery }: MapViewProps) {
             <TileLayer
                 attribution='Maps &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, Data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="/api/tiles/{z}/{x}/{y}.png"
-                zIndex={1}
+                // zIndex={1}
             />
 
             {/* Sync bounds with map */}

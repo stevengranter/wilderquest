@@ -1,17 +1,20 @@
 import { createContext, ReactNode, useContext, useState } from 'react'
-import { ViewMode, SearchResults, SearchContextType } from '@/contexts/search/SearchContext.types'
-
+import {
+    SearchContextType,
+    SearchResults,
+    ViewMode,
+} from '@/contexts/search/SearchContext.types'
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined)
 
 interface SearchProviderProps {
-    children: ReactNode;
+    children: ReactNode
 }
 
 const SearchProvider = ({ children }: SearchProviderProps) => {
     // const selectionState = useSelectionState()
     const [results, setResults] = useState<SearchResults | undefined>(undefined)
-    const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Grid)
+    const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.List)
 
     const contextValue = {
         // ...selectionState,
