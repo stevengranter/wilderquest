@@ -3,16 +3,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useReward } from 'react-rewards'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useSearchContext } from '@/contexts/search/SearchContext'
 import { useSelectionContext } from '@/contexts/selection/SelectionContext'
-import CollectionsList from '@/features/collections/CollectionsList'
 import MiniCard from '@/features/collections/MiniCard'
 import { useCollections } from '@/features/collections/useCollections'
 import { Collection } from '../../../types/types'
@@ -27,7 +20,7 @@ export default function SelectionDrawer({ isVisible }: CollectionsDrawerProps) {
     return (
         <div
             className={cx(
-                'fixed bottom-0 left-0 right-0 p-4 flex justify-between items-center',
+                'fixed bottom-0 left-0 right-0 p-4 flex justify-between items-center z-100',
                 'bg-main',
                 {
                     hidden: !isSelectionMode,
