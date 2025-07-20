@@ -10,7 +10,7 @@ async function fetchPlacesAutocomplete(query: string) {
     }
     console.log(query)
     const response = await axios.get(
-        `/api/iNatAPI/places/autocomplete?q=${query}`,
+        `/api/iNatAPI/places/autocomplete?q=${query}`
     )
     console.log(response.data)
     if (response.data.results.length > 0) {
@@ -43,13 +43,17 @@ export function PlaceFinder() {
     return (
         <>
             <Input type="text" onChange={(e) => setQuery(e.target.value)} />
-            {places && places.length > 0 && (
-                <ul>
-                    {places.map((place) => (
-                        <li key={place.id}>{place.name}</li>
-                    ))}
-                </ul>
-            )}
+            {places && places.length > 0 && <PlaceSelector places={places} />}
         </>
+    )
+}
+
+function PlaceSelector({ places }) {
+    return (
+        <ul>
+            {places.map((place) => (
+                <li key={place.id}>{place.name}</li>
+            ))}
+        </ul>
     )
 }

@@ -179,6 +179,9 @@ importers:
       express-rate-limit:
         specifier: ^7.5.0
         version: 7.5.1(express@5.1.0)
+      express-slow-down:
+        specifier: ^2.1.0
+        version: 2.1.0(express@5.1.0)
       genkit:
         specifier: ^1.7.0
         version: 1.13.0
@@ -3191,6 +3194,12 @@ packages:
     engines: {node: '>= 16'}
     peerDependencies:
       express: '>= 4.11'
+
+  express-slow-down@2.1.0:
+    resolution: {integrity: sha512-tQ/ItTDbGfo+fLS+jxu19vgYOgZk7wyOakuAsnzl8f7HmxG3ynWAoo136+oqB+rqHCk3QyM6VoXL03qA5a4gVQ==}
+    engines: {node: '>= 16'}
+    peerDependencies:
+      express: 4 || 5 || ^5.0.0-beta.1
 
   express-static-gzip@2.2.0:
     resolution: {integrity: sha512-4ZQ0pHX0CAauxmzry2/8XFLM6aZA4NBvg9QezSlsEO1zLnl7vMFa48/WIcjzdfOiEUS4S1npPPKP2NHHYAp6qg==}
@@ -8683,6 +8692,11 @@ snapshots:
   express-rate-limit@7.5.1(express@5.1.0):
     dependencies:
       express: 5.1.0
+
+  express-slow-down@2.1.0(express@5.1.0):
+    dependencies:
+      express: 5.1.0
+      express-rate-limit: 7.5.1(express@5.1.0)
 
   express-static-gzip@2.2.0:
     dependencies:
