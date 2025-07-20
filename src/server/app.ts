@@ -6,6 +6,7 @@ import { createChatController } from './controllers/chatController.js'
 import { createCollectionController } from './controllers/collectionController.js'
 import { createINaturalistAPIController } from './controllers/iNaturalistAPIController.js'
 import { createUserController } from './controllers/userController.js'
+import { rateLimiter } from './middlewares/rateLimiter.js'
 import { rateSlowDown } from './middlewares/rateSlowDown.js'
 import { CollectionRepositoryInstance } from './repositories/CollectionRepository.js'
 import { type UserRepositoryInstance } from './repositories/UserRepository.js'
@@ -45,7 +46,12 @@ export function buildApp({
 
     const iNatController = createINaturalistAPIController()
     // apiRouter.use('/iNatAPI', rateLimiter(1000, 1), iNatController)
-    apiRouter.use('/iNatAPI', rateSlowDown, iNatController)
+    apiRouter.use(
+        '/iNatAPI',
+        rateSlowDown,
+        rateLimiter(60 * 1000, 60),
+        iNatController
+    )
     apiRouter.use('/tiles', mapTilesProxyRouter)
 
     apiRouter.get('/health', (req, res) => {
