@@ -35,14 +35,21 @@ export function PlaceFinder() {
     }, [debouncedQuery])
 
     useEffect(() => {
-        if (places.length > 0) {
+        if (places && places.length > 0) {
             console.log(places)
         }
     }, [places])
 
     return (
-        <div>
+        <>
             <Input type="text" onChange={(e) => setQuery(e.target.value)} />
-        </div>
+            {places && places.length > 0 && (
+                <ul>
+                    {places.map((place) => (
+                        <li key={place.id}>{place.name}</li>
+                    ))}
+                </ul>
+            )}
+        </>
     )
 }

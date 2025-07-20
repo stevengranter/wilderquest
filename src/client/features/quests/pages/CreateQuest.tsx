@@ -23,18 +23,23 @@ import { PlaceFinder } from '@/features/quests/components/PlaceFinder'
 import { useAuth } from '@/hooks/useAuth'
 import { ExploreTab } from '@/routes/explore/ExploreTab'
 
+const formSchema = z.object({
+    questName: z.string().min(2, {
+        message: 'Quest name must be at least 2 characters.',
+    }),
+    placeName: z.string().min(2, {
+        message: 'Quest name must be at least 2 characters.',
+    }),
+})
+
 export function CreateQuest() {
     const { isAuthenticated } = useAuth()
-    const formSchema = z.object({
-        questname: z.string().min(2, {
-            message: 'Quest name must be at least 2 characters.',
-        }),
-    })
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            questname: '',
+            questName: '',
+            placeName: '',
         },
     })
 
@@ -57,7 +62,7 @@ export function CreateQuest() {
                 >
                     <FormField
                         control={form.control}
-                        name="questname"
+                        name="questName"
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Quest Name</FormLabel>
@@ -69,6 +74,23 @@ export function CreateQuest() {
                                 </FormControl>
                                 <FormDescription>
                                     This is the display name for your quest.
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="placeName"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Place Name</FormLabel>
+                                <FormControl>
+                                    <PlaceFinder />
+                                </FormControl>
+                                <FormDescription>
+                                    This is the iNaturalist place name
                                 </FormDescription>
                                 <FormMessage />
                             </FormItem>
@@ -92,8 +114,6 @@ export function CreateQuest() {
                     <Button type="submit">Submit</Button>
                 </form>
             </Form>
-
-            <PlaceFinder />
         </div>
     )
 }
