@@ -1,5 +1,5 @@
-import { Router } from 'express'
 import type { RequestHandler } from 'express'
+import { Router } from 'express'
 
 interface AuthController {
     register: RequestHandler

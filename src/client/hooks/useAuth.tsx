@@ -6,8 +6,8 @@ import {
     useState,
 } from 'react'
 import { toast } from '@/hooks/use-toast.js'
-import { authApi } from '@/services/authApi.js'
-import { tokenManager } from '@/services/tokenManager.js'
+import { authApi, configureAuthApi } from '@/services/authApi.js'
+import useTokenManager from '@/services/tokenManager.js'
 import type {
     LoggedInUser,
     LoginResponseData,
@@ -25,30 +25,54 @@ type AuthContextType = {
         registrationData: RegisterRequestBody
     ) => Promise<RegisterResponseData | undefined>
     user: LoggedInUser | null
-    token: string | null
+    accessToken: string | null
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<LoggedInUser | null>(null)
-    const [token, setToken] = useState<string | null>(null)
+    const {
+        user,
+        saveUser,
+        accessToken,
+        saveAccessToken,
+        refreshToken,
+        saveRefreshToken,
+        clearAll,
+    } = useTokenManager()
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
 
     useEffect(() => {
-        const storedUser = tokenManager.getUser()
-        const token = tokenManager.getAccessToken()
+        configureAuthApi({
+            user,
+            saveUser,
+            saveAccessToken,
+            accessToken,
+            saveRefreshToken,
+            refreshToken,
+            clearAll,
+        })
+    }, [])
 
-        if (storedUser && token && authApi.verifyToken(token)) {
-            setUser(storedUser)
-            setToken(token)
+    useEffect(() => {
+        console.log(accessToken)
+    }, [accessToken])
+
+    useEffect(() => {
+        console.log(accessToken)
+    }, [accessToken])
+
+    useEffect(() => {
+        if (user && accessToken && authApi.verifyToken(accessToken)) {
+            saveUser(user)
+            saveAccessToken(accessToken)
             setIsAuthenticated(true)
         } else {
-            setUser(null)
-            setToken(null)
+            saveUser(null)
+            saveAccessToken('')
             setIsAuthenticated(false)
         }
-    }, [])
+    }, [accessToken])
 
     const login = async (credentials: LoginRequestBody) => {
         try {
@@ -60,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 return
             }
 
-            setUser(response.user)
+            saveUser(response.user)
             setIsAuthenticated(true)
             return response
         } catch (error) {
@@ -76,7 +100,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
             console.error('Logout error:', error)
         } finally {
-            setUser(null)
+            saveUser(null)
             setIsAuthenticated(false)
         }
     }
@@ -93,7 +117,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return (
         <AuthContext.Provider
-            value={{ isAuthenticated, login, logout, register, user, token }}
+            value={{
+                isAuthenticated,
+                login,
+                logout,
+                register,
+                user,
+                accessToken,
+            }}
         >
             {children}
         </AuthContext.Provider>

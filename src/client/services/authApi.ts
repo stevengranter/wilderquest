@@ -14,14 +14,29 @@ import type {
     LoginResponseData,
     RegisterResponseData,
 } from '../../shared/types/authTypes.js'
-import { tokenManager } from './tokenManager'
+
+type TokenCallbacks = {
+    accessToken: string | null
+    refreshToken: string | null
+    user: { cuid: string; username: string } | null
+    saveAccessToken: (token: string) => void
+    saveRefreshToken: (token: string) => void
+    saveUser: (user: { cuid: string; username: string }) => void
+    clearAll: () => void
+}
+
+let callbacks: TokenCallbacks | null = null
+
+export function configureAuthApi(cb: TokenCallbacks) {
+    callbacks = cb
+}
 
 export const authApi = {
     async register(credentials: z.infer<typeof RegisterRequestSchema>) {
         try {
             const { data, status } = await api.post(
                 '/auth/register',
-                credentials,
+                credentials
             )
             if (status === 201) return data as RegisterResponseData
             handleError(Error(`Unexpected response status: ${status}`))
@@ -38,12 +53,17 @@ export const authApi = {
                 return null
             }
 
-            const { user, refreshToken, accessToken } = data
-            tokenManager.setUser(user)
-            tokenManager.setAccessToken(accessToken)
-            tokenManager.setRefreshToken(refreshToken)
+            if (callbacks) {
+                callbacks.clearAll()
+                callbacks.saveUser(data.user)
+                callbacks.saveAccessToken(data.accessToken)
+                callbacks.saveRefreshToken(data.refreshToken)
+            } else {
+                console.error('No callbacks configured for authAPI')
+            }
+
             axios.defaults.headers.common['Authorization'] =
-                `Bearer ${accessToken}`
+                `Bearer ${data.accessToken}`
             return data as LoginResponseData
         } catch (err: unknown) {
             // Explicitly type err as unknown
@@ -54,8 +74,12 @@ export const authApi = {
     },
 
     async logout(): Promise<void> {
+        if (!callbacks) {
+            console.error('No callbacks configured for authAPI')
+            return
+        }
         try {
-            const user = tokenManager.getUser()
+            const user = callbacks.user
             if (user?.cuid) {
                 await api.post('/auth/logout', { user_cuid: user.cuid })
             }
@@ -63,14 +87,18 @@ export const authApi = {
             handleError(err)
             return
         } finally {
-            tokenManager.clearAll()
+            callbacks.clearAll()
             delete axios.defaults.headers.common['Authorization']
         }
     },
 
     async refreshAccessToken(): Promise<void> {
-        const refreshToken = tokenManager.getRefreshToken()
-        const user = tokenManager.getUser()
+        if (!callbacks) {
+            console.error('No callbacks configured for authAPI')
+            return
+        }
+        const refreshToken = callbacks.refreshToken
+        const user = callbacks.user
         const user_cuid = user?.cuid
 
         if (!refreshToken || !user_cuid) {
@@ -85,22 +113,22 @@ export const authApi = {
             })
 
             if (status !== 200 || !data.access_token) {
-                tokenManager.clearAll()
+                callbacks.clearAll()
                 handleError(`Token refresh failed with status: ${status}`)
                 return
             }
-            tokenManager.setAccessToken(data.access_token)
-            tokenManager.setRefreshToken(data.refresh_token)
+            callbacks.saveAccessToken(data.access_token)
+            callbacks.saveRefreshToken(data.refresh_token)
             axios.defaults.headers.common['Authorization'] =
                 `Bearer ${data.access_token}`
         } catch (error) {
             console.error('Error during token refresh:', error)
-            tokenManager.clearAll()
+            callbacks.clearAll()
             handleError(error)
         }
     },
 
-    verifyToken(token: string | null): boolean {
+    verifyToken(token: string | null): boolean | undefined {
         if (!token) return false
 
         const decoded: DecodedToken = jwtDecode(token)
@@ -117,10 +145,18 @@ export const authApi = {
         } else {
             this.refreshAccessToken()
                 .then(() => {
-                    this.verifyToken(tokenManager.getAccessToken())
+                    if (!callbacks) {
+                        console.error('No callbacks configured for authAPI')
+                        return
+                    }
+                    this.verifyToken(callbacks.accessToken)
                 })
                 .catch((_err) => {
-                    tokenManager.clearAll()
+                    if (!callbacks) {
+                        console.error('No callbacks configured for authAPI')
+                        return
+                    }
+                    callbacks.clearAll()
                     alert('Session expired. Please log in again.')
                 })
             return false

@@ -68,32 +68,21 @@ export function createCollectionController(
             }
         },
 
-        async getCollectionsByUserId(
+        async getPublicCollectionsByUserId(
             req: AuthenticatedRequest,
             res: Response
         ): Promise<void> {
-            console.log(req.user)
             try {
-                const authenticatedUserId = req.user?.id
-                if (!authenticatedUserId) {
-                    res.status(401).json({ message: 'Unauthorized' })
-                    return
-                }
+                const userId = Number(req.params.user_id)
 
-                const targetUserId =
-                    Number(req.params.user_id) || authenticatedUserId
-
-                if (isNaN(targetUserId)) {
+                if (isNaN(userId)) {
                     res.status(400).json({ message: 'Invalid user ID' })
                     return
                 }
 
-                const service = new CollectionService(
-                    collectionRepo,
-                    authenticatedUserId
-                )
+                const service = new CollectionService(collectionRepo, userId)
                 const collections =
-                    await service.findCollectionsByUserId(targetUserId)
+                    await service.findCollectionsByUserId(userId)
                 console.log(collections)
                 res.json(collections)
             } catch (error: unknown) {
