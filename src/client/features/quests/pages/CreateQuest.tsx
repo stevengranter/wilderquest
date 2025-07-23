@@ -1,12 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { debounce } from 'lodash'
 import React, { useEffect, useRef, useState } from 'react'
-import { Control, Controller, useForm, useFormContext } from 'react-hook-form'
+import {
+    Controller,
+    FormProvider,
+    useForm,
+    useFormContext,
+} from 'react-hook-form'
 import { z } from 'zod'
 import { getCitySuggestions } from '@/components/location/locationUtils'
 import { Button } from '@/components/ui/button'
 import {
-    Form,
     FormControl,
     FormDescription,
     FormField,
@@ -24,6 +28,8 @@ const formSchema = z.object({
     locationName: z.string().min(2, {
         message: 'Quest name must be at least 2 characters.',
     }),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
 })
 
 export function CreateQuest() {
@@ -49,7 +55,7 @@ export function CreateQuest() {
         <div className="p-4">
             <h1>Create Quest</h1>
             <p>Create a new quest.</p>
-            <Form {...form}>
+            <FormProvider {...form}>
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
                     className="space-y-8"
@@ -74,11 +80,43 @@ export function CreateQuest() {
                         )}
                     />
 
-                    <LocationInput control={form.control} name="locationName" />
+                    <LocationInput name="locationName" />
+
+                    <div className="flex flex-row">
+                        <FormField
+                            control={form.control}
+                            name="latitude"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Latitude</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="0.00" {...field} />
+                                    </FormControl>
+
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="longitude"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Longitude</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="0.00" {...field} />
+                                    </FormControl>
+
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
 
                     <Button type="submit">Submit</Button>
                 </form>
-            </Form>
+            </FormProvider>
         </div>
     )
 }
@@ -86,52 +124,71 @@ export function CreateQuest() {
 type Suggestion = {
     place_id: string
     display_name: string
+    lat: string
+    lon: string
 }
 
 type LocationInputProps = {
-    control: Control
     name: string
     label?: string
     description?: string
 }
 
 export function LocationInput({
-    control,
     name,
     label = 'Location Name',
     description = 'This is the location for your quest.',
 }: LocationInputProps) {
+    const { control, watch, setValue } = useFormContext()
     const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+    const [showSuggestions, setShowSuggestions] = useState(false)
     const suppressFetchRef = useRef(false)
+
+    // Memoize the debounced function
     const fetchSuggestions = useRef(
         debounce(async (query: string) => {
-            if (query.length < 2) return
-            const results = await getCitySuggestions(query)
-            if (!results || results.length === 0) return
-            setSuggestions(results)
+            if (query.length < 2) {
+                setSuggestions([])
+                return
+            }
+            try {
+                const results = await getCitySuggestions(query)
+                setSuggestions(results || [])
+            } catch (error) {
+                console.error('Failed to fetch suggestions:', error)
+                setSuggestions([])
+            }
         }, 300)
     ).current
 
-    const formContext = useFormContext()
-
     useEffect(() => {
-        const subscription = formContext.watch(
-            (value, { name: changedName }) => {
-                if (changedName === name) {
-                    if (suppressFetchRef.current) {
-                        suppressFetchRef.current = false
-                        return
-                    }
-                    fetchSuggestions(value[name])
+        const subscription = watch((value, { name: changedName }) => {
+            if (changedName === name) {
+                // ✨ FIX: Check the ref to prevent fetching after selection
+                if (suppressFetchRef.current) {
+                    suppressFetchRef.current = false // Reset the flag
+                    return
                 }
+
+                // ✨ FIX: Show suggestions when typing
+                setShowSuggestions(true)
+                fetchSuggestions(value[name])
             }
-        )
+        })
 
         return () => {
             subscription.unsubscribe()
             fetchSuggestions.cancel()
         }
-    }, [formContext, name])
+    }, [watch, name, fetchSuggestions])
+
+    // ✨ FIX: Add a blur handler to hide suggestions
+    const handleBlur = () => {
+        // Use a small delay to allow click events on suggestions to register
+        setTimeout(() => {
+            setShowSuggestions(false)
+        }, 150)
+    }
 
     return (
         <Controller
@@ -141,22 +198,43 @@ export function LocationInput({
                 <FormItem className="relative">
                     <FormLabel>{label}</FormLabel>
                     <FormControl>
-                        <Input placeholder="Search location..." {...field} />
+                        <Input
+                            placeholder="Search location..."
+                            {...field}
+                            // ✨ FIX: Add the onBlur handler
+                            onBlur={handleBlur}
+                            // Also hide suggestions if the input is cleared
+                            onChange={(e) => {
+                                field.onChange(e)
+                                if (e.target.value.length < 2) {
+                                    setShowSuggestions(false)
+                                }
+                            }}
+                            autoComplete="off"
+                        />
                     </FormControl>
 
-                    {suggestions.length > 0 && (
+                    {showSuggestions && suggestions.length > 0 && (
                         <ul className="absolute mt-1 z-10 w-full bg-white border border-gray-300 rounded shadow-md">
                             {suggestions.map((s) => (
                                 <li
                                     key={s.place_id}
                                     className="p-2 hover:bg-gray-100 cursor-pointer"
-                                    onClick={() => {
+                                    // Use onMouseDown to fire before onBlur
+                                    onMouseDown={() => {
+                                        // ✨ FIX: Update logic for selecting a suggestion
                                         suppressFetchRef.current = true
-                                        formContext.setValue(
-                                            name,
-                                            s.display_name
-                                        )
+                                        setValue(name, s.display_name, {
+                                            shouldValidate: true,
+                                        })
+                                        setValue('latitude', Number(s.lat), {
+                                            shouldValidate: true,
+                                        })
+                                        setValue('longitude', Number(s.lon), {
+                                            shouldValidate: true,
+                                        })
                                         setSuggestions([])
+                                        setShowSuggestions(false)
                                     }}
                                 >
                                     {s.display_name}
