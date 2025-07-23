@@ -1,12 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { debounce } from 'lodash'
+import React, { useEffect, useRef, useState } from 'react'
+import { Control, Controller, useForm, useFormContext } from 'react-hook-form'
 import { z } from 'zod'
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from '@/components/ui/accordion'
+import { getCitySuggestions } from '@/components/location/locationUtils'
 import { Button } from '@/components/ui/button'
 import {
     Form,
@@ -18,16 +15,13 @@ import {
     FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import SelectionDrawer from '@/features/collections/SelectionDrawer'
-import { PlaceFinder } from '@/features/quests/components/PlaceFinder'
 import { useAuth } from '@/hooks/useAuth'
-import { ExploreTab } from '@/routes/explore/ExploreTab'
 
 const formSchema = z.object({
     questName: z.string().min(2, {
         message: 'Quest name must be at least 2 characters.',
     }),
-    placeName: z.string().min(2, {
+    locationName: z.string().min(2, {
         message: 'Quest name must be at least 2 characters.',
     }),
 })
@@ -39,7 +33,7 @@ export function CreateQuest() {
         resolver: zodResolver(formSchema),
         defaultValues: {
             questName: '',
-            placeName: '',
+            locationName: '',
         },
     })
 
@@ -80,40 +74,101 @@ export function CreateQuest() {
                         )}
                     />
 
-                    <FormField
-                        control={form.control}
-                        name="placeName"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Place Name</FormLabel>
-                                <FormControl>
-                                    <PlaceFinder />
-                                </FormControl>
-                                <FormDescription>
-                                    This is the iNaturalist place name
-                                </FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <Accordion
-                        type="single"
-                        collapsible
-                        className="w-full max-w-xl"
-                    >
-                        <AccordionItem value="item-1">
-                            <AccordionTrigger>Add species</AccordionTrigger>
-                            <AccordionContent>
-                                <ExploreTab />
-                                <SelectionDrawer />
-                            </AccordionContent>
-                        </AccordionItem>
-                    </Accordion>
+                    <LocationInput control={form.control} name="locationName" />
 
                     <Button type="submit">Submit</Button>
                 </form>
             </Form>
         </div>
+    )
+}
+
+type Suggestion = {
+    place_id: string
+    display_name: string
+}
+
+type LocationInputProps = {
+    control: Control
+    name: string
+    label?: string
+    description?: string
+}
+
+export function LocationInput({
+    control,
+    name,
+    label = 'Location Name',
+    description = 'This is the location for your quest.',
+}: LocationInputProps) {
+    const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+    const suppressFetchRef = useRef(false)
+    const fetchSuggestions = useRef(
+        debounce(async (query: string) => {
+            if (query.length < 2) return
+            const results = await getCitySuggestions(query)
+            if (!results || results.length === 0) return
+            setSuggestions(results)
+        }, 300)
+    ).current
+
+    const formContext = useFormContext()
+
+    useEffect(() => {
+        const subscription = formContext.watch(
+            (value, { name: changedName }) => {
+                if (changedName === name) {
+                    if (suppressFetchRef.current) {
+                        suppressFetchRef.current = false
+                        return
+                    }
+                    fetchSuggestions(value[name])
+                }
+            }
+        )
+
+        return () => {
+            subscription.unsubscribe()
+            fetchSuggestions.cancel()
+        }
+    }, [formContext, name])
+
+    return (
+        <Controller
+            name={name}
+            control={control}
+            render={({ field }) => (
+                <FormItem className="relative">
+                    <FormLabel>{label}</FormLabel>
+                    <FormControl>
+                        <Input placeholder="Search location..." {...field} />
+                    </FormControl>
+
+                    {suggestions.length > 0 && (
+                        <ul className="absolute mt-1 z-10 w-full bg-white border border-gray-300 rounded shadow-md">
+                            {suggestions.map((s) => (
+                                <li
+                                    key={s.place_id}
+                                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                                    onClick={() => {
+                                        suppressFetchRef.current = true
+                                        formContext.setValue(
+                                            name,
+                                            s.display_name
+                                        )
+                                        setSuggestions([])
+                                    }}
+                                >
+                                    {s.display_name}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+
+                    <FormDescription>{description}</FormDescription>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
     )
 }

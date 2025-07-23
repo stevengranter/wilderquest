@@ -11,6 +11,7 @@ import { rateSlowDown } from './middlewares/rateSlowDown.js'
 import { CollectionRepositoryInstance } from './repositories/CollectionRepository.js'
 import { type UserRepositoryInstance } from './repositories/UserRepository.js'
 import { mapTilesProxyRouter } from './routes/api/proxies.routes.js'
+import { serviceRouter } from './routes/api/services.routes.js'
 import { authRouter } from './routes/authRouter.js'
 import { chatRouter } from './routes/chatRouter.js'
 import { collectionRouter } from './routes/collectionRouter.js'
@@ -53,6 +54,8 @@ export function buildApp({
         iNatController
     )
     apiRouter.use('/tiles', mapTilesProxyRouter)
+
+    apiRouter.use('/service', serviceRouter)
 
     apiRouter.get('/health', (req, res) => {
         res.status(200).json({ status: 'ok', timestamp: Date.now() })
