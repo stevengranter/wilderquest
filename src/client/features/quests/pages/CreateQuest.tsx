@@ -1,4 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import axios from 'axios'
+import { LatLngBounds } from 'leaflet'
 import { debounce } from 'lodash'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -8,9 +10,16 @@ import {
     useFormContext,
     useWatch,
 } from 'react-hook-form'
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
+import {
+    MapContainer,
+    Marker,
+    MarkerProps,
+    Popup,
+    TileLayer,
+    useMap,
+    useMapEvents,
+} from 'react-leaflet'
 import { z } from 'zod'
-
 import { getCitySuggestions } from '@/components/location/locationUtils'
 import { Button } from '@/components/ui/button'
 import {
@@ -38,6 +47,8 @@ const formSchema = z.object({
 export function CreateQuest() {
     const { isAuthenticated } = useAuth()
 
+    const [speciesCounts, setSpeciesCounts] = useState<unknown[]>([])
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -50,7 +61,22 @@ export function CreateQuest() {
     const lon = useWatch({ control: form.control, name: 'longitude' })
 
     const center = useMemo(() => {
-        return [lat, lon] as [number, number]
+        if (!lat || !lon) {
+            return undefined
+        } else {
+            return [lat, lon] as [number, number]
+        }
+    }, [lat, lon])
+
+    useEffect(() => {
+        if (!lat || !lon) {
+            return
+        }
+        getSpeciesCountsByGeoLocation(lat, lon, 10).then((data) => {
+            if (!data) return
+            console.log(data)
+            setSpeciesCounts(data.results)
+        })
     }, [lat, lon])
 
     function onSubmit(values: z.infer<typeof formSchema>) {
@@ -132,6 +158,24 @@ export function CreateQuest() {
                     </div>
 
                     <QuestMapView center={center} zoom={13} />
+
+                    {speciesCounts.length > 0 && (
+                        <div className="flex flex-col gap-4">
+                            {speciesCounts.map((s) => (
+                                <div key={s.taxon.id}>
+                                    <div className="flex flex-row gap-4">
+                                        <div className="flex flex-col">
+                                            <div className="font-bold">
+                                                {s.count}
+                                                {s.taxon.preferred_common_name}{' '}
+                                                - <i>{s.taxon.name}</i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
                     <Button type="submit">Submit</Button>
                 </form>
@@ -263,9 +307,13 @@ export function LocationInput({
     )
 }
 
-type QuestMapProps = {
+type QuestMapOptions = {
     center?: [number, number]
     zoom?: number
+}
+type QuestMapProps = {
+    options?: QuestMapOptions
+    markerData?: MarkerProps[]
 }
 
 function MapUpdater({ center }: { center?: [number, number] }) {
@@ -278,20 +326,55 @@ function MapUpdater({ center }: { center?: [number, number] }) {
     return null
 }
 
-function QuestMapView({ center, zoom = 10 }: QuestMapProps) {
+function MapSyncHandler({
+    onBoundsChange,
+}: {
+    onBoundsChange: (bounds: LatLngBounds) => void
+}) {
+    useMapEvents({
+        moveend(e) {
+            onBoundsChange(e.target.getBounds())
+        },
+        zoomend(e) {
+            onBoundsChange(e.target.getBounds())
+        },
+    })
+    return null
+}
+
+function QuestMapView({ options, markerData }: QuestMapProps) {
     const initialCenter: [number, number] = [49.18, -57.43] // Deer Lake, NL
+    const { center, zoom } = options || { center: initialCenter, zoom: 13 }
+    const [bounds, setBounds] = useState<LatLngBounds | null>(null)
+    const [markers, _setMarkers] = useState<MarkerProps[]>(markerData || [])
+
+    useEffect(() => {
+        console.log('Bounds changed:', bounds)
+    }, [bounds])
+
+    useEffect(() => {
+        console.log('Markers changed:', markers)
+    }, [markers])
 
     return (
         <MapContainer
             center={center || initialCenter}
             zoom={zoom}
             scrollWheelZoom={true}
-            style={{ height: '500px', borderRadius: '8px' }}
+            style={{
+                height: '300px',
+                width: '50%',
+                aspectRatio: '1/1',
+                borderRadius: '8px',
+            }}
         >
             <TileLayer
                 attribution='Maps &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, Data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="/api/tiles/{z}/{x}/{y}.png"
             />
+
+            {/* Sync bounds with map */}
+            <MapSyncHandler onBoundsChange={setBounds} />
 
             <MapUpdater center={center} />
 
@@ -302,4 +385,14 @@ function QuestMapView({ center, zoom = 10 }: QuestMapProps) {
             )}
         </MapContainer>
     )
+}
+
+async function getSpeciesCountsByGeoLocation(latitude, longitude, radius = 10) {
+    const response = await axios.get(
+        `https://api.inaturalist.org/v1/observations/species_counts?lat=${latitude}&lng=${longitude}&radius=${radius}&include_ancestors=false`
+    )
+    if (!response.data) {
+        return []
+    }
+    return response.data
 }
