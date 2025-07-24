@@ -1,11 +1,11 @@
-import {jwtDecode} from 'jwt-decode'
+import { jwtDecode } from 'jwt-decode'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { Button } from '@/components/ui/button.js'
-import { authApi } from '@/services/authApi'
-import {useEffect, useState} from 'react'
-import {Link} from 'react-router'
+import { useAuth } from '@/hooks/useAuth'
 
 const Welcome = () => {
-    const { refreshAccessToken } = authApi
+    const { refreshAccessToken } = useAuth()
     const user = localStorage.getItem('user')
     const [token, setToken] = useState<string | null>(null)
 
@@ -27,7 +27,7 @@ const Welcome = () => {
                 {token ? jwtDecode(token).exp : ''}
             </div>
 
-            <Link to='/users'>See all users</Link>
+            <Link to="/users">See all users</Link>
             <Button onClick={refreshAccessToken}>Refresh Access Token</Button>
         </>
     )

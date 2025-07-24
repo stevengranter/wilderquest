@@ -1,3 +1,5 @@
+// useAuth.tsx
+
 import {
     createContext,
     ReactNode,
@@ -6,7 +8,11 @@ import {
     useState,
 } from 'react'
 import { toast } from '@/hooks/use-toast.js'
-import { authApi, configureAuthApi } from '@/services/authApi.js'
+import {
+    authApi,
+    configureAuthApi,
+    TokenCallbacks,
+} from '@/services/authApi.js'
 import useTokenManager from '@/services/tokenManager.js'
 import type {
     LoggedInUser,
@@ -26,6 +32,7 @@ type AuthContextType = {
     ) => Promise<RegisterResponseData | undefined>
     user: LoggedInUser | null
     accessToken: string | null
+    verifyToken: (token: string | null) => boolean
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
@@ -40,56 +47,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         saveRefreshToken,
         clearAll,
     } = useTokenManager()
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+    const [isAuthenticated, setIsAuthenticated] = useState(
+        () => !!(user && accessToken && authApi.verifyToken(accessToken))
+    )
 
     useEffect(() => {
-        configureAuthApi({
+        const tokenCallbacks: TokenCallbacks = {
             user,
-            saveUser,
-            saveAccessToken,
             accessToken,
-            saveRefreshToken,
             refreshToken,
+            saveAccessToken,
+            saveRefreshToken,
+            saveUser,
             clearAll,
-        })
-    }, [])
-
-    useEffect(() => {
-        console.log(accessToken)
-    }, [accessToken])
-
-    useEffect(() => {
-        console.log(accessToken)
-    }, [accessToken])
-
-    useEffect(() => {
-        if (user && accessToken && authApi.verifyToken(accessToken)) {
-            saveUser(user)
-            saveAccessToken(accessToken)
-            setIsAuthenticated(true)
-        } else {
-            saveUser(null)
-            saveAccessToken('')
-            setIsAuthenticated(false)
         }
-    }, [accessToken])
+        configureAuthApi(tokenCallbacks)
+    }, [
+        user,
+        accessToken,
+        refreshToken,
+        saveAccessToken,
+        saveRefreshToken,
+        saveUser,
+        clearAll,
+    ])
+
+    useEffect(() => {
+        const isValid = user && accessToken && authApi.verifyToken(accessToken)
+        setIsAuthenticated(!!isValid)
+        if (!isValid) {
+            clearAll()
+        }
+    }, [accessToken, user])
 
     const login = async (credentials: LoginRequestBody) => {
         try {
             const response = await authApi.login(credentials)
-            console.log(response)
-            if (!response || !response.user) {
+            if (!response?.user) {
                 setIsAuthenticated(false)
-                // handleError('Could not log in')
                 return
             }
-
-            saveUser(response.user)
             setIsAuthenticated(true)
             return response
         } catch (error) {
             setIsAuthenticated(false)
-            // handleError(`Login error in AuthProvider: ${error}`)
             throw error
         }
     }
@@ -97,18 +98,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const logout = async () => {
         try {
             await authApi.logout()
-        } catch (error) {
-            console.error('Logout error:', error)
         } finally {
-            saveUser(null)
+            clearAll()
             setIsAuthenticated(false)
         }
     }
 
     const register = async (registrationData: RegisterRequestBody) => {
         try {
+            const response = await authApi.register(registrationData)
             toast({ title: 'Welcome!' })
-            return await authApi.register(registrationData)
+            return response
         } catch (error) {
             console.error('Registration error:', error)
             throw error
@@ -124,6 +124,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 register,
                 user,
                 accessToken,
+                verifyToken: authApi.verifyToken,
             }}
         >
             {children}
@@ -131,12 +132,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     )
 }
 
-const useAuth = (): AuthContextType => {
+export const useAuth = () => {
     const context = useContext(AuthContext)
     if (!context) {
         throw new Error('useAuth must be used within an AuthProvider')
     }
     return context
 }
-
-export { useAuth }

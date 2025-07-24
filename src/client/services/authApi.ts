@@ -11,17 +11,18 @@ import {
     RegisterRequestSchema,
 } from '../../shared/schemas/Auth.js'
 import type {
+    LoggedInUser,
     LoginResponseData,
     RegisterResponseData,
 } from '../../shared/types/authTypes.js'
 
-type TokenCallbacks = {
+export type TokenCallbacks = {
     accessToken: string | null
     refreshToken: string | null
-    user: { cuid: string; username: string } | null
+    user: LoggedInUser | null // Change this line to use LoggedInUser
     saveAccessToken: (token: string) => void
     saveRefreshToken: (token: string) => void
-    saveUser: (user: { cuid: string; username: string }) => void
+    saveUser: (user: LoggedInUser | null) => void // Change this line to accept LoggedInUser
     clearAll: () => void
 }
 
@@ -95,71 +96,101 @@ export const authApi = {
     async refreshAccessToken(): Promise<void> {
         if (!callbacks) {
             console.error('No callbacks configured for authAPI')
-            return
+            throw new Error('No callbacks configured for authAPI')
         }
+
         const refreshToken = callbacks.refreshToken
         const user = callbacks.user
         const user_cuid = user?.cuid
 
+        console.log('Refresh Token Details:', {
+            hasRefreshToken: !!refreshToken,
+            hasUser: !!user,
+            userCuid: user_cuid,
+        })
+
         if (!refreshToken || !user_cuid) {
-            handleError('Missing refresh token or user_cuid')
-            return
+            callbacks.clearAll()
+            throw new Error('Missing refresh token or user_cuid')
         }
 
         try {
-            const { data, status } = await api.post('/auth/refresh', {
+            console.log('Calling refresh token endpoint...')
+            const response = await axios.post('/api/auth/refresh', {
                 user_cuid,
                 refresh_token: refreshToken,
             })
 
-            if (status !== 200 || !data.access_token) {
+            console.log('Refresh response:', {
+                status: response.status,
+                hasAccessToken: !!response.data?.access_token,
+                hasRefreshToken: !!response.data?.refresh_token,
+            })
+
+            if (!response.data?.access_token || !response.data?.refresh_token) {
                 callbacks.clearAll()
-                handleError(`Token refresh failed with status: ${status}`)
-                return
+                console.error('Invalid token refresh response')
             }
-            callbacks.saveAccessToken(data.access_token)
-            callbacks.saveRefreshToken(data.refresh_token)
-            axios.defaults.headers.common['Authorization'] =
-                `Bearer ${data.access_token}`
+
+            callbacks.saveAccessToken(response.data.access_token)
+            callbacks.saveRefreshToken(response.data.refresh_token)
+
+            console.log('Tokens successfully updated')
+
+            return
         } catch (error) {
-            console.error('Error during token refresh:', error)
+            console.error('Refresh token error:', error)
             callbacks.clearAll()
-            handleError(error)
+            throw error
         }
     },
 
-    verifyToken(token: string | null): boolean | undefined {
+    verifyToken(token: string | null): boolean {
         if (!token) return false
 
-        const decoded: DecodedToken = jwtDecode(token)
-        const parsed = DecodedTokenSchema.safeParse(decoded)
+        try {
+            const decoded: DecodedToken = jwtDecode(token)
+            const parsed = DecodedTokenSchema.safeParse(decoded)
 
-        if (!parsed.success) {
-            console.error('Token decode error:', parsed.error)
+            if (!parsed.success) {
+                return false
+            }
+
+            const now = Date.now() / 1000
+            return parsed.data.exp > now
+        } catch {
             return false
         }
+    },
+}
 
-        const now = Date.now() / 1000
-        if (parsed.data.exp > now) {
-            return true
-        } else {
-            this.refreshAccessToken()
-                .then(() => {
-                    if (!callbacks) {
-                        console.error('No callbacks configured for authAPI')
-                        return
-                    }
-                    this.verifyToken(callbacks.accessToken)
-                })
-                .catch((_err) => {
-                    if (!callbacks) {
-                        console.error('No callbacks configured for authAPI')
-                        return
-                    }
-                    callbacks.clearAll()
-                    alert('Session expired. Please log in again.')
-                })
-            return false
+// Add this to authApi.ts
+export const testUtils = {
+    async simulateExpiredToken() {
+        if (!callbacks?.accessToken) {
+            console.error('No access token to expire')
+            return
+        }
+
+        // Save the current token for verification
+        const oldToken = callbacks.accessToken
+
+        // Force a 401 response to trigger refresh
+        try {
+            await api.get('/auth/test-auth', {
+                headers: {
+                    Authorization: 'Bearer expired_token',
+                },
+            })
+        } catch (error) {
+            console.log(
+                'Error caught while simulating expired token:',
+                error.message,
+                'Expected 401 error, checking if token was refreshed...'
+            )
+            console.log('Old token:', oldToken)
+            console.log('New token:', callbacks.accessToken)
+            return oldToken !== callbacks.accessToken
         }
     },
 }

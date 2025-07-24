@@ -1,18 +1,19 @@
 // src/routes/routes.tsx
 
 import { createBrowserRouter } from 'react-router'
+import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { Home } from '@/components/pages/Home'
 import Login from '@/components/pages/Login'
 import Register from '@/components/pages/Register'
 import Welcome from '@/components/pages/Welcome'
 import CollectionDetail from '@/features/collections/CollectionDetail'
 import UserCollectionsManager from '@/features/collections/UserCollectionsManager'
+import { CreateQuest } from '@/features/quests/pages/CreateQuest'
+import { QuestsPage } from '@/features/quests/pages/QuestsPage'
 import { AppLayout } from '@/layouts/AppLayout'
 import { ExploreTab } from './explore/ExploreTab'
 import { IdentifyTab } from './identify/IdentifyTab'
 import { LocateTab } from './locate/LocateTab'
-import { Home } from '@/components/pages/Home'
-import { QuestsPage } from '@/features/quests/pages/QuestsPage'
-import { CreateQuest } from '@/features/quests/pages/CreateQuest'
 
 export const router = createBrowserRouter([
     {
@@ -22,7 +23,7 @@ export const router = createBrowserRouter([
             {
                 index: true, // Match the root path exactly
                 // element: <Navigate to="/explore" replace />, // Redirect to /explore
-                element: <Home />
+                element: <Home />,
             },
             {
                 path: 'explore',
@@ -79,9 +80,12 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: 'create',
-                        element: <CreateQuest/>
-                    }
-
+                        element: (
+                            <ProtectedRoute>
+                                <CreateQuest />
+                            </ProtectedRoute>
+                        ),
+                    },
                 ],
             },
         ],

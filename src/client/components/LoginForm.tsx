@@ -31,32 +31,31 @@ const LoginForm = React.forwardRef(() => {
         },
     })
 
-    async function onSubmit(values: z.infer<typeof LoginRequestSchema>) {
-        const response = await login(values)
+    // Updates to LoginForm.tsx - modify the onSubmit function
 
-        if (response?.success) {
-            // Use optional chaining here as well if 'response' can be undefined
-            toast.success('Logged in successfully!')
-            navigate('/welcome')
-        } else if (
-            response?.message?.includes('User not found') ||
-            response?.message?.includes('Incorrect password')
-        ) {
-            // Display on form
+    async function onSubmit(values: z.infer<typeof LoginRequestSchema>) {
+        try {
+            const response = await login(values)
+
+            if (response?.success) {
+                toast.success('Logged in successfully!')
+                navigate('/welcome')
+            } else {
+                form.setError('root.serverError', {
+                    type: 'server',
+                    message: response?.message || 'Authentication failed',
+                })
+            }
+        } catch (_error) {
             form.setError('root.serverError', {
                 type: 'server',
-                message: 'User not found or incorrect password.',
-            })
-        } else {
-            form.setError('root.serverError', {
-                type: 'server',
-                message: 'User not found or incorrect password.',
+                message: 'An error occurred during login',
             })
         }
     }
 
     if (isAuthenticated) {
-        return 'Already logged in!'
+        return 'Already logged in! Would you like to log out?'
     }
 
     return (
