@@ -1,26 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
-import { LatLngBounds } from 'leaflet'
-import { debounce } from 'lodash'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
-    Controller,
-    FormProvider,
-    useForm,
-    useFormContext,
-    useWatch,
-} from 'react-hook-form'
-import {
-    MapContainer,
-    Marker,
-    MarkerProps,
-    Popup,
-    TileLayer,
-    useMap,
-    useMapEvents,
-} from 'react-leaflet'
+import React, { useEffect, useMemo, useState } from 'react'
+import { FormProvider, useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
-import { getCitySuggestions } from '@/components/location/locationUtils'
 import { Button } from '@/components/ui/button'
 import {
     FormControl,
@@ -31,9 +13,11 @@ import {
     FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { LocationInput } from '@/features/quests/components/LocationInput'
+import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { useAuth } from '@/hooks/useAuth'
 
-const formSchema = z.object({
+export const formSchema = z.object({
     questName: z.string().min(2, {
         message: 'Quest name must be at least 2 characters.',
     }),
@@ -44,10 +28,20 @@ const formSchema = z.object({
     longitude: z.number().optional(),
 })
 
+interface TaxonData {
+    id: number
+    name: string
+    preferred_common_name: string
+}
+
+interface SpeciesCount {
+    taxon: TaxonData
+    count: number
+}
+
 export function CreateQuest() {
     const { isAuthenticated } = useAuth()
-
-    const [speciesCounts, setSpeciesCounts] = useState<unknown[]>([])
+    const [speciesCounts, setSpeciesCounts] = useState<SpeciesCount[]>([])
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -117,7 +111,12 @@ export function CreateQuest() {
                         )}
                     />
 
-                    <LocationInput name="locationName" />
+                    <LocationInput
+                        name="locationName"
+                        control={form.control}
+                        watch={form.watch}
+                        setValue={form.setValue}
+                    />
 
                     <div className="flex flex-row gap-4">
                         <FormField
@@ -130,6 +129,13 @@ export function CreateQuest() {
                                         <Input
                                             placeholder="0.00"
                                             {...field}
+                                            value={field.value ?? ''}
+                                            onChange={(e) => {
+                                                const value = e.target.value
+                                                    ? Number(e.target.value)
+                                                    : undefined
+                                                field.onChange(value)
+                                            }}
                                             readOnly
                                         />
                                     </FormControl>
@@ -157,7 +163,7 @@ export function CreateQuest() {
                         />
                     </div>
 
-                    <QuestMapView center={center} zoom={13} />
+                    <QuestMapView options={{ center, zoom: 13 }} />
 
                     {speciesCounts.length > 0 && (
                         <div className="flex flex-col gap-4">
@@ -184,210 +190,11 @@ export function CreateQuest() {
     )
 }
 
-type Suggestion = {
-    place_id: string
-    display_name: string
-    lat: string
-    lon: string
-}
-
-type LocationInputProps = {
-    name: string
-    label?: string
-    description?: string
-}
-
-export function LocationInput({
-    name,
-    label = 'Location Name',
-    description = 'This is the location for your quest.',
-}: LocationInputProps) {
-    const { control, watch, setValue } = useFormContext()
-    const [suggestions, setSuggestions] = useState<Suggestion[]>([])
-    const [showSuggestions, setShowSuggestions] = useState(false)
-    const suppressFetchRef = useRef(false)
-
-    const fetchSuggestions = useMemo(
-        () =>
-            debounce(async (query: string) => {
-                if (query.length < 2) {
-                    setSuggestions([])
-                    return
-                }
-                try {
-                    const results = await getCitySuggestions(query)
-                    setSuggestions(results || [])
-                } catch (error) {
-                    console.error('Failed to fetch suggestions:', error)
-                    setSuggestions([])
-                }
-            }, 300),
-        []
-    )
-
-    useEffect(() => {
-        const subscription = watch((value, { name: changedName }) => {
-            if (changedName === name) {
-                if (suppressFetchRef.current) {
-                    suppressFetchRef.current = false
-                    return
-                }
-                setShowSuggestions(true)
-                fetchSuggestions(value[name])
-            }
-        })
-
-        return () => {
-            subscription.unsubscribe()
-            fetchSuggestions.cancel()
-        }
-    }, [watch, name, fetchSuggestions])
-
-    const handleBlur = () => {
-        setTimeout(() => {
-            setShowSuggestions(false)
-        }, 150)
-    }
-
-    return (
-        <Controller
-            name={name}
-            control={control}
-            render={({ field }) => (
-                <FormItem className="relative">
-                    <FormLabel>{label}</FormLabel>
-                    <FormControl>
-                        <Input
-                            placeholder="Search location..."
-                            {...field}
-                            onBlur={handleBlur}
-                            onChange={(e) => {
-                                field.onChange(e)
-                                if (e.target.value.length < 2) {
-                                    setShowSuggestions(false)
-                                }
-                            }}
-                            autoComplete="off"
-                        />
-                    </FormControl>
-
-                    {showSuggestions && suggestions.length > 0 && (
-                        <ul className="absolute mt-1 z-10 w-full bg-white border border-gray-300 rounded shadow-md">
-                            {suggestions.map((s) => (
-                                <li
-                                    key={s.place_id}
-                                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                                    onMouseDown={() => {
-                                        suppressFetchRef.current = true
-                                        setValue(name, s.display_name, {
-                                            shouldValidate: true,
-                                        })
-                                        // Ensure lat/lon are set as numbers
-                                        setValue('latitude', Number(s.lat), {
-                                            shouldValidate: true,
-                                        })
-                                        setValue('longitude', Number(s.lon), {
-                                            shouldValidate: true,
-                                        })
-                                        setSuggestions([])
-                                        setShowSuggestions(false)
-                                    }}
-                                >
-                                    {s.display_name}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-
-                    <FormDescription>{description}</FormDescription>
-                    <FormMessage />
-                </FormItem>
-            )}
-        />
-    )
-}
-
-type QuestMapOptions = {
-    center?: [number, number]
-    zoom?: number
-}
-type QuestMapProps = {
-    options?: QuestMapOptions
-    markerData?: MarkerProps[]
-}
-
-function MapUpdater({ center }: { center?: [number, number] }) {
-    const map = useMap()
-    useEffect(() => {
-        if (center) {
-            map.flyTo(center, map.getZoom())
-        }
-    }, [center, map])
-    return null
-}
-
-function MapSyncHandler({
-    onBoundsChange,
-}: {
-    onBoundsChange: (bounds: LatLngBounds) => void
-}) {
-    useMapEvents({
-        moveend(e) {
-            onBoundsChange(e.target.getBounds())
-        },
-        zoomend(e) {
-            onBoundsChange(e.target.getBounds())
-        },
-    })
-    return null
-}
-
-function QuestMapView({ options, markerData }: QuestMapProps) {
-    const initialCenter: [number, number] = [49.18, -57.43] // Deer Lake, NL
-    const { center, zoom } = options || { center: initialCenter, zoom: 13 }
-    const [bounds, setBounds] = useState<LatLngBounds | null>(null)
-    const [markers, _setMarkers] = useState<MarkerProps[]>(markerData || [])
-
-    useEffect(() => {
-        console.log('Bounds changed:', bounds)
-    }, [bounds])
-
-    useEffect(() => {
-        console.log('Markers changed:', markers)
-    }, [markers])
-
-    return (
-        <MapContainer
-            center={center || initialCenter}
-            zoom={zoom}
-            scrollWheelZoom={true}
-            style={{
-                height: '300px',
-                width: '50%',
-                aspectRatio: '1/1',
-                borderRadius: '8px',
-            }}
-        >
-            <TileLayer
-                attribution='Maps &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, Data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="/api/tiles/{z}/{x}/{y}.png"
-            />
-
-            {/* Sync bounds with map */}
-            <MapSyncHandler onBoundsChange={setBounds} />
-
-            <MapUpdater center={center} />
-
-            {center && (
-                <Marker position={center}>
-                    <Popup>Selected Quest Location</Popup>
-                </Marker>
-            )}
-        </MapContainer>
-    )
-}
-
-async function getSpeciesCountsByGeoLocation(latitude, longitude, radius = 10) {
+async function getSpeciesCountsByGeoLocation(
+    latitude: number,
+    longitude: number,
+    radius = 10
+) {
     const response = await axios.get(
         `https://api.inaturalist.org/v1/observations/species_counts?lat=${latitude}&lng=${longitude}&radius=${radius}&include_ancestors=false`
     )
