@@ -1,13 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { debounce } from 'lodash'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
     Controller,
     FormProvider,
     useForm,
     useFormContext,
+    useWatch,
 } from 'react-hook-form'
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import { z } from 'zod'
+
 import { getCitySuggestions } from '@/components/location/locationUtils'
 import { Button } from '@/components/ui/button'
 import {
@@ -43,8 +46,16 @@ export function CreateQuest() {
         },
     })
 
+    const lat = useWatch({ control: form.control, name: 'latitude' })
+    const lon = useWatch({ control: form.control, name: 'longitude' })
+
+    const center = useMemo(() => {
+        return [lat, lon] as [number, number]
+    }, [lat, lon])
+
     function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values)
+        // This function is called when the form is submitted
+        console.log('Form Submitted:', values)
     }
 
     if (!isAuthenticated) {
@@ -82,7 +93,7 @@ export function CreateQuest() {
 
                     <LocationInput name="locationName" />
 
-                    <div className="flex flex-row">
+                    <div className="flex flex-row gap-4">
                         <FormField
                             control={form.control}
                             name="latitude"
@@ -90,9 +101,12 @@ export function CreateQuest() {
                                 <FormItem>
                                     <FormLabel>Latitude</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="0.00" {...field} />
+                                        <Input
+                                            placeholder="0.00"
+                                            {...field}
+                                            readOnly
+                                        />
                                     </FormControl>
-
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -105,14 +119,19 @@ export function CreateQuest() {
                                 <FormItem>
                                     <FormLabel>Longitude</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="0.00" {...field} />
+                                        <Input
+                                            placeholder="0.00"
+                                            {...field}
+                                            readOnly
+                                        />
                                     </FormControl>
-
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
                     </div>
+
+                    <QuestMapView center={center} zoom={13} />
 
                     <Button type="submit">Submit</Button>
                 </form>
@@ -144,33 +163,31 @@ export function LocationInput({
     const [showSuggestions, setShowSuggestions] = useState(false)
     const suppressFetchRef = useRef(false)
 
-    // Memoize the debounced function
-    const fetchSuggestions = useRef(
-        debounce(async (query: string) => {
-            if (query.length < 2) {
-                setSuggestions([])
-                return
-            }
-            try {
-                const results = await getCitySuggestions(query)
-                setSuggestions(results || [])
-            } catch (error) {
-                console.error('Failed to fetch suggestions:', error)
-                setSuggestions([])
-            }
-        }, 300)
-    ).current
+    const fetchSuggestions = useMemo(
+        () =>
+            debounce(async (query: string) => {
+                if (query.length < 2) {
+                    setSuggestions([])
+                    return
+                }
+                try {
+                    const results = await getCitySuggestions(query)
+                    setSuggestions(results || [])
+                } catch (error) {
+                    console.error('Failed to fetch suggestions:', error)
+                    setSuggestions([])
+                }
+            }, 300),
+        []
+    )
 
     useEffect(() => {
         const subscription = watch((value, { name: changedName }) => {
             if (changedName === name) {
-                // ✨ FIX: Check the ref to prevent fetching after selection
                 if (suppressFetchRef.current) {
-                    suppressFetchRef.current = false // Reset the flag
+                    suppressFetchRef.current = false
                     return
                 }
-
-                // ✨ FIX: Show suggestions when typing
                 setShowSuggestions(true)
                 fetchSuggestions(value[name])
             }
@@ -182,9 +199,7 @@ export function LocationInput({
         }
     }, [watch, name, fetchSuggestions])
 
-    // ✨ FIX: Add a blur handler to hide suggestions
     const handleBlur = () => {
-        // Use a small delay to allow click events on suggestions to register
         setTimeout(() => {
             setShowSuggestions(false)
         }, 150)
@@ -201,9 +216,7 @@ export function LocationInput({
                         <Input
                             placeholder="Search location..."
                             {...field}
-                            // ✨ FIX: Add the onBlur handler
                             onBlur={handleBlur}
-                            // Also hide suggestions if the input is cleared
                             onChange={(e) => {
                                 field.onChange(e)
                                 if (e.target.value.length < 2) {
@@ -220,13 +233,12 @@ export function LocationInput({
                                 <li
                                     key={s.place_id}
                                     className="p-2 hover:bg-gray-100 cursor-pointer"
-                                    // Use onMouseDown to fire before onBlur
                                     onMouseDown={() => {
-                                        // ✨ FIX: Update logic for selecting a suggestion
                                         suppressFetchRef.current = true
                                         setValue(name, s.display_name, {
                                             shouldValidate: true,
                                         })
+                                        // Ensure lat/lon are set as numbers
                                         setValue('latitude', Number(s.lat), {
                                             shouldValidate: true,
                                         })
@@ -248,5 +260,46 @@ export function LocationInput({
                 </FormItem>
             )}
         />
+    )
+}
+
+type QuestMapProps = {
+    center?: [number, number]
+    zoom?: number
+}
+
+function MapUpdater({ center }: { center?: [number, number] }) {
+    const map = useMap()
+    useEffect(() => {
+        if (center) {
+            map.flyTo(center, map.getZoom())
+        }
+    }, [center, map])
+    return null
+}
+
+function QuestMapView({ center, zoom = 10 }: QuestMapProps) {
+    const initialCenter: [number, number] = [49.18, -57.43] // Deer Lake, NL
+
+    return (
+        <MapContainer
+            center={center || initialCenter}
+            zoom={zoom}
+            scrollWheelZoom={true}
+            style={{ height: '500px', borderRadius: '8px' }}
+        >
+            <TileLayer
+                attribution='Maps &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, Data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="/api/tiles/{z}/{x}/{y}.png"
+            />
+
+            <MapUpdater center={center} />
+
+            {center && (
+                <Marker position={center}>
+                    <Popup>Selected Quest Location</Popup>
+                </Marker>
+            )}
+        </MapContainer>
     )
 }
