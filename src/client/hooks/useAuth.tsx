@@ -56,12 +56,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const accessTokenRef = useRef<string | null>(accessToken)
-    const isAuthenticatedRef = useRef<boolean>(isAuthenticated)
+    const getValidTokenRef = useRef<() => Promise<string | null>>(
+        async () => null
+    )
 
     useEffect(() => {
         accessTokenRef.current = accessToken
-        isAuthenticatedRef.current = isAuthenticated
-    }, [accessToken, isAuthenticated])
+    }, [accessToken])
 
     useEffect(() => {
         const tokenCallbacks: TokenCallbacks = {
@@ -75,17 +76,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         configureAuthApi(tokenCallbacks)
     }, [user, accessToken, refreshToken])
-
-    useEffect(() => {
-        const isValid = user && accessToken && authApi.verifyToken(accessToken)
-        setIsAuthenticated(!!isValid)
-        if (!isValid) {
-            clearAll()
-        } else {
-            scheduleTokenRefresh(accessToken)
-        }
-        setAuthLoading(false)
-    }, [accessToken, user])
 
     const isTokenExpiringSoon = useCallback((token: string | null): boolean => {
         if (!token) return true
@@ -114,75 +104,86 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return currentToken
         }
 
-        console.log(
-            '🔄 Token refresh needed - current token is expired or expiring soon'
-        )
+        console.log('🔄 Refreshing token...')
 
         try {
-            console.log('📡 Attempting to refresh access token...')
             const response = await authApi.refreshAccessToken()
             const newToken = response?.access_token
 
             if (newToken) {
                 console.log('✅ Token refresh successful')
-                console.log(
-                    '🔑 New token expires in:',
-                    (() => {
-                        try {
-                            const decoded = jwtDecode<{ exp: number }>(newToken)
-                            const timeUntilExpiry =
-                                decoded.exp - Date.now() / 1000
-                            return `${Math.floor(timeUntilExpiry / 60)}m ${Math.floor(timeUntilExpiry % 60)}s`
-                        } catch {
-                            return 'unknown'
-                        }
-                    })()
-                )
                 saveAccessToken(newToken)
                 accessTokenRef.current = newToken
                 scheduleTokenRefresh(newToken)
                 return newToken
             } else {
-                console.error('❌ Token refresh failed - no new token received')
+                console.error('❌ Token refresh failed - no token returned')
             }
         } catch (error) {
-            console.error('❌ Token refresh failed with error:', error)
-            setIsAuthenticated(false)
+            console.error('❌ Token refresh error:', error)
             clearAll()
+            setIsAuthenticated(false)
         }
 
         return null
-    }, [isTokenExpiringSoon, clearAll, saveAccessToken])
+    }, [isTokenExpiringSoon, saveAccessToken, clearAll])
 
-    const scheduleTokenRefresh = useCallback(
-        (token: string | null) => {
-            if (!token) return
-            try {
-                const decoded = jwtDecode<{ exp: number }>(token)
-                const now = Date.now() / 1000
-                const timeUntilExpiry = decoded.exp - now
-                const refreshIn = (timeUntilExpiry - 30) * 1000 // 30s before expiry
+    // Assign the latest version of getValidToken to the ref
+    getValidTokenRef.current = getValidToken
 
-                if (refreshTimeoutRef.current) {
-                    clearTimeout(refreshTimeoutRef.current)
-                }
+    const scheduleTokenRefresh = useCallback((token: string | null) => {
+        if (!token) return
+        try {
+            const decoded = jwtDecode<{ exp: number }>(token)
+            const now = Date.now() / 1000
+            const timeUntilExpiry = decoded.exp - now
+            const refreshIn = (timeUntilExpiry - 30) * 1000
 
-                refreshTimeoutRef.current = setTimeout(
-                    async () => {
-                        try {
-                            await getValidToken()
-                        } catch (err) {
-                            console.error('Scheduled refresh failed:', err)
-                        }
-                    },
-                    Math.max(refreshIn, 0)
-                )
-            } catch {
-                console.warn('Unable to schedule token refresh')
+            if (refreshTimeoutRef.current) {
+                clearTimeout(refreshTimeoutRef.current)
             }
-        },
-        [getValidToken]
-    )
+
+            refreshTimeoutRef.current = setTimeout(
+                async () => {
+                    try {
+                        await getValidTokenRef.current()
+                    } catch (err) {
+                        console.error('Scheduled token refresh failed:', err)
+                    }
+                },
+                Math.max(refreshIn, 0)
+            )
+        } catch {
+            console.warn('Unable to schedule token refresh')
+        }
+    }, [])
+
+    useEffect(() => {
+        const restoreAuthState = async () => {
+            const token = accessTokenRef.current
+            const valid = token && authApi.verifyToken(token)
+
+            if (user && token && valid && !isTokenExpiringSoon(token)) {
+                setIsAuthenticated(true)
+                scheduleTokenRefresh(token)
+            } else if (refreshToken) {
+                const refreshedToken = await getValidTokenRef.current()
+                if (refreshedToken) {
+                    setIsAuthenticated(true)
+                } else {
+                    clearAll()
+                    setIsAuthenticated(false)
+                }
+            } else {
+                clearAll()
+                setIsAuthenticated(false)
+            }
+
+            setAuthLoading(false)
+        }
+
+        restoreAuthState()
+    }, [])
 
     const login = async (credentials: LoginRequestBody) => {
         try {
@@ -192,6 +193,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 return
             }
             setIsAuthenticated(true)
+            accessTokenRef.current = response.access_token
             scheduleTokenRefresh(response.access_token)
             return response
         } catch (error) {
