@@ -11,13 +11,21 @@ import { UserRepositoryInstance } from '../repositories/UserRepository.js'
 // For a real application, consider a configuration library (e.g., dotenv)
 // env.ACCESS_TOKEN_SECRET
 // env.REFRESH_TOKEN_SECRET
-
-type PublicUser = {
-    username: string
-    email: string
-    user_cuid: string
-    role_id: number
+interface AuthenticatedUserResponse {
+    success: boolean
+    user: {
+        id: number
+        username: string
+        email: string | undefined
+        role: number
+        cuid: string
+    }
+    accessToken: string
+    refreshToken: string
 }
+
+const ACCESS_TOKEN_EXPIRES_IN = '300s'
+const REFRESH_TOKEN_EXPIRES_IN = '1d'
 
 export class UserExistsError extends Error {
     constructor(message: string) {
@@ -75,13 +83,10 @@ export type AuthServiceInstance = InstanceType<AuthServiceConstructor>
 
 export default class AuthService {
     constructor(private userRepository: UserRepositoryInstance) {
-        // Ensure environment variables are set before proceeding
         if (!env.ACCESS_TOKEN_SECRET || !env.REFRESH_TOKEN_SECRET) {
             console.error(
                 'Missing ACCESS_TOKEN_SECRET or REFRESH_TOKEN_SECRET environment variables.'
             )
-            // In a real app, you might want to throw an error or handle this more gracefully
-            // For now, it's a console error to highlight the issue.
         }
     }
 
@@ -167,12 +172,12 @@ export default class AuthService {
             const accessToken = jwt.sign(
                 { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
                 env.ACCESS_TOKEN_SECRET!,
-                { expiresIn: '30s' } // 5 minutes
+                { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
             )
             const refreshToken = jwt.sign(
                 { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
                 env.REFRESH_TOKEN_SECRET!,
-                { expiresIn: '1d' } // 1 day, common for refresh tokens
+                { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
             )
 
             // Save refresh token to db
@@ -200,17 +205,21 @@ export default class AuthService {
         return null
     }
 
-    async registerAndLogin(username: string, email: string, password: string) {
-        const newUser = await this.register(username, email, password)
-        const loggedInUser = await this.login(username, password)
+    async registerAndLogin(
+        username: string,
+        email: string,
+        password: string
+    ): Promise<AuthenticatedUserResponse> {
+        await this.register(username, email, password)
 
-        if (!loggedInUser) {
+        const authenticationResult = await this.login(username, password)
+        if (!authenticationResult) {
             throw new AuthenticationError(
                 'User registered but failed to authenticate'
             )
         }
 
-        return loggedInUser
+        return authenticationResult
     }
 
     /**
@@ -265,19 +274,19 @@ export default class AuthService {
         }
 
         // 2. Verify the refresh token's authenticity and expiration
-        let decoded: jwt.JwtPayload
+        // let decoded: jwt.JwtPayload
         try {
-            decoded = jwt.verify(
+            const decoded = jwt.verify(
                 refreshToken,
                 env.REFRESH_TOKEN_SECRET!
             ) as jwt.JwtPayload
-
+            console.log(decoded)
             // Optional: Check if the decoded user ID/CUID matches the requested one,
             // though the initial DB lookup already ensures this.
-            if (decoded.cuid !== user.user_cuid || decoded.id !== user.id) {
-                throw new TokenError('Refresh token payload mismatch.')
-            }
-        } catch (err) {
+            // if (decoded.cuid !== user.user_cuid || decoded.id !== user.id) {
+            //     throw new TokenError('Refresh token payload mismatch.')
+            // }
+        } catch (_err) {
             // Token is expired, invalid, or malformed
             // Clear the refresh token from the database if it's expired or invalid
             await this.userRepository.update(user.id, { refresh_token: '' })
@@ -290,7 +299,7 @@ export default class AuthService {
         const newAccessToken = jwt.sign(
             { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
             env.ACCESS_TOKEN_SECRET!,
-            { expiresIn: '300s' } // 5 minutes
+            { expiresIn: ACCESS_TOKEN_EXPIRES_IN } // 5 minutes
         )
 
         // Optional: Implement refresh token rotation (issue a new refresh token and invalidate the old one)
@@ -300,7 +309,7 @@ export default class AuthService {
         const newRefreshToken = jwt.sign(
             { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
             env.REFRESH_TOKEN_SECRET!,
-            { expiresIn: '1d' }
+            { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
         )
         await this.userRepository.update(user.id, {
             refresh_token: newRefreshToken,
