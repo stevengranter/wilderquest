@@ -5,11 +5,19 @@ const api = axios.create({
     baseURL: '/api',
 })
 
+// Helper function to clean token from potential quotes
+const cleanToken = (token: string | null): string | null => {
+    if (!token) return null
+    // Remove surrounding quotes if they exist
+    return token.replace(/^"(.*)"$/, '$1')
+}
+
 // Request interceptor
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('accessToken')
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`
+    const cleanedToken = cleanToken(token)
+    if (cleanedToken) {
+        config.headers.Authorization = `Bearer ${cleanedToken}`
     }
     return config
 })
@@ -38,13 +46,14 @@ api.interceptors.response.use(
 
                 // Update the Authorization header with the new token
                 const newToken = localStorage.getItem('accessToken')
-                originalRequest.headers.Authorization = `Bearer ${newToken}`
+                const cleanedNewToken = cleanToken(newToken)
+                originalRequest.headers.Authorization = `Bearer ${cleanedNewToken}`
 
                 console.log(
                     'Token refresh successful, retrying with new token:',
                     {
-                        newToken: newToken
-                            ? newToken.substring(0, 10) + '...'
+                        newToken: cleanedNewToken
+                            ? cleanedNewToken.substring(0, 10) + '...'
                             : 'none',
                     }
                 )
