@@ -24,7 +24,7 @@ interface AuthenticatedUserResponse {
     refreshToken: string
 }
 
-const ACCESS_TOKEN_EXPIRES_IN = '300s'
+const ACCESS_TOKEN_EXPIRES_IN = '60s'
 const REFRESH_TOKEN_EXPIRES_IN = '1d'
 
 export class UserExistsError extends Error {

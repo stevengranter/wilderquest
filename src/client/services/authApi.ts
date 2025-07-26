@@ -6,8 +6,15 @@ import { z } from 'zod'
 import api from '@/api/api'
 import { handleError } from '@/helpers/errorHandler.js'
 import { DecodedToken, DecodedTokenSchema } from '@/models/token.js'
-import { LoginRequestSchema, RegisterRequestSchema } from '../../shared/schemas/Auth.js'
-import type { LoggedInUser, LoginResponseData, RegisterResponseData } from '../../shared/types/authTypes.js'
+import {
+    LoginRequestSchema,
+    RegisterRequestSchema,
+} from '../../shared/schemas/Auth.js'
+import type {
+    LoggedInUser,
+    LoginResponseData,
+    RegisterResponseData,
+} from '../../shared/types/authTypes.js'
 
 export type TokenCallbacks = {
     accessToken: string | null
@@ -86,7 +93,10 @@ export const authApi = {
         }
     },
 
-    async refreshAccessToken(): Promise<void> {
+    async refreshAccessToken(): Promise<{
+        access_token: string
+        refresh_token: string
+    } | null> {
         if (!callbacks) {
             console.error('No callbacks configured for authAPI')
             throw new Error('No callbacks configured for authAPI')
@@ -109,7 +119,6 @@ export const authApi = {
 
         try {
             console.log('Calling refresh token endpoint...')
-            // Remove the extra /api prefix
             const response = await api.post('/auth/refresh', {
                 user_cuid,
                 refresh_token: refreshToken,
@@ -117,14 +126,14 @@ export const authApi = {
 
             console.log('Refresh response:', {
                 status: response.status,
-                data: response.data, // Log full response data for debugging
+                data: response.data,
                 hasAccessToken: !!response.data?.access_token,
                 hasRefreshToken: !!response.data?.refresh_token,
             })
 
             if (!response.data?.access_token || !response.data?.refresh_token) {
                 callbacks.clearAll()
-                throw new Error('Invalid token refresh response')
+                console.log('Invalid token refresh response')
             }
 
             callbacks.saveAccessToken(response.data.access_token)
@@ -132,7 +141,10 @@ export const authApi = {
 
             console.log('Tokens successfully updated')
 
-            return
+            return {
+                access_token: response.data.access_token,
+                refresh_token: response.data.refresh_token,
+            }
         } catch (error) {
             console.error('Refresh token error:', error)
             callbacks.clearAll()
@@ -178,7 +190,7 @@ export const testUtils = {
             const response = await api.get('/auth/test-auth')
             console.log('Unexpected success from test endpoint:', response)
             return false
-        } catch (error) {
+        } catch (_error) {
             // Give the refresh process time to complete
             await new Promise((resolve) => setTimeout(resolve, 1000))
 
@@ -194,7 +206,7 @@ export const testUtils = {
             })
 
             // Verify the new token exists and is different
-            return wasRefreshed && newToken !== null && newToken !== ''
+            return newToken !== '' && newToken !== null && wasRefreshed
         }
     },
 }
