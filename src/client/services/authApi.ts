@@ -6,15 +6,8 @@ import { z } from 'zod'
 import api from '@/api/api'
 import { handleError } from '@/helpers/errorHandler.js'
 import { DecodedToken, DecodedTokenSchema } from '@/models/token.js'
-import {
-    LoginRequestSchema,
-    RegisterRequestSchema,
-} from '../../shared/schemas/Auth.js'
-import type {
-    LoggedInUser,
-    LoginResponseData,
-    RegisterResponseData,
-} from '../../shared/types/authTypes.js'
+import { LoginRequestSchema, RegisterRequestSchema } from '../../shared/schemas/Auth.js'
+import type { LoggedInUser, LoginResponseData, RegisterResponseData } from '../../shared/types/authTypes.js'
 
 export type TokenCallbacks = {
     accessToken: string | null
@@ -116,20 +109,22 @@ export const authApi = {
 
         try {
             console.log('Calling refresh token endpoint...')
-            const response = await axios.post('/api/auth/refresh', {
+            // Remove the extra /api prefix
+            const response = await api.post('/auth/refresh', {
                 user_cuid,
                 refresh_token: refreshToken,
             })
 
             console.log('Refresh response:', {
                 status: response.status,
+                data: response.data, // Log full response data for debugging
                 hasAccessToken: !!response.data?.access_token,
                 hasRefreshToken: !!response.data?.refresh_token,
             })
 
             if (!response.data?.access_token || !response.data?.refresh_token) {
                 callbacks.clearAll()
-                console.error('Invalid token refresh response')
+                throw new Error('Invalid token refresh response')
             }
 
             callbacks.saveAccessToken(response.data.access_token)
@@ -169,28 +164,37 @@ export const testUtils = {
     async simulateExpiredToken() {
         if (!callbacks?.accessToken) {
             console.error('No access token to expire')
-            return
+            return false
         }
 
-        // Save the current token for verification
         const oldToken = callbacks.accessToken
+        console.log(
+            'Starting token refresh test with token:',
+            oldToken.substring(0, 10) + '...'
+        )
 
-        // Force a 401 response to trigger refresh
         try {
-            await api.get('/auth/test-auth', {
-                headers: {
-                    Authorization: 'Bearer expired_token',
-                },
-            })
+            // Make sure we use the test endpoint that always returns 401
+            const response = await api.get('/auth/test-auth')
+            console.log('Unexpected success from test endpoint:', response)
+            return false
         } catch (error) {
-            console.log(
-                'Error caught while simulating expired token:',
-                error.message,
-                'Expected 401 error, checking if token was refreshed...'
-            )
-            console.log('Old token:', oldToken)
-            console.log('New token:', callbacks.accessToken)
-            return oldToken !== callbacks.accessToken
+            // Give the refresh process time to complete
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+
+            // Get the new token
+            const newToken = callbacks.accessToken
+            const wasRefreshed = oldToken !== newToken
+
+            console.log('Token refresh test complete:', {
+                wasRefreshed,
+                oldToken: oldToken.substring(0, 10) + '...',
+                newToken: newToken.substring(0, 10) + '...',
+                tokenChanged: oldToken !== newToken,
+            })
+
+            // Verify the new token exists and is different
+            return wasRefreshed && newToken !== null && newToken !== ''
         }
     },
 }

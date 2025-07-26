@@ -7,6 +7,7 @@ interface AuthController {
     login: RequestHandler
     logout: RequestHandler
     handleRefreshToken: RequestHandler
+    testAuth: RequestHandler
 }
 
 export function authRouter(controller: AuthController) {
@@ -16,9 +17,7 @@ export function authRouter(controller: AuthController) {
     router.post('/login', controller.login)
     router.post('/logout', controller.logout)
     router.post('/refresh', controller.handleRefreshToken)
-    router.get('/test-auth', optionalAuthMiddleware, (req, res) => {
-        res.status(200).json({ message: 'Authentication successful' })
-    })
+    router.get('/test-auth', optionalAuthMiddleware, controller.testAuth)
 
     return router
 }

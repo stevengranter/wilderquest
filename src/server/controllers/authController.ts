@@ -1,24 +1,12 @@
 // src/controllers/authController.ts
 import { NextFunction, Request, Response } from 'express' // Import NextFunction
-
+import jwt from 'jsonwebtoken'
 // Import your Zod schemas for request body validation
-import {
-    LoginRequestSchema,
-    RefreshReqBodySchema,
-    RegisterRequestSchema,
-} from '../../shared/schemas/Auth.js'
-
+import { LoginRequestSchema, RefreshReqBodySchema, RegisterRequestSchema } from '../../shared/schemas/Auth.js'
 // Import your custom types
 import type { AuthenticatedRequest } from '../middlewares/verifyJWT.js' // Assuming this is defined
-
 // Import your AuthService and custom error classes
-import AuthService, {
-    // Import AuthService class itself
-    AuthServiceInstance,
-    UserCreationError, // Keep if custom errors are thrown by AuthService
-    UserExistsError, // Keep if custom errors are thrown by AuthService
-    UserRetrievalError, // Keep if custom errors are thrown by AuthService
-} from '../services/authService.js'
+import { AuthServiceInstance } from '../services/authService.js'
 
 /**
  * Defines a custom error interface that includes a statusCode property.
@@ -142,6 +130,76 @@ export function createAuthController(authService: AuthServiceInstance) {
                 access_token: accessToken,
                 refresh_token: refreshToken, // Send the new refresh token back
             })
+        },
+
+        async testAuth(req: AuthenticatedRequest, res: Response) {
+            const authHeader = req.headers.authorization
+
+            if (!authHeader) {
+                return res.status(401).json({
+                    status: 'error',
+                    message: 'No authorization header',
+                    code: 'NO_AUTH_HEADER',
+                })
+            }
+
+            const token = authHeader.split(' ')[1]
+
+            try {
+                const decoded = jwt.verify(
+                    token,
+                    process.env.ACCESS_TOKEN_SECRET!
+                ) as jwt.JwtPayload
+
+                // Calculate remaining time
+                const now = Math.floor(Date.now() / 1000)
+                const timeRemaining = decoded.exp ? decoded.exp - now : 0
+
+                return res.status(200).json({
+                    status: 'success',
+                    message: 'Token is valid',
+                    tokenInfo: {
+                        isValid: true,
+                        expiresIn: timeRemaining,
+                        exp: decoded.exp,
+                        iat: decoded.iat,
+                        user: {
+                            id: decoded.id,
+                            cuid: decoded.cuid,
+                            role_id: decoded.role_id,
+                        },
+                    },
+                })
+            } catch (error) {
+                if (error instanceof jwt.TokenExpiredError) {
+                    return res.status(401).json({
+                        status: 'error',
+                        message: 'Token has expired',
+                        code: 'TOKEN_EXPIRED',
+                        expiredAt: error.expiredAt,
+                    })
+                }
+
+                if (error instanceof jwt.JsonWebTokenError) {
+                    return res.status(401).json({
+                        status: 'error',
+                        message: 'Invalid token',
+                        code: 'INVALID_TOKEN',
+                        error: error.message,
+                    })
+                }
+
+                // For any other errors
+                return res.status(401).json({
+                    status: 'error',
+                    message: 'Token validation failed',
+                    code: 'TOKEN_VALIDATION_FAILED',
+                    error:
+                        error instanceof Error
+                            ? error.message
+                            : 'Unknown error',
+                })
+            }
         },
     }
 

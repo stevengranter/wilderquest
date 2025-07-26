@@ -1,4 +1,3 @@
-// api.ts
 import axios from 'axios'
 import { authApi } from '@/services/authApi'
 
@@ -20,29 +19,47 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config
+
+        // Log more details about the error
         console.log('Response error:', {
             status: error.response?.status,
             isRetry: originalRequest._retry,
             url: originalRequest.url,
+            error: error.message,
         })
 
-        // Prevent infinite loops
+        // Check if it's a 401 and we haven't tried to refresh yet
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true
-            console.log('Attempting token refresh...')
 
             try {
+                console.log('Attempting token refresh...')
                 await authApi.refreshAccessToken()
+
+                // Update the Authorization header with the new token
+                const newToken = localStorage.getItem('accessToken')
+                originalRequest.headers.Authorization = `Bearer ${newToken}`
+
                 console.log(
-                    'Token refresh successful, retrying original request'
+                    'Token refresh successful, retrying with new token:',
+                    {
+                        newToken: newToken
+                            ? newToken.substring(0, 10) + '...'
+                            : 'none',
+                    }
                 )
+
+                // Retry the original request with the new token
                 return api(originalRequest)
             } catch (refreshError) {
                 console.error('Token refresh failed:', refreshError)
+                // Redirect to login only if refresh actually failed
                 window.location.href = '/login'
                 return Promise.reject(refreshError)
             }
         }
+
+        // If it's not a 401 or we've already tried to refresh, reject with the original error
         return Promise.reject(error)
     }
 )
