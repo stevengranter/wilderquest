@@ -39,7 +39,7 @@ const verifyJWT = (
         (err, decoded) => {
             if (err) {
                 console.log('Invalid token or token expired:', err)
-                return next()
+                return res.sendStatus(401) // ✅ Fixed: Send 401 instead of calling next()
             }
 
             if (decoded) {
@@ -53,8 +53,9 @@ const verifyJWT = (
                 next()
             } else {
                 console.error(
-                    'Error in decoding token in verifyJWT middleware.',
+                    'Error in decoding token in verifyJWT middleware.'
                 )
+                res.sendStatus(401) // ✅ Added: Send 401 for undefined decoded token
             }
         }
     )
@@ -63,13 +64,13 @@ const verifyJWT = (
 export const optionalAuthMiddleware = (
     req: AuthenticatedRequest,
     _res: Response,
-    next: NextFunction,
+    next: NextFunction
 ) => {
     const authHeader = req.headers.authorization
 
     if (!authHeader) {
         console.log(
-            'Authorization header is missing — proceeding as unauthenticated',
+            'Authorization header is missing — proceeding as unauthenticated'
         )
         return next()
     }
@@ -95,7 +96,7 @@ export const optionalAuthMiddleware = (
                 }
             } else {
                 console.error(
-                    'Decoded token is undefined in optionalAuthMiddleware after successful verification.',
+                    'Decoded token is undefined in optionalAuthMiddleware after successful verification.'
                 )
             }
             next()
