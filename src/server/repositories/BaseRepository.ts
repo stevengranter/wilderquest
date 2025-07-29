@@ -1,12 +1,35 @@
 import { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
-import { User } from '../models/User.js' // Import Pool type
 
 export type getColumnsOptions = {
     orderByColumn: string
     order: 'desc' | 'asc'
 }
 
-class BaseRepository<T> {
+export interface IBaseRepository<T> {
+    getDb(): Pool
+    getTableName(): string
+
+    create(data: Partial<T>): Promise<number>
+    update(id: number | undefined, data: object): Promise<boolean>
+    delete(id: number): Promise<boolean>
+
+    findOne(conditions: Partial<T>): Promise<T | null>
+    findMany(conditions: Partial<T>, options?: {}): Promise<T[]>
+    findRowByColumnAndValue<K>(
+        column: K,
+        value: string | number
+    ): Promise<unknown[]>
+    findAll(): Promise<T[]>
+
+    getColumns(
+        columns: string[],
+        options: getColumnsOptions
+    ): Promise<Partial<T>[]>
+}
+
+export type BaseRepositoryInstance<T> = BaseRepository<T>
+
+class BaseRepository<T> implements IBaseRepository<T> {
     private tableName: string
     private dbPool: Pool // Store the injected database pool
 
@@ -70,8 +93,8 @@ class BaseRepository<T> {
         try {
             const [result] = await this.dbPool.execute<ResultSetHeader>(
                 `DELETE
-                                                                 FROM ${this.tableName}
-                                                                 WHERE id = ?`,
+                     FROM ${this.tableName}
+                     WHERE id = ?`,
                 [id]
             )
             return result.affectedRows > 0
@@ -84,40 +107,31 @@ class BaseRepository<T> {
         }
     }
 
-    public async findOne(conditions: Partial<T>): Promise<T | null> {
+    async findOne(conditions: Partial<T>): Promise<T | null> {
         try {
-            const whereClauses = []
-            const values: unknown[] = []
-
-            for (const [key, value] of Object.entries(conditions)) {
-                whereClauses.push(`${key} = ?`)
-                values.push(value)
+            const keys = Object.keys(conditions) as (keyof T)[]
+            if (keys.length === 0) {
+                throw new Error('findOne called without conditions')
             }
 
-            if (whereClauses.length === 0) {
-                throw new Error('No conditions provided')
-            }
+            const whereClause = keys
+                .map((key) => `${String(key)} = ?`)
+                .join(' AND ')
+            const values = keys.map((key) => conditions[key])
 
-            const whereSql = whereClauses.join(' AND ')
-
-            const query = `SELECT *
-                           FROM ${this.tableName}
-                           WHERE ${whereSql}
-                           LIMIT 1`
-
+            const query = `SELECT * FROM ${this.tableName} WHERE ${whereClause} LIMIT 1`
             const [rows] = await this.dbPool.execute<RowDataPacket[]>(
                 query,
                 values
-            ) // Use this.dbPool directly
+            )
 
             return rows.length > 0 ? (rows[0] as T) : null
         } catch (error) {
-            console.error('Error in findOne method:', error)
-            throw error
+            console.error(`Error in findOne for ${this.tableName}:`, error)
+            throw error // rethrow to satisfy the linter
         }
     }
 
-    // ... (repeat for all other methods, replacing this.getDb().execute with this.dbPool.execute)
     async findMany(
         conditions: Partial<T>,
         options?: {

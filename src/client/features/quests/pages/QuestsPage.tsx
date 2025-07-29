@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import api from '@/api/api'
 import { Link } from 'react-router'
+import { toast } from 'sonner'
+import api from '@/api/api'
+import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useAuth } from '@/hooks/useAuth'
-import { toast } from 'sonner'
 import { Collection } from '../../../../types/types'
-import { Button } from '@/components/ui/button'
 
 export function QuestsPage() {
     const { isAuthenticated, user } = useAuth()
@@ -19,7 +19,8 @@ export function QuestsPage() {
 
     useEffect(() => {
         if (!isMyQuests) {
-            api.get('/collections').then((response) => {
+            api.get('/quests').then((response) => {
+                console.log(response.data)
                 setQuests(response.data)
             })
         }
@@ -49,7 +50,9 @@ export function QuestsPage() {
                 <Label htmlFor="airplane-mode">My Quests</Label>
             </div>
             <QuestsList quests={quests} />
-            <Button><Link to="/quests/create">Create Quest</Link></Button>
+            <Button>
+                <Link to="/quests/create">Create Quest</Link>
+            </Button>
         </>
     )
 }
@@ -61,10 +64,9 @@ function QuestsList({ quests }: { quests: Collection[] }) {
         <ul>
             {quests.map((quest) => (
                 <li key={quest.id}>
-                    <Link to={`/collections/${quest.id}`}>{quest.name}</Link>
+                    <Link to={`/quests/${quest.id}`}>{quest.name}</Link>
                 </li>
             ))}
         </ul>
     )
 }
-
