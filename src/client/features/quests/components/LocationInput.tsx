@@ -114,7 +114,7 @@ export function LocationInput({
                     </FormControl>
 
                     {showSuggestions && suggestions.length > 0 && (
-                        <ul className="absolute mt-1 z-10 w-full bg-white border border-gray-300 rounded shadow-md">
+                        <ul className="absolute mt-15 z-10 w-full bg-white border border-gray-300 rounded shadow-md">
                             {suggestions.map((s) => (
                                 <li
                                     key={s.place_id}

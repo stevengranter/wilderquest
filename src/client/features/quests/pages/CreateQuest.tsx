@@ -3,6 +3,8 @@ import axios from 'axios'
 import React, { useEffect, useMemo, useState } from 'react'
 import { FormProvider, useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
+import titleCase from '@/components/search/titleCase'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
     FormControl,
@@ -22,26 +24,51 @@ export const formSchema = z.object({
         message: 'Quest name must be at least 2 characters.',
     }),
     locationName: z.string().min(2, {
-        message: 'Quest name must be at least 2 characters.',
+        message: 'Location name must be at least 2 characters.',
     }),
-    latitude: z.number().optional(),
-    longitude: z.number().optional(),
+    latitude: z.number(), // Remove .optional() if required
+    longitude: z.number(), // Remove .optional() if required
 })
 
 interface TaxonData {
+    default_photo: DefaultPhoto
     id: number
     name: string
     preferred_common_name: string
 }
 
-interface SpeciesCount {
+interface DefaultPhoto {
+    id: number
+    license_code: string
+    attribution: string
+    url: string
+    original_dimensions: {
+        height: number
+        width: number
+    }
+    flags: {
+        id: number
+        flag: string
+        comment: string
+        user_id: number
+        resolver_id: number
+        resolved: boolean
+        created_at: string
+        updated_at: string
+    }[]
+    attribution_name: string | null
+    square_url: string
+    medium_url: string
+}
+
+interface SpeciesCountItem {
     taxon: TaxonData
     count: number
 }
 
 export function CreateQuest() {
     const { isAuthenticated } = useAuth()
-    const [speciesCounts, setSpeciesCounts] = useState<SpeciesCount[]>([])
+    const [speciesCounts, setSpeciesCounts] = useState<SpeciesCountItem[]>([])
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -115,7 +142,13 @@ export function CreateQuest() {
                         name="locationName"
                         control={form.control}
                         watch={form.watch}
-                        setValue={form.setValue}
+                        setValue={(name, value) => {
+                            form.setValue(name, value, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                                shouldTouch: true,
+                            })
+                        }}
                     />
 
                     <div className="flex flex-row gap-4">
@@ -167,25 +200,36 @@ export function CreateQuest() {
 
                     {speciesCounts.length > 0 && (
                         <div className="flex flex-col gap-4">
-                            {speciesCounts.map((s) => (
-                                <div key={s.taxon.id}>
-                                    <div className="flex flex-row gap-4">
-                                        <div className="flex flex-col">
-                                            <div className="font-bold">
-                                                {s.count}
-                                                {s.taxon.preferred_common_name}{' '}
-                                                - <i>{s.taxon.name}</i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                            {speciesCounts.map((s) => SpeciesItem(s))}
                         </div>
                     )}
 
                     <Button type="submit">Submit</Button>
                 </form>
             </FormProvider>
+        </div>
+    )
+}
+
+function SpeciesItem(s: SpeciesCountItem) {
+    return (
+        <div key={s.taxon.id}>
+            <div className="flex flex-row gap-4">
+                {s.taxon.default_photo && (
+                    <img
+                        src={s.taxon.default_photo.square_url}
+                        alt={`Photo of ${s.taxon.preferred_common_name} - ${s.taxon.name}`}
+                        className="w-16 h-16 rounded object-cover"
+                    />
+                )}
+
+                <div className="flex flex-col">
+                    <Badge>{s.count}</Badge>
+                    {titleCase(s.taxon.preferred_common_name)}-{' '}
+                    <i>{s.taxon.name}</i>
+                </div>
+                <Button>Add to quest</Button>
+            </div>
         </div>
     )
 }
@@ -201,5 +245,6 @@ async function getSpeciesCountsByGeoLocation(
     if (!response.data) {
         return []
     }
+    console.log(response.data)
     return response.data
 }
