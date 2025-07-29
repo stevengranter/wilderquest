@@ -2,7 +2,10 @@ import { Request, Response } from 'express'
 import { z } from 'zod'
 import { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
 import { CollectionRepositoryInstance } from '../repositories/CollectionRepository.js'
-import { CollectionSchema } from '../schemas/collection.schemas.js'
+import {
+    CollectionSchema,
+    CreateCollectionSchema,
+} from '../schemas/collection.schemas.js'
 import { CollectionService } from '../services/CollectionService.js'
 
 export function createCollectionController(
@@ -99,12 +102,20 @@ export function createCollectionController(
         ): Promise<void> {
             try {
                 const userId = req.user?.id
+                console.log('userId: ', userId)
+                console.log('req.body: ', req.body)
+
                 if (!userId) {
                     res.status(401).json({ message: 'Unauthorized' })
                     return
                 }
 
-                const parsedBody = CollectionSchema.safeParse(req.body)
+                const parsedBody = CreateCollectionSchema.safeParse({
+                    ...req.body,
+                    user_id: userId,
+                    created_at: new Date(),
+                    updated_at: new Date(),
+                })
                 if (!parsedBody.success) {
                     res.status(400).send(parsedBody.error.issues)
                     return

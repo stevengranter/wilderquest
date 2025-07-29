@@ -2,7 +2,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
 import React, { useEffect, useMemo, useState } from 'react'
 import { FormProvider, useForm, useWatch } from 'react-hook-form'
+import { useNavigate } from 'react-router'
 import { z } from 'zod'
+import api from '@/api/api'
 import titleCase from '@/components/search/titleCase'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -70,6 +72,7 @@ export function CreateQuest() {
     const { isAuthenticated } = useAuth()
     const [speciesCounts, setSpeciesCounts] = useState<SpeciesCountItem[]>([])
     const [questSpecies, setQuestSpecies] = useState<SpeciesCountItem[]>([])
+    const navigate = useNavigate()
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -105,8 +108,25 @@ export function CreateQuest() {
         console.log(questSpecies)
     }, [questSpecies])
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log('Form Submitted:', values)
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        const taxonIds = questSpecies.map((s) => s.taxon.id)
+        const { questName } = values
+        const payload = {
+            name: questName,
+            taxon_ids: taxonIds,
+        }
+
+        console.log('Submitting quest with:', payload)
+
+        const newCollection = await api.post('/collections', payload)
+
+        if (!newCollection.data.id) {
+            console.error('Failed to create collection')
+        }
+
+        console.log('Created collection:', newCollection.data)
+
+        navigate(`/collections/${newCollection.data.collection.id}`)
     }
 
     function toggleSpeciesInQuest(species: SpeciesCountItem) {

@@ -2,10 +2,13 @@ import { z } from 'zod'
 import { Collection } from '../../types/types.js'
 import { CollectionToTaxa } from '../models/CollectionToTaxa.js'
 import { CollectionRepositoryInstance } from '../repositories/CollectionRepository.js'
-import { CollectionSchema } from '../schemas/collection.schemas.js'
+import {
+    CollectionSchema,
+    CreateCollectionSchema,
+} from '../schemas/collection.schemas.js'
 
 // Types
-type CreateCollectionInput = z.infer<typeof CollectionSchema>
+type CreateCollectionInput = z.infer<typeof CreateCollectionSchema>
 type UpdateCollectionInput = Partial<CreateCollectionInput>
 type CollectionModel = z.infer<typeof CollectionSchema> & {
     id: number
@@ -24,7 +27,7 @@ export class CollectionService {
 
     async getPublicCollectionById(
         collectionId: number
-    ): Promise<(CollectionModel & { taxon_ids: number[] }) | null> {
+    ): Promise<CollectionModel | null> {
         const collection = await this.collectionRepo.findOne({
             id: collectionId,
             is_private: false,
@@ -39,19 +42,27 @@ export class CollectionService {
 
     async createCollection(
         data: CreateCollectionInput
-    ): Promise<CollectionModel> {
+    ): Promise<Collection & { taxon_ids: number[] }> {
         this.ensureAuthorized()
+        const { taxon_ids = [], ...collectionData } = data
 
-        const newId = await this.collectionRepo.create({
-            ...data,
+        const newCollectionId = await this.collectionRepo.create({
+            ...collectionData,
             user_id: this.userId!,
         })
 
-        const collection = await this.collectionRepo.findOne({ id: newId })
-        if (!collection)
+        const newCollection = await this.collectionRepo.findOne({
+            id: newCollectionId,
+        })
+        if (!newCollection) {
             throw new Error('Failed to retrieve newly created collection.')
+        }
 
-        return collection
+        if (taxon_ids.length > 0) {
+            await this.updateCollectionTaxa(newCollectionId, taxon_ids)
+        }
+
+        return this.enrichCollectionWithTaxa(newCollection)
     }
 
     async updateCollection(
