@@ -8,6 +8,7 @@ import Register from '@/components/pages/Register'
 import Welcome from '@/components/pages/Welcome'
 import CollectionDetail from '@/features/collections/CollectionDetail'
 import UserCollectionsManager from '@/features/collections/UserCollectionsManager'
+import QuestDetail from '@/features/quests/components/QuestDetail'
 import { CreateQuest } from '@/features/quests/pages/CreateQuest'
 import { QuestsPage } from '@/features/quests/pages/QuestsPage'
 import { AppLayout } from '@/layouts/AppLayout'
@@ -77,6 +78,10 @@ export const router = createBrowserRouter([
                     {
                         index: true, // For /quests (no ID)
                         element: <QuestsPage />,
+                    },
+                    {
+                        path: ':questId',
+                        element: <QuestDetail />,
                     },
                     {
                         path: 'create',

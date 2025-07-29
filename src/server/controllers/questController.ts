@@ -5,7 +5,14 @@ export function createQuestController(questService: QuestServiceInstance) {
         return questService.getAllPublicQuests()
     }
 
-    return { getQuests: getPublicQuests }
+    async function getQuestById(id: number) {
+        return questService.getQuestById(id)
+    }
+
+    return {
+        getQuests: getPublicQuests,
+        getQuestById: getQuestById,
+    }
 }
 
 export type QuestController = ReturnType<typeof createQuestController>

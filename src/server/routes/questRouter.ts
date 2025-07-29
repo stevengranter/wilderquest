@@ -8,5 +8,9 @@ export function questRouter(controller: QuestController) {
         console.log(quests)
         res.status(200).send(quests)
     })
+    router.get('/:id', async (req, res) => {
+        const quest = await controller.getQuestById(Number(req.params.id))
+        res.status(200).send(quest)
+    })
     return router
 }
