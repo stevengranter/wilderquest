@@ -13,6 +13,11 @@ export const CollectionSchema = z.object({
     description: z.string().optional(),
     is_private: z.boolean().default(false),
     emoji: z.string().optional(),
+    location_name: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+    created_at: z.instanceof(Date).optional(),
+    updated_at: z.instanceof(Date).optional(),
 })
 
 export const CreateCollectionSchema = CollectionSchema.extend({

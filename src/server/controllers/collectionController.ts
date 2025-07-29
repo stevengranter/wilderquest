@@ -121,6 +121,8 @@ export function createCollectionController(
                     return
                 }
 
+                console.log('parsedBody.data: ', parsedBody.data)
+
                 const service = new CollectionService(collectionRepo, userId)
                 const newCollection = await service.createCollection(
                     parsedBody.data

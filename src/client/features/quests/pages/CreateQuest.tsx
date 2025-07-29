@@ -110,9 +110,12 @@ export function CreateQuest() {
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         const taxonIds = questSpecies.map((s) => s.taxon.id)
-        const { questName } = values
+        const { questName, locationName, latitude, longitude } = values
         const payload = {
             name: questName,
+            location_name: locationName,
+            latitude: latitude,
+            longitude: longitude,
             taxon_ids: taxonIds,
         }
 
@@ -120,7 +123,7 @@ export function CreateQuest() {
 
         const newCollection = await api.post('/collections', payload)
 
-        if (!newCollection.data.id) {
+        if (!newCollection.data.collection.id) {
             console.error('Failed to create collection')
         }
 
