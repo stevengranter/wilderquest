@@ -69,6 +69,7 @@ interface SpeciesCountItem {
 export function CreateQuest() {
     const { isAuthenticated } = useAuth()
     const [speciesCounts, setSpeciesCounts] = useState<SpeciesCountItem[]>([])
+    const [questSpecies, setQuestSpecies] = useState<SpeciesCountItem[]>([])
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -100,9 +101,25 @@ export function CreateQuest() {
         })
     }, [lat, lon])
 
+    useEffect(() => {
+        console.log(questSpecies)
+    }, [questSpecies])
+
     function onSubmit(values: z.infer<typeof formSchema>) {
-        // This function is called when the form is submitted
         console.log('Form Submitted:', values)
+    }
+
+    function toggleSpeciesInQuest(species: SpeciesCountItem) {
+        setQuestSpecies((prev) => {
+            const alreadyAdded = prev.some(
+                (s) => s.taxon.id === species.taxon.id
+            )
+            if (alreadyAdded) {
+                return prev.filter((s) => s.taxon.id !== species.taxon.id)
+            } else {
+                return [...prev, species]
+            }
+        })
     }
 
     if (!isAuthenticated) {
@@ -198,38 +215,59 @@ export function CreateQuest() {
 
                     <QuestMapView options={{ center, zoom: 13 }} />
 
-                    {speciesCounts.length > 0 && (
-                        <div className="flex flex-col gap-4">
-                            {speciesCounts.map((s) => SpeciesItem(s))}
-                        </div>
-                    )}
+                    <h2>Top Species</h2>
+                    {speciesCounts.map((s) => (
+                        <SpeciesItem
+                            key={s.taxon.id}
+                            species={s}
+                            onToggle={toggleSpeciesInQuest}
+                            questSpecies={questSpecies}
+                        />
+                    ))}
 
-                    <Button type="submit">Submit</Button>
+                    <Button type="submit">Save Quest</Button>
                 </form>
             </FormProvider>
         </div>
     )
 }
 
-function SpeciesItem(s: SpeciesCountItem) {
-    return (
-        <div key={s.taxon.id}>
-            <div className="flex flex-row gap-4">
-                {s.taxon.default_photo && (
-                    <img
-                        src={s.taxon.default_photo.square_url}
-                        alt={`Photo of ${s.taxon.preferred_common_name} - ${s.taxon.name}`}
-                        className="w-16 h-16 rounded object-cover"
-                    />
-                )}
+type SpeciesItemProps = {
+    species: SpeciesCountItem
+    onToggle: (species: SpeciesCountItem) => void
+    questSpecies: SpeciesCountItem[]
+}
 
-                <div className="flex flex-col">
-                    <Badge>{s.count}</Badge>
-                    {titleCase(s.taxon.preferred_common_name)}-{' '}
-                    <i>{s.taxon.name}</i>
-                </div>
-                <Button>Add to quest</Button>
+function SpeciesItem({ species, onToggle, questSpecies }: SpeciesItemProps) {
+    const isAdded = questSpecies.some(
+        (added) => added.taxon.id === species.taxon.id
+    )
+
+    return (
+        <div className="flex flex-row gap-4 items-center">
+            {species.taxon.default_photo && (
+                <img
+                    src={species.taxon.default_photo.square_url}
+                    alt={`Photo of ${species.taxon.preferred_common_name} - ${species.taxon.name}`}
+                    className="w-16 h-16 rounded object-cover"
+                />
+            )}
+
+            <div className="flex flex-col">
+                <Badge>{species.count}</Badge>
+                {titleCase(species.taxon.preferred_common_name)} -{' '}
+                <i>{species.taxon.name}</i>
             </div>
+
+            <Button
+                onClick={(e) => {
+                    e.preventDefault()
+                    onToggle(species)
+                }}
+                variant={isAdded ? 'neutral' : 'default'}
+            >
+                {isAdded ? 'Remove from Quest' : 'Add to Quest'}
+            </Button>
         </div>
     )
 }
