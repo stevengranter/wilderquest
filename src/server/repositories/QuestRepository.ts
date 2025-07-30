@@ -1,4 +1,4 @@
-import { Pool } from 'mysql2/promise'
+import { Pool, RowDataPacket } from 'mysql2/promise'
 import BaseRepository from './BaseRepository.js'
 
 type Quest = {
@@ -23,6 +23,23 @@ export default class QuestRepository extends BaseRepository<Quest> {
             `QuestRepository constructed for table '${tableName}' with dbPool:`,
             dbPool ? 'exists' : 'does not exist'
         )
+    }
+
+    async findAccessibleById(
+        id: number,
+        userId?: number
+    ): Promise<Quest | null> {
+        const query = `
+    SELECT * FROM ${this.getTableName()}
+    WHERE id = ?
+      AND (is_private = FALSE OR user_id = ?)
+    LIMIT 1
+  `
+        const [rows] = await this.getDb().execute<RowDataPacket[]>(query, [
+            id,
+            userId ?? -1,
+        ])
+        return rows.length > 0 ? (rows[0] as Quest) : null
     }
 }
 

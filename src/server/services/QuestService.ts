@@ -15,8 +15,14 @@ export class QuestService {
         return this.questsRepo.findMany({ is_private: false })
     }
 
-    async getQuestById(id: number) {
-        return this.questsRepo.findOne({ id })
+    async getQuestById(id: number, userId?: number) {
+        const collection = await this.questsRepo.findAccessibleById(id, userId)
+
+        if (!collection) {
+            throw new Error('Quest not found or access denied')
+        }
+
+        return collection
     }
 
     async getTaxaForQuestId(questId: number) {
