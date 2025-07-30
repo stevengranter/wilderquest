@@ -24,6 +24,8 @@ export function createQuestController(questService: QuestServiceInstance) {
         }
     }
 
+
+
     return {
         getQuests: getPublicQuests,
         getQuestById: getQuest,

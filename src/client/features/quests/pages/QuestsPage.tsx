@@ -19,7 +19,7 @@ export function QuestsPage() {
 
     useEffect(() => {
         if (!isMyQuests) {
-            api.get('/quests').then((response) => {
+            api.get('/collections').then((response) => {
                 console.log(response.data)
                 setQuests(response.data)
             })
@@ -64,7 +64,7 @@ function QuestsList({ quests }: { quests: Collection[] }) {
         <ul>
             {quests.map((quest) => (
                 <li key={quest.id}>
-                    <Link to={`/quests/${quest.id}`}>{quest.name}</Link>
+                    <Link to={`/collections/${quest.id}`}>{quest.name}</Link>
                 </li>
             ))}
         </ul>
