@@ -41,6 +41,22 @@ export default class QuestRepository extends BaseRepository<Quest> {
         ])
         return rows.length > 0 ? (rows[0] as Quest) : null
     }
+
+    async findAccessibleByUserId(
+        userId: number,
+    ): Promise<Quest[]> {
+        const query = `
+    SELECT * FROM ${this.getTableName()}
+    WHERE user_id = ?
+      AND (is_private = FALSE OR user_id = ?)
+        `
+        const [rows] = await this.getDb().execute<RowDataPacket[]>(query, [
+            userId,
+            userId,
+        ])
+        return rows as Quest[]
+    }
+
 }
 
 export type QuestToTaxaRepositoryInstance = InstanceType<

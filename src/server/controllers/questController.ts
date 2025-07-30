@@ -24,11 +24,24 @@ export function createQuestController(questService: QuestServiceInstance) {
         }
     }
 
+    async function getQuestsByUserIdParam(req: AuthenticatedRequest, res: Response) {
+        const userId = req.params.user_id
+        try {
+            const quests = await questService.getQuestsByUserId(Number(userId))
+            res.status(200).json(quests)
+            return
+        }  catch (_error) {
+            res.status(404).json({
+                message: 'Quests not found or access denied',
+            })
+        }
+    }
 
 
     return {
         getQuests: getPublicQuests,
         getQuestById: getQuest,
+        getQuestsByUserId: getQuestsByUserIdParam,
     }
 }
 

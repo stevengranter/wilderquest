@@ -1,7 +1,4 @@
-import {
-    QuestRepositoryInstance,
-    QuestToTaxaRepositoryInstance,
-} from '../repositories/QuestRepository.js'
+import { QuestRepositoryInstance, QuestToTaxaRepositoryInstance } from '../repositories/QuestRepository.js'
 
 export type QuestServiceInstance = InstanceType<typeof QuestService>
 
@@ -23,6 +20,10 @@ export class QuestService {
         }
 
         return collection
+    }
+
+    async getQuestsByUserId(userId: number) {
+        return this.questsRepo.findAccessibleByUserId(userId)
     }
 
     async getTaxaForQuestId(questId: number) {
