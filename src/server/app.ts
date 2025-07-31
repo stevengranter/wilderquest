@@ -9,12 +9,12 @@ import { createQuestController } from './controllers/questController.js'
 import { createUserController } from './controllers/userController.js'
 import { rateLimiter } from './middlewares/rateLimiter.js'
 import { rateSlowDown } from './middlewares/rateSlowDown.js'
-import { CollectionRepositoryInstance } from './repositories/CollectionRepository.js'
+import { CollectionRepository } from './repositories/CollectionRepository.js'
 import {
-    QuestRepositoryInstance,
-    QuestToTaxaRepositoryInstance,
+    QuestRepository,
+    QuestToTaxaRepository,
 } from './repositories/QuestRepository.js'
-import { type UserRepositoryInstance } from './repositories/UserRepository.js'
+import { type UserRepository } from './repositories/UserRepository.js'
 import { mapTilesProxyRouter } from './routes/api/proxies.routes.js'
 import { serviceRouter } from './routes/api/services.routes.js'
 import { authRouter } from './routes/authRouter.js'
@@ -22,29 +22,28 @@ import { chatRouter } from './routes/chatRouter.js'
 import { collectionRouter } from './routes/collectionRouter.js'
 import { questRouter } from './routes/questRouter.js'
 import { userRouter } from './routes/userRouter.js'
-import { AuthServiceInstance } from './services/authService.js'
-import { QuestServiceInstance } from './services/QuestService.js'
+import { createAuthService } from './services/authService.js'
+import { createQuestService } from './services/questService.js'
 
 export function buildApp({
     userRepository,
     collectionRepository,
     questRepository,
     questToTaxaRepository,
-    questService,
-    authService,
 }: {
-    userRepository: UserRepositoryInstance
-    collectionRepository: CollectionRepositoryInstance
-    questRepository: QuestRepositoryInstance
-    questToTaxaRepository: QuestToTaxaRepositoryInstance
-    questService: QuestServiceInstance
-    authService: AuthServiceInstance
+    userRepository: UserRepository
+    collectionRepository: CollectionRepository
+    questRepository: QuestRepository
+    questToTaxaRepository: QuestToTaxaRepository
 }) {
+    // initialize express
     const app = express()
     app.use(express.json())
 
+    // initialize main router
     const apiRouter = express.Router()
 
+    // TODO: create userService
     const userController = createUserController(userRepository)
     apiRouter.use('/users', userRouter(userController))
 
@@ -52,9 +51,14 @@ export function buildApp({
         createCollectionController(collectionRepository)
     apiRouter.use('/collections', collectionRouter(collectionController))
 
+    const questService = createQuestService(
+        questRepository,
+        questToTaxaRepository
+    )
     const questController = createQuestController(questService)
     apiRouter.use('/quests', questRouter(questController))
 
+    const authService = createAuthService(userRepository)
     const authController = createAuthController(authService)
     apiRouter.use('/auth', authRouter(authController))
 

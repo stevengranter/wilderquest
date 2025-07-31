@@ -1,30 +1,19 @@
 import { Pool, RowDataPacket } from 'mysql2/promise'
-import { type Collection } from '../models/Collection.js'
-import { type CollectionToTaxa } from '../models/CollectionToTaxa.js'
-import BaseRepository from './BaseRepository.js'
+import { Collection } from '../models/Collection.js'
+import { CollectionToTaxa } from '../models/CollectionToTaxa.js'
+import { createBaseRepository } from './BaseRepository.js'
 
-// Type export for usage elsewhere
-export type CollectionRepositoryInstance = InstanceType<
-    typeof CollectionRepository
->
+export type CollectionRepository = ReturnType<typeof createCollectionRepository>
 
-export default class CollectionRepository extends BaseRepository<Collection> {
-    constructor(tableName: string, dbPool: Pool) {
-        super(tableName, dbPool)
-        console.log(
-            `[CollectionRepository] Initialized for table '${tableName}'`,
-        )
-    }
+export function createCollectionRepository(tableName: string, dbPool: Pool) {
+    const base = createBaseRepository<Collection>(tableName, dbPool)
 
-    private async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
+    async function query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
         try {
-            const [rows] = await this.getDb().execute<RowDataPacket[]>(
-                sql,
-                params,
-            )
+            const [rows] = await dbPool.execute<RowDataPacket[]>(sql, params)
             return rows as T[]
         } catch (error) {
-            console.error(`[CollectionRepository] SQL Error:`, {
+            console.error(`[CollectionRepository] SQL Error`, {
                 sql,
                 params,
                 error,
@@ -33,72 +22,68 @@ export default class CollectionRepository extends BaseRepository<Collection> {
         }
     }
 
-    async findByUserId(userId: number): Promise<Collection[]> {
-        return this.query<Collection>(
-            `SELECT * FROM ${this.getTableName()} WHERE user_id = ?`,
-            [userId],
+    async function findByUserId(userId: number): Promise<Collection[]> {
+        return query<Collection>(
+            `SELECT * FROM ${tableName} WHERE user_id = ?`,
+            [userId]
         )
     }
 
-    async findAllPublic(): Promise<Collection[]> {
+    async function findAllPublic(): Promise<Collection[]> {
         try {
-            return await this.query<Collection>(
-                `SELECT * FROM ${this.getTableName()} WHERE is_private = 0`,
+            return await query<Collection>(
+                `SELECT * FROM ${tableName} WHERE is_private = 0`
             )
-        } catch (error) {
-            return [] // Silent failure fallback
+        } catch {
+            return [] // silent fallback
         }
     }
 
-    async findPublicCollectionsByUserId(userId: number): Promise<Collection[]> {
-        return this.query<Collection>(
-            `SELECT * FROM ${this.getTableName()} WHERE user_id = ? AND is_private = 0`,
-            [userId],
+    async function findPublicCollectionsByUserId(
+        userId: number
+    ): Promise<Collection[]> {
+        return query<Collection>(
+            `SELECT * FROM ${tableName} WHERE user_id = ? AND is_private = 0`,
+            [userId]
         )
     }
 
-    async findTaxaByCollectionId(
-        collectionId: number,
+    async function findTaxaByCollectionId(
+        collectionId: number
     ): Promise<CollectionToTaxa[]> {
-        return this.query<CollectionToTaxa>(
+        return query<CollectionToTaxa>(
             `SELECT taxon_id FROM collections_to_taxa WHERE collection_id = ?`,
-            [collectionId],
+            [collectionId]
         )
     }
 
-    // Alias for findTaxaByCollectionId
-    async findCollectionItemsById(
-        collectionId: number,
-    ): Promise<CollectionToTaxa[]> {
-        return this.findTaxaByCollectionId(collectionId)
-    }
+    const findCollectionItemsById = findTaxaByCollectionId
 
-    async updateCollectionItems(
+    async function updateCollectionItems(
         collectionId: number,
         taxaIds: number[]
     ): Promise<{ success: boolean }> {
         if (!taxaIds?.length) return { success: true }
 
-        const connection = await this.getDb().getConnection()
+        const connection = await dbPool.getConnection()
 
         try {
             await connection.beginTransaction()
 
-            // First, delete existing relationships
+            // Delete existing entries
             await connection.execute(
                 'DELETE FROM collections_to_taxa WHERE collection_id = ?',
-                [collectionId],
+                [collectionId]
             )
 
-            // Then insert new ones if there are any
+            // Insert new entries
             const values = taxaIds.map((taxonId) => [collectionId, taxonId])
             const placeholders = values.map(() => '(?, ?)').join(', ')
+            const flatValues = values.flat()
 
             await connection.execute(
-                `INSERT INTO collections_to_taxa (collection_id, taxon_id)
-                VALUES
-                ${placeholders}`,
-                values.flat(),
+                `INSERT INTO collections_to_taxa (collection_id, taxon_id) VALUES ${placeholders}`,
+                flatValues
             )
 
             await connection.commit()
@@ -110,5 +95,15 @@ export default class CollectionRepository extends BaseRepository<Collection> {
         } finally {
             connection.release()
         }
+    }
+
+    return {
+        ...base,
+        findByUserId,
+        findAllPublic,
+        findPublicCollectionsByUserId,
+        findTaxaByCollectionId,
+        findCollectionItemsById,
+        updateCollectionItems,
     }
 }

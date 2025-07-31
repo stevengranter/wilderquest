@@ -1,41 +1,31 @@
-import BaseRepository, { type getColumnsOptions } from './BaseRepository.js'
-import { Pool, RowDataPacket } from 'mysql2/promise'
+import { Pool } from 'mysql2/promise'
 import { User } from '../models/User.js'
+import { createBaseRepository, GetColumnsOptions } from './BaseRepository.js'
 
-// Instantiate a InstanceType for TypeScript completions
-type UserRepositoryConstructor = typeof UserRepository;
-export type UserRepositoryInstance = InstanceType<UserRepositoryConstructor>;
+export type UserRepository = ReturnType<typeof createUserRepository>
 
-const allowedFields = {
-    id: 'id',
-    email: 'email',
-    username: 'username',
-} as const
+export function createUserRepository(tableName: string, dbPool: Pool) {
+    const base = createBaseRepository<User>(tableName, dbPool)
 
-export default class UserRepository extends BaseRepository<User> {
-    constructor(tableName: string, dbPool: Pool) {
-        super(tableName, dbPool)
-        console.log(
-            `UsersRepository constructed for table '${tableName}' with dbPool:`,
-            dbPool ? 'exists' : 'does not exist',
-        )
-    }
-
-    async getColumns(
+    async function getColumns(
         columns: string[],
-        { orderByColumn = columns[0], order = 'asc' }: getColumnsOptions,
+        { orderByColumn = columns[0], order = 'asc' }: GetColumnsOptions
     ): Promise<Partial<User>[]> {
-        return super.getColumns(columns, { orderByColumn, order })
+        return base.getColumns(columns, { orderByColumn, order })
     }
 
-    async create(data: Partial<User>): Promise<number> {
-        const created_at: Date = new Date()
-        const updated_at: Date = new Date()
-        const newData = { ...data, created_at, updated_at }
-        return await super.create(newData)
+    async function create(data: Partial<User>): Promise<number> {
+        const now = new Date()
+        return base.create({
+            ...data,
+            created_at: now,
+            updated_at: now,
+        })
     }
 
-
-
-
+    return {
+        ...base,
+        getColumns,
+        create,
+    }
 }

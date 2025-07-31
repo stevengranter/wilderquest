@@ -1,11 +1,64 @@
 import { Pool, RowDataPacket } from 'mysql2/promise'
-import BaseRepository from './BaseRepository.js'
+import { createBaseRepository } from './BaseRepository.js'
 
 type Quest = {
     id: number
     name: string
+    created_at: Date
+    updated_at: Date
     description?: string
     is_private: boolean
+    user_id: number
+}
+
+export type QuestRepository = ReturnType<typeof createQuestRepository>
+
+export function createQuestRepository(tableName: string, dbPool: Pool) {
+    const base = createBaseRepository<Quest>(tableName, dbPool)
+
+    async function findAccessibleById(
+        id: number,
+        userId?: number
+    ): Promise<Quest | null> {
+        const query = `
+      SELECT * FROM ${base.getTableName()}
+      WHERE id = ?
+        AND (is_private = FALSE OR user_id = ?)
+      LIMIT 1
+    `
+        const [rows] = await base
+            .getDb()
+            .execute<RowDataPacket[]>(query, [id, userId ?? -1])
+        return rows.length > 0 ? (rows[0] as Quest) : null
+    }
+
+    async function findAccessibleByUserId(userId: number): Promise<Quest[]> {
+        const query = `
+      SELECT * FROM ${base.getTableName()}
+      WHERE user_id = ?
+        AND (is_private = FALSE OR user_id = ?)
+    `
+        const [rows] = await base
+            .getDb()
+            .execute<RowDataPacket[]>(query, [userId, userId])
+        return rows as Quest[]
+    }
+
+    async function saveQuest(quest: Partial<Quest>): Promise<number> {
+        const now = new Date()
+        return base.create({
+            ...quest,
+            created_at: now,
+            updated_at: now,
+        })
+    }
+
+    return {
+        ...base,
+        findAccessibleById,
+        findAccessibleByUserId,
+        saveQuest,
+    }
 }
 
 type QuestToTaxa = {
@@ -14,59 +67,10 @@ type QuestToTaxa = {
     taxon_id: number
 }
 
-export type QuestRepositoryInstance = InstanceType<typeof QuestRepository>
-
-export default class QuestRepository extends BaseRepository<Quest> {
-    constructor(tableName: string, dbPool: Pool) {
-        super(tableName, dbPool)
-        console.log(
-            `QuestRepository constructed for table '${tableName}' with dbPool:`,
-            dbPool ? 'exists' : 'does not exist'
-        )
-    }
-
-    async findAccessibleById(
-        id: number,
-        userId?: number
-    ): Promise<Quest | null> {
-        const query = `
-    SELECT * FROM ${this.getTableName()}
-    WHERE id = ?
-      AND (is_private = FALSE OR user_id = ?)
-    LIMIT 1
-  `
-        const [rows] = await this.getDb().execute<RowDataPacket[]>(query, [
-            id,
-            userId ?? -1,
-        ])
-        return rows.length > 0 ? (rows[0] as Quest) : null
-    }
-
-    async findAccessibleByUserId(
-        userId: number,
-    ): Promise<Quest[]> {
-        const query = `
-    SELECT * FROM ${this.getTableName()}
-    WHERE user_id = ?
-      AND (is_private = FALSE OR user_id = ?)
-        `
-        const [rows] = await this.getDb().execute<RowDataPacket[]>(query, [
-            userId,
-            userId,
-        ])
-        return rows as Quest[]
-    }
-
-}
-
-export type QuestToTaxaRepositoryInstance = InstanceType<
-    typeof QuestToTaxaRepository
+export type QuestToTaxaRepository = ReturnType<
+    typeof createQuestToTaxaRepository
 >
-export class QuestToTaxaRepository extends BaseRepository<QuestToTaxa> {
-    constructor(tableName: string, dbPool: Pool) {
-        super(tableName, dbPool)
-        console.log(
-            `QuestToTaxaRepository constructed for table '${tableName}' with dbPool:`
-        )
-    }
+
+export function createQuestToTaxaRepository(tableName: string, dbPool: Pool) {
+    return createBaseRepository<QuestToTaxa>(tableName, dbPool)
 }

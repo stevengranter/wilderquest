@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
-import { QuestServiceInstance } from '../services/QuestService.js'
+import { QuestServiceInstance } from '../services/questService.js'
 
 export function createQuestController(questService: QuestServiceInstance) {
     async function getPublicQuests(req: Request, res: Response) {
@@ -24,19 +24,21 @@ export function createQuestController(questService: QuestServiceInstance) {
         }
     }
 
-    async function getQuestsByUserIdParam(req: AuthenticatedRequest, res: Response) {
+    async function getQuestsByUserIdParam(
+        req: AuthenticatedRequest,
+        res: Response
+    ) {
         const userId = req.params.user_id
         try {
             const quests = await questService.getQuestsByUserId(Number(userId))
             res.status(200).json(quests)
             return
-        }  catch (_error) {
+        } catch (_error) {
             res.status(404).json({
                 message: 'Quests not found or access denied',
             })
         }
     }
-
 
     return {
         getQuests: getPublicQuests,
