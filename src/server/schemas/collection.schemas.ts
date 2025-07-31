@@ -7,7 +7,7 @@ export const CollectionToTaxaSchema = z.object({
 })
 
 export const CollectionSchema = z.object({
-    id: z.number().optional(),
+    id: z.number(),
     user_id: z.number(),
     name: z.string(),
     description: z.string().optional(),

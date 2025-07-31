@@ -1,15 +1,12 @@
 import { Request, Response } from 'express'
 import { z } from 'zod'
 import { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
-import { CollectionRepositoryInstance } from '../repositories/CollectionRepository.js'
-import {
-    CollectionSchema,
-    CreateCollectionSchema,
-} from '../schemas/collection.schemas.js'
-import { CollectionService } from '../services/CollectionService.js'
+import { type CollectionRepository } from '../repositories/CollectionRepository.js'
+import { CollectionSchema, CreateCollectionSchema } from '../schemas/collection.schemas.js'
+import { createCollectionService } from '../services/CollectionService.js'
 
 export function createCollectionController(
-    collectionRepo: CollectionRepositoryInstance
+    collectionRepo: CollectionRepository
 ) {
     return {
         async getAllPublicCollections(
@@ -17,7 +14,7 @@ export function createCollectionController(
             res: Response
         ): Promise<void> {
             try {
-                const service = new CollectionService(collectionRepo, null)
+                const service = createCollectionService(collectionRepo, null)
                 const allCollections = await service.getAllPublicCollections()
                 res.json(allCollections)
             } catch (err: unknown) {
@@ -37,7 +34,7 @@ export function createCollectionController(
                 }
 
                 const userId = (req as AuthenticatedRequest).user?.id ?? null
-                const service = new CollectionService(collectionRepo, userId)
+                const service = createCollectionService(collectionRepo, userId)
 
                 // First try to get the collection directly from the repository
                 const collection = await collectionRepo.findOne({
@@ -83,7 +80,7 @@ export function createCollectionController(
                     return
                 }
 
-                const service = new CollectionService(collectionRepo, userId)
+                const service = createCollectionService(collectionRepo, userId)
                 const collections =
                     await service.findCollectionsByUserId(userId)
                 console.log(collections)
@@ -123,7 +120,7 @@ export function createCollectionController(
 
                 console.log('parsedBody.data: ', parsedBody.data)
 
-                const service = new CollectionService(collectionRepo, userId)
+                const service = createCollectionService(collectionRepo, userId)
                 const newCollection = await service.createCollection(
                     parsedBody.data
                 )
@@ -170,7 +167,7 @@ export function createCollectionController(
                     return
                 }
                 console.log('parsedBody.data: ', parsedBody.data)
-                const service = new CollectionService(collectionRepo, userId)
+                const service = createCollectionService(collectionRepo, userId)
                 const updatedCollection = await service.updateCollection(
                     collectionId,
                     parsedBody.data
@@ -212,7 +209,7 @@ export function createCollectionController(
                     return
                 }
 
-                const service = new CollectionService(collectionRepo, userId)
+                const service = createCollectionService(collectionRepo, userId)
                 const success = await service.deleteCollection(collectionId)
 
                 if (success) {
@@ -254,7 +251,7 @@ export function createCollectionController(
                     return
                 }
 
-                const service = new CollectionService(collectionRepo, userId)
+                const service = createCollectionService(collectionRepo, userId)
                 const updatedCollection = await service.updateCollectionTaxa(
                     collectionId,
                     parsedBody.data

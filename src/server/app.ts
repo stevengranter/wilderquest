@@ -10,10 +10,7 @@ import { createUserController } from './controllers/userController.js'
 import { rateLimiter } from './middlewares/rateLimiter.js'
 import { rateSlowDown } from './middlewares/rateSlowDown.js'
 import { CollectionRepository } from './repositories/CollectionRepository.js'
-import {
-    QuestRepository,
-    QuestToTaxaRepository,
-} from './repositories/QuestRepository.js'
+import { QuestRepository, QuestToTaxaRepository } from './repositories/QuestRepository.js'
 import { type UserRepository } from './repositories/UserRepository.js'
 import { mapTilesProxyRouter } from './routes/api/proxies.routes.js'
 import { serviceRouter } from './routes/api/services.routes.js'
