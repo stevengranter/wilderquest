@@ -2,11 +2,15 @@
 import { NextFunction, Request, Response } from 'express' // Import NextFunction
 import jwt from 'jsonwebtoken'
 // Import your Zod schemas for request body validation
-import { LoginRequestSchema, RefreshReqBodySchema, RegisterRequestSchema } from '../../shared/schemas/Auth.js'
+import {
+    LoginRequestSchema,
+    RefreshReqBodySchema,
+    RegisterRequestSchema,
+} from '../../shared/schemas/Auth.js'
 // Import your custom types
 import type { AuthenticatedRequest } from '../middlewares/verifyJWT.js' // Assuming this is defined
 // Import your AuthService and custom error classes
-import { AuthServiceInstance } from '../services/authService.js'
+import { AuthService } from '../services/authService.js'
 
 /**
  * Defines a custom error interface that includes a statusCode property.
@@ -18,8 +22,8 @@ interface HttpError extends Error {
 
 // Function to create the AuthController instance
 // It receives an instance of your AuthService (the class, not an interface)
-export function createAuthController(authService: AuthServiceInstance) {
-    const controller = {
+export function createAuthController(authService: AuthService) {
+    return {
         async register(req: Request, res: Response, next: NextFunction) {
             const parsed = RegisterRequestSchema.safeParse(req.body)
             if (!parsed.success) {
@@ -124,7 +128,7 @@ export function createAuthController(authService: AuthServiceInstance) {
             // Express 5 automatically catches rejected promises from async functions
             // and forwards them to the error handling middleware.
             const { accessToken, refreshToken } =
-                await authService.refreshToken(user_cuid, refresh_token)
+                await authService.refreshAccessToken(user_cuid, refresh_token)
 
             res.json({
                 access_token: accessToken,
@@ -202,8 +206,6 @@ export function createAuthController(authService: AuthServiceInstance) {
             }
         },
     }
-
-    return controller
 }
 
 // Infer the type of AuthController from the return type of createAuthController
