@@ -10,7 +10,7 @@ interface AuthController {
     testAuth: RequestHandler
 }
 
-export function authRouter(controller: AuthController) {
+export function createAuthRouter(controller: AuthController) {
     const router = Router()
 
     router.post('/register', controller.register)

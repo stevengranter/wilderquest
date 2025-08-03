@@ -3,7 +3,7 @@ import { Router } from 'express'
 import type { CollectionController } from '../controllers/collectionController.js'
 import verifyJWT, { optionalAuthMiddleware } from '../middlewares/verifyJWT.js'
 
-export function collectionRouter(controller: CollectionController) {
+export function createCollectionRouter(controller: CollectionController) {
     const router = Router()
 
     // Public: Get all public collections (globally)
