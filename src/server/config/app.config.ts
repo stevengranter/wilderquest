@@ -1,15 +1,15 @@
 import 'dotenv/config'
-import {z} from 'zod'
+import { z } from 'zod'
 
 const envSchema = z.object({
     // Express app variables
-    PROTOCOL: z.union([z.literal('http'), z.literal('https')]).optional(),
-    PORT: z.coerce.number().min(1000).optional(),
-    HOST: z.string().optional(),
+    PROTOCOL: z.union([z.literal('http'), z.literal('https')]).default('http'),
+    PORT: z.coerce.number().min(1000).default(3000),
+    HOST: z.string().default('localhost'),
 
     // MySQL Database variables
-    MYSQL_HOST: z.string().optional(),
-    MYSQL_PORT: z.coerce.number().min(1000),
+    MYSQL_HOST: z.string().default('localhost'),
+    MYSQL_PORT: z.coerce.number().min(1000).default(3306),
     MYSQL_DATABASE: z.string(),
     MYSQL_USER: z.string(),
     MYSQL_PASSWORD: z.string(),
@@ -25,8 +25,13 @@ const envSchema = z.object({
     MAP_TILES_API_KEY: z.string(),
 })
 
-type Environment = z.infer<typeof envSchema>
+const result = envSchema.safeParse(process.env)
 
-const env = envSchema.parse(process.env)
+if (!result.success) {
+    console.error('❌ Invalid or missing environment variables:\n')
+    console.error(result.error.format())
+    process.exit(1)
+}
 
+const env = result.data
 export default env

@@ -1,6 +1,9 @@
-#.appConfig
+# Ignore all .env files...
 .env
 .env.*
+# ...except for env.example
+!.env.example
+
 
 # seeded data
 *.dev.json

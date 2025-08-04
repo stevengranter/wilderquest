@@ -1,5 +1,5 @@
 import { type Request, type Response } from 'express'
-import { UserRepositoryInstance } from '../repositories/UserRepository.js'
+import { UserRepository } from '../repositories/UserRepository.js'
 
 export interface UserController {
     getUserById(req: Request, res: Response): void | Promise<void>
@@ -7,7 +7,7 @@ export interface UserController {
     getUserByUsername(req: Request, res: Response): void | Promise<void>
 }
 
-export function createUserController(userRepo: UserRepositoryInstance) {
+export function createUserController(userRepo: UserRepository) {
     return {
         getUserById: async (req: Request, res: Response) => {
             const user = await userRepo.findRowByColumnAndValue(

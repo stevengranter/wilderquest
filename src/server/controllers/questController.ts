@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
 import { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
-import { QuestServiceInstance } from '../services/questService.js'
+import { QuestService } from '../services/questService.js'
 
-export function createQuestController(questService: QuestServiceInstance) {
+export function createQuestController(questService: QuestService) {
     async function getPublicQuests(req: Request, res: Response) {
         const quests = await questService.getAllPublicQuests()
         res.status(200).json(quests)

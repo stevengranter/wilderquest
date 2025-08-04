@@ -1,29 +1,27 @@
-# fly.toml app configuration file generated for db-morning-wildflower-9602 on 2025-05-21T12:36:58-02:30
+# fly.toml app configuration file generated for db-wildernest on 2025-08-04T13:46:42-02:30
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'db-morning-wildflower-9602'
+app = 'db-wildernest'
 primary_region = 'yyz'
 
 [build]
-  image = 'mysql:8.0'
-
-
+  image = 'mysql:8.0.37'
 
 [[vm]]
+  memory = '512mb'
   cpu_kind = 'shared'
   cpus = 1
-  memory_mb = 2048
 
 [processes]
-app = """--datadir /data/mysql \
-    --default-authentication-plugin mysql_native_password"""
+  app = """--datadir /data/mysql \
+    --default-authentication-plugin mysql_native_password  --performance-schema=OFF --innodb-buffer-pool-size 64M"""
 
 [mounts]
-source = "mysqldata"
-destination = "/data"
+  source = "mysqldata"
+  destination = "/data"
 
 [env]
-MYSQL_DATABASE = "wildernest_db"
-MYSQL_USER = "wildernest_api"
+  MYSQL_DATABASE = "app_db"
+  MYSQL_USER = "app_user"

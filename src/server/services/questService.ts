@@ -1,13 +1,13 @@
 import {
-    QuestRepositoryInstance,
-    QuestToTaxaRepositoryInstance,
+    QuestRepository,
+    QuestToTaxaRepository,
 } from '../repositories/QuestRepository.js'
 
 export type QuestService = ReturnType<typeof createQuestService>
 
 export function createQuestService(
-    questsRepo: QuestRepositoryInstance,
-    questsToTaxaRepo: QuestToTaxaRepositoryInstance
+    questsRepo: QuestRepository,
+    questsToTaxaRepo: QuestToTaxaRepository
 ) {
     async function getAllPublicQuests() {
         try {
