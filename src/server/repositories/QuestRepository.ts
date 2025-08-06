@@ -1,7 +1,7 @@
 import { Pool, RowDataPacket } from 'mysql2/promise'
 import { createBaseRepository } from './BaseRepository.js'
 
-type Quest = {
+export type Quest = {
     id: number
     name: string
     created_at: Date
@@ -9,6 +9,10 @@ type Quest = {
     description?: string
     is_private: boolean
     user_id: number
+}
+
+export type QuestWithTaxa = Quest & {
+    taxon_ids: number[]
 }
 
 export type QuestRepository = ReturnType<typeof createQuestRepository>
@@ -20,6 +24,18 @@ export function createQuestRepository(
     questsToTaxaRepo?: ReturnType<typeof createQuestToTaxaRepository>
 ) {
     const base = createBaseRepository<Quest>(tableName, dbPool, validColumns)
+
+    async function findById(questId: number) {
+        const query = `
+      SELECT * FROM ${tableName}
+      WHERE id = ?
+      LIMIT 1
+    `
+        const [rows] = await base
+            .getDb()
+            .execute<RowDataPacket[]>(query, [questId])
+        return rows.length > 0 ? (rows[0] as Quest) : null
+    }
 
     async function findAccessibleById(
         id: number,
@@ -87,6 +103,7 @@ export function createQuestRepository(
 
     return {
         ...base,
+        findById,
         findAccessibleById,
         findAccessibleByUserId,
         findTaxaForQuest,

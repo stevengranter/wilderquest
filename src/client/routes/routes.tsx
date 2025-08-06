@@ -9,7 +9,7 @@ import Welcome from '@/components/pages/Welcome'
 import CollectionDetail from '@/features/collections/CollectionDetail'
 import UserCollectionsManager from '@/features/collections/UserCollectionsManager'
 import QuestDetail from '@/features/quests/components/QuestDetail'
-import QuestForm from '@/features/quests/form/QuestForm'
+import { CreateQuest } from '@/features/quests/pages/CreateQuest'
 import { QuestsPage } from '@/features/quests/pages/QuestsPage'
 import UserQuestsPage from '@/features/quests/pages/UserQuestsPage'
 import { AppLayout } from '@/layouts/AppLayout'
@@ -92,7 +92,7 @@ export const router = createBrowserRouter([
                         path: 'create/*',
                         element: (
                             <ProtectedRoute>
-                                <QuestForm />
+                                <CreateQuest />
                             </ProtectedRoute>
                         ),
                     },

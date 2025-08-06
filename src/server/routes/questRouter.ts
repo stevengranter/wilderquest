@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { QuestController } from '../controllers/questController.js'
-import { optionalAuthMiddleware } from '../middlewares/verifyJWT.js'
+import verifyJWT, { optionalAuthMiddleware } from '../middlewares/verifyJWT.js'
 
 export function createQuestRouter(controller: QuestController) {
     const router = Router()
@@ -11,5 +11,6 @@ export function createQuestRouter(controller: QuestController) {
         optionalAuthMiddleware,
         controller.getQuestsByUserId
     )
+    router.post('/', verifyJWT, controller.createQuest)
     return router
 }

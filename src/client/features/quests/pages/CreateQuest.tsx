@@ -121,7 +121,7 @@ export function CreateQuest() {
 
         console.log('Submitting quest with:', payload)
 
-        const newCollection = await api.post('/collections', payload)
+        const newCollection = await api.post('/quests', payload)
 
         if (!newCollection.data.collection.id) {
             console.error('Failed to create collection')

@@ -45,10 +45,20 @@ export function createQuestController(questService: QuestService) {
         }
     }
 
+    async function createQuest(req: AuthenticatedRequest, res: Response) {
+        if (!req.user) {
+            res.status(401).json('You must be logged in to access this page')
+            return
+        }
+        const quest = await questService.createQuest(req.body, req.user.id)
+        console.log(quest)
+    }
+
     return {
         getQuests: getPublicQuests,
         getQuestById: getQuest,
         getQuestsByUserId: getQuestsByUserIdParam,
+        createQuest: createQuest,
     }
 }
 
