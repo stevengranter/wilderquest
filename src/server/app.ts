@@ -22,6 +22,7 @@ import { createQuestRouter } from './routes/questRouter.js'
 import { userRouter } from './routes/userRouter.js'
 import { createAuthService } from './services/authService.js'
 import { createQuestService } from './services/questService.js'
+import { createUserService } from './services/userService.js'
 
 export function buildApp({
     userRepository,
@@ -42,7 +43,8 @@ export function buildApp({
     const apiRouter = express.Router()
 
     // TODO: create userService
-    const userController = createUserController(userRepository)
+    const userService = createUserService(userRepository)
+    const userController = createUserController(userService)
     apiRouter.use('/users', userRouter(userController))
 
     const collectionController =

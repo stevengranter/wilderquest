@@ -1,29 +1,20 @@
 import { type Request, type Response } from 'express'
-import { UserRepository } from '../repositories/UserRepository.js'
+import { UserService } from '../services/userService.js'
 
-export interface UserController {
-    getUserById(req: Request, res: Response): void | Promise<void>
-    getUserByEmail(req: Request, res: Response): void | Promise<void>
-    getUserByUsername(req: Request, res: Response): void | Promise<void>
-}
+export type UserController = ReturnType<typeof createUserController>
 
-export function createUserController(userRepo: UserRepository) {
+export function createUserController(userService: UserService) {
     return {
         getUserById: async (req: Request, res: Response) => {
             const userId = Number(req.params.id)
-            const user = await userRepo.findUser({ id: userId })
+            const user = await userService.getUserProfileById(userId)
             res.json(user)
         },
 
         getUserByUsername: async (req: Request, res: Response) => {
             const username = req.params.username
-            const user = await userRepo.findUser({ username: username })
+            const user = await userService.getUserProfileByUsername(username)
             res.json(user)
-        },
-
-        createUser: async (req: Request, res: Response) => {
-            const newUser = await userRepo.create(req.body)
-            res.status(201).json(newUser)
         },
     }
 }

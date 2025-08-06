@@ -11,6 +11,13 @@ const safeUserColumns: (keyof User)[] = [
     'updated_at',
 ]
 
+export type SafeUserDTO = {
+    id: number
+    username: string
+    created_at: Date
+    updated_at: Date
+}
+
 export function createUserRepository(
     tableName: string,
     dbPool: Pool,
@@ -29,11 +36,15 @@ export function createUserRepository(
 
     async function findUser(
         conditions: Partial<User>
-    ): Promise<Partial<User> | null> {
-        return base.findOne(conditions, safeUserColumns)
+    ): Promise<Partial<SafeUserDTO> | null> {
+        const user = await base.findOne(conditions, safeUserColumns)
+        if (!user) return null
+        const { id, username, created_at, updated_at } = user
+        return { id, username, created_at, updated_at }
     }
 
     return {
+        ...base,
         create,
         findUser,
     }
