@@ -53,7 +53,10 @@ export function createQuestRepository(
         return rows.length > 0 ? (rows[0] as Quest) : null
     }
 
-    async function findAccessibleByUserId(userId: number, viewerId?: number) {
+    async function findAccessibleByUserId(
+        userId: number,
+        viewerId?: number
+    ): Promise<Quest[]> {
         const isOwner = userId === viewerId
         console.log('isOwner', isOwner)
         console.log('userId', userId)
@@ -64,7 +67,7 @@ export function createQuestRepository(
                 `SELECT * FROM quests WHERE user_id = ?`,
                 [userId]
             )
-            return rows
+            return rows as Quest[]
         } else {
             // only return public quests
             console.log('getting public quests')
@@ -72,7 +75,7 @@ export function createQuestRepository(
                 `SELECT * FROM quests WHERE user_id = ? AND is_private = false`,
                 [userId]
             )
-            return rows
+            return rows as Quest[]
         }
     }
 
@@ -92,13 +95,17 @@ export function createQuestRepository(
         })
     }
 
-    async function updateQuest(
-        id: number,
-        questData: Partial<Quest>
-    ): Promise<{ success: boolean; affectedRows: number }> {
-        const now = new Date()
-        const data = { ...questData, updated_at: now }
-        return await base.update(id, data)
+    async function update(id: number, data: Partial<Quest>): Promise<void> {
+        const fields = Object.keys(data)
+        const values = Object.values(data)
+
+        if (fields.length === 0) return
+
+        const setClause = fields.map((field) => `${field} = ?`).join(', ')
+        await dbPool.query(
+            `UPDATE quests SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            [...values, id]
+        )
     }
 
     return {
@@ -108,7 +115,7 @@ export function createQuestRepository(
         findAccessibleByUserId,
         findTaxaForQuest,
         saveQuest,
-        updateQuest,
+        update,
     }
 }
 
@@ -144,9 +151,16 @@ export function createQuestToTaxaRepository(
         return base.create({ quest_id: questId, taxon_id: taxonId })
     }
 
+    async function deleteMany(filter: { quest_id: number }) {
+        await dbPool.query(`DELETE FROM quest_to_taxa WHERE quest_id = ?`, [
+            filter.quest_id,
+        ])
+    }
+
     return {
         ...base,
         findByQuestId,
         addMapping,
+        deleteMany,
     }
 }

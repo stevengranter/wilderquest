@@ -12,5 +12,7 @@ export function createQuestRouter(controller: QuestController) {
         controller.getQuestsByUserId
     )
     router.post('/', verifyJWT, controller.createQuest)
+    router.patch('/:id', verifyJWT, controller.updateQuest)
+
     return router
 }

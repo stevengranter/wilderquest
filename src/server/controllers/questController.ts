@@ -6,20 +6,19 @@ export function createQuestController(questService: QuestService) {
     async function getPublicQuests(req: Request, res: Response) {
         const quests = await questService.getAllPublicQuests()
         res.status(200).json(quests)
-        return
     }
 
     async function getQuest(req: AuthenticatedRequest, res: Response) {
-        console.log('getQuest')
         const questId = Number(req.params.id)
-        console.log('Quest ID: ', questId)
         const userId = req.user?.id
-        console.log('User ID: ', userId)
 
         try {
-            const quest = await questService.getQuestByIdWithTaxa(questId)
+            // ✅ Use the secure version with auth check
+            const quest = await questService.getAccessibleQuestWithTaxaById(
+                questId,
+                userId
+            )
             res.status(200).json(quest)
-            return
         } catch (_error) {
             res.status(404).json({
                 message: 'Quest not found or access denied',
@@ -33,11 +32,10 @@ export function createQuestController(questService: QuestService) {
     ) {
         const userId = Number(req.params.user_id)
         const viewerId = req.user?.id
-        console.log('getQuestsByUserIdParam', userId)
+
         try {
             const quests = await questService.getUserQuests(userId, viewerId)
             res.status(200).json(quests)
-            return
         } catch (_error) {
             res.status(404).json({
                 message: 'Quests not found or access denied',
@@ -50,16 +48,41 @@ export function createQuestController(questService: QuestService) {
             res.status(401).json('You must be logged in to access this page')
             return
         }
-        const quest = await questService.createQuest(req.body, req.user.id)
-        console.log(quest)
-        res.status(200).json(quest)
+
+        try {
+            const quest = await questService.createQuest(req.body, req.user.id)
+            res.status(201).json(quest)
+        } catch (_err) {
+            res.status(400).json({ message: 'Failed to create quest' })
+        }
+    }
+
+    async function updateQuest(req: AuthenticatedRequest, res: Response) {
+        const questId = Number(req.params.id)
+        const userId = req.user?.id
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' })
+        }
+
+        try {
+            const updatedQuest = await questService.updateQuest(
+                questId,
+                req.body,
+                userId
+            )
+            res.status(200).json(updatedQuest)
+        } catch (error) {
+            res.status(403).json({ message: (error as Error).message })
+        }
     }
 
     return {
         getQuests: getPublicQuests,
         getQuestById: getQuest,
         getQuestsByUserId: getQuestsByUserIdParam,
-        createQuest: createQuest,
+        createQuest,
+        updateQuest,
     }
 }
 
