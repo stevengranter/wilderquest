@@ -19,21 +19,19 @@ export function QuestsPage() {
 
     useEffect(() => {
         if (!isMyQuests) {
-            api.get('/collections').then((response) => {
+            api.get('/quests').then((response) => {
                 console.log(response.data)
                 setQuests(response.data)
             })
+            return
         }
-    }, [isMyQuests])
 
-    useEffect(() => {
-        if (!isMyQuests) return
         if (!isAuthenticated || !user) {
             toast.error('You are not logged in!')
             return
         }
 
-        api.get(`/collections/user/${user.id}`).then((response) => {
+        api.get(`/quests/user/${user.id}`).then((response) => {
             setQuests(response.data)
         })
     }, [isMyQuests, isAuthenticated, user])
@@ -62,11 +60,15 @@ function QuestsList({ quests }: { quests: Collection[] }) {
 
     return (
         <ul>
-            {quests.map((quest) => (
-                <li key={quest.id}>
-                    <Link to={`/collections/${quest.id}`}>{quest.name}</Link>
-                </li>
-            ))}
+            {quests.length > 0 ? (
+                quests.map((quest) => (
+                    <li key={quest.id}>
+                        <Link to={`/quests/${quest.id}`}>{quest.name}</Link>
+                    </li>
+                ))
+            ) : (
+                <p>No quests found</p>
+            )}
         </ul>
     )
 }

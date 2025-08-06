@@ -10,8 +10,11 @@ export function createQuestController(questService: QuestService) {
     }
 
     async function getQuest(req: AuthenticatedRequest, res: Response) {
+        console.log('getQuest')
         const questId = Number(req.params.id)
+        console.log('Quest ID: ', questId)
         const userId = req.user?.id
+        console.log('User ID: ', userId)
 
         try {
             const quest = await questService.getQuestById(questId, userId)

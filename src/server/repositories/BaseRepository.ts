@@ -10,7 +10,10 @@ export interface BaseRepository<T> {
     getTableName(): string
 
     create(data: Partial<T>): Promise<number>
-    update(id: number | undefined, data: object): Promise<boolean>
+    update(
+        id: number | undefined,
+        data: object
+    ): Promise<{ success: boolean; affectedRows: number }>
     delete(id: number): Promise<{ success: boolean; affectedRows: number }>
 
     findOne(conditions: Partial<T>): Promise<T | null>
@@ -67,7 +70,7 @@ export function createBaseRepository<T>(
     async function update(
         id: number | undefined,
         data: object
-    ): Promise<boolean> {
+    ): Promise<{ success: boolean; affectedRows: number }> {
         if (id == null) throw new Error('Cannot update without an ID')
         const columns = Object.keys(data)
         if (columns.length === 0) {
@@ -83,7 +86,10 @@ export function createBaseRepository<T>(
             `UPDATE ${tableName} SET ${setClause} WHERE id = ?`,
             [...values, id]
         )
-        return result.affectedRows > 0
+        return {
+            success: result.affectedRows > 0,
+            affectedRows: result.affectedRows,
+        }
     }
 
     async function remove(

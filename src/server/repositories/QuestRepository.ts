@@ -65,12 +65,22 @@ export function createQuestRepository(
         })
     }
 
+    async function updateQuest(
+        id: number,
+        questData: Partial<Quest>
+    ): Promise<{ success: boolean; affectedRows: number }> {
+        const now = new Date()
+        const data = { ...questData, updated_at: now }
+        return await base.update(id, data)
+    }
+
     return {
         ...base,
         findAccessibleById,
         findAccessibleByUserId,
         findTaxaForQuest,
         saveQuest,
+        updateQuest,
     }
 }
 

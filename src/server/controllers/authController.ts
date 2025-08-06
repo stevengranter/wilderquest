@@ -1,12 +1,13 @@
 // src/controllers/authController.ts
-import { NextFunction, Request, Response } from 'express' // Import NextFunction
-import jwt from 'jsonwebtoken'
+
 // Import your Zod schemas for request body validation
 import {
     LoginRequestSchema,
     RefreshReqBodySchema,
     RegisterRequestSchema,
-} from '../../shared/schemas/Auth.js'
+} from '@shared/schemas/Auth.js'
+import { NextFunction, Request, Response } from 'express' // Import NextFunction
+import jwt from 'jsonwebtoken'
 // Import your custom types
 import type { AuthenticatedRequest } from '../middlewares/verifyJWT.js' // Assuming this is defined
 // Import your AuthService and custom error classes

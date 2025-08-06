@@ -12,13 +12,15 @@ export function createQuestService(
     async function getAllPublicQuests() {
         try {
             return await questsRepo.findMany({ is_private: false })
-        } catch (_error) {
+        } catch (error) {
+            console.error('Error in getAllPublicQuests:', error)
             throw new Error('Error getting public quests')
         }
     }
 
     async function getQuestById(id: number, userId?: number) {
         const collection = await questsRepo.findAccessibleById(id, userId)
+        console.log(collection)
 
         if (!collection) {
             throw new Error('Quest not found or access denied')

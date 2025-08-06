@@ -1,3 +1,4 @@
+import { INatTaxon } from '@shared/types/iNatTypes'
 import axios from 'axios'
 import { chunk } from 'lodash'
 import { Lock, LockOpen, Pencil } from 'lucide-react'
@@ -9,7 +10,6 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
-import { INatTaxon } from '../../../../shared/types/iNatTypes'
 
 type Quest = {
     id: string
@@ -39,6 +39,7 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
     const [taxa, setTaxa] = useState<INatTaxon[]>([])
 
     useEffect(() => {
+        console.log('activeQuestId', activeQuestId)
         if (!activeQuestId) {
             setQuestData(null)
             setIsLoading(false)
@@ -139,14 +140,14 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                     <div>Location: {questData.location_name}</div>
                 )}
 
-                {questData.latitude && questData.longitude && (
-                    <QuestMapView
-                        options={{
-                            center: [questData.latitude, questData.longitude],
-                            zoom: 10,
-                        }}
-                    />
-                )}
+                {/*{questData.latitude && questData.longitude && (*/}
+                {/*    <QuestMapView*/}
+                {/*        options={{*/}
+                {/*            center: [questData.latitude, questData.longitude],*/}
+                {/*            zoom: 10,*/}
+                {/*        }}*/}
+                {/*    />*/}
+                {/*)}*/}
 
                 <div className="mt-8">
                     <h2 className="text-xl font-semibold mb-4">

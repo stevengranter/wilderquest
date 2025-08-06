@@ -117,7 +117,7 @@
         "skipLibCheck": true,
         /* Skip type checking all .d.ts files. */
         "paths": {
-            "@/shared/*": ["../shared/*"]
+            "@shared/*": ["../shared/*"]
         }
     },
     "include": ["./**/*.ts", "./**/*.tsx"]
