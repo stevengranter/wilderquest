@@ -17,7 +17,7 @@ export function createQuestController(questService: QuestService) {
         console.log('User ID: ', userId)
 
         try {
-            const quest = await questService.getQuestById(questId, userId)
+            const quest = await questService.getQuestByIdWithTaxa(questId)
             res.status(200).json(quest)
             return
         } catch (_error) {
@@ -52,6 +52,7 @@ export function createQuestController(questService: QuestService) {
         }
         const quest = await questService.createQuest(req.body, req.user.id)
         console.log(quest)
+        res.status(200).json(quest)
     }
 
     return {

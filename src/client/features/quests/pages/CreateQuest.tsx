@@ -121,15 +121,16 @@ export function CreateQuest() {
 
         console.log('Submitting quest with:', payload)
 
-        const newCollection = await api.post('/quests', payload)
+        const newQuest = await api.post('/quests', payload)
 
-        if (!newCollection.data.collection.id) {
-            console.error('Failed to create collection')
+        console.log(await newQuest)
+        if (!newQuest.data.id) {
+            console.error('Failed to create quest')
         }
 
-        console.log('Created collection:', newCollection.data)
+        console.log('Created quest:', newQuest.data)
 
-        navigate(`/collections/${newCollection.data.collection.id}`)
+        navigate(`/quests/${newQuest.data.id}`)
     }
 
     function toggleSpeciesInQuest(species: SpeciesCountItem) {
