@@ -5,8 +5,16 @@ import { createBaseRepository } from './BaseRepository.js'
 
 export type CollectionRepository = ReturnType<typeof createCollectionRepository>
 
-export function createCollectionRepository(tableName: string, dbPool: Pool) {
-    const base = createBaseRepository<Collection>(tableName, dbPool)
+export function createCollectionRepository(
+    tableName: string,
+    dbPool: Pool,
+    validColumns: (keyof Collection)[]
+) {
+    const base = createBaseRepository<Collection>(
+        tableName,
+        dbPool,
+        validColumns
+    )
 
     async function query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
         try {

@@ -1,8 +1,8 @@
 import { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 
-export type GetColumnsOptions = {
-    orderByColumn: string
-    order: 'desc' | 'asc'
+export type GetColumnsOptions<T> = {
+    orderByColumn: keyof T
+    order: 'asc' | 'desc'
 }
 
 export interface BaseRepository<T> {
@@ -11,7 +11,7 @@ export interface BaseRepository<T> {
 
     create(data: Partial<T>): Promise<number>
     update(id: number | undefined, data: object): Promise<boolean>
-    delete(id: number): Promise<boolean>
+    delete(id: number): Promise<{ success: boolean; affectedRows: number }>
 
     findOne(conditions: Partial<T>): Promise<T | null>
     findMany(
@@ -19,35 +19,46 @@ export interface BaseRepository<T> {
         options?: {
             limit?: number
             offset?: number
-            orderByColumn?: string
+            orderByColumn?: keyof T
             order?: 'asc' | 'desc'
         }
     ): Promise<T[]>
-    findRowByColumnAndValue<K>(
+    findRowByColumnAndValue<K extends keyof T>(
         column: K,
-        value: string | number
-    ): Promise<unknown[]>
+        value: T[K]
+    ): Promise<T[]>
     findAll(): Promise<T[]>
-    getColumns(
-        columns: string[],
-        options: GetColumnsOptions
-    ): Promise<Partial<T>[]>
+    getColumns<K extends keyof T>(
+        columns: K[],
+        options: GetColumnsOptions<T>
+    ): Promise<Pick<T, K>[]>
 }
 
 export function createBaseRepository<T>(
     tableName: string,
-    dbPool: Pool
+    dbPool: Pool,
+    validColumns: (keyof T)[]
 ): BaseRepository<T> {
     const getDb = () => dbPool
     const getTableName = () => tableName
 
+    function assertValidColumns(input: (string | number)[]) {
+        for (const col of input) {
+            if (!validColumns.includes(col as keyof T)) {
+                throw new Error(`Invalid column: ${col}`)
+            }
+        }
+    }
+
     async function create(data: Partial<T>): Promise<number> {
-        const columns = Object.keys(data).join(', ')
+        const columns = Object.keys(data)
+        assertValidColumns(columns)
+
         const values = Object.values(data)
         const placeholders = values.map(() => '?').join(', ')
 
         const [result] = await dbPool.execute<ResultSetHeader>(
-            `INSERT INTO ${tableName} (${columns}) VALUES (${placeholders})`,
+            `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`,
             values
         )
         return result.insertId
@@ -57,7 +68,14 @@ export function createBaseRepository<T>(
         id: number | undefined,
         data: object
     ): Promise<boolean> {
+        if (id == null) throw new Error('Cannot update without an ID')
         const columns = Object.keys(data)
+        if (columns.length === 0) {
+            throw new Error('No fields provided for update')
+        }
+
+        assertValidColumns(columns as (string | number)[])
+
         const values = Object.values(data)
         const setClause = columns.map((col) => `${col} = ?`).join(', ')
 
@@ -68,12 +86,17 @@ export function createBaseRepository<T>(
         return result.affectedRows > 0
     }
 
-    async function remove(id: number): Promise<boolean> {
+    async function remove(
+        id: number
+    ): Promise<{ success: boolean; affectedRows: number }> {
         const [result] = await dbPool.execute<ResultSetHeader>(
             `DELETE FROM ${tableName} WHERE id = ?`,
             [id]
         )
-        return result.affectedRows > 0
+        return {
+            success: result.affectedRows > 0,
+            affectedRows: result.affectedRows,
+        }
     }
 
     async function findOne(conditions: Partial<T>): Promise<T | null> {
@@ -81,6 +104,8 @@ export function createBaseRepository<T>(
         if (keys.length === 0) {
             throw new Error('findOne called without conditions')
         }
+
+        assertValidColumns(keys as (string | number)[])
 
         const whereClause = keys
             .map((key) => `${String(key)} = ?`)
@@ -91,6 +116,7 @@ export function createBaseRepository<T>(
             `SELECT * FROM ${tableName} WHERE ${whereClause} LIMIT 1`,
             values
         )
+
         return rows.length > 0 ? (rows[0] as T) : null
     }
 
@@ -99,7 +125,7 @@ export function createBaseRepository<T>(
         options: {
             limit?: number
             offset?: number
-            orderByColumn?: string
+            orderByColumn?: keyof T
             order?: 'asc' | 'desc'
         } = {}
     ): Promise<T[]> {
@@ -107,36 +133,44 @@ export function createBaseRepository<T>(
         const values: unknown[] = []
 
         for (const [key, value] of Object.entries(conditions)) {
+            if (!validColumns.includes(key as keyof T)) {
+                throw new Error(`Invalid column in conditions: ${key}`)
+            }
             whereClauses.push(`${key} = ?`)
             values.push(value)
         }
 
-        const whereSql = whereClauses.length
-            ? `WHERE ${whereClauses.join(' AND ')}`
-            : ''
-        const orderBySql = options.orderByColumn
-            ? `ORDER BY ${options.orderByColumn} ${options.order?.toUpperCase() || 'ASC'}`
-            : ''
-        const limitSql = options.limit
-            ? `LIMIT ${options.limit}${options.offset ? ` OFFSET ${options.offset}` : ''}`
-            : ''
+        let query = `SELECT * FROM ${tableName}`
+        if (whereClauses.length) {
+            query += ` WHERE ${whereClauses.join(' AND ')}`
+        }
 
-        const [rows] = await dbPool.execute<RowDataPacket[]>(
-            `SELECT * FROM ${tableName} ${whereSql} ${orderBySql} ${limitSql}`,
-            values
-        )
+        if (options.orderByColumn) {
+            assertValidColumns([options.orderByColumn] as (string | number)[])
+            query += ` ORDER BY ${String(options.orderByColumn)} ${options.order?.toUpperCase() || 'ASC'}`
+        }
+
+        if (options.limit != null) {
+            query += ` LIMIT ${options.limit}`
+            if (options.offset != null) {
+                query += ` OFFSET ${options.offset}`
+            }
+        }
+
+        const [rows] = await dbPool.execute<RowDataPacket[]>(query, values)
         return rows as T[]
     }
 
-    async function findRowByColumnAndValue<K>(
+    async function findRowByColumnAndValue<K extends keyof T>(
         column: K,
-        value: string | number
-    ): Promise<unknown[]> {
+        value: T[K]
+    ): Promise<T[]> {
+        assertValidColumns([column] as (string | number)[])
         const [rows] = await dbPool.execute<RowDataPacket[]>(
             `SELECT * FROM ${tableName} WHERE ${String(column)} = ?`,
             [value]
         )
-        return rows
+        return rows as T[]
     }
 
     async function findAll(): Promise<T[]> {
@@ -146,25 +180,28 @@ export function createBaseRepository<T>(
         return rows as T[]
     }
 
-    async function getColumns(
-        columns: string[],
-        options: GetColumnsOptions
-    ): Promise<Partial<T>[]> {
+    async function getColumns<K extends keyof T>(
+        columns: K[],
+        options: GetColumnsOptions<T>
+    ): Promise<Pick<T, K>[]> {
+        assertValidColumns(columns as (string | number)[])
+        assertValidColumns([options.orderByColumn] as (string | number)[])
+
         const columnString = columns.join(', ')
         const order = options.order.toUpperCase()
 
         const [rows] = await dbPool.execute<RowDataPacket[]>(
-            `SELECT ${columnString} FROM ${tableName} ORDER BY ${options.orderByColumn} ${order}`
+            `SELECT ${columnString} FROM ${tableName} ORDER BY ${String(options.orderByColumn)} ${order}`
         )
 
         return rows.map((row) => {
             const partial: Partial<T> = {}
             for (const column of columns) {
                 if (Object.hasOwn(row, column)) {
-                    partial[column as keyof T] = row[column]
+                    partial[column] = row[column as keyof typeof row]
                 }
             }
-            return partial
+            return partial as Pick<T, K>
         })
     }
 
@@ -173,7 +210,7 @@ export function createBaseRepository<T>(
         getTableName,
         create,
         update,
-        delete: remove, // "delete" is a reserved word in JS
+        delete: remove,
         findOne,
         findMany,
         findRowByColumnAndValue,

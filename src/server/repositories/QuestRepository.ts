@@ -13,15 +13,20 @@ type Quest = {
 
 export type QuestRepository = ReturnType<typeof createQuestRepository>
 
-export function createQuestRepository(tableName: string, dbPool: Pool) {
-    const base = createBaseRepository<Quest>(tableName, dbPool)
+export function createQuestRepository(
+    tableName: string,
+    dbPool: Pool,
+    validColumns: (keyof Quest)[],
+    questsToTaxaRepo?: ReturnType<typeof createQuestToTaxaRepository>
+) {
+    const base = createBaseRepository<Quest>(tableName, dbPool, validColumns)
 
     async function findAccessibleById(
         id: number,
         userId?: number
     ): Promise<Quest | null> {
         const query = `
-      SELECT * FROM ${base.getTableName()}
+      SELECT * FROM ${tableName}
       WHERE id = ?
         AND (is_private = FALSE OR user_id = ?)
       LIMIT 1
@@ -34,7 +39,7 @@ export function createQuestRepository(tableName: string, dbPool: Pool) {
 
     async function findAccessibleByUserId(userId: number): Promise<Quest[]> {
         const query = `
-      SELECT * FROM ${base.getTableName()}
+      SELECT * FROM ${tableName}
       WHERE user_id = ?
         AND (is_private = FALSE OR user_id = ?)
     `
@@ -42,6 +47,13 @@ export function createQuestRepository(tableName: string, dbPool: Pool) {
             .getDb()
             .execute<RowDataPacket[]>(query, [userId, userId])
         return rows as Quest[]
+    }
+
+    async function findTaxaForQuest(questId: number) {
+        if (!questsToTaxaRepo) {
+            throw new Error('questsToTaxaRepo is not provided')
+        }
+        return questsToTaxaRepo.findByQuestId(questId)
     }
 
     async function saveQuest(quest: Partial<Quest>): Promise<number> {
@@ -57,6 +69,7 @@ export function createQuestRepository(tableName: string, dbPool: Pool) {
         ...base,
         findAccessibleById,
         findAccessibleByUserId,
+        findTaxaForQuest,
         saveQuest,
     }
 }
@@ -71,6 +84,31 @@ export type QuestToTaxaRepository = ReturnType<
     typeof createQuestToTaxaRepository
 >
 
-export function createQuestToTaxaRepository(tableName: string, dbPool: Pool) {
-    return createBaseRepository<QuestToTaxa>(tableName, dbPool)
+export function createQuestToTaxaRepository(
+    tableName: string,
+    dbPool: Pool,
+    validColumns: (keyof QuestToTaxa)[]
+) {
+    const base = createBaseRepository<QuestToTaxa>(
+        tableName,
+        dbPool,
+        validColumns
+    )
+
+    async function findByQuestId(questId: number): Promise<QuestToTaxa[]> {
+        return base.findMany({ quest_id: questId })
+    }
+
+    async function addMapping(
+        questId: number,
+        taxonId: number
+    ): Promise<number> {
+        return base.create({ quest_id: questId, taxon_id: taxonId })
+    }
+
+    return {
+        ...base,
+        findByQuestId,
+        addMapping,
+    }
 }

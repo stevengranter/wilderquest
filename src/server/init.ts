@@ -6,19 +6,34 @@ import {
     createQuestToTaxaRepository,
 } from './repositories/QuestRepository.js'
 import { createUserRepository } from './repositories/UserRepository.js'
+import { getTableColumns } from './utils/getTableColumns.js'
 
 // Initialize db and repositories
 export async function initApp() {
     const dbPool = await initializeDb()
-    const userRepository = createUserRepository('users', dbPool)
+
+    const userColumns = await getTableColumns(dbPool, 'users')
+    const userRepository = createUserRepository('users', dbPool, userColumns)
+
+    const collectionColumns = await getTableColumns(dbPool, 'collections')
     const collectionRepository = createCollectionRepository(
         'collections',
-        dbPool
+        dbPool,
+        collectionColumns
     )
-    const questRepository = createQuestRepository('quests', dbPool)
+
+    const questToTaxaColumns = await getTableColumns(dbPool, 'quests_to_taxa')
     const questToTaxaRepository = createQuestToTaxaRepository(
         'quests_to_taxa',
-        dbPool
+        dbPool,
+        questToTaxaColumns
+    )
+    const questTableColumns = await getTableColumns(dbPool, 'quests')
+    const questRepository = createQuestRepository(
+        'quests',
+        dbPool,
+        questTableColumns,
+        questToTaxaRepository
     )
 
     return {

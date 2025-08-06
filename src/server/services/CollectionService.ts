@@ -2,7 +2,10 @@ import { z } from 'zod'
 import { Collection } from '../../types/types.js'
 import { CollectionToTaxa } from '../models/CollectionToTaxa.js'
 import { CollectionRepository } from '../repositories/CollectionRepository.js'
-import { CollectionSchema, CreateCollectionSchema } from '../schemas/collection.schemas.js'
+import {
+    CollectionSchema,
+    CreateCollectionSchema,
+} from '../schemas/collection.schemas.js'
 
 type CreateCollectionInput = z.infer<typeof CreateCollectionSchema>
 type UpdateCollectionInput = Partial<CreateCollectionInput>
@@ -105,11 +108,13 @@ export function createCollectionService(
         return enrichCollectionWithTaxa(collection)
     }
 
-    async function deleteCollection(collectionId: number): Promise<boolean> {
+    async function deleteCollection(
+        collectionId: number
+    ): Promise<{ success: boolean; affectedRows: number }> {
         try {
             await requireOwnedCollection(collectionId)
         } catch {
-            return false
+            return { success: false, affectedRows: 0 }
         }
         return collectionRepo.delete(collectionId)
     }
