@@ -31,9 +31,11 @@ export function createQuestController(questService: QuestService) {
         req: AuthenticatedRequest,
         res: Response
     ) {
-        const userId = req.params.user_id
+        const userId = Number(req.params.user_id)
+        const viewerId = req.user?.id
+        console.log('getQuestsByUserIdParam', userId)
         try {
-            const quests = await questService.getQuestsByUserId(Number(userId))
+            const quests = await questService.getUserQuests(userId, viewerId)
             res.status(200).json(quests)
             return
         } catch (_error) {

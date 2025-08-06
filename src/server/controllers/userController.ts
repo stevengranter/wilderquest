@@ -10,26 +10,14 @@ export interface UserController {
 export function createUserController(userRepo: UserRepository) {
     return {
         getUserById: async (req: Request, res: Response) => {
-            const user = await userRepo.findRowByColumnAndValue(
-                'id',
-                Number(req.params.id)
-            )
-            res.json(user)
-        },
-
-        getUserByEmail: async (req: Request, res: Response) => {
-            const user = await userRepo.findRowByColumnAndValue(
-                'email',
-                req.params.email
-            )
+            const userId = Number(req.params.id)
+            const user = await userRepo.findUser({ id: userId })
             res.json(user)
         },
 
         getUserByUsername: async (req: Request, res: Response) => {
-            const user = await userRepo.findRowByColumnAndValue(
-                'username',
-                req.params.username
-            )
+            const username = req.params.username
+            const user = await userRepo.findUser({ username: username })
             res.json(user)
         },
 

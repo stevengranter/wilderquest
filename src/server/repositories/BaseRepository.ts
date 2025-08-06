@@ -5,43 +5,13 @@ export type GetColumnsOptions<T> = {
     order: 'asc' | 'desc'
 }
 
-export interface BaseRepository<T> {
-    getDb(): Pool
-    getTableName(): string
-
-    create(data: Partial<T>): Promise<number>
-    update(
-        id: number | undefined,
-        data: object
-    ): Promise<{ success: boolean; affectedRows: number }>
-    delete(id: number): Promise<{ success: boolean; affectedRows: number }>
-
-    findOne(conditions: Partial<T>): Promise<T | null>
-    findMany(
-        conditions: Partial<T>,
-        options?: {
-            limit?: number
-            offset?: number
-            orderByColumn?: keyof T
-            order?: 'asc' | 'desc'
-        }
-    ): Promise<T[]>
-    findRowByColumnAndValue<K extends keyof T>(
-        column: K,
-        value: T[K]
-    ): Promise<T[]>
-    findAll(): Promise<T[]>
-    getColumns<K extends keyof T>(
-        columns: K[],
-        options: GetColumnsOptions<T>
-    ): Promise<Pick<T, K>[]>
-}
+export type BaseRepository<T> = ReturnType<typeof createBaseRepository<T>>
 
 export function createBaseRepository<T>(
     tableName: string,
     dbPool: Pool,
     validColumns: (keyof T)[]
-): BaseRepository<T> {
+) {
     const getDb = () => dbPool
     const getTableName = () => tableName
 
@@ -105,25 +75,33 @@ export function createBaseRepository<T>(
         }
     }
 
-    async function findOne(conditions: Partial<T>): Promise<T | null> {
+    async function findOne(
+        conditions: Partial<T>,
+        selectColumns: (keyof T)[] = validColumns
+    ): Promise<Partial<T> | null> {
         const keys = Object.keys(conditions) as (keyof T)[]
         if (keys.length === 0) {
             throw new Error('findOne called without conditions')
         }
 
         assertValidColumns(keys as (string | number)[])
+        assertValidColumns(selectColumns as (string | number)[])
 
         const whereClause = keys
             .map((key) => `${String(key)} = ?`)
             .join(' AND ')
         const values = keys.map((key) => conditions[key])
 
+        const columns = selectColumns
+            .map((col) => `\`${String(col)}\``)
+            .join(', ')
+
         const [rows] = await dbPool.execute<RowDataPacket[]>(
-            `SELECT * FROM ${tableName} WHERE ${whereClause} LIMIT 1`,
+            `SELECT ${columns} FROM ${tableName} WHERE ${whereClause} LIMIT 1`,
             values
         )
 
-        return rows.length > 0 ? (rows[0] as T) : null
+        return rows.length > 0 ? (rows[0] as Partial<T>) : null
     }
 
     async function findMany(

@@ -4,7 +4,7 @@
     "version": "0.0.1",
     "type": "module",
     "scripts": {
-        "dev": "nodemon --watch src --ext ts,json --exec 'tsx src/server/server.ts'",
+        "dev": "nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts",
         "start:preview": "NODE_ENV=production tsx src/server/server.ts",
         "start": "NODE_ENV=production node dist/server/server.js",
         "build": "NODE_ENV=production rm -rf dist && vite build && tsc -p src/server/tsconfig.json"

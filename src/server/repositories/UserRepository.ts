@@ -4,6 +4,13 @@ import { createBaseRepository } from './BaseRepository.js'
 
 export type UserRepository = ReturnType<typeof createUserRepository>
 
+const safeUserColumns: (keyof User)[] = [
+    'id',
+    'username',
+    'created_at',
+    'updated_at',
+]
+
 export function createUserRepository(
     tableName: string,
     dbPool: Pool,
@@ -20,8 +27,14 @@ export function createUserRepository(
         })
     }
 
+    async function findUser(
+        conditions: Partial<User>
+    ): Promise<Partial<User> | null> {
+        return base.findOne(conditions, safeUserColumns)
+    }
+
     return {
-        ...base,
         create,
+        findUser,
     }
 }

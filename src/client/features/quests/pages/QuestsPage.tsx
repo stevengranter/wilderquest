@@ -10,6 +10,7 @@ import { Collection } from '../../../../types/types'
 
 export function QuestsPage() {
     const { isAuthenticated, user } = useAuth()
+
     const [quests, setQuests] = useState<Collection[]>([])
     const [isMyQuests, setIsMyQuests] = useState<boolean>(false)
 

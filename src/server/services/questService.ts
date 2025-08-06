@@ -29,8 +29,8 @@ export function createQuestService(
         return collection
     }
 
-    async function getQuestsByUserId(userId: number) {
-        return questsRepo.findAccessibleByUserId(userId)
+    async function getUserQuests(targetUserId: number, viewerId?: number) {
+        return questsRepo.findAccessibleByUserId(targetUserId, viewerId)
     }
 
     async function getTaxaForQuestId(questId: number) {
@@ -40,7 +40,7 @@ export function createQuestService(
     return {
         getAllPublicQuests,
         getQuestById,
-        getQuestsByUserId,
+        getUserQuests,
         getTaxaForQuestId,
     }
 }

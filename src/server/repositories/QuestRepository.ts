@@ -37,16 +37,27 @@ export function createQuestRepository(
         return rows.length > 0 ? (rows[0] as Quest) : null
     }
 
-    async function findAccessibleByUserId(userId: number): Promise<Quest[]> {
-        const query = `
-      SELECT * FROM ${tableName}
-      WHERE user_id = ?
-        AND (is_private = FALSE OR user_id = ?)
-    `
-        const [rows] = await base
-            .getDb()
-            .execute<RowDataPacket[]>(query, [userId, userId])
-        return rows as Quest[]
+    async function findAccessibleByUserId(userId: number, viewerId?: number) {
+        const isOwner = userId === viewerId
+        console.log('isOwner', isOwner)
+        console.log('userId', userId)
+
+        if (isOwner) {
+            // return all quests (public and private)
+            const [rows] = await dbPool.query(
+                `SELECT * FROM quests WHERE user_id = ?`,
+                [userId]
+            )
+            return rows
+        } else {
+            // only return public quests
+            console.log('getting public quests')
+            const [rows] = await dbPool.query(
+                `SELECT * FROM quests WHERE user_id = ? AND is_private = false`,
+                [userId]
+            )
+            return rows
+        }
     }
 
     async function findTaxaForQuest(questId: number) {

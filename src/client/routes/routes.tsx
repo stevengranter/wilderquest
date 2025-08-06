@@ -11,6 +11,7 @@ import UserCollectionsManager from '@/features/collections/UserCollectionsManage
 import QuestDetail from '@/features/quests/components/QuestDetail'
 import QuestForm from '@/features/quests/form/QuestForm'
 import { QuestsPage } from '@/features/quests/pages/QuestsPage'
+import UserQuestsPage from '@/features/quests/pages/UserQuestsPage'
 import { AppLayout } from '@/layouts/AppLayout'
 import { ExploreTab } from './explore/ExploreTab'
 import { IdentifyTab } from './identify/IdentifyTab'
@@ -82,6 +83,10 @@ export const router = createBrowserRouter([
                     {
                         path: ':questId',
                         element: <QuestDetail />,
+                    },
+                    {
+                        path: 'user/:userId',
+                        element: <UserQuestsPage />,
                     },
                     {
                         path: 'create/*',
