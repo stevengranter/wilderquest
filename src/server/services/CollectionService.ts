@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { Collection } from '../../types/types.js'
 import { CollectionToTaxa } from '../models/CollectionToTaxa.js'
 import { CollectionRepository } from '../repositories/CollectionRepository.js'
 import {
@@ -9,10 +8,8 @@ import {
 
 type CreateCollectionInput = z.infer<typeof CreateCollectionSchema>
 type UpdateCollectionInput = Partial<CreateCollectionInput>
-type CollectionModel = z.infer<typeof CollectionSchema> & {
-    id: number
-    user_id: number
-}
+
+export type CollectionModel = z.infer<typeof CollectionSchema>
 
 export function createCollectionService(
     collectionRepo: CollectionRepository,
@@ -29,7 +26,9 @@ export function createCollectionService(
     async function requireOwnedCollection(
         collectionId: number
     ): Promise<CollectionModel> {
-        const collection = await collectionRepo.findOne({ id: collectionId })
+        const collection = (await collectionRepo.findOne({
+            id: collectionId,
+        })) as CollectionModel | null
         if (!collection || !isAuthorized(collection)) {
             throw new Error('Forbidden')
         }
@@ -37,27 +36,31 @@ export function createCollectionService(
     }
 
     async function getAllPublicCollections(): Promise<CollectionModel[]> {
-        return collectionRepo.findAllPublic()
+        return (await collectionRepo.findAllPublic()) as CollectionModel[]
     }
 
     async function getPublicCollectionById(
         collectionId: number
-    ): Promise<CollectionModel | null> {
-        const collection = await collectionRepo.findOne({
+    ): Promise<(CollectionModel & { taxon_ids: number[] }) | null> {
+        const collection = (await collectionRepo.findOne({
             id: collectionId,
             is_private: false,
-        })
-        return collection ? enrichCollectionWithTaxa(collection) : null
+        })) as CollectionModel | null
+        return collection ? await enrichCollectionWithTaxa(collection) : null
     }
 
-    async function findCollectionsByUserId(userId: number) {
-        const raw = await collectionRepo.findByUserId(userId)
-        return enrichAllCollectionsWithTaxa(raw)
+    async function findCollectionsByUserId(
+        userId: number
+    ): Promise<(CollectionModel & { taxon_ids: number[] })[]> {
+        const raw = (await collectionRepo.findByUserId(
+            userId
+        )) as CollectionModel[]
+        return await enrichAllCollectionsWithTaxa(raw)
     }
 
     async function createCollection(
         data: CreateCollectionInput
-    ): Promise<Collection & { taxon_ids: number[] }> {
+    ): Promise<CollectionModel & { taxon_ids: number[] }> {
         ensureAuthorized()
         const { taxon_ids = [], ...collectionData } = data
 
@@ -66,9 +69,9 @@ export function createCollectionService(
             user_id: userId!,
         })
 
-        const newCollection = await collectionRepo.findOne({
+        const newCollection = (await collectionRepo.findOne({
             id: newCollectionId,
-        })
+        })) as CollectionModel | null
         if (!newCollection) {
             throw new Error('Failed to retrieve newly created collection.')
         }
@@ -77,7 +80,7 @@ export function createCollectionService(
             await updateCollectionTaxa(newCollectionId, taxon_ids)
         }
 
-        return enrichCollectionWithTaxa(newCollection)
+        return await enrichCollectionWithTaxa(newCollection)
     }
 
     async function updateCollection(
@@ -90,22 +93,28 @@ export function createCollectionService(
             return null
         }
         const success = await collectionRepo.update(collectionId, updateData)
-        return success ? collectionRepo.findOne({ id: collectionId }) : null
+        return success
+            ? ((await collectionRepo.findOne({
+                  id: collectionId,
+              })) as CollectionModel | null)
+            : null
     }
 
     async function updateCollectionTaxa(
         collectionId: number,
         taxon_ids: number[]
-    ): Promise<CollectionModel | null> {
+    ): Promise<(CollectionModel & { taxon_ids: number[] }) | null> {
         try {
             await requireOwnedCollection(collectionId)
         } catch {
             return null
         }
         await collectionRepo.updateCollectionItems(collectionId, taxon_ids)
-        const collection = await collectionRepo.findOne({ id: collectionId })
+        const collection = (await collectionRepo.findOne({
+            id: collectionId,
+        })) as CollectionModel | null
         if (!collection) return null
-        return enrichCollectionWithTaxa(collection)
+        return await enrichCollectionWithTaxa(collection)
     }
 
     async function deleteCollection(
@@ -116,26 +125,28 @@ export function createCollectionService(
         } catch {
             return { success: false, affectedRows: 0 }
         }
-        return collectionRepo.delete(collectionId)
+        return await collectionRepo.delete(collectionId)
     }
 
     async function getTaxaByCollectionId(
         collectionId: number
     ): Promise<CollectionToTaxa[]> {
-        return collectionRepo.findTaxaByCollectionId(collectionId)
+        return await collectionRepo.findTaxaByCollectionId(collectionId)
     }
 
     async function enrichCollectionWithTaxa(
-        collection: Collection
-    ): Promise<Collection & { taxon_ids: number[] }> {
+        collection: CollectionModel
+    ): Promise<CollectionModel & { taxon_ids: number[] }> {
         const taxa = await getTaxaByCollectionId(collection.id)
         return { ...collection, taxon_ids: taxa.map((t) => t.taxon_id) }
     }
 
     async function enrichAllCollectionsWithTaxa(
-        collections: Collection[]
-    ): Promise<(Collection & { taxon_ids: number[] })[]> {
-        return Promise.all(collections.map((c) => enrichCollectionWithTaxa(c)))
+        collections: CollectionModel[]
+    ): Promise<(CollectionModel & { taxon_ids: number[] })[]> {
+        return await Promise.all(
+            collections.map((c) => enrichCollectionWithTaxa(c))
+        )
     }
 
     return {
@@ -150,7 +161,3 @@ export function createCollectionService(
         enrichCollectionWithTaxa,
     }
 }
-
-export type CollectionServiceInstance = ReturnType<
-    typeof createCollectionService
->

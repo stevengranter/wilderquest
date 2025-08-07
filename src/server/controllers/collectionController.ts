@@ -2,8 +2,14 @@ import { Request, Response } from 'express'
 import { z } from 'zod'
 import { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
 import { type CollectionRepository } from '../repositories/CollectionRepository.js'
-import { CollectionSchema, CreateCollectionSchema } from '../schemas/collection.schemas.js'
-import { createCollectionService } from '../services/CollectionService.js'
+import {
+    CollectionSchema,
+    CreateCollectionSchema,
+} from '../schemas/collection.schemas.js'
+import {
+    CollectionModel,
+    createCollectionService,
+} from '../services/CollectionService.js'
 
 export function createCollectionController(
     collectionRepo: CollectionRepository
@@ -55,10 +61,31 @@ export function createCollectionController(
                         return
                     }
                 }
+                if (
+                    collection.id === undefined ||
+                    collection.user_id === undefined
+                ) {
+                    res.status(500).json({
+                        message: 'Collection is missing required fields',
+                    })
+                    return
+                }
 
-                // If we get here, either the collection is public or the user is authorized
+                // Before calling enrichCollectionWithTaxa, check required fields
+                if (
+                    typeof collection.id !== 'number' ||
+                    typeof collection.user_id !== 'number'
+                ) {
+                    res.status(500).json({
+                        message: 'Collection is missing required fields',
+                    })
+                    return
+                }
+
                 const enrichedCollection =
-                    await service.enrichCollectionWithTaxa(collection)
+                    await service.enrichCollectionWithTaxa(
+                        collection as CollectionModel
+                    )
                 res.json(enrichedCollection)
             } catch (error) {
                 res.status(500).json({
