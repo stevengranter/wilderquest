@@ -49,6 +49,7 @@ export const formSchema = z.object({
     }),
     latitude: z.number().nullable(),
     longitude: z.number().nullable(),
+    isPrivate: z.boolean(),
 })
 
 interface TaxonData {
@@ -102,6 +103,7 @@ export function CreateQuest() {
             locationName: '',
             latitude: null,
             longitude: null,
+            isPrivate: false,
         },
     })
 
@@ -397,7 +399,11 @@ function SpeciesItem({ species, onToggle, isAdded }: SpeciesItemProps) {
                 </Button>
             </div>
             {showObservations && (
-                <ObservationList taxonId={species.taxon.id} lat={lat} lon={lon} />
+                <ObservationList
+                    taxonId={species.taxon.id}
+                    lat={lat}
+                    lon={lon}
+                />
             )}
         </Card>
     )

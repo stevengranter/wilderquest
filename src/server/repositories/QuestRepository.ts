@@ -152,7 +152,7 @@ export function createQuestToTaxaRepository(
     }
 
     async function deleteMany(filter: { quest_id: number }) {
-        await dbPool.query(`DELETE FROM quest_to_taxa WHERE quest_id = ?`, [
+        await dbPool.query(`DELETE FROM ${tableName} WHERE quest_id = ?`, [
             filter.quest_id,
         ])
     }

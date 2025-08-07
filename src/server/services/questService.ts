@@ -1,4 +1,9 @@
-import { Quest, QuestRepository, QuestToTaxaRepository, QuestWithTaxa } from '../repositories/QuestRepository.js'
+import {
+    Quest,
+    QuestRepository,
+    QuestToTaxaRepository,
+    QuestWithTaxa,
+} from '../repositories/QuestRepository.js'
 
 export type QuestService = ReturnType<typeof createQuestService>
 
@@ -121,7 +126,7 @@ export function createQuestService(
             throw new Error('Access denied')
         }
 
-        const { taxon_ids, ...questTableData } = updatedData
+        const { taxon_ids, description, ...questTableData } = updatedData
 
         // Update the quest (exclude undefined fields)
         if (Object.keys(questTableData).length > 0) {

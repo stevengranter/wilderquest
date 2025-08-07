@@ -8,6 +8,7 @@ import Register from '@/components/pages/Register'
 import Welcome from '@/components/pages/Welcome'
 import CollectionDetail from '@/features/collections/CollectionDetail'
 import UserCollectionsManager from '@/features/collections/UserCollectionsManager'
+import EditQuest from '@/features/quests/components/EditQuest'
 import QuestDetail from '@/features/quests/components/QuestDetail'
 import { CreateQuest } from '@/features/quests/pages/CreateQuest'
 import { QuestsPage } from '@/features/quests/pages/QuestsPage'
@@ -83,6 +84,14 @@ export const router = createBrowserRouter([
                     {
                         path: ':questId',
                         element: <QuestDetail />,
+                    },
+                    {
+                        path: ':questId/edit',
+                        element: (
+                            <ProtectedRoute>
+                                <EditQuest />
+                            </ProtectedRoute>
+                        ),
                     },
                     {
                         path: 'user/:userId',

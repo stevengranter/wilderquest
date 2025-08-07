@@ -3,7 +3,7 @@ import axios from 'axios'
 import { chunk } from 'lodash'
 import { Lock, LockOpen, Pencil } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import api from '@/api/api'
 import { SpeciesCard } from '@/components/cards/SpeciesCard'
 import { Button } from '@/components/ui/button'
@@ -129,10 +129,10 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                         </p>
                     </div>
                     <Button variant="default" size="sm" asChild>
-                        <a href={`/quests/${questData.id}/edit`}>
+                        <Link to={`/quests/${questData.id}/edit`}>
                             <Pencil className="h-4 w-4 mr-2" />
                             Edit Quest
-                        </a>
+                        </Link>
                     </Button>
                 </div>
 
