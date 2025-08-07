@@ -45,7 +45,7 @@ function MapSyncHandler({
     return null
 }
 
-export function QuestMapView({ options, markerData }: QuestMapProps) {
+export const QuestMapView = React.memo(({ options, markerData }: QuestMapProps) => {
     const initialCenter: [number, number] = [49.18, -57.43] // Deer Lake, NL
     const { center, zoom } = options || { center: initialCenter, zoom: 13 }
     const [bounds, setBounds] = useState<LatLngBounds | null>(null)
@@ -88,4 +88,4 @@ export function QuestMapView({ options, markerData }: QuestMapProps) {
             )}
         </MapContainer>
     )
-}
+})
