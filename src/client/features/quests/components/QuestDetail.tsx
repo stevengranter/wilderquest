@@ -153,7 +153,7 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                     <h2 className="text-xl font-semibold mb-4">
                         Species ({taxa.length})
                     </h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 auto-rows-fr">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
                         {taxa.map((taxon) => (
                             <Dialog key={taxon.id}>
                                 <DialogTrigger className="h-full w-full">
@@ -240,15 +240,15 @@ function ObservationList({
     if (isError) return <ObservationErrorState />
 
     return (
+        // In ObservationList, wrap the toggle/header and content in a fixed min-height container
         <motion.div
-            className="mt-4"
+            className="mt-4 min-h-[480px] overflow-hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
         >
-            {/* Header with view toggle */}
             <motion.div
-                className="flex items-center justify-between mb-4"
+                className="flex items-center justify-between mb-4 min-h-12"
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
@@ -264,63 +264,53 @@ function ObservationList({
                     }
                     className="border rounded-lg"
                 >
-                    <ToggleGroupItem
-                        value="grid"
-                        aria-label="Grid view"
-                        size="sm"
-                    >
+                    <ToggleGroupItem value="grid" aria-label="Grid view">
                         <Grid className="h-4 w-4" />
                     </ToggleGroupItem>
-                    <ToggleGroupItem
-                        value="list"
-                        aria-label="List view"
-                        size="sm"
-                    >
+                    <ToggleGroupItem value="list" aria-label="List view">
                         <List className="h-4 w-4" />
                     </ToggleGroupItem>
-                    <ToggleGroupItem
-                        value="map"
-                        aria-label="Map view"
-                        size="sm"
-                    >
+                    <ToggleGroupItem value="map" aria-label="Map view">
                         <Map className="h-4 w-4" />
                     </ToggleGroupItem>
                 </ToggleGroup>
             </motion.div>
-
-            {observations && observations.length > 0 ? (
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={viewMode}
+            <div className="min-h-[350px] overflow-y-auto pt-6 pb-6 box-border">
+                {/* Animated content here */}
+                {observations && observations.length > 0 ? (
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={viewMode}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            {viewMode === 'grid' && (
+                                <ObservationGridView observations={observations} />
+                            )}
+                            {viewMode === 'list' && (
+                                <ObservationListView observations={observations} />
+                            )}
+                            {viewMode === 'map' && (
+                                <ObservationMapView
+                                    observations={observations}
+                                    center={[lat, lon]}
+                                />
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+                ) : (
+                    <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.4, delay: 0.3 }}
+                        className="text-center py-8 text-muted-foreground"
                     >
-                        {viewMode === 'grid' && (
-                            <ObservationGridView observations={observations} />
-                        )}
-                        {viewMode === 'list' && (
-                            <ObservationListView observations={observations} />
-                        )}
-                        {viewMode === 'map' && (
-                            <ObservationMapView
-                                observations={observations}
-                                center={[lat, lon]}
-                            />
-                        )}
-                    </motion.div>
-                </AnimatePresence>
-            ) : (
-                <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.3 }}
-                    className="text-center py-8 text-muted-foreground"
-                >
-                    No observations found for this species in this area.
-                </motion.p>
-            )}
+                        No observations found for this species in this area.
+                    </motion.p>
+                )}
+            </div>
         </motion.div>
     )
 }
@@ -389,7 +379,7 @@ function ObservationGridView({
                             }}
                         >
                             {/* Polaroid Card */}
-                            <div className="bg-white p-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                            <div className="bg-white p-3 rounded-lg border-1 hover:shadow-shadow transtion:shadow duration-300">
                                 {/* Photo Area */}
                                 <div className="aspect-square bg-gray-100 rounded-sm overflow-hidden mb-3 relative">
                                     {obs.photos.length > 0 ? (

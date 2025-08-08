@@ -1,14 +1,6 @@
 import { LatLngBounds } from 'leaflet'
 import React, { useEffect, useState } from 'react'
-import {
-    MapContainer,
-    Marker,
-    MarkerProps,
-    Popup,
-    TileLayer,
-    useMap,
-    useMapEvents,
-} from 'react-leaflet'
+import { MapContainer, Marker, MarkerProps, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 
 type QuestMapOptions = {
     center?: [number, number]
@@ -23,7 +15,8 @@ function MapUpdater({ center }: { center?: [number, number] }) {
     const map = useMap()
     useEffect(() => {
         if (center) {
-            map.flyTo(center, map.getZoom())
+            // map.flyTo(center, map.getZoom())  // DISABLED: To save on tile calls,  uncomment if you want to fly to the center on mount
+            map.setView([center[0], center[1]])
         }
     }, [center, map])
     return null

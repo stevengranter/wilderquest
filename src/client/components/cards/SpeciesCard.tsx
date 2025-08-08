@@ -7,7 +7,7 @@ import React, { useRef } from 'react'
 import getKingdomIcon from '@/components/search/getKingdomIcon'
 import titleCase from '@/components/search/titleCase'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 import { cn } from '@/lib/utils'
 
@@ -33,8 +33,6 @@ export function SpeciesCard({
     } = useSelectionContext()
     const cardRef = useRef<HTMLDivElement>(null)
     const isSelected = selectedIds.includes(species.id.toString())
-
-    const [isFullScreen, setIsFullScreen] = React.useState(false)
 
     const handleClick = (e: React.MouseEvent) => {
         // Only prevent default and handle click if we're in selection mode
@@ -132,24 +130,44 @@ function SpeciesGridItem({
                 className={cn('w-full cursor-pointer', className)}
                 onClick={handleClick}
                 ref={cardRef}
-                style={{
-                    aspectRatio: '2.5/3.5', // Trading card proportions
-                }}
+                // style={{
+                //     aspectRatio: '2.5/3.5', // Trading card proportions
+                // }}
             >
                 <Card
                     className={cn(
-                        'h-full w-full overflow-hidden mt-0 py-0 transition-all duration-200',
-                        'shadow-md hover:shadow-lg',
+                        'aspect-2/3 overflow-hidden',
+                        'shadow-md py-0 gap-0',
                         isSelected && 'ring-2 ring-blue-500 shadow-blue-200/50'
                     )}
                 >
-                    <CardContent className="relative w-full aspect-square m-0 p-0 overflow-hidden">
+                    <CardHeader className="gap-0 flex flex-row justify-between py-2 relative">
+                        {species.preferred_common_name && (
+                            <h3 className="sm:text-sm md:text-lg lg:text-xxl">
+                                {titleCase(species.preferred_common_name)}
+                            </h3>
+                        )}
+
+
+
+                    </CardHeader>
+                    <CardContent className="relative border-1 px-0 mx-5">
+                        <div className="absolute top-2 right-2">
+                        {species.iconic_taxon_name && (
+                            <div className="bg-white p-2 rounded-full ">
+                            {getKingdomIcon(
+                                species.iconic_taxon_name
+                            )}
+                                </div>
+                        )}
+                        </div>
+
                         {species.default_photo ? (
                             <>
                                 <img
                                     src={species.default_photo.medium_url}
                                     alt={species.name}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full aspect-square object-cover"
                                 />
                             </>
                         ) : (
@@ -160,22 +178,9 @@ function SpeciesGridItem({
                             </div>
                         )}
 
-                        {/* Kingdom badge overlay */}
-                        {species.iconic_taxon_name && (
-                            <div className="absolute top-2 right-2">
-                                <Badge
-                                    variant="secondary"
-                                    className="text-[10px] px-1.5 py-0.5 bg-white/90 backdrop-blur-sm border-0 shadow-sm"
-                                >
-                                    <span className="mr-1">
-                                        {getKingdomIcon(
-                                            species.iconic_taxon_name
-                                        )}
-                                    </span>
-                                    {species.iconic_taxon_name}
-                                </Badge>
-                            </div>
-                        )}
+
+
+
                     </CardContent>
 
                     {/* Content Footer - Flexible height below square image */}
@@ -198,7 +203,7 @@ function SpeciesGridItem({
                             <div className="flex items-center gap-1">
                                 {species.rank && (
                                     <Badge
-                                        variant="outline"
+                                        variant="neutral"
                                         className="text-[9px] px-1.5 py-0.5 h-auto capitalize"
                                     >
                                         {species.rank}
@@ -299,7 +304,6 @@ function SpeciesListItem({
                 {species.wikipedia_url && (
                     <a
                         href={species.wikipedia_url}
-                        onClick={(e) => handleInteractiveClick(e, 'Wikipedia')}
                         className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
                     >
                         <ExternalLink className="h-3 w-3" />
