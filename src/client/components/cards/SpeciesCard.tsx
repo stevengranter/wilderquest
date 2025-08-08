@@ -7,7 +7,7 @@ import React, { useRef } from 'react'
 import getKingdomIcon from '@/components/search/getKingdomIcon'
 import titleCase from '@/components/search/titleCase'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 import { cn } from '@/lib/utils'
 
@@ -100,6 +100,7 @@ function SpeciesGridItem({
     handleClick: (e: React.MouseEvent) => void
     isSelectable?: boolean
 }) {
+    const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
     return (
         <AnimatePresence mode="wait">
             <motion.div
@@ -122,7 +123,8 @@ function SpeciesGridItem({
                     default: { duration: 0.3 },
                 }}
                 whileHover={{
-                    scale: 1.02,
+                    scale: 1.04,
+                    // rotateZ: 5,
                     y: -2,
                     transition: { duration: 0.2, type: 'spring', damping: 15 },
                 }}
@@ -136,28 +138,28 @@ function SpeciesGridItem({
             >
                 <Card
                     className={cn(
-                        'aspect-2/3 overflow-hidden',
-                        'shadow-md py-0 gap-0',
-                        isSelected && 'ring-2 ring-blue-500 shadow-blue-200/50'
+                        'aspect-2.5/3.5 overflow-hidden',
+                        'shadow-0 py-0 gap-0',
+                        isSelected && 'ring-2 ring-blue-500 shadow-blue-200/50',
+                        'hover:shadow-shadow transition-shadow duration-500',
                     )}
                 >
-                    <CardHeader className="gap-0 flex flex-row justify-between py-2 relative">
+                    <CardHeader className="gap-0 justify-start pt-2 pb-1 relative">
                         {species.preferred_common_name && (
-                            <h3 className="sm:text-sm md:text-lg lg:text-xxl">
+                            <h3 className="sm:text-md md:text-lg lg:text-xxl">
                                 {titleCase(species.preferred_common_name)}
                             </h3>
                         )}
 
 
 
+
                     </CardHeader>
-                    <CardContent className="relative border-1 px-0 mx-5">
-                        <div className="absolute top-2 right-2">
+                    <CardContent className="relative px-0 mx-5">
+                        <div className="absolute -top-3 -right-3">
                         {species.iconic_taxon_name && (
-                            <div className="bg-white p-2 rounded-full ">
-                            {getKingdomIcon(
-                                species.iconic_taxon_name
-                            )}
+                            <div className="bg-main rounded-full text-bg-main-foreground p-2">
+                           <KingdomIcon size={20} />
                                 </div>
                         )}
                         </div>
@@ -167,7 +169,7 @@ function SpeciesGridItem({
                                 <img
                                     src={species.default_photo.medium_url}
                                     alt={species.name}
-                                    className="w-full h-full aspect-square object-cover"
+                                    className="w-full h-full aspect-square object-cover border-2 rounded-sm"
                                 />
                             </>
                         ) : (
@@ -184,32 +186,35 @@ function SpeciesGridItem({
                     </CardContent>
 
                     {/* Content Footer - Flexible height below square image */}
-                    <div className="flex-1 p-3 flex flex-col justify-between min-h-[120px]">
+                    <CardFooter className="min-h-[120px] flex flex-col justify-start">
                         {/* Species Names */}
-                        <div className="space-y-1">
-                            <h3 className="font-bold text-sm leading-tight line-clamp-2">
-                                {titleCase(species.preferred_common_name) ||
-                                    species.name}
-                            </h3>
+
+                        <div className="space-y-1 justify-start self-end mt-1">
                             {species.preferred_common_name && (
                                 <p className="text-[11px] text-muted-foreground italic leading-tight line-clamp-1">
                                     {species.name}
                                 </p>
                             )}
+                            {/*<h3 className="font-bold text-sm leading-tight line-clamp-2">*/}
+                            {/*    {titleCase(species.preferred_common_name) ||*/}
+                            {/*        species.name}*/}
+                            {/*</h3>*/}
+
                         </div>
 
                         {/* Stats and Badges Row */}
                         <div className="flex items-center justify-between mt-auto">
-                            <div className="flex items-center gap-1">
-                                {species.rank && (
-                                    <Badge
-                                        variant="neutral"
-                                        className="text-[9px] px-1.5 py-0.5 h-auto capitalize"
-                                    >
-                                        {species.rank}
-                                    </Badge>
-                                )}
-                            </div>
+                            {/* DISABLED: ALl records are Species rank*/}
+                            {/*<div className="flex items-center gap-1">*/}
+                            {/*    {species.rank && (*/}
+                            {/*        <Badge*/}
+                            {/*            variant="neutral"*/}
+                            {/*            className="text-[9px] px-1.5 py-0.5 h-auto capitalize"*/}
+                            {/*        >*/}
+                            {/*            {species.rank}*/}
+                            {/*        </Badge>*/}
+                            {/*    )}*/}
+                            {/*</div>*/}
 
                             <div className="text-[10px] text-muted-foreground text-right">
                                 <div>
@@ -228,7 +233,7 @@ function SpeciesGridItem({
                                 </div>
                             </div>
                         )}
-                    </div>
+                    </CardFooter>
                 </Card>
             </motion.div>
         </AnimatePresence>
