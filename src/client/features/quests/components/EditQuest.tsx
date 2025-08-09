@@ -2,12 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { chunk } from 'lodash'
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-    FormProvider,
-    useForm,
-    useFormContext,
-    useWatch,
-} from 'react-hook-form'
+import { FormProvider, useForm, useFormContext, useWatch } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -15,19 +10,13 @@ import api from '@/api/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from '@/components/ui/form'
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { formSchema } from '@/features/quests/pages/CreateQuest'
 import { useAuth } from '@/hooks/useAuth'
+import { SpeciesCard } from '@/components/cards/SpeciesCard'
 
 type QuestFormValues = z.infer<typeof formSchema>
 
@@ -224,12 +213,13 @@ function SpeciesSelector({ selectedTaxa, onToggleTaxon }) {
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {selectedTaxa.map((taxon) => (
-                    <SpeciesItem
-                        key={taxon.id}
-                        taxon={taxon}
-                        onToggle={onToggleTaxon}
-                        isAdded={true}
-                    />
+                    <SpeciesCard key={taxon.id} species={taxon} />
+                    // <SpeciesItem
+                    //     key={taxon.id}
+                    //     taxon={taxon}
+                    //     onToggle={onToggleTaxon}
+                    //     isAdded={true}
+                    // />
                 ))}
             </div>
             {/* Add search and species list from iNat API here */}
