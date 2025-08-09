@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 import { cn } from '@/lib/utils'
+import { random } from 'lodash'
 
 interface SpeciesCardProps {
     species: INatTaxon
@@ -20,11 +21,11 @@ interface SpeciesCardProps {
 }
 
 export function SpeciesCard({
-    species,
-    className,
-    viewMode,
-    isSelectable = true,
-}: SpeciesCardProps) {
+                                species,
+                                className,
+                                viewMode,
+                                isSelectable = true,
+                            }: SpeciesCardProps) {
     const {
         isSelectionMode,
         selectedIds,
@@ -86,13 +87,13 @@ export function SpeciesCard({
 }
 
 function SpeciesGridItem({
-    species,
-    className,
-    cardRef,
-    isSelected,
-    isSelectable = true,
-    handleClick,
-}: {
+                             species,
+                             className,
+                             cardRef,
+                             isSelected,
+                             isSelectable = true,
+                             handleClick,
+                         }: {
     species: INatTaxon
     className?: string
     cardRef: React.RefObject<HTMLDivElement | null>
@@ -124,7 +125,7 @@ function SpeciesGridItem({
                 }}
                 whileHover={{
                     scale: 1.04,
-                    // rotateZ: 5,
+                    rotateZ: random(-3, 3), // Slight random rotation for hover effect
                     y: -2,
                     transition: { duration: 0.2, type: 'spring', damping: 15 },
                 }}
@@ -139,29 +140,36 @@ function SpeciesGridItem({
                 <Card
                     className={cn(
                         'aspect-2.5/3.5 overflow-hidden',
+                        'bg-gradient-to-b from-emerald-400 from-0% via-cyan-300 via-50% to-violet-400 to-100%',
                         'shadow-0 py-0 gap-0',
+                        'border-3 rounded-xl border-teal-600',
+                        'rotate-0',
+                        'z-100',
                         isSelected && 'ring-2 ring-blue-500 shadow-blue-200/50',
                         'hover:shadow-shadow transition-shadow duration-500',
                     )}
+
                 >
-                    <CardHeader className="gap-0 justify-start pt-2 pb-1 relative">
+                    <CardHeader
+                        className="gap-0 justify-start pt-2 pb-1 relative text-white tracking-widest font-bold"
+                        // style={{ textShadow: '2px 2px 1px rgba(0, 0, 0, 0.8)' }}
+                    >
                         {species.preferred_common_name && (
-                            <h3 className="sm:text-md md:text-lg lg:text-xxl">
+                            <h3 className="sm:text-md md:text-lg lg:text-xxl text-shadow-md line-clamp-1">
                                 {titleCase(species.preferred_common_name)}
                             </h3>
                         )}
 
 
-
-
                     </CardHeader>
                     <CardContent className="relative px-0 mx-5">
                         <div className="absolute -top-3 -right-3">
-                        {species.iconic_taxon_name && (
-                            <div className="bg-main rounded-full text-bg-main-foreground p-2">
-                           <KingdomIcon size={20} />
+                            {species.iconic_taxon_name && (
+                                <div
+                                    className="bg-yellow-300 rounded-full text-bg-main-foreground p-2 rotate-15 border-2">
+                                    <KingdomIcon size={20} />
                                 </div>
-                        )}
+                            )}
                         </div>
 
                         {species.default_photo ? (
@@ -169,18 +177,17 @@ function SpeciesGridItem({
                                 <img
                                     src={species.default_photo.medium_url}
                                     alt={species.name}
-                                    className="w-full h-full aspect-square object-cover border-2 rounded-sm"
+                                    className="w-full h-full aspect-square object-cover border-2 border-white outline-black outline-2 rounded-sm"
                                 />
                             </>
                         ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                            <div
+                                className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                                 <div className="text-gray-400 text-xs text-center px-2">
                                     No image
                                 </div>
                             </div>
                         )}
-
-
 
 
                     </CardContent>
@@ -189,17 +196,17 @@ function SpeciesGridItem({
                     <CardFooter className="min-h-[120px] flex flex-col justify-start">
                         {/* Species Names */}
 
-                        <div className="space-y-1 justify-start self-end mt-1">
+                        <div className="space-y-1 justify-start self-end mt-1 mb-2">
                             {species.preferred_common_name && (
-                                <p className="text-[11px] text-muted-foreground italic leading-tight line-clamp-1">
+                                <p className="text-[11px] text-white italic leading-tight line-clamp-1">
                                     {species.name}
                                 </p>
                             )}
-                            {/*<h3 className="font-bold text-sm leading-tight line-clamp-2">*/}
-                            {/*    {titleCase(species.preferred_common_name) ||*/}
-                            {/*        species.name}*/}
-                            {/*</h3>*/}
 
+                        </div>
+
+                        <div className="w-full h-full bg-white text-xs content-start text-left p-2 outline-2 rounded-sm outline-white border-2 border-black">
+                            <p>lorem ipsum dolor sit amet, consectetur adipiscing elit. </p>
                         </div>
 
                         {/* Stats and Badges Row */}
@@ -228,7 +235,8 @@ function SpeciesGridItem({
                         {/* Selection indicator */}
                         {isSelected && (
                             <div className="absolute bottom-1 left-1 right-1">
-                                <div className="bg-blue-500 text-white text-[10px] font-medium px-2 py-0.5 rounded text-center">
+                                <div
+                                    className="bg-blue-500 text-white text-[10px] font-medium px-2 py-0.5 rounded text-center">
                                     ✓ Selected
                                 </div>
                             </div>
@@ -241,12 +249,12 @@ function SpeciesGridItem({
 }
 
 function SpeciesListItem({
-    species,
-    className,
-    cardRef,
-    isSelected,
-    handleClick,
-}: {
+                             species,
+                             className,
+                             cardRef,
+                             isSelected,
+                             handleClick,
+                         }: {
     species: INatTaxon
     className?: string
     cardRef: React.RefObject<HTMLDivElement | null>
@@ -264,7 +272,7 @@ function SpeciesListItem({
             className={cn(
                 'flex items-center gap-4 p-2 rounded-md transition-all duration-200 hover:bg-gray-100',
                 isSelected && 'ring-2 ring-blue-500 bg-blue-50',
-                className
+                className,
             )}
             onClick={handleClick}
             ref={cardRef}
