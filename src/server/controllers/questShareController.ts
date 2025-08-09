@@ -115,11 +115,16 @@ export function createQuestShareController(service: QuestShareService) {
     }
 
     async function setObservedAsOwner(req: AuthenticatedRequest, res: Response) {
+        console.log("setObservedAsOwner")
         const userId = req.user?.id
         if (!userId) return res.status(401).json({ message: 'Unauthorized' })
+        console.log("userId: " + userId)
         const questId = Number(req.params.questId)
+        console.log("questId: " + questId)
         const mappingId = Number(req.params.mappingId)
+        console.log("mappingId: " + mappingId)
         const observed = Boolean(req.body?.observed)
+        console.log("observedId: " + observed)
         try {
             await service.setObservedAsOwner(questId, mappingId, observed, userId)
             res.status(200).json({ success: true })

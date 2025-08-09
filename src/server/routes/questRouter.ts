@@ -13,6 +13,7 @@ export function createQuestRouter(controller: QuestController) {
     )
     router.post('/', verifyJWT, controller.createQuest)
     router.patch('/:id', verifyJWT, controller.updateQuest)
+    router.patch('/:id/status', verifyJWT, controller.updateQuestStatus)
 
     return router
 }

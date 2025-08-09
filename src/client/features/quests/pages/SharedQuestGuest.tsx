@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useParams } from 'react-router'
 import api from '@/api/api'
 import { Card } from '@/components/ui/card'
@@ -7,6 +7,7 @@ import { INatTaxon } from '@shared/types/iNatTypes'
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { Pause, Play, StopCircle } from 'lucide-react'
 
 type TaxonMapping = {
     id: number // mapping id (quests_to_taxa.id)
@@ -33,6 +34,7 @@ type Quest = {
     location_name?: string
     latitude?: number
     longitude?: number
+    status: 'active' | 'paused' | 'ended'
 }
 
 export default function SharedQuestGuest() {
@@ -43,7 +45,7 @@ export default function SharedQuestGuest() {
     const [progress, setProgress] = useState<Progress[]>([])
     const [taxa, setTaxa] = useState<INatTaxon[]>([])
     const [questName, setQuestName] = useState<string>('')
-    const [questData, setQuestData] = useState<Quest | null>(null)
+    const [questData, setQuestData] = useState<Quest | undefined>(undefined)
     const [guestName, setGuestName] = useState<string | null>(null)
     const [aggregate, setAggregate] = useState<
         { mapping_id: number; count: number; last_observed_at?: string; last_guest_name?: string | null }[]
@@ -51,29 +53,31 @@ export default function SharedQuestGuest() {
 
     const observedSet = useMemo(() => new Set(progress.map((p) => p.taxon_id)), [progress])
 
-    useEffect(() => {
-        const load = async () => {
-            if (!token) return
+    const fetchQuestData = useCallback(async (isInitialLoad: boolean) => {
+        if (!token) return
+        if (isInitialLoad) {
             setLoading(true)
-            setError(null)
-            try {
-                const res = await api.get(`/quest-sharing/shares/token/${token}`)
-                const mappings: TaxonMapping[] = res.data.taxa_mappings || []
-                setTaxaMappings(mappings)
-                setQuestName(res.data.quest?.name || '')
-                setQuestData(res.data.quest)
-                setGuestName(res.data.share?.guest_name ?? null)
-                const res2 = await api.get(
-                    `/quest-sharing/shares/token/${token}/progress`
-                )
-                setProgress(res2.data || [])
+        }
+        setError(null)
+        try {
+            const res = await api.get(`/quest-sharing/shares/token/${token}`)
+            const mappings: TaxonMapping[] = res.data.taxa_mappings || []
+            setTaxaMappings(mappings)
+            setQuestName(res.data.quest?.name || '')
+            setQuestData(res.data.quest)
+            setGuestName(res.data.share?.guest_name ?? null)
+            const res2 = await api.get(
+                `/quest-sharing/shares/token/${token}/progress`
+            )
+            setProgress(res2.data || [])
 
-                // Aggregated progress (who/when)
-                const aggRes = await api.get(
-                    `/quest-sharing/shares/token/${token}/progress/aggregate`
-                )
-                setAggregate(aggRes.data || [])
+            // Aggregated progress (who/when)
+            const aggRes = await api.get(
+                `/quest-sharing/shares/token/${token}/progress/aggregate`
+            )
+            setAggregate(aggRes.data || [])
 
+            if (isInitialLoad) {
                 // Fetch INat taxa for display like QuestDetail
                 const taxonIds = mappings.map((m) => m.taxon_id)
                 const idsChunks = chunk(taxonIds, 30)
@@ -83,9 +87,11 @@ export default function SharedQuestGuest() {
                     if (resp.data?.results) allTaxa.push(...resp.data.results)
                 }
                 setTaxa(allTaxa)
-            } catch (e: any) {
-                setError(e?.response?.data?.message || 'Link invalid or expired')
-            } finally {
+            }
+        } catch (e: any) {
+            setError(e?.response?.data?.message || 'Link invalid or expired')
+        } finally {
+            if (isInitialLoad) {
                 setLoading(false)
             }
         }
@@ -151,6 +157,20 @@ export default function SharedQuestGuest() {
                             {totalFound}/{total} Found
                         </span>
                     </div>
+                    {questData?.status && (
+                        <div className="mt-4 flex items-center gap-2">
+                            <span className={`px-3 py-1 text-sm font-bold rounded-full flex items-center gap-2 ${
+                                questData.status === 'active' ? 'bg-green-100 text-green-800' :
+                                questData.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                            }`}>
+                                {questData.status === 'active' && <Play className="h-4 w-4" />}
+                                {questData.status === 'paused' && <Pause className="h-4 w-4" />}
+                                {questData.status === 'ended' && <StopCircle className="h-4 w-4" />}
+                                <span className="capitalize">{questData.status}</span>
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {taxa.length === 0 ? (
@@ -198,8 +218,9 @@ export default function SharedQuestGuest() {
                                     <div className="absolute bottom-2 right-2">
                                         <Button
                                             size="sm"
-                                            variant={isObserved ? 'secondary' : 'default'}
+                                            variant={isObserved ? 'neutral' : 'default'}
                                             onClick={() => toggleObserved(mapping.id, !isObserved)}
+                                            disabled={questData?.status !== 'active'}
                                         >
                                             Found
                                         </Button>

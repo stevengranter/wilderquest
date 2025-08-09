@@ -1,5 +1,7 @@
 import type { QuestRepository, QuestToTaxaRepository } from '../repositories/QuestRepository.js'
 import type { QuestShareRepository, SharedQuestProgressRepository } from '../repositories/QuestShareRepository.js'
+import { sendEvent } from './questEventsService.js'
+import { UserRepository } from '../repositories/UserRepository.js'
 
 export type QuestShareService = ReturnType<typeof createQuestShareService>
 
@@ -7,7 +9,8 @@ export function createQuestShareService(
     questRepo: QuestRepository,
     questToTaxaRepo: QuestToTaxaRepository,
     questShareRepo: QuestShareRepository,
-    progressRepo: SharedQuestProgressRepository
+    progressRepo: SharedQuestProgressRepository,
+    userRepo: UserRepository,
 ) {
     async function assertQuestOwnership(questId: number, userId: number) {
         const quest = await questRepo.findById(questId)
@@ -201,6 +204,7 @@ export function createQuestShareService(
     ) {
         // Ensure ownership
         await assertQuestOwnership(questId, userId)
+        const user = await userRepo.findUser({ id: userId });
         // Find or create an owner share for this quest (guest_name null)
         const possibleShares = await questShareRepo.findMany({
             quest_id: questId,
@@ -222,11 +226,13 @@ export function createQuestShareService(
         if (observed) {
             try {
                 await progressRepo.addProgress(share.id, mappingId)
+                sendEvent(String(questId), { type: 'SPECIES_FOUND', payload: { mappingId, guestName: user?.username } });
             } catch (_err) {
                 // ignore unique constraint violation
             }
         } else {
             await progressRepo.removeProgress(share.id, mappingId)
+            sendEvent(String(questId), { type: 'SPECIES_UNFOUND', payload: { mappingId, guestName: user?.username } });
         }
 
         return true

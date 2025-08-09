@@ -101,7 +101,7 @@ export function ShareQuest({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="secondary" size="sm">
+                <Button size="sm">
                     Share Quest
                 </Button>
             </DialogTrigger>
@@ -176,7 +176,6 @@ export function ShareQuest({
                                     ) : null}
                                     <div className="flex gap-2">
                                         <Button
-                                            variant="secondary"
                                             size="sm"
                                             onClick={() => {
                                                 navigator.clipboard.writeText(
@@ -187,7 +186,7 @@ export function ShareQuest({
                                             Copy link
                                         </Button>
                                         <Button
-                                            variant="destructive"
+                                            variant="neutral"
                                             size="sm"
                                             onClick={() => deleteShare(s.id)}
                                         >

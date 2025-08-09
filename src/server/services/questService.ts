@@ -1,15 +1,13 @@
-import {
-    Quest,
-    QuestRepository,
-    QuestToTaxaRepository,
-    QuestWithTaxa,
-} from '../repositories/QuestRepository.js'
+import { Quest, QuestRepository, QuestToTaxaRepository, QuestWithTaxa } from '../repositories/QuestRepository.js'
+import { sendEvent } from './questEventsService.js'
+import { QuestShareRepository } from '../repositories/QuestShareRepository.js'
 
 export type QuestService = ReturnType<typeof createQuestService>
 
 export function createQuestService(
     questsRepo: QuestRepository,
-    questsToTaxaRepo: QuestToTaxaRepository
+    questsToTaxaRepo: QuestToTaxaRepository,
+    questShareRepo: QuestShareRepository,
 ) {
     // 1. Get all public quests
     async function getAllPublicQuests(): Promise<Quest[]> {
@@ -71,6 +69,14 @@ export function createQuestService(
                     )
                 )
             }
+
+            // Create owner share
+            await questShareRepo.createShare({
+                quest_id: questId,
+                created_by_user_id: userId,
+                guest_name: null,
+                expires_at: null,
+            })
 
             return getQuestWithTaxaById(questId)
         } catch (error) {
@@ -153,6 +159,29 @@ export function createQuestService(
         return await getQuestWithTaxaById(questId)
     }
 
+    async function updateQuestStatus(
+        questId: number,
+        status: string,
+        userId: number
+    ): Promise<void> {
+        const existingQuest = await questsRepo.findById(questId)
+        if (!existingQuest) {
+            throw new Error('Quest not found')
+        }
+
+        if (existingQuest.user_id !== userId) {
+            throw new Error('Access denied')
+        }
+
+        if (!['active', 'paused', 'ended'].includes(status)) {
+            throw new Error('Invalid status')
+        }
+
+        await questsRepo.updateStatus(questId, status)
+
+        sendEvent(String(questId), { type: 'QUEST_STATUS_UPDATED', payload: { status } });
+    }
+
     return {
         getAllPublicQuests,
         getAccessibleQuestById,
@@ -162,5 +191,6 @@ export function createQuestService(
         createQuest,
         getQuestWithTaxaById,
         updateQuest,
+        updateQuestStatus,
     }
 }

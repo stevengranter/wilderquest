@@ -77,12 +77,30 @@ export function createQuestController(questService: QuestService) {
         }
     }
 
+    async function updateQuestStatus(req: AuthenticatedRequest, res: Response) {
+        const questId = Number(req.params.id)
+        const userId = req.user?.id
+        const { status } = req.body
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' })
+        }
+
+        try {
+            await questService.updateQuestStatus(questId, status, userId)
+            res.status(200).json({ message: 'Quest status updated successfully' })
+        } catch (error) {
+            res.status(403).json({ message: (error as Error).message })
+        }
+    }
+
     return {
         getQuests: getPublicQuests,
         getQuestById: getQuest,
         getQuestsByUserId: getQuestsByUserIdParam,
         createQuest,
         updateQuest,
+        updateQuestStatus,
     }
 }
 

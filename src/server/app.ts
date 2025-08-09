@@ -20,6 +20,7 @@ import { createCollectionRouter } from './routes/collectionRouter.js'
 import { createQuestRouter } from './routes/questRouter.js'
 import { createQuestShareRouter } from './routes/questShareRouter.js'
 import { userRouter } from './routes/userRouter.js'
+import questEventsRouter from './routes/questEventsRouter.js'
 import { createAuthService } from './services/authService.js'
 import { createQuestService } from './services/questService.js'
 import { createQuestShareService } from './services/questShareService.js'
@@ -60,7 +61,8 @@ export function buildApp({
 
     const questService = createQuestService(
         questRepository,
-        questToTaxaRepository
+        questToTaxaRepository,
+        questShareRepository
     )
     const questController = createQuestController(questService)
     const questRouter = createQuestRouter(questController)
@@ -69,11 +71,13 @@ export function buildApp({
         questRepository,
         questToTaxaRepository,
         questShareRepository,
-        sharedQuestProgressRepository
+        sharedQuestProgressRepository,
+        userRepository
     )
     const questShareController = createQuestShareController(questShareService)
     const questShareRouter = createQuestShareRouter(questShareController)
     apiRouter.use('/quest-sharing', questShareRouter)
+    apiRouter.use('/quests', questEventsRouter)
 
     // apiRouter.use('/quests', createQuestRouter(questController))
 

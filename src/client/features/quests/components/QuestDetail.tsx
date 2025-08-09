@@ -1,9 +1,9 @@
 import { INatTaxon } from '@shared/types/iNatTypes'
 import axios from 'axios'
 import { chunk } from 'lodash'
-import { Lock, LockOpen, Pencil } from 'lucide-react'
+import { Lock, LockOpen, Pause, Pencil, Play, StopCircle } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import api from '@/api/api'
 import { SpeciesCard } from '@/components/cards/SpeciesCard'
@@ -27,6 +27,7 @@ type Quest = {
     location_name?: string
     latitude?: number
     longitude?: number
+    status: 'active' | 'paused' | 'ended'
 }
 
 interface QuestProps {
@@ -55,6 +56,52 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
         { progress_id: number; mapping_id: number; observed_at: string; quest_share_id: number; display_name?: string | null }[]
     >([])
 
+    const fetchQuest = async () => {
+        setIsLoading(true)
+        setIsError(null)
+
+        try {
+            const response = await api.get(`/quests/${activeQuestId}`)
+            setQuestData(response.data)
+
+            if (response.data.taxon_ids?.length) {
+                const taxaIdsChunks = chunk(response.data.taxon_ids, 30)
+                const allTaxaResults: INatTaxon[] = []
+
+                for (const chunk of taxaIdsChunks) {
+                    try {
+                        const chunkIds = chunk.join(',')
+                        const taxaResponse = await api.get(
+                            `/iNatAPI/taxa/${chunkIds}`
+                        )
+
+                        if (taxaResponse.data.results) {
+                            allTaxaResults.push(
+                                ...taxaResponse.data.results
+                            )
+                        }
+                    } catch (chunkError) {
+                        console.error(
+                            'Error fetching taxa chunk:',
+                            chunkError
+                        )
+                    }
+                }
+
+                setTaxa(allTaxaResults)
+            }
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err)) {
+                setIsError(err.response?.data?.message || err.message)
+            } else {
+                setIsError('An unexpected error occurred.')
+            }
+            setQuestData(null)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
     useEffect(() => {
         if (!activeQuestId) {
             setQuestData(null)
@@ -63,82 +110,72 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
             return
         }
 
-        const fetchQuest = async () => {
-            setIsLoading(true)
-            setIsError(null)
-
-            try {
-                const response = await api.get(`/quests/${activeQuestId}`)
-                setQuestData(response.data)
-
-                if (response.data.taxon_ids?.length) {
-                    const taxaIdsChunks = chunk(response.data.taxon_ids, 30)
-                    const allTaxaResults: INatTaxon[] = []
-
-                    for (const chunk of taxaIdsChunks) {
-                        try {
-                            const chunkIds = chunk.join(',')
-                            const taxaResponse = await api.get(
-                                `/iNatAPI/taxa/${chunkIds}`
-                            )
-
-                            if (taxaResponse.data.results) {
-                                allTaxaResults.push(
-                                    ...taxaResponse.data.results
-                                )
-                            }
-                        } catch (chunkError) {
-                            console.error(
-                                'Error fetching taxa chunk:',
-                                chunkError
-                            )
-                        }
-                    }
-
-                    setTaxa(allTaxaResults)
-                }
-            } catch (err: unknown) {
-                if (axios.isAxiosError(err)) {
-                    setIsError(err.response?.data?.message || err.message)
-                } else {
-                    setIsError('An unexpected error occurred.')
-                }
-                setQuestData(null)
-            } finally {
-                setIsLoading(false)
-            }
-        }
-
         fetchQuest()
     }, [activeQuestId])
 
+    const fetchMappingsAndProgress = useCallback(async () => {
+        try {
+            const questIdNum = Number(activeQuestId)
+            if (!questIdNum) return
+
+            const [mappingsRes, progressRes, detailedRes] = await Promise.all([
+                api.get(`/quest-sharing/quests/${questIdNum}/mappings`),
+                api.get(`/quest-sharing/quests/${questIdNum}/progress/aggregate`),
+                api.get(`/quest-sharing/quests/${questIdNum}/progress/detailed`),
+            ])
+            setTaxaMappings(mappingsRes.data || [])
+            setAggregatedProgress(progressRes.data || [])
+            setDetailedProgress(detailedRes.data || [])
+        } catch (err) {
+            // ignore
+        }
+    }, [activeQuestId]);
+
     // Poll aggregated progress so QuestDetail updates in near real-time
     useEffect(() => {
-        let timer: number | undefined
-        const questIdNum = Number(activeQuestId)
-        if (!questIdNum) return
-
-        const fetchMappingsAndProgress = async () => {
-            try {
-                const [mappingsRes, progressRes, detailedRes] = await Promise.all([
-                    api.get(`/quest-sharing/quests/${questIdNum}/mappings`),
-                    api.get(`/quest-sharing/quests/${questIdNum}/progress/aggregate`),
-                    api.get(`/quest-sharing/quests/${questIdNum}/progress/detailed`),
-                ])
-                setTaxaMappings(mappingsRes.data || [])
-                setAggregatedProgress(progressRes.data || [])
-                setDetailedProgress(detailedRes.data || [])
-            } catch (err) {
-                // ignore
-            }
-        }
-
         fetchMappingsAndProgress()
-        timer = window.setInterval(fetchMappingsAndProgress, 5000)
+        const timer = window.setInterval(fetchMappingsAndProgress, 5000)
         return () => {
             if (timer) window.clearInterval(timer)
         }
-    }, [activeQuestId])
+    }, [activeQuestId, fetchMappingsAndProgress])
+
+    useEffect(() => {
+        if (!activeQuestId) return;
+
+        const eventSource = new EventSource(`/api/quests/${activeQuestId}/events`);
+
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'QUEST_STATUS_UPDATED') {
+                toast.info(`Quest status updated to ${data.payload.status}`);
+                setQuestData(prev => prev ? { ...prev, status: data.payload.status } : null);
+            } else if (data.type === 'SPECIES_FOUND') {
+                const guestName = data.payload.guestName || (data.payload.owner ? 'The owner' : 'A guest');
+                toast.success(`${guestName} found a species!`);
+                fetchMappingsAndProgress();
+            } else if (data.type === 'SPECIES_UNFOUND') {
+                const guestName = data.payload.guestName || (data.payload.owner ? 'The owner' : 'A guest');
+                toast.info(`${guestName} unmarked a species.`);
+                fetchMappingsAndProgress();
+            }
+        };
+
+        return () => {
+            eventSource.close();
+        };
+    }, [activeQuestId, fetchMappingsAndProgress]);
+
+    const updateStatus = async (status: 'active' | 'paused' | 'ended') => {
+        if (!questData) return;
+        try {
+            await api.patch(`/quests/${questData.id}/status`, { status });
+            setQuestData(prev => prev ? { ...prev, status } : null);
+            toast.success(`Quest status updated to ${status}`);
+        } catch (error) {
+            toast.error('Failed to update quest status');
+        }
+    };
 
     if (isLoading) {
         return <LoadingSkeleton />
@@ -155,23 +192,69 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
     return (
         <div className="container mx-auto px-4 py-8">
             <Card className="bg-card p-6 rounded-lg shadow-lg">
-                <div className="flex justify-between items-start mb-6">
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <h1 className="text-3xl font-bold text-primary">
-                                {questData.name}
-                            </h1>
-                            {questData.is_private ? (
-                                <Lock className="h-5 w-5 text-muted-foreground" />
-                            ) : (
-                                <LockOpen className="h-5 w-5 text-muted-foreground" />
-                            )}
+                <div className="flex flex-row justify-between align-middle">
+                    <h1 className="text-3xl font-bold text-primary">
+                        {questData.name}
+                    </h1>
+                    <div className="flex items-center gap-3">
+                        {questData.is_private ? (
+                            <Lock className="h-5 w-5 text-muted-foreground" />
+                        ) : (
+                            <LockOpen className="h-5 w-5 text-muted-foreground" />
+                        )}
+                    </div>
+                    {questData.status && (
+                        <div className="mt-4 flex items-center gap-2">
+                                <span className={`px-3 py-1 text-sm font-bold rounded-full flex items-center gap-2 ${
+                                    questData.status === 'active' ? 'bg-green-100 text-green-800' :
+                                        questData.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
+                                            'bg-red-100 text-red-800'
+                                }`}>
+                                    {questData.status === 'active' && <Play className="h-4 w-4" />}
+                                    {questData.status === 'paused' && <Pause className="h-4 w-4" />}
+                                    {questData.status === 'ended' && <StopCircle className="h-4 w-4" />}
+                                    <span className="capitalize">{questData.status}</span>
+                                </span>
                         </div>
+                    )}
+                </div>
+                {isOwner && (
+                    <div className="flex items-center gap-2 w-full">
+                        <Button
+                            className="flex-1"
+                            onClick={() => updateStatus('active')}
+                            disabled={questData.status === 'active'}
+                        >
+                            <Play /> Start
+                        </Button>
+                        <Button
+                            className="flex-1"
+                            onClick={() => updateStatus('paused')}
+                            disabled={questData.status === 'paused'}
+                        >
+                            <Pause /> Pause
+                        </Button>
+                        <Button
+                            className="flex-1"
+                            onClick={() => updateStatus('ended')}
+                            disabled={questData.status === 'ended'}
+                        >
+                            <StopCircle /> End
+                        </Button>
+                    </div>
+
+                )}
+                <div className="flex justify-between items-start mb-6">
+
+                    <div>
+
                         <p className="text-muted-foreground mt-2">
                             {questData.description}
                         </p>
+
                     </div>
                     <div className="flex items-center gap-2">
+
                         <Button variant="default" size="sm" asChild>
                             <Link to={`/quests/${questData.id}/edit`}>
                                 <Pencil className="h-4 w-4 mr-2" />
@@ -228,11 +311,14 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                                                 variant="neutral"
                                                 onClick={async () => {
                                                     try {
-                                                        const next = progressCount === 0
+                                                        const ownerProgress = detailedProgress.find(p => p.display_name === user?.username && p.mapping_id === mapping.id);
+                                                        const next = !ownerProgress;
                                                         await api.post(`/quest-sharing/quests/${questData.id}/progress/${mapping.id}`, { observed: next })
                                                         // After toggling, refresh aggregates to determine who/first
                                                         const aggRes = await api.get(`/quest-sharing/quests/${questData.id}/progress/aggregate`)
                                                         setAggregatedProgress(aggRes.data || [])
+                                                        const detailedRes = await api.get(`/quest-sharing/quests/${questData.id}/progress/detailed`)
+                                                        setDetailedProgress(detailedRes.data || [])
                                                         const meta = (aggRes.data as Array<{ mapping_id: number; count: number; last_display_name?: string }> ).find(p => p.mapping_id === mapping.id)
                                                         const name = meta?.last_display_name || (user?.username ?? 'You')
                                                         if (next) {

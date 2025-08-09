@@ -9,6 +9,7 @@ export type Quest = {
     description?: string
     is_private: boolean
     user_id: number
+    status: 'active' | 'paused' | 'ended'
 }
 
 export type QuestWithTaxa = Quest & {
@@ -108,6 +109,13 @@ export function createQuestRepository(
         )
     }
 
+    async function updateStatus(id: number, status: string): Promise<void> {
+        await dbPool.query(
+            `UPDATE quests SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            [status, id]
+        )
+    }
+
     return {
         ...base,
         findById,
@@ -116,6 +124,7 @@ export function createQuestRepository(
         findTaxaForQuest,
         saveQuest,
         update,
+        updateStatus,
     }
 }
 
