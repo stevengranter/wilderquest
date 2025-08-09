@@ -11,6 +11,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 import { cn } from '@/lib/utils'
 import { random } from 'lodash'
+import { TbBinocularsFilled } from 'react-icons/tb'
 
 interface SpeciesCardProps {
     species: INatTaxon
@@ -145,24 +146,25 @@ function SpeciesGridItem({
                         'border-3 rounded-xl border-teal-600',
                         'rotate-0',
                         'z-100',
+                        'flex flex-column justify-between',
                         isSelected && 'ring-2 ring-blue-500 shadow-blue-200/50',
                         'hover:shadow-shadow transition-shadow duration-500',
                     )}
 
                 >
                     <CardHeader
-                        className="gap-0 justify-start pt-2 pb-1 relative text-white tracking-widest font-bold"
-                        // style={{ textShadow: '2px 2px 1px rgba(0, 0, 0, 0.8)' }}
+                        className="gap-0 text-left justify-start pt-2 pb-2 relative text-white tracking-normal font-bold sm:text-md md:text-md lg:text-xl  line-clamp-1 font-barlow"
+                        style={{ textShadow: '2px 2px 1px rgba(0, 0, 0, 0.3)' }}
                     >
                         {species.preferred_common_name && (
-                            <h3 className="sm:text-md md:text-lg lg:text-xxl text-shadow-md line-clamp-1">
+                            <h3 className="">
                                 {titleCase(species.preferred_common_name)}
                             </h3>
                         )}
 
 
                     </CardHeader>
-                    <CardContent className="relative px-0 mx-5">
+                    <CardContent className="relative px-0 mx-6">
                         <div className="absolute -top-3 -right-3">
                             {species.iconic_taxon_name && (
                                 <div
@@ -189,14 +191,10 @@ function SpeciesGridItem({
                             </div>
                         )}
 
-
-                    </CardContent>
-
-                    {/* Content Footer - Flexible height below square image */}
-                    <CardFooter className="min-h-[120px] flex flex-col justify-start">
-                        {/* Species Names */}
-
-                        <div className="space-y-1 justify-start self-end mt-1 mb-2">
+                        <div
+                            className="space-y-1 text-right self-end mt-1 mb-2"
+                            style={{ textShadow: '1px 1px 1px rgba(0, 0, 0, 0.5)' }}
+                        >
                             {species.preferred_common_name && (
                                 <p className="text-[11px] text-white italic leading-tight line-clamp-1">
                                     {species.name}
@@ -204,33 +202,28 @@ function SpeciesGridItem({
                             )}
 
                         </div>
+                    </CardContent>
 
-                        <div className="w-full h-full bg-white text-xs content-start text-left p-2 outline-2 rounded-sm outline-white border-2 border-black">
-                            <p>lorem ipsum dolor sit amet, consectetur adipiscing elit. </p>
+                    <CardContent>
+                        <div className="h-full bg-teal-100 text-xs content-start text-left p-2 outline-2 rounded-sm outline-white border-2 border-black">
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem dsadas dasds ad </p>
                         </div>
+                    </CardContent>
 
-                        {/* Stats and Badges Row */}
-                        <div className="flex items-center justify-between mt-auto">
-                            {/* DISABLED: ALl records are Species rank*/}
-                            {/*<div className="flex items-center gap-1">*/}
-                            {/*    {species.rank && (*/}
-                            {/*        <Badge*/}
-                            {/*            variant="neutral"*/}
-                            {/*            className="text-[9px] px-1.5 py-0.5 h-auto capitalize"*/}
-                            {/*        >*/}
-                            {/*            {species.rank}*/}
-                            {/*        </Badge>*/}
-                            {/*    )}*/}
-                            {/*</div>*/}
+                    {/* Content Footer - Flexible height below square image */}
+                    <CardFooter className="flex flex-row justify-between items-start py-4">
+                            {/* Stats and badges */}
 
-                            <div className="text-[10px] text-muted-foreground text-right">
-                                <div>
-                                    {species.observations_count?.toLocaleString() ||
-                                        '0'}{' '}
-                                    obs
-                                </div>
-                            </div>
-                        </div>
+                        <Badge className="bg-violet-500 text-violet-50 border-0 outline-2 outline-violet-900">
+                                <TbBinocularsFilled size={15}/>
+                                    {species.observations_count?.toLocaleString()}
+                            </Badge>
+
+                            {/*<Badge className="bg-violet-500 text-violet-50 border-0 outline-2 outline-violet-900">*/}
+                            {/*    <TbBinocularsFilled size={15}/>*/}
+                            {/*    {species.observations_count?.toLocaleString()}*/}
+                            {/*</Badge>*/}
+
 
                         {/* Selection indicator */}
                         {isSelected && (

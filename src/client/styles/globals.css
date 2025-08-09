@@ -16,11 +16,36 @@ body {
     font-variation-settings: "wdth" 100;
 }
 
+
+.league-gothic-regular {
+                    font-family: "League Gothic", sans-serif;
+                    font-optical-sizing: auto;
+                    font-weight: 400;
+                    font-style: normal;
+                    font-variation-settings:
+                            "wdth" 100;
+                }
+
+/*.barlow-semi-condensed-regular {*/
+/*    font-family: "Barlow Semi Condensed", sans-serif;*/
+/*    font-weight: 400;*/
+/*    font-style: normal;*/
+/*}*/
+
+.barlow-semi-condensed-bold {
+    font-family: "Barlow Semi Condensed", sans-serif;
+    font-weight: 700;
+    font-style: normal;
+}
+
+
 @theme {
     --font-cherrybomb: "Cherry Bomb One", system-ui;
     --font-allerta-stencil: "Allerta Stencil", sans-serif;
     --font-fredoka: "Fredoka", sans-serif;
     --font-display: "Fredoka", sans-serif;
+    --font-league: "League Gothic", sans-serif;
+    --font-barlow: "Barlow Semi Condensed", sans-serif;
 }
 
 :root {
