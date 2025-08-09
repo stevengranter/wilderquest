@@ -11,14 +11,7 @@ import api from '@/api/api'
 import { SpeciesCard } from '@/components/cards/SpeciesCard'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTrigger } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
@@ -165,11 +158,14 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                                     </div>
                                 </DialogTrigger>
                                 <DialogContent className="sm:max-w-[80vw] max-h-[85vh] flex flex-col">
+                                    <SpeciesCard species={taxon} className="w-75 relative -top-20 -left-10 -rotate-5" />
                                     <DialogHeader className="flex-shrink-0">
-                                        <DialogTitle>
-                                            {taxon.preferred_common_name}
-                                        </DialogTitle>
-                                        <DialogDescription>
+
+                                        {/*<DialogTitle>*/}
+                                        {/*    {titleCase(taxon.preferred_common_name)}*/}
+                                        {/*</DialogTitle>*/}
+
+                                        <DialogDescription className="justify-end">
                                             Recent observations near{' '}
                                             {questData.location_name}
                                         </DialogDescription>
