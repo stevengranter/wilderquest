@@ -1,25 +1,9 @@
 import { jwtDecode } from 'jwt-decode'
-import {
-    createContext,
-    ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useRef,
-    useState,
-} from 'react'
-import { toast } from '@/hooks/use-toast.js'
-import {
-    authApi,
-    configureAuthApi,
-    TokenCallbacks,
-} from '@/services/authApi.js'
+import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
+import { authApi, configureAuthApi, TokenCallbacks } from '@/services/authApi.js'
 import useTokenManager from '@/services/tokenManager.js'
-import type {
-    LoggedInUser,
-    LoginResponseData,
-    RegisterResponseData,
-} from '../../shared/types/authTypes.js'
+import type { LoggedInUser, LoginResponseData, RegisterResponseData } from '@shared/types/authTypes'
 import { LoginRequestBody, RegisterRequestBody } from '../../types/types.js'
 
 type AuthContextType = {
@@ -217,7 +201,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const register = async (registrationData: RegisterRequestBody) => {
         try {
             const response = await authApi.register(registrationData)
-            toast({ title: 'Welcome!' })
+            toast('Welcome!')
             return response
         } catch (error) {
             console.error('Registration error:', error)

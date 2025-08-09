@@ -12,6 +12,8 @@ import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import ShareQuest from '@/features/quests/components/ShareQuest'
+import { toast } from 'sonner'
+import { useAuth } from '@/hooks/useAuth'
 
 type Quest = {
     id: string
@@ -39,13 +41,18 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [isError, setIsError] = useState<string | null>(null)
     const [taxa, setTaxa] = useState<INatTaxon[]>([])
+    const { user } = useAuth()
+    const isOwner = !!user && questData && Number(user.id) === Number(questData.user_id)
     const [taxaMappings, setTaxaMappings] = useState<{
         id: number
         quest_id: number
         taxon_id: number
     }[]>([])
     const [aggregatedProgress, setAggregatedProgress] = useState<
-        { mapping_id: number; count: number }[]
+        { mapping_id: number; count: number; last_observed_at?: string; last_display_name?: string | null }[]
+    >([])
+    const [detailedProgress, setDetailedProgress] = useState<
+        { progress_id: number; mapping_id: number; observed_at: string; quest_share_id: number; display_name?: string | null }[]
     >([])
 
     useEffect(() => {
@@ -113,14 +120,14 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
 
         const fetchMappingsAndProgress = async () => {
             try {
-                const [mappingsRes, progressRes] = await Promise.all([
+                const [mappingsRes, progressRes, detailedRes] = await Promise.all([
                     api.get(`/quest-sharing/quests/${questIdNum}/mappings`),
-                    api.get(
-                        `/quest-sharing/quests/${questIdNum}/progress/aggregate`
-                    ),
+                    api.get(`/quest-sharing/quests/${questIdNum}/progress/aggregate`),
+                    api.get(`/quest-sharing/quests/${questIdNum}/progress/detailed`),
                 ])
                 setTaxaMappings(mappingsRes.data || [])
                 setAggregatedProgress(progressRes.data || [])
+                setDetailedProgress(detailedRes.data || [])
             } catch (err) {
                 // ignore
             }
@@ -180,6 +187,19 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                 )}
 
                 <div className="mt-8">
+                    {taxaMappings.length > 0 && (
+                        <div className="mb-2 text-sm">
+                            {(() => {
+                                const total = taxaMappings.length
+                                const found = aggregatedProgress.filter((a) => (a.count || 0) > 0).length
+                                return (
+                                    <span className="inline-block bg-emerald-600 text-white px-2 py-0.5 rounded">
+                                        {found}/{total} Found
+                                    </span>
+                                )
+                            })()}
+                        </div>
+                    )}
                     <h2 className="text-xl font-semibold mb-4">
                         Species ({taxa.length})
                     </h2>
@@ -194,17 +214,76 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                                       (p) => p.mapping_id === mapping.id
                                   )?.count || 0)
                                 : 0
+                            const recentEntries = mapping ? detailedProgress.filter(d => d.mapping_id === mapping.id).slice(0, 3) : []
                             return (
                                 <div key={taxon.id} className="relative">
                                     <SpeciesCardWithObservations
                                         species={taxon}
                                         questData={questData}
                                     />
+                                    {isOwner && mapping && (
+                                        <div className="absolute bottom-2 right-2">
+                                            <Button
+                                                size="sm"
+                                                variant="neutral"
+                                                onClick={async () => {
+                                                    try {
+                                                        const next = progressCount === 0
+                                                        await api.post(`/quest-sharing/quests/${questData.id}/progress/${mapping.id}`, { observed: next })
+                                                        // After toggling, refresh aggregates to determine who/first
+                                                        const aggRes = await api.get(`/quest-sharing/quests/${questData.id}/progress/aggregate`)
+                                                        setAggregatedProgress(aggRes.data || [])
+                                                        const meta = (aggRes.data as Array<{ mapping_id: number; count: number; last_display_name?: string }> ).find(p => p.mapping_id === mapping.id)
+                                                        const name = meta?.last_display_name || (user?.username ?? 'You')
+                                                        if (next) {
+                                                            const first = (meta?.count || 0) === 1
+                                                            toast(first ? `First found by ${name}` : `Found by ${name}`)
+                                                        } else {
+                                                            toast(`Unmarked by ${name}`)
+                                                        }
+                                                    } catch (e) {
+                                                        toast('Action failed')
+                                                    }
+                                                }}
+                                            >
+                                                Found
+                                            </Button>
+                                        </div>
+                                    )}
                                     {progressCount > 0 && (
                                         <div className="absolute top-2 right-2">
-                                            <span className="bg-emerald-600 text-white text-xs px-2 py-1 rounded-md">
-                                                Found{progressCount > 1 ? ` x${progressCount}` : ''}
-                                            </span>
+                                            <div className="bg-emerald-600 text-white text-xs px-2 py-1 rounded-md shadow">
+                                                <div>
+                                                    Found{progressCount > 1 ? ` x${progressCount}` : ''}
+                                                </div>
+                                                {mapping && (
+                                                    <div className="text-[10px] opacity-90 mt-0.5">
+                                                        {(() => {
+                                                            const meta = aggregatedProgress.find(p => p.mapping_id === mapping.id)
+                                                            if (!meta) return null
+                                                            const ts = meta.last_observed_at
+                                                            const name = (meta as any).last_display_name || 'Someone'
+                                                            try {
+                                                                const d = ts ? new Date(ts) : null
+                                                                const formatted = d ? d.toLocaleString() : ''
+                                                                return `${name} • ${formatted}`
+                                                            } catch {
+                                                                return name
+                                                            }
+                                                        })()}
+                                                    </div>
+                                                )}
+                                                {recentEntries.length > 0 && (
+                                                    <div className="text-[10px] opacity-90 mt-1">
+                                                        {recentEntries.map((e) => {
+                                                            const d = new Date(e.observed_at)
+                                                            return (
+                                                                <div key={e.progress_id}>{e.display_name || 'Someone'} • {d.toLocaleString()}</div>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     )}
                                 </div>

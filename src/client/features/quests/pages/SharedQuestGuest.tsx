@@ -6,6 +6,7 @@ import { chunk } from 'lodash'
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 type TaxonMapping = {
     id: number // mapping id (quests_to_taxa.id)
@@ -29,6 +30,9 @@ export default function SharedQuestGuest() {
     const [taxa, setTaxa] = useState<INatTaxon[]>([])
     const [questName, setQuestName] = useState<string>('')
     const [guestName, setGuestName] = useState<string | null>(null)
+    const [aggregate, setAggregate] = useState<
+        { mapping_id: number; count: number; last_observed_at?: string; last_guest_name?: string | null }[]
+    >([])
 
     const observedSet = useMemo(() => new Set(progress.map((p) => p.taxon_id)), [progress])
 
@@ -47,6 +51,12 @@ export default function SharedQuestGuest() {
                     `/quest-sharing/shares/token/${token}/progress`
                 )
                 setProgress(res2.data || [])
+
+                // Aggregated progress (who/when)
+                const aggRes = await api.get(
+                    `/quest-sharing/shares/token/${token}/progress/aggregate`
+                )
+                setAggregate(aggRes.data || [])
 
                 // Fetch INat taxa for display like QuestDetail
                 const taxonIds = mappings.map((m) => m.taxon_id)
@@ -74,8 +84,27 @@ export default function SharedQuestGuest() {
                 { observed: next }
             )
             setProgress(res.data || [])
+            // Refresh aggregate after change
+            const aggRes = await api.get(
+                `/quest-sharing/shares/token/${token}/progress/aggregate`
+            )
+            setAggregate(aggRes.data || [])
+            const meta = (aggRes.data as Array<{ mapping_id: number; count: number; last_display_name?: string; last_observed_at?: string }>)
+                .find((a) => a.mapping_id === mappingId)
+            const name = meta?.last_display_name || guestName || 'Someone'
+            if (next) {
+                const first = (meta?.count || 0) === 1
+                toast(first ? `First found by ${name}` : `Found by ${name}`, {
+                    description: first ? 'This is the first time this species was found on this quest.' : `Total found count is now ${meta?.count}.`,
+                })
+            } else {
+                toast(`Unmarked by ${name}`, {
+                    description: 'This species has been cleared for this link.',
+                })
+            }
         } catch (e) {
             console.error('Failed to toggle', e)
+            toast('Action failed', { description: 'Please try again.' })
         }
     }
 
@@ -87,6 +116,10 @@ export default function SharedQuestGuest() {
             </div>
         )
 
+    // totals for header
+    const total = taxaMappings.length
+    const totalFound = aggregate.filter(a => a.count && a.count > 0).length
+
     return (
         <div className="container mx-auto px-4 py-8">
             <Card className="bg-card p-6 rounded-lg shadow-lg">
@@ -97,6 +130,11 @@ export default function SharedQuestGuest() {
                             For: {guestName}
                         </div>
                     ) : null}
+                    <div className="mt-1 text-sm">
+                        <span className="inline-block bg-emerald-600 text-white px-2 py-0.5 rounded">
+                            {totalFound}/{total} Found
+                        </span>
+                    </div>
                 </div>
 
                 {taxa.length === 0 ? (
@@ -107,16 +145,44 @@ export default function SharedQuestGuest() {
                             const mapping = taxaMappings.find((m) => m.taxon_id === taxon.id)
                             if (!mapping) return null
                             const isObserved = observedSet.has(mapping.id)
+                            const meta = aggregate.find((a) => a.mapping_id === mapping.id)
+                            const metaLine = (() => {
+                                if (!meta) return null
+                                const name = meta.last_guest_name || 'Someone'
+                                try {
+                                    const d = meta.last_observed_at ? new Date(meta.last_observed_at) : null
+                                    const formatted = d ? d.toLocaleString() : ''
+                                    return `${name} • ${formatted}`
+                                } catch {
+                                    return name
+                                }
+                            })()
                             return (
                                 <div key={taxon.id} className="relative">
                                     <SpeciesCardWithObservations species={taxon} />
                                     <div className="absolute top-2 right-2">
+                                        <div className="bg-emerald-600 text-white text-xs px-2 py-1 rounded-md shadow text-right">
+                                            <div>
+                                                Found
+                                                {(() => {
+                                                    const count = aggregate.find(a => a.mapping_id === mapping.id)?.count || 0
+                                                    return count > 1 ? ` x${count}` : ''
+                                                })()}
+                                            </div>
+                                            {metaLine && (
+                                                <div className="text-[10px] opacity-90 mt-0.5">
+                                                    {metaLine}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="absolute bottom-2 right-2">
                                         <Button
                                             size="sm"
                                             variant={isObserved ? 'secondary' : 'default'}
                                             onClick={() => toggleObserved(mapping.id, !isObserved)}
                                         >
-                                            {isObserved ? 'Unmark' : 'Mark'}
+                                            Found
                                         </Button>
                                     </div>
                                 </div>
