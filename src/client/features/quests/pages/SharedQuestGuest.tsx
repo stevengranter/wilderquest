@@ -21,6 +21,20 @@ type Progress = {
     observed_at: string
 }
 
+type Quest = {
+    id: string
+    name: string
+    description?: string
+    taxon_ids?: number[]
+    is_private: boolean
+    user_id: string
+    created_at: string
+    updated_at: string
+    location_name?: string
+    latitude?: number
+    longitude?: number
+}
+
 export default function SharedQuestGuest() {
     const { token } = useParams()
     const [loading, setLoading] = useState(true)
@@ -29,6 +43,7 @@ export default function SharedQuestGuest() {
     const [progress, setProgress] = useState<Progress[]>([])
     const [taxa, setTaxa] = useState<INatTaxon[]>([])
     const [questName, setQuestName] = useState<string>('')
+    const [questData, setQuestData] = useState<Quest | null>(null)
     const [guestName, setGuestName] = useState<string | null>(null)
     const [aggregate, setAggregate] = useState<
         { mapping_id: number; count: number; last_observed_at?: string; last_guest_name?: string | null }[]
@@ -46,6 +61,7 @@ export default function SharedQuestGuest() {
                 const mappings: TaxonMapping[] = res.data.taxa_mappings || []
                 setTaxaMappings(mappings)
                 setQuestName(res.data.quest?.name || '')
+                setQuestData(res.data.quest)
                 setGuestName(res.data.share?.guest_name ?? null)
                 const res2 = await api.get(
                     `/quest-sharing/shares/token/${token}/progress`
@@ -159,7 +175,10 @@ export default function SharedQuestGuest() {
                             })()
                             return (
                                 <div key={taxon.id} className="relative">
-                                    <SpeciesCardWithObservations species={taxon} />
+                                    <SpeciesCardWithObservations
+                                        species={taxon}
+                                        questData={questData}
+                                    />
                                     <div className="absolute top-2 right-2">
                                         <div className="bg-emerald-600 text-white text-xs px-2 py-1 rounded-md shadow text-right">
                                             <div>
