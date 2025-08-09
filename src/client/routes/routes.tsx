@@ -13,6 +13,7 @@ import QuestDetail from '@/features/quests/components/QuestDetail'
 import { CreateQuest } from '@/features/quests/pages/CreateQuest'
 import { QuestsPage } from '@/features/quests/pages/QuestsPage'
 import UserQuestsPage from '@/features/quests/pages/UserQuestsPage'
+import SharedQuestGuest from '@/features/quests/pages/SharedQuestGuest'
 import { AppLayout } from '@/layouts/AppLayout'
 import { ExploreTab } from './explore/ExploreTab'
 import { IdentifyTab } from './identify/IdentifyTab'
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
                 index: true, // Match the root path exactly
                 // element: <Navigate to="/explore" replace />, // Redirect to /explore
                 element: <Home />,
+            },
+            {
+                path: 'share/:token',
+                element: <SharedQuestGuest />,
             },
             {
                 path: 'explore',

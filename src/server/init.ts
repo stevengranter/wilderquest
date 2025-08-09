@@ -1,11 +1,12 @@
 // src/init.ts
 import { initializeDb } from './db/index.js'
 import { createCollectionRepository } from './repositories/CollectionRepository.js'
-import {
-    createQuestRepository,
-    createQuestToTaxaRepository,
-} from './repositories/QuestRepository.js'
+import { createQuestRepository, createQuestToTaxaRepository } from './repositories/QuestRepository.js'
 import { createUserRepository } from './repositories/UserRepository.js'
+import {
+    createQuestShareRepository,
+    createSharedQuestProgressRepository,
+} from './repositories/QuestShareRepository.js'
 import { getTableColumns } from './utils/getTableColumns.js'
 
 // Initialize db and repositories
@@ -36,11 +37,27 @@ export async function initApp() {
         questToTaxaRepository
     )
 
+    // Quest shares + progress
+    const questShareColumns = await getTableColumns(dbPool, 'quest_shares')
+    const questShareRepository = createQuestShareRepository(
+        'quest_shares',
+        dbPool,
+        questShareColumns
+    )
+    const progressColumns = await getTableColumns(dbPool, 'shared_quest_progress')
+    const sharedQuestProgressRepository = createSharedQuestProgressRepository(
+        'shared_quest_progress',
+        dbPool,
+        progressColumns
+    )
+
     return {
         dbPool,
         userRepository,
         collectionRepository,
         questRepository,
         questToTaxaRepository,
+        questShareRepository,
+        sharedQuestProgressRepository,
     }
 }

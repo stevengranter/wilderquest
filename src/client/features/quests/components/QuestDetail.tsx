@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
+import ShareQuest from '@/features/quests/components/ShareQuest'
 
 type Quest = {
     id: string
@@ -38,6 +39,14 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [isError, setIsError] = useState<string | null>(null)
     const [taxa, setTaxa] = useState<INatTaxon[]>([])
+    const [taxaMappings, setTaxaMappings] = useState<{
+        id: number
+        quest_id: number
+        taxon_id: number
+    }[]>([])
+    const [aggregatedProgress, setAggregatedProgress] = useState<
+        { mapping_id: number; count: number }[]
+    >([])
 
     useEffect(() => {
         if (!activeQuestId) {
@@ -96,6 +105,34 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
         fetchQuest()
     }, [activeQuestId])
 
+    // Poll aggregated progress so QuestDetail updates in near real-time
+    useEffect(() => {
+        let timer: number | undefined
+        const questIdNum = Number(activeQuestId)
+        if (!questIdNum) return
+
+        const fetchMappingsAndProgress = async () => {
+            try {
+                const [mappingsRes, progressRes] = await Promise.all([
+                    api.get(`/quest-sharing/quests/${questIdNum}/mappings`),
+                    api.get(
+                        `/quest-sharing/quests/${questIdNum}/progress/aggregate`
+                    ),
+                ])
+                setTaxaMappings(mappingsRes.data || [])
+                setAggregatedProgress(progressRes.data || [])
+            } catch (err) {
+                // ignore
+            }
+        }
+
+        fetchMappingsAndProgress()
+        timer = window.setInterval(fetchMappingsAndProgress, 5000)
+        return () => {
+            if (timer) window.clearInterval(timer)
+        }
+    }, [activeQuestId])
+
     if (isLoading) {
         return <LoadingSkeleton />
     }
@@ -127,12 +164,15 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                             {questData.description}
                         </p>
                     </div>
-                    <Button variant="default" size="sm" asChild>
-                        <Link to={`/quests/${questData.id}/edit`}>
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Edit Quest
-                        </Link>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button variant="default" size="sm" asChild>
+                            <Link to={`/quests/${questData.id}/edit`}>
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Edit Quest
+                            </Link>
+                        </Button>
+                        <ShareQuest questId={Number(questData.id)} ownerUserId={Number(questData.user_id)} />
+                    </div>
                 </div>
 
                 {questData.location_name && (
@@ -144,9 +184,32 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                         Species ({taxa.length})
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr">
-                        {taxa.map((taxon) => (
-                            <SpeciesCardWithObservations key={taxon.id} species={taxon} questData={questData} />
-                        ))}
+                        {taxa.map((taxon) => {
+                            const mapping = taxaMappings.find(
+                                (m) => m.taxon_id === taxon.id
+                            )
+                            const progressCount = mapping
+                                ?
+                                  (aggregatedProgress.find(
+                                      (p) => p.mapping_id === mapping.id
+                                  )?.count || 0)
+                                : 0
+                            return (
+                                <div key={taxon.id} className="relative">
+                                    <SpeciesCardWithObservations
+                                        species={taxon}
+                                        questData={questData}
+                                    />
+                                    {progressCount > 0 && (
+                                        <div className="absolute top-2 right-2">
+                                            <span className="bg-emerald-600 text-white text-xs px-2 py-1 rounded-md">
+                                                Found{progressCount > 1 ? ` x${progressCount}` : ''}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
             </Card>

@@ -5,23 +5,24 @@ import { createAuthController } from './controllers/authController.js'
 import { createCollectionController } from './controllers/collectionController.js'
 import { createINaturalistAPIController } from './controllers/iNaturalistAPIController.js'
 import { createQuestController } from './controllers/questController.js'
+import { createQuestShareController } from './controllers/questShareController.js'
 import { createUserController } from './controllers/userController.js'
 import { rateLimiter } from './middlewares/rateLimiter.js'
 import { rateSlowDown } from './middlewares/rateSlowDown.js'
 import { CollectionRepository } from './repositories/CollectionRepository.js'
-import {
-    QuestRepository,
-    QuestToTaxaRepository,
-} from './repositories/QuestRepository.js'
+import { QuestRepository, QuestToTaxaRepository } from './repositories/QuestRepository.js'
+import type { QuestShareRepository, SharedQuestProgressRepository } from './repositories/QuestShareRepository.js'
 import { type UserRepository } from './repositories/UserRepository.js'
 import { mapTilesProxyRouter } from './routes/api/proxies.routes.js'
 import { serviceRouter } from './routes/api/services.routes.js'
 import { createAuthRouter } from './routes/authRouter.js'
 import { createCollectionRouter } from './routes/collectionRouter.js'
 import { createQuestRouter } from './routes/questRouter.js'
+import { createQuestShareRouter } from './routes/questShareRouter.js'
 import { userRouter } from './routes/userRouter.js'
 import { createAuthService } from './services/authService.js'
 import { createQuestService } from './services/questService.js'
+import { createQuestShareService } from './services/questShareService.js'
 import { createUserService } from './services/userService.js'
 
 export function buildApp({
@@ -29,11 +30,15 @@ export function buildApp({
     collectionRepository,
     questRepository,
     questToTaxaRepository,
+    questShareRepository,
+    sharedQuestProgressRepository,
 }: {
     userRepository: UserRepository
     collectionRepository: CollectionRepository
     questRepository: QuestRepository
     questToTaxaRepository: QuestToTaxaRepository
+    questShareRepository: QuestShareRepository
+    sharedQuestProgressRepository: SharedQuestProgressRepository
 }) {
     // initialize express
     const app = express()
@@ -60,6 +65,16 @@ export function buildApp({
     const questController = createQuestController(questService)
     const questRouter = createQuestRouter(questController)
     apiRouter.use('/quests', questRouter)
+    const questShareService = createQuestShareService(
+        questRepository,
+        questToTaxaRepository,
+        questShareRepository,
+        sharedQuestProgressRepository
+    )
+    const questShareController = createQuestShareController(questShareService)
+    const questShareRouter = createQuestShareRouter(questShareController)
+    apiRouter.use('/quest-sharing', questShareRouter)
+
     // apiRouter.use('/quests', createQuestRouter(questController))
 
     const authService = createAuthService(userRepository)
