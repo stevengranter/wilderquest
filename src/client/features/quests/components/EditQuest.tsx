@@ -16,7 +16,9 @@ import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { formSchema } from '@/features/quests/pages/CreateQuest'
 import { useAuth } from '@/hooks/useAuth'
-import { SpeciesCard } from '@/components/cards/SpeciesCard'
+import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
+import { SpeciesSelector } from '@/features/quests/components/SpeciesSelector'
+
 
 type QuestFormValues = z.infer<typeof formSchema>
 
@@ -198,54 +200,3 @@ function QuestDetails() {
     )
 }
 
-function SpeciesSelector({ selectedTaxa, onToggleTaxon }) {
-    const { control } = useFormContext()
-    const lat = useWatch({ control, name: 'latitude' })
-    const lon = useWatch({ control, name: 'longitude' })
-
-    // Here you could add a search functionality to add new species
-    // For now, it just displays the currently selected species.
-
-    return (
-        <div>
-            <h2 className="text-xl font-semibold mb-4">
-                Species ({selectedTaxa.length})
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {selectedTaxa.map((taxon) => (
-                    <SpeciesCard key={taxon.id} species={taxon} />
-                    // <SpeciesItem
-                    //     key={taxon.id}
-                    //     taxon={taxon}
-                    //     onToggle={onToggleTaxon}
-                    //     isAdded={true}
-                    // />
-                ))}
-            </div>
-            {/* Add search and species list from iNat API here */}
-        </div>
-    )
-}
-
-function SpeciesItem({ taxon, onToggle, isAdded }) {
-    return (
-        <Card className="p-2">
-            <img
-                src={taxon.default_photo?.square_url}
-                alt={taxon.name}
-                className="w-full h-32 object-cover rounded-md"
-            />
-            <p className="text-sm font-semibold mt-2">{taxon.name}</p>
-            <Button
-                onClick={(e) => {
-                    e.preventDefault()
-                    onToggle(taxon)
-                }}
-                variant={isAdded ? 'destructive' : 'default'}
-                className="w-full mt-2"
-            >
-                {isAdded ? 'Remove' : 'Add'}
-            </Button>
-        </Card>
-    )
-}
