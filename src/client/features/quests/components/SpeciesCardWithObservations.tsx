@@ -124,10 +124,10 @@ interface Observation {
 type ViewMode = 'grid' | 'list' | 'map'
 
 function ObservationList({
-    taxonId,
-    lat,
-    lon,
-}: {
+                             taxonId,
+                             lat,
+                             lon,
+                         }: {
     taxonId: number
     lat: number
     lon: number
@@ -143,18 +143,17 @@ function ObservationList({
         enabled: !!taxonId && !!lat && !!lon,
     })
 
-    if (isLoading) return <ObservationLoadingState />
-    if (isError) return <ObservationErrorState />
+    const MIN_HEIGHT = 'min-h-[500px]' // consistent height for all states
 
     return (
-        // In ObservationList, wrap the toggle/header and content in a fixed min-height container
         <motion.div
             layout
             transition={{ duration: 0.5, type: 'spring' }}
-            className="mt-4 overflow-hidden"
+            className={`mx-10 overflow-hidden`}
         >
+            {/* Header / Toggle */}
             <motion.div
-                className="flex items-center justify-between mb-4 min-h-12"
+                className="flex items-center justify-between mb-4 min-h-12 px-4"
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
@@ -165,9 +164,7 @@ function ObservationList({
                 <ToggleGroup
                     type="single"
                     value={viewMode}
-                    onValueChange={(value: ViewMode) =>
-                        value && setViewMode(value)
-                    }
+                    onValueChange={(value: ViewMode) => value && setViewMode(value)}
                     className="border rounded-lg"
                 >
                     <ToggleGroupItem value="grid" aria-label="Grid view">
@@ -181,53 +178,72 @@ function ObservationList({
                     </ToggleGroupItem>
                 </ToggleGroup>
             </motion.div>
-            <motion.div
-            layout
-            transition={{ duration: 0.5, type: 'spring', bounce: 0.2 }}
-            className="min-h-[350px] overflow-y-auto pt-6 pb-6 box-border"
-        >
-            {/* Animated content here */}
-            {observations && observations.length > 0 ? (
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={viewMode}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        {viewMode === 'grid' && (
-                            <ObservationGridView
-                                observations={observations}
-                            />
-                        )}
-                        {viewMode === 'list' && (
-                            <ObservationListView
-                                observations={observations}
-                            />
-                        )}
-                        {viewMode === 'map' && (
-                            <ObservationMapView
-                                observations={observations}
-                                center={[lat, lon]}
-                            />
-                        )}
-                    </motion.div>
+
+            {/* Content wrapper with fixed height and relative positioning */}
+            <div className={`relative ${MIN_HEIGHT} pt-6 pb-6`}>
+                {/* Skeleton behind */}
+                <AnimatePresence>
+                    {isLoading && (
+                        <motion.div
+                            key="loading-skeleton"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 overflow-y-auto"
+                            style={{ pointerEvents: 'none' }}
+                        >
+                            <ObservationLoadingState />
+                        </motion.div>
+                    )}
                 </AnimatePresence>
-            ) : (
-                <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.3 }}
-                    className="text-center py-8 text-muted-foreground"
-                >
-                    No observations found for this species in this area.
-                </motion.p>
-            )}
-        </motion.div>
+
+                {/* Actual content on top */}
+                {!isLoading && (
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={viewMode}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="absolute inset-0 overflow-y-auto"
+                        >
+                            {isError ? (
+                                <ObservationErrorState />
+                            ) : observations && observations.length > 0 ? (
+                                <>
+                                    {viewMode === 'grid' && (
+                                        <ObservationGridView observations={observations} />
+                                    )}
+                                    {viewMode === 'list' && (
+                                        <ObservationListView observations={observations} />
+                                    )}
+                                    {viewMode === 'map' && (
+                                        <ObservationMapView
+                                            observations={observations}
+                                            center={[lat, lon]}
+                                        />
+                                    )}
+                                </>
+                            ) : (
+                                <motion.p
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.4, delay: 0.3 }}
+                                    className="text-center py-8 text-muted-foreground"
+                                >
+                                    No observations found for this species in this area.
+                                </motion.p>
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+                )}
+            </div>
         </motion.div>
     )
 }
+
+
 
 function ObservationGridView({
     observations,
@@ -263,7 +279,7 @@ function ObservationGridView({
             open={zoomedIndex !== null}
             onOpenChange={(isOpen) => !isOpen && setZoomedIndex(null)}
         >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                 <AnimatePresence>
                     {observationsWithPhotos.map((obs, index) => {
                         const rotation = rotations[index]
@@ -628,7 +644,6 @@ function ObservationMapView({
     )
 }
 
-// Loading State Component
 function ObservationLoadingState() {
     return (
         <motion.div
@@ -645,24 +660,30 @@ function ObservationLoadingState() {
             >
                 Recent Observations
             </motion.h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                 {Array.from({ length: 6 }).map((_, i) => (
                     <motion.div
                         key={i}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: i * 0.1 }}
+                        initial={{ opacity: 0, y: 30, scale: 0.8 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.6, delay: i * 0.15, ease: 'easeOut' }}
+                        className="cursor-pointer"
                     >
-                        <Card className="p-2">
+                        {/* Polaroid Card */}
+                        <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                            {/* Photo Area: same aspect ratio as your actual photos */}
                             <motion.div
-                                className="w-full h-48 bg-gray-200 rounded-md mb-2"
+                                className="aspect-square bg-gray-200 rounded-sm overflow-hidden mb-3 relative"
                                 animate={{ opacity: [0.5, 1, 0.5] }}
                                 transition={{
                                     duration: 1.5,
                                     repeat: Infinity,
                                     ease: 'easeInOut',
+                                    delay: i * 0.2,
                                 }}
                             />
+                            {/* Caption placeholders */}
                             <div className="space-y-2">
                                 <motion.div
                                     className="h-4 bg-gray-200 rounded w-3/4"
@@ -671,7 +692,7 @@ function ObservationLoadingState() {
                                         duration: 1.5,
                                         repeat: Infinity,
                                         ease: 'easeInOut',
-                                        delay: 0.2,
+                                        delay: i * 0.2 + 0.3,
                                     }}
                                 />
                                 <motion.div
@@ -681,17 +702,18 @@ function ObservationLoadingState() {
                                         duration: 1.5,
                                         repeat: Infinity,
                                         ease: 'easeInOut',
-                                        delay: 0.4,
+                                        delay: i * 0.2 + 0.6,
                                     }}
                                 />
                             </div>
-                        </Card>
+                        </div>
                     </motion.div>
                 ))}
             </div>
         </motion.div>
     )
 }
+
 
 // Error State Component
 function ObservationErrorState() {
