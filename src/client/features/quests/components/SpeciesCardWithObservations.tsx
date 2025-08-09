@@ -1,14 +1,25 @@
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { useQuery } from '@tanstack/react-query'
-import { Grid, List, Map } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Grid, List, Map } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import api from '@/api/api'
 import { SpeciesCard } from '@/components/cards/SpeciesCard'
 import { Card } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTrigger } from '@/components/ui/dialog'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
+import titleCase from '@/components/search/titleCase'
+// Grid View Component
+import { Button } from '@/components/ui/button'
 
 type Quest = {
     id: string
@@ -25,58 +36,69 @@ type Quest = {
 }
 
 interface SpeciesCardWithObservationsProps {
-    species: INatTaxon;
-    questData?: Quest;
+    species: INatTaxon
+    questData?: Quest
     locationData?: {
-        location_name?: string;
-        latitude?: number;
-        longitude?: number;
-    };
+        location_name?: string
+        latitude?: number
+        longitude?: number
+    }
 }
 
-export function SpeciesCardWithObservations(props: SpeciesCardWithObservationsProps) {
-    const { species, questData, locationData } = props;
-    const displayData = questData || locationData;
+export function SpeciesCardWithObservations(
+    props: SpeciesCardWithObservationsProps,
+) {
+    const { species, questData, locationData } = props
+    const displayData = questData || locationData
 
     if (!displayData?.latitude || !displayData?.longitude) {
-        // Or return a disabled card, or some other fallback.
-        return <SpeciesCard species={species} className="h-full" />;
+        return <SpeciesCard species={species} className="h-full" />
     }
 
-    return <Dialog>
-        <DialogTrigger className="h-full w-full">
-            <div className="h-full transform transition-transform hover:scale-105 cursor-pointer">
-                <SpeciesCard
-                    species={species}
-                    className="h-full"
-                />
-            </div>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[80vw] max-h-[85vh] flex flex-col">
-            <SpeciesCard species={species} className="w-75 relative -top-20 -left-10 -rotate-5" />
-            <DialogHeader className="flex-shrink-0">
+    return (
+        <Dialog>
+            <DialogTrigger className="h-full w-full" asChild>
+                <div className="h-full transform transition-transform hover:scale-105 cursor-pointer">
+                    <SpeciesCard species={species} className="h-full" />
+                </div>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[80vw] max-h-[85vh] flex flex-row gap-6 p-6">
+                {/* Left Column: Species Card */}
+                <div className="w-1/3 flex-shrink-0">
+                    <div className="sticky top-0">
+                        <SpeciesCard
+                            species={species}
+                            className="relative -top-10 md:-left-15 -rotate-5"
+                        />
+                        <DialogHeader className="-mt-4">
+                            <DialogTitle>
+                                <VisuallyHidden>
+                                    {titleCase(
+                                        species.preferred_common_name
+                                    )}
+                                </VisuallyHidden>
+                            </DialogTitle>
+                            <DialogDescription className="text-center">
+                                Recent observations near{' '}
+                                <strong>{displayData.location_name}</strong>
+                            </DialogDescription>
+                        </DialogHeader>
+                    </div>
+                </div>
 
-                {/*<DialogTitle>*/}
-                {/*    {titleCase(taxon.preferred_common_name)}*/}
-                {/*</DialogTitle>*/}
-
-                <DialogDescription className="justify-end">
-                    Recent observations near{' '}
-                    {displayData.location_name}
-                </DialogDescription>
-            </DialogHeader>
-            <div className="flex-1 overflow-y-auto">
-                {displayData.latitude &&
-                    displayData.longitude && (
+                {/* Right Column: Observations */}
+                <div className="flex-1 overflow-y-auto">
+                    {displayData.latitude && displayData.longitude && (
                         <ObservationList
                             taxonId={species.id}
                             lat={displayData.latitude}
                             lon={displayData.longitude}
                         />
                     )}
-            </div>
-        </DialogContent>
-    </Dialog>
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
 }
 
 interface ObservationPhoto {
@@ -127,10 +149,9 @@ function ObservationList({
     return (
         // In ObservationList, wrap the toggle/header and content in a fixed min-height container
         <motion.div
-            className="mt-4 min-h-[480px] overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
+            layout
+            transition={{ duration: 0.5, type: 'spring' }}
+            className="mt-4 overflow-hidden"
         >
             <motion.div
                 className="flex items-center justify-between mb-4 min-h-12"
@@ -160,166 +181,304 @@ function ObservationList({
                     </ToggleGroupItem>
                 </ToggleGroup>
             </motion.div>
-            <div className="min-h-[350px] overflow-y-auto pt-6 pb-6 box-border">
-                {/* Animated content here */}
-                {observations && observations.length > 0 ? (
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={viewMode}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            {viewMode === 'grid' && (
-                                <ObservationGridView observations={observations} />
-                            )}
-                            {viewMode === 'list' && (
-                                <ObservationListView observations={observations} />
-                            )}
-                            {viewMode === 'map' && (
-                                <ObservationMapView
-                                    observations={observations}
-                                    center={[lat, lon]}
-                                />
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
-                ) : (
-                    <motion.p
+            <motion.div
+            layout
+            transition={{ duration: 0.5, type: 'spring', bounce: 0.2 }}
+            className="min-h-[350px] overflow-y-auto pt-6 pb-6 box-border"
+        >
+            {/* Animated content here */}
+            {observations && observations.length > 0 ? (
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={viewMode}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.3 }}
-                        className="text-center py-8 text-muted-foreground"
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
                     >
-                        No observations found for this species in this area.
-                    </motion.p>
-                )}
-            </div>
+                        {viewMode === 'grid' && (
+                            <ObservationGridView
+                                observations={observations}
+                            />
+                        )}
+                        {viewMode === 'list' && (
+                            <ObservationListView
+                                observations={observations}
+                            />
+                        )}
+                        {viewMode === 'map' && (
+                            <ObservationMapView
+                                observations={observations}
+                                center={[lat, lon]}
+                            />
+                        )}
+                    </motion.div>
+                </AnimatePresence>
+            ) : (
+                <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.3 }}
+                    className="text-center py-8 text-muted-foreground"
+                >
+                    No observations found for this species in this area.
+                </motion.p>
+            )}
+        </motion.div>
         </motion.div>
     )
 }
 
-// Grid View Component
 function ObservationGridView({
     observations,
 }: {
     observations: Observation[]
 }) {
-    // Generate random rotation angles for each photo (between -8 and +8 degrees)
-    const rotations = observations.map(() => (Math.random() - 0.5) * 16)
+    const [zoomedIndex, setZoomedIndex] = useState<number | null>(null)
+
+    const observationsWithPhotos = observations.filter(
+        (obs) => obs.photos.length > 0
+    )
+    const rotations = observationsWithPhotos.map(
+        () => (Math.random() - 0.5) * 16
+    )
+
+    const handleNext = () => {
+        if (
+            zoomedIndex !== null &&
+            zoomedIndex < observationsWithPhotos.length - 1
+        ) {
+            setZoomedIndex(zoomedIndex + 1)
+        }
+    }
+
+    const handlePrev = () => {
+        if (zoomedIndex !== null && zoomedIndex > 0) {
+            setZoomedIndex(zoomedIndex - 1)
+        }
+    }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-4">
-            <AnimatePresence>
-                {observations.map((obs, index) => {
-                    const rotation = rotations[index]
-                    return (
-                        <motion.div
-                            key={obs.id}
-                            initial={{
-                                opacity: 0,
-                                y: 30,
-                                scale: 0.8,
-                                rotate: rotation + 10,
-                            }}
-                            animate={{
-                                opacity: 1,
-                                y: 0,
-                                scale: 1,
-                                rotate: rotation,
-                            }}
-                            exit={{
-                                opacity: 0,
-                                y: -20,
-                                scale: 0.8,
-                                rotate: rotation - 10,
-                            }}
-                            transition={{
-                                duration: 0.6,
-                                delay: index * 0.15,
-                                ease: 'easeOut',
-                                type: 'spring',
-                                damping: 15,
-                                stiffness: 100,
-                            }}
-                            whileHover={{
-                                scale: 1.05,
-                                rotate: 0,
-                                y: -8,
-                                transition: {
-                                    duration: 0.3,
-                                    type: 'spring',
-                                    damping: 10,
-                                    stiffness: 200,
-                                },
-                            }}
-                            whileTap={{
-                                scale: 0.95,
-                                rotate: rotation * 0.5,
-                            }}
-                            className="cursor-pointer"
-                            style={{
-                                transformOrigin: 'center center',
-                            }}
-                        >
-                            {/* Polaroid Card */}
-                            <div className="bg-white p-3 rounded-lg border-1 hover:shadow-shadow transtion:shadow duration-300">
-                                {/* Photo Area */}
-                                <div className="aspect-square bg-gray-100 rounded-sm overflow-hidden mb-3 relative">
-                                    {obs.photos.length > 0 ? (
-                                        <motion.img
-                                            src={obs.photos[0].url.replace(
-                                                'square',
-                                                'medium'
-                                            )}
-                                            alt="Observation"
-                                            className="w-full h-full object-cover"
-                                            initial={{ scale: 1.1, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            transition={{
-                                                duration: 0.8,
-                                                delay: index * 0.15 + 0.2,
-                                                ease: 'easeOut',
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                                            <div className="text-gray-400 text-sm">
-                                                No photo
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Polaroid Caption Area */}
+        <Dialog
+            open={zoomedIndex !== null}
+            onOpenChange={(isOpen) => !isOpen && setZoomedIndex(null)}
+        >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-4">
+                <AnimatePresence>
+                    {observationsWithPhotos.map((obs, index) => {
+                        const rotation = rotations[index]
+                        return (
+                            <DialogTrigger
+                                key={obs.id}
+                                asChild
+                                onClick={() => setZoomedIndex(index)}
+                            >
                                 <motion.div
-                                    className="text-xs text-gray-700 space-y-1"
-                                    initial={{ y: 10, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
+                                    initial={{
+                                        opacity: 0,
+                                        y: 30,
+                                        scale: 0.8,
+                                        // rotate: rotation + 10,
+                                    }}
+                                    animate={{
+                                        opacity: 1,
+                                        y: 0,
+                                        scale: 1,
+                                        // rotate: rotation,
+                                    }}
+                                    exit={{
+                                        opacity: 0,
+                                        y: -20,
+                                        scale: 0.8,
+                                        // rotate: rotation - 10,
+                                    }}
                                     transition={{
-                                        duration: 0.5,
-                                        delay: index * 0.15 + 0.4,
+                                        duration: 0.6,
+                                        delay: index * 0.15,
+                                        ease: 'easeOut',
+                                        type: 'spring',
+                                        damping: 15,
+                                        stiffness: 100,
+                                    }}
+                                    whileHover={{
+                                        scale: 1.05,
+                                        // rotate: 0,
+                                        y: -8,
+                                        transition: {
+                                            duration: 0.3,
+                                            type: 'spring',
+                                            damping: 10,
+                                            stiffness: 200,
+                                        },
+                                    }}
+                                    whileTap={{
+                                        scale: 0.95,
+                                        // rotate: rotation * 0.5,
+                                    }}
+                                    className="cursor-pointer"
+                                    style={{
+                                        transformOrigin: 'center center',
                                     }}
                                 >
-                                    <p className="font-medium truncate">
-                                        {obs.user.login}
+                                    {/* Polaroid Card */}
+                                    <div className="bg-white p-3 rounded-lg border-0 hover:shadow-shadow transtion:shadow duration-300">
+                                        {/* Photo Area */}
+                                        <div className="aspect-square bg-gray-100 rounded-sm overflow-hidden mb-3 relative">
+                                            <motion.img
+                                                src={obs.photos[0].url.replace(
+                                                    'square',
+                                                    'medium'
+                                                )}
+                                                alt="Observation"
+                                                className="w-full h-full object-cover"
+                                                initial={{
+                                                    scale: 1.1,
+                                                    opacity: 0,
+                                                }}
+                                                animate={{
+                                                    scale: 1,
+                                                    opacity: 1,
+                                                }}
+                                                transition={{
+                                                    duration: 0.8,
+                                                    delay:
+                                                        index * 0.15 + 0.2,
+                                                    ease: 'easeOut',
+                                                }}
+                                            />
+                                        </div>
+
+                                        {/* Polaroid Caption Area */}
+                                        <motion.div
+                                            className="text-xs text-gray-700 space-y-1"
+                                            initial={{ y: 10, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            transition={{
+                                                duration: 0.5,
+                                                delay: index * 0.15 + 0.4,
+                                            }}
+                                        >
+                                            <p className="font-medium truncate line-clamp-1">
+                                                {obs.user.login}
+                                            </p>
+                                            <p className="text-gray-500 line-clamp-1">
+                                                {obs.observed_on_string}
+                                            </p>
+                                            {obs.place_guess && (
+                                                <p className="text-gray-500 truncate text-[10px] line-clamp-1">
+                                                    📍 {obs.place_guess}
+                                                </p>
+                                            )}
+                                        </motion.div>
+                                    </div>
+                                </motion.div>
+                            </DialogTrigger>
+                        )
+                    })}
+                </AnimatePresence>
+            </div>
+            <DialogContent className="p-0 border-0 w-full max-w-sm md:max-w-md lg:max-w-lg bg-transparent shadow-none flex items-center justify-center">
+                <AnimatePresence>
+                    {observationsWithPhotos.map((obs, index) => {
+                        if (index < zoomedIndex) {
+                            return null
+                        }
+                        if (index > zoomedIndex + 2) {
+                            return null
+                        }
+                        return (
+                            <motion.div
+                                key={obs.id}
+                                className="absolute bg-white p-4 rounded-lg border-1 shadow-xl w-full"
+                                style={{
+                                    transformOrigin: 'center center',
+                                }}
+                                initial={{
+                                    scale: 1,
+                                    y: 0,
+                                    // rotate: 0,
+                                }}
+                                animate={{
+                                    scale: 1 - (index - zoomedIndex) * 0.1,
+                                    y: (index - zoomedIndex) * 20,
+                                    rotate: (index - zoomedIndex) * 5,
+                                    zIndex:
+                                        observationsWithPhotos.length -
+                                        index,
+                                }}
+                                exit={{
+                                    x: 300,
+                                    opacity: 0,
+                                    scale: 0.5,
+                                    transition: { duration: 0.3 },
+                                }}
+                                transition={{
+                                    type: 'spring',
+                                    stiffness: 100,
+                                    damping: 20,
+                                }}
+                                drag="x"
+                                dragConstraints={{ left: 0, right: 0 }}
+                                onDragEnd={(event, { offset, velocity }) => {
+                                    if (Math.abs(offset.x) > 50) {
+                                        if (offset.x > 0) {
+                                            handlePrev()
+                                        } else {
+                                            handleNext()
+                                        }
+                                    }
+                                }}
+                            >
+                                <div className="aspect-square bg-gray-100 rounded-sm overflow-hidden mb-4">
+                                    <img
+                                        src={obs.photos[0].url.replace(
+                                            'square',
+                                            'large'
+                                        )}
+                                        alt="Zoomed observation"
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <div className="text-center text-gray-800 space-y-1">
+                                    <p className="font-bold text-lg">
+                                        Observed by: {obs.user.login}
                                     </p>
-                                    <p className="text-gray-500">
+                                    <p className="text-sm text-gray-600">
                                         {obs.observed_on_string}
                                     </p>
                                     {obs.place_guess && (
-                                        <p className="text-gray-500 truncate text-[10px]">
+                                        <p className="text-sm text-gray-500 truncate">
                                             📍 {obs.place_guess}
                                         </p>
                                     )}
-                                </motion.div>
-                            </div>
-                        </motion.div>
-                    )
-                })}
-            </AnimatePresence>
-        </div>
+                                </div>
+                            </motion.div>
+                        )
+                    })}
+                </AnimatePresence>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 rounded-full bg-white z-50"
+                    onClick={handlePrev}
+                    disabled={zoomedIndex === 0}
+                >
+                    <ChevronLeft className="h-6 w-6" />
+                </Button>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 rounded-full bg-white z-50"
+                    onClick={handleNext}
+                    disabled={
+                        zoomedIndex ===
+                        observationsWithPhotos.length - 1
+                    }
+                >
+                    <ChevronRight className="h-6 w-6" />
+                </Button>
+            </DialogContent>
+        </Dialog>
     )
 }
 
@@ -350,11 +509,14 @@ function ObservationListView({
                                     <motion.img
                                         src={obs.photos[0].url.replace(
                                             'medium',
-                                            'square'
+                                            'square',
                                         )}
                                         alt="Observation"
                                         className="w-16 h-16 rounded-md object-cover flex-shrink-0"
-                                        initial={{ scale: 0.8, opacity: 0 }}
+                                        initial={{
+                                            scale: 0.8,
+                                            opacity: 0,
+                                        }}
                                         animate={{ scale: 1, opacity: 1 }}
                                         transition={{
                                             duration: 0.3,
@@ -394,7 +556,7 @@ function ObservationMapView({
 }) {
     // Filter observations that have coordinates
     const observationsWithCoords = observations.filter(
-        (obs) => obs.geojson?.coordinates || obs.location
+        (obs) => obs.geojson?.coordinates || obs.location,
     )
 
     return (
@@ -439,7 +601,7 @@ function ObservationMapView({
                                         <img
                                             src={obs.photos[0].url.replace(
                                                 'square',
-                                                'medium'
+                                                'medium',
                                             )}
                                             alt="Observation"
                                             className="w-full h-32 object-cover rounded mb-2"
@@ -548,10 +710,10 @@ function ObservationErrorState() {
 async function getObservationsFromINat(
     taxonId: number,
     lat: number,
-    lon: number
+    lon: number,
 ) {
     const response = await api.get(
-        `/iNatAPI/observations?taxon_id=${taxonId}&lat=${lat}&lng=${lon}&radius=10&per_page=6&order_by=observed_on`
+        `/iNatAPI/observations?taxon_id=${taxonId}&lat=${lat}&lng=${lon}&radius=10&per_page=6&order_by=observed_on`,
     )
     if (!response.data) {
         return []

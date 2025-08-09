@@ -204,7 +204,7 @@ function SpeciesGridItem({
                         </div>
                     </CardContent>
 
-                    <CardContent>
+                    <CardContent className="block sm:hidden md:block">
                         <div className="h-full bg-teal-100 text-xs content-start text-left p-2 outline-2 rounded-sm outline-white border-2 border-black">
                             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem dsadas dasds ad </p>
                         </div>
