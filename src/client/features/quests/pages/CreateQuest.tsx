@@ -1,44 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
-import React, {
-    useCallback,
-    useLayoutEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react'
-import {
-    FormProvider,
-    useForm,
-    useFormContext,
-    useWatch,
-} from 'react-hook-form'
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { FormProvider, useForm, useFormContext, useWatch } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { z } from 'zod'
 import api from '@/api/api'
-import titleCase from '@/components/search/titleCase'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import {
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from '@/components/ui/form'
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { useAuth } from '@/hooks/useAuth'
+import { SpeciesCard } from '@/components/cards/SpeciesCard'
+import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 
 export const formSchema = z.object({
     questName: z.string().min(2, {
@@ -258,12 +233,13 @@ function QuestDetails({ setStep }) {
 
 function SpeciesSelector({ questSpecies, setQuestSpecies, setStep }) {
     const [page, setPage] = useState(1)
-    const [perPage, setPerPage] = useState(10)
+    const [perPage, setPerPage] = useState(6)
     const speciesListRef = useRef<HTMLDivElement>(null)
     const { control } = useFormContext()
 
     const lat = useWatch({ control, name: 'latitude' })
     const lon = useWatch({ control, name: 'longitude' })
+    const locationName = useWatch({ control, name: 'locationName' })
 
     const {
         data: speciesCounts,
@@ -309,12 +285,13 @@ function SpeciesSelector({ questSpecies, setQuestSpecies, setStep }) {
                         onValueChange={(value) => setPerPage(Number(value))}
                     >
                         <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="10" />
+                            <SelectValue placeholder="6" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="10">10</SelectItem>
-                            <SelectItem value="20">20</SelectItem>
-                            <SelectItem value="30">30</SelectItem>
+                            <SelectItem value="6">6</SelectItem>
+                            <SelectItem value="12">12</SelectItem>
+                            <SelectItem value="24">24</SelectItem>
+                            <SelectItem value="48">48</SelectItem>
                             <SelectItem value="50">50</SelectItem>
                         </SelectContent>
                     </Select>
@@ -322,15 +299,32 @@ function SpeciesSelector({ questSpecies, setQuestSpecies, setStep }) {
 
                 {isLoading && <p>Loading species...</p>}
                 {isError && <p>Error fetching species.</p>}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr">
                 {speciesCounts &&
                     speciesCounts.map((s) => (
-                        <SpeciesItem
-                            key={s.taxon.id}
-                            species={s}
-                            onToggle={toggleSpeciesInQuest}
-                            isAdded={questSpecies.has(s.taxon.id)}
+                        <div key={s.taxon.id} className="flex flex-col gap-2">
+                        <SpeciesCardWithObservations
+                            species={s.taxon}
+                            locationData={{
+                                latitude: lat,
+                                longitude: lon,
+                                location_name: locationName
+                            }}
                         />
+                        <Button
+                            onClick={(e) => {
+                                e.stopPropagation() // Prevent card click from firing
+                                e.preventDefault()
+                                toggleSpeciesInQuest(s)
+                            }}
+                            variant={questSpecies.has(s.taxon.id) ? 'neutral' : 'default'}
+                            className="self-center"
+                        >
+                            {questSpecies.has(s.taxon.id) ? 'Remove' : 'Add'}
+                        </Button>
+                        </div>
                     ))}
+                </div>
 
                 <div className="flex justify-between mt-4">
                     <Button
@@ -354,155 +348,14 @@ function SpeciesSelector({ questSpecies, setQuestSpecies, setStep }) {
     )
 }
 
-type SpeciesItemProps = {
-    species: SpeciesCountItem
-    onToggle: (species: SpeciesCountItem) => void
-    isAdded: boolean
-}
 
-function SpeciesItem({ species, onToggle, isAdded }: SpeciesItemProps) {
-    const [showObservations, setShowObservations] = useState(false)
-    const { control } = useFormContext()
-    const lat = useWatch({ control, name: 'latitude' })
-    const lon = useWatch({ control, name: 'longitude' })
-
-    return (
-        <Card
-            className="p-4 cursor-pointer"
-            onClick={() => setShowObservations((prev) => !prev)}
-        >
-            <div className="flex items-center space-x-4">
-                {species.taxon.default_photo && (
-                    <img
-                        src={species.taxon.default_photo.square_url}
-                        alt={`Photo of ${species.taxon.preferred_common_name} - ${species.taxon.name}`}
-                        className="w-20 h-20 rounded-md object-cover"
-                    />
-                )}
-                <div className="flex-grow">
-                    <p className="font-bold text-lg">
-                        {titleCase(species.taxon.preferred_common_name)}
-                    </p>
-                    <p className="text-sm italic">{species.taxon.name}</p>
-                    <Badge>{species.count} observations</Badge>
-                </div>
-                <Button
-                    onClick={(e) => {
-                        e.stopPropagation() // Prevent card click from firing
-                        e.preventDefault()
-                        onToggle(species)
-                    }}
-                    variant={isAdded ? 'neutral' : 'default'}
-                    className="self-center"
-                >
-                    {isAdded ? 'Remove' : 'Add'}
-                </Button>
-            </div>
-            {showObservations && (
-                <ObservationList
-                    taxonId={species.taxon.id}
-                    lat={lat}
-                    lon={lon}
-                />
-            )}
-        </Card>
-    )
-}
-
-interface ObservationPhoto {
-    id: number
-    url: string
-    attribution: string
-}
-
-interface Observation {
-    id: number
-    photos: ObservationPhoto[]
-    observed_on_string: string
-    place_guess: string
-    user: {
-        login: string
-    }
-}
-
-function ObservationList({
-    taxonId,
-    lat,
-    lon,
-}: {
-    taxonId: number
-    lat: number
-    lon: number
-}) {
-    const {
-        data: observations,
-        isLoading,
-        isError,
-    } = useQuery<Observation[], Error>({
-        queryKey: ['observations', taxonId, lat, lon],
-        queryFn: () => getObservationsByTaxonId(taxonId, lat, lon),
-        enabled: !!taxonId && !!lat && !!lon,
-    })
-
-    if (isLoading) return <p>Loading observations...</p>
-    if (isError) return <p>Error fetching observations.</p>
-
-    return (
-        <div className="mt-4">
-            <h3 className="text-lg font-semibold">Recent Observations</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
-                {observations?.map((obs) => (
-                    <Card key={obs.id} className="p-2">
-                        {obs.photos.length > 0 && (
-                            <img
-                                src={obs.photos[0].url.replace(
-                                    'square',
-                                    'medium'
-                                )}
-                                alt="Observation"
-                                className="rounded-md w-full h-48 object-cover"
-                            />
-                        )}
-                        <div className="mt-2 text-sm">
-                            <p>
-                                <strong>Observed by:</strong> {obs.user.login}
-                            </p>
-                            <p>
-                                <strong>On:</strong> {obs.observed_on_string}
-                            </p>
-                            {obs.place_guess && (
-                                <p>
-                                    <strong>Location:</strong> {obs.place_guess}
-                                </p>
-                            )}
-                        </div>
-                    </Card>
-                ))}
-            </div>
-        </div>
-    )
-}
-
-async function getObservationsByTaxonId(
-    taxonId: number,
-    lat: number,
-    lon: number
-) {
-    const response = await api.get(
-        `/iNatAPI/observations?taxon_id=${taxonId}&lat=${lat}&lng=${lon}&radius=10&per_page=6&order_by=observed_on`
-    )
-    if (!response.data) {
-        return []
-    }
-    return response.data.results
-}
 
 async function getSpeciesCountsByGeoLocation(
     latitude: number,
     longitude: number,
     radius = 10,
     page = 1,
-    perPage = 10
+    perPage = 6
 ) {
     const response = await api.get(
         `/iNatAPI/observations/species_counts?lat=${latitude}&lng=${longitude}&radius=${radius}&include_ancestors=false&page=${page}&per_page=${perPage}`
