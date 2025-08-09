@@ -27,7 +27,7 @@ type Quest = {
     location_name?: string
     latitude?: number
     longitude?: number
-    status: 'active' | 'paused' | 'ended'
+    status: 'pending' | 'active' | 'paused' | 'ended'
 }
 
 interface QuestProps {
@@ -166,7 +166,7 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
         };
     }, [activeQuestId, fetchMappingsAndProgress]);
 
-    const updateStatus = async (status: 'active' | 'paused' | 'ended') => {
+    const updateStatus = async (status: 'pending' |'active' | 'paused' | 'ended') => {
         if (!questData) return;
         try {
             await api.patch(`/quests/${questData.id}/status`, { status });
@@ -205,16 +205,20 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                     </div>
                     {questData.status && (
                         <div className="mt-4 flex items-center gap-2">
-                                <span className={`px-3 py-1 text-sm font-bold rounded-full flex items-center gap-2 ${
-                                    questData.status === 'active' ? 'bg-green-100 text-green-800' :
-                                        questData.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
-                                            'bg-red-100 text-red-800'
-                                }`}>
-                                    {questData.status === 'active' && <Play className="h-4 w-4" />}
-                                    {questData.status === 'paused' && <Pause className="h-4 w-4" />}
-                                    {questData.status === 'ended' && <StopCircle className="h-4 w-4" />}
-                                    <span className="capitalize">{questData.status}</span>
-                                </span>
+                            <span
+                                className={`px-3 py-1 text-sm font-bold rounded-full flex items-center gap-2 ${
+                                    questData.status === 'pending' ? 'bg-gray-200 text-gray-700' :
+                                        questData.status === 'active' ? 'bg-green-100 text-green-800' :
+                                            questData.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800'
+                                }`}
+                            >
+                                {questData.status === 'pending' && <Lock className="h-4 w-4" />}
+                                {questData.status === 'active' && <Play className="h-4 w-4" />}
+                                {questData.status === 'paused' && <Pause className="h-4 w-4" />}
+                                {questData.status === 'ended' && <StopCircle className="h-4 w-4" />}
+                                <span className="capitalize">{questData.status}</span>
+                            </span>
                         </div>
                     )}
                 </div>
@@ -225,12 +229,12 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                             onClick={() => updateStatus('active')}
                             disabled={questData.status === 'active'}
                         >
-                            <Play /> Start
+                            <Play /> {questData.status === 'pending' ? 'Start' : 'Resume'}
                         </Button>
                         <Button
                             className="flex-1"
                             onClick={() => updateStatus('paused')}
-                            disabled={questData.status === 'paused'}
+                            disabled={questData.status === 'paused' || questData.status === 'pending'}
                         >
                             <Pause /> Pause
                         </Button>
@@ -242,19 +246,15 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                             <StopCircle /> End
                         </Button>
                     </div>
-
                 )}
                 <div className="flex justify-between items-start mb-6">
 
                     <div>
-
                         <p className="text-muted-foreground mt-2">
                             {questData.description}
                         </p>
-
                     </div>
                     <div className="flex items-center gap-2">
-
                         <Button variant="default" size="sm" asChild>
                             <Link to={`/quests/${questData.id}/edit`}>
                                 <Pencil className="h-4 w-4 mr-2" />
@@ -293,9 +293,9 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                             )
                             const progressCount = mapping
                                 ?
-                                  (aggregatedProgress.find(
-                                      (p) => p.mapping_id === mapping.id
-                                  )?.count || 0)
+                                (aggregatedProgress.find(
+                                    (p) => p.mapping_id === mapping.id
+                                )?.count || 0)
                                 : 0
                             const recentEntries = mapping ? detailedProgress.filter(d => d.mapping_id === mapping.id).slice(0, 3) : []
                             return (
