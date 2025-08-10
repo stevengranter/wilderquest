@@ -33,6 +33,7 @@ export const subscribe = (req: Request, res: Response) => {
 
 export const sendEvent = (questId: string, event: any) => {
     const questClients = clients[questId];
+    console.log(event);
     if (questClients) {
         questClients.forEach(client => {
             client.res.write(`data: ${JSON.stringify(event)}

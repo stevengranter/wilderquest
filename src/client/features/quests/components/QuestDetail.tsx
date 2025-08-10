@@ -171,9 +171,9 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
         try {
             await api.patch(`/quests/${questData.id}/status`, { status });
             setQuestData(prev => prev ? { ...prev, status } : null);
-            toast.success(`Quest status updated to ${status}`);
+            // toast.success(`Quest status updated to ${status}`);
         } catch (error) {
-            toast.error('Failed to update quest status');
+            // toast.error('Failed to update quest status');
         }
     };
 
@@ -323,9 +323,9 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                                                         const name = meta?.last_display_name || (user?.username ?? 'You')
                                                         if (next) {
                                                             const first = (meta?.count || 0) === 1
-                                                            toast(first ? `First found by ${name}` : `Found by ${name}`)
+                                                            // toast(first ? `First found by ${name}` : `Found by ${name}`)
                                                         } else {
-                                                            toast(`Unmarked by ${name}`)
+                                                            // toast(`Unmarked by ${name}`)
                                                         }
                                                     } catch (e) {
                                                         toast('Action failed')
