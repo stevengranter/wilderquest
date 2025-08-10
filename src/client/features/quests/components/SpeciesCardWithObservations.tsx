@@ -249,7 +249,7 @@ function ObservationLoadingState() {
                 {Array.from({ length: 6 }).map((_, i) => (
                     <motion.div
                         key={i}
-                        initial={{ opacity: 0, y: 30, scale: 0.8 }}
+                        initial={{ opacity: 0, y: 30, scale: 1 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         transition={{ duration: 0.6, delay: i * 0.15, ease: 'easeOut' }}
                         className="cursor-pointer"
