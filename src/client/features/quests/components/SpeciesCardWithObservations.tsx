@@ -25,7 +25,7 @@ import {
 } from '@/features/quests/components/ObservationGridView'
 
 type Quest = {
-    id: string
+    id: string | number
     name: string
     description?: string
     taxon_ids?: number[]

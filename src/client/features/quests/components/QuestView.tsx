@@ -9,7 +9,7 @@ import ShareQuest from '@/features/quests/components/ShareQuest'
 import { useAuth } from '@/hooks/useAuth'
 import api from '@/api/api'
 import { toast } from 'sonner'
-import { Quest } from '@/types/types'
+import { Quest } from '../../../../server/repositories/QuestRepository'
 
 type QuestViewProps = {
     questData: Quest | null | undefined;
@@ -24,6 +24,7 @@ type QuestViewProps = {
     token?: string;
     share?: any;
 };
+
 
 export const QuestView = ({
     questData,
@@ -67,48 +68,13 @@ export const QuestView = ({
                         )}
                     </div>
                     {questData.status && (
-                        <div className="mt-4 flex items-center gap-2">
-                            <span
-                                className={`px-3 py-1 text-sm font-bold rounded-full flex items-center gap-2 ${
-                                    questData.status === 'pending' ? 'bg-gray-200 text-gray-700' :
-                                        questData.status === 'active' ? 'bg-green-100 text-green-800' :
-                                            questData.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
-                                                'bg-red-100 text-red-800'
-                                }`}
-                            >
-                                {questData.status === 'pending' && <Lock className="h-4 w-4" />}
-                                {questData.status === 'active' && <Play className="h-4 w-4" />}
-                                {questData.status === 'paused' && <Pause className="h-4 w-4" />}
-                                {questData.status === 'ended' && <StopCircle className="h-4 w-4" />}
-                                <span className="capitalize">{questData.status}</span>
-                            </span>
-                        </div>
+                        <QuestStatus status={questData.status} />
                     )}
                 </div>
                 {isOwner && (
-                    <div className="flex items-center gap-2 w-full">
-                        <Button
-                            className="flex-1"
-                            onClick={() => updateStatus('active')}
-                            disabled={questData.status === 'active'}
-                        >
-                            <Play /> {questData.status === 'pending' ? 'Start' : 'Resume'}
-                        </Button>
-                        <Button
-                            className="flex-1"
-                            onClick={() => updateStatus('paused')}
-                            disabled={questData.status === 'paused' || questData.status === 'pending'}
-                        >
-                            <Pause /> Pause
-                        </Button>
-                        <Button
-                            className="flex-1"
-                            onClick={() => updateStatus('ended')}
-                            disabled={questData.status === 'ended'}
-                        >
-                            <StopCircle /> End
-                        </Button>
-                    </div>
+                    <QuestStatusControls handleActive={() => updateStatus('active')} status={questData.status}
+                                         handlePaused={() => updateStatus('paused')}
+                                         handleEnded={() => updateStatus('ended')} />
                 )}
                 <div className="flex justify-between items-start mb-6">
                     <div>
@@ -129,8 +95,8 @@ export const QuestView = ({
                     )}
                 </div>
 
-                {questData.location_name && (
-                    <div>Location: {questData.location_name}</div>
+                {questData?.location_name && (
+                    <div>Location: {questData?.location_name}</div>
                 )}
 
                 <div className="mt-8">
@@ -245,6 +211,51 @@ export const QuestView = ({
     );
 };
 
+
+function QuestStatusControls(props: { handleActive: () => void, status: any, handlePaused: () => void, handleEnded: () => void }) {
+    return <div className="flex items-center gap-2 w-full">
+        <Button
+            className="flex-1"
+            onClick={props.handleActive}
+            disabled={props.status === 'active'}
+        >
+            <Play /> {props.status === 'pending' ? 'Start' : 'Resume'}
+        </Button>
+        <Button
+            className="flex-1"
+            onClick={props.handlePaused}
+            disabled={props.status === 'paused' || props.status === 'pending'}
+        >
+            <Pause /> Pause
+        </Button>
+        <Button
+            className="flex-1"
+            onClick={props.handleEnded}
+            disabled={props.status === 'ended'}
+        >
+            <StopCircle /> End
+        </Button>
+    </div>
+}
+
+function QuestStatus(props: { status: any }) {
+    return <div className="mt-4 flex items-center gap-2">
+                            <span
+                                className={`px-3 py-1 text-sm font-bold rounded-full flex items-center gap-2 ${
+                                    props.status === 'pending' ? 'bg-gray-200 text-gray-700' :
+                                        props.status === 'active' ? 'bg-green-100 text-green-800' :
+                                            props.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800'
+                                }`}
+                            >
+                                {props.status === 'pending' && <Lock className="h-4 w-4" />}
+                                {props.status === 'active' && <Play className="h-4 w-4" />}
+                                {props.status === 'paused' && <Pause className="h-4 w-4" />}
+                                {props.status === 'ended' && <StopCircle className="h-4 w-4" />}
+                                <span className="capitalize">{props.status}</span>
+                            </span>
+    </div>
+}
 
 function LoadingSkeleton() {
     return (
