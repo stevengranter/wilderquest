@@ -81,6 +81,8 @@ export function createQuestShareService(
     ) {
         const share = await questShareRepo.findActiveByToken(token)
         if (!share) throw new Error('Share not found or expired')
+        const guestName = share.guest_name ?? null
+        const questId = share.quest_id ?? null
 
         // Validate the mapping belongs to the quest of the share
         const mapping = await questToTaxaRepo.findOne({ id: mappingId })
@@ -92,11 +94,13 @@ export function createQuestShareService(
         if (observed) {
             try {
                 await progressRepo.addProgress(share.id, mappingId)
+                sendEvent(String(questId), { type: 'SPECIES_FOUND', payload: { mappingId, guestName } });
             } catch (_err) {
                 // ignore duplicates because of unique constraint
             }
         } else {
             await progressRepo.removeProgress(share.id, mappingId)
+            sendEvent(String(questId), { type: 'SPECIES_UNFOUND', payload: { mappingId, guestName } });
         }
 
         return progressRepo.findByShareId(share.id)
