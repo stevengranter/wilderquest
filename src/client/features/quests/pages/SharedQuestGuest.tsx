@@ -1,296 +1,36 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router'
-import api from '@/api/api'
-import { Card } from '@/components/ui/card'
-import { chunk } from 'lodash'
-import { INatTaxon } from '@shared/types/iNatTypes'
-import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
-import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
-import { Pause, Play, StopCircle } from 'lucide-react'
-
-type TaxonMapping = {
-    id: number // mapping id (quests_to_taxa.id)
-    quest_id: number
-    taxon_id: number // iNat taxon id
-}
-
-type Progress = {
-    id: number
-    quest_share_id: number
-    taxon_id: number // mapping id
-    observed_at: string
-}
-
-type Quest = {
-    id: string
-    name: string
-    description?: string
-    taxon_ids?: number[]
-    is_private: boolean
-    user_id: string
-    created_at: string
-    updated_at: string
-    location_name?: string
-    latitude?: number
-    longitude?: number
-    status: 'pending' | 'active' | 'paused' | 'ended'
-}
+import { useQuest } from '@/hooks/useQuest'
+import { QuestView } from '@/features/quests/components/QuestView'
 
 export default function SharedQuestGuest() {
-    const { token } = useParams()
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const [taxaMappings, setTaxaMappings] = useState<TaxonMapping[]>([])
-    const [progress, setProgress] = useState<Progress[]>([])
-    const [taxa, setTaxa] = useState<INatTaxon[]>([])
-    const [questName, setQuestName] = useState<string>('')
-    const [questData, setQuestData] = useState<Quest | undefined>(undefined)
-    const [guestName, setGuestName] = useState<string | null>(null)
-    const [aggregate, setAggregate] = useState<
-        { mapping_id: number; count: number; last_observed_at?: string; last_guest_name?: string | null }[]
-    >([])
+    const { token } = useParams();
 
-    const observedSet = useMemo(() => new Set(progress.map((p) => p.taxon_id)), [progress])
-
-    const fetchQuestData = useCallback(async (isInitialLoad: boolean) => {
-        if (!token) return
-        if (isInitialLoad) {
-            setLoading(true)
-        }
-        setError(null)
-        try {
-            const res = await api.get(`/quest-sharing/shares/token/${token}`)
-            const mappings: TaxonMapping[] = res.data.taxa_mappings || []
-            setTaxaMappings(mappings)
-            setQuestName(res.data.quest?.name || '')
-            setQuestData(res.data.quest)
-            setGuestName(res.data.share?.guest_name ?? null)
-            const res2 = await api.get(`/quest-sharing/shares/token/${token}/progress`)
-            setProgress(res2.data || [])
-
-            // Aggregated progress (who/when)
-            const aggRes = await api.get(`/quest-sharing/shares/token/${token}/progress/aggregate`)
-            setAggregate(aggRes.data || [])
-
-            if (isInitialLoad) {
-                // Fetch INat taxa for display like QuestDetail
-                const taxonIds = mappings.map((m) => m.taxon_id)
-                const idsChunks = chunk(taxonIds, 30)
-                const allTaxa: INatTaxon[] = []
-                for (const ids of idsChunks) {
-                    const resp = await api.get(`/iNatAPI/taxa/${ids.join(',')}`)
-                    if (resp.data?.results) allTaxa.push(...resp.data.results)
-                }
-                setTaxa(allTaxa)
-            }
-        } catch (e: any) {
-            setError(e?.response?.data?.message || 'Link invalid or expired')
-        } finally {
-            if (isInitialLoad) {
-                setLoading(false)
-            }
-        }
-    }, [token])
-
-    // Separate fetch for mappings/progress/aggregate (used on SSE events)
-    const fetchMappingsAndProgress = useCallback(async () => {
-        if (!token) return
-        try {
-            const res = await api.get(`/quest-sharing/shares/token/${token}`)
-            setTaxaMappings(res.data.taxa_mappings || [])
-            setQuestName(res.data.quest?.name || '')
-            setGuestName(res.data.share?.guest_name ?? null)
-
-            const progressRes = await api.get(`/quest-sharing/shares/token/${token}/progress`)
-            setProgress(progressRes.data || [])
-
-            const aggregateRes = await api.get(`/quest-sharing/shares/token/${token}/progress/aggregate`)
-            setAggregate(aggregateRes.data || [])
-        } catch (e) {
-            console.error('Failed to refresh quest data on SSE event', e)
-        }
-    }, [token])
-
-    useEffect(() => {
-        fetchQuestData(true)
-    }, [fetchQuestData])
-
-    // SSE subscription to listen for quest status and species found/unfound events
-    useEffect(() => {
-        if (!questData?.id) return
-
-        const eventSource = new EventSource(`/api/quests/${questData.id}/events`)
-
-        eventSource.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data)
-                if (data.type === 'QUEST_STATUS_UPDATED') {
-                    toast.info(`Quest status updated to ${data.payload.status}`)
-                    setQuestData((prev) => (prev ? { ...prev, status: data.payload.status } : undefined))
-                } else if (data.type === 'SPECIES_FOUND') {
-                    const guestName = data.payload.guestName || (data.payload.owner ? 'The owner' : 'A guest')
-                    toast.success(`${guestName} found a species!`)
-                    fetchMappingsAndProgress()
-                } else if (data.type === 'SPECIES_UNFOUND') {
-                    const guestName = data.payload.guestName || (data.payload.owner ? 'The owner' : 'A guest')
-                    toast.info(`${guestName} unmarked a species.`)
-                    fetchMappingsAndProgress()
-                }
-            } catch (err) {
-                console.error('Failed to parse SSE event data', err)
-            }
-        }
-
-        eventSource.onerror = (e) => {
-            console.error('SSE error', e)
-            eventSource.close()
-        }
-
-        return () => {
-            eventSource.close()
-        }
-    }, [questData?.id, fetchMappingsAndProgress])
-
-    const toggleObserved = async (mappingId: number, next: boolean) => {
-        if (!token) return
-        try {
-            const res = await api.post(`/quest-sharing/shares/token/${token}/progress/${mappingId}`, { observed: next })
-            setProgress(res.data || [])
-
-            // Refresh aggregate after change
-            const aggRes = await api.get(`/quest-sharing/shares/token/${token}/progress/aggregate`)
-            setAggregate(aggRes.data || [])
-
-            const meta = (aggRes.data as Array<{ mapping_id: number; count: number; last_display_name?: string; last_observed_at?: string }>)
-                .find((a) => a.mapping_id === mappingId)
-            const name = meta?.last_display_name || guestName || 'Someone'
-            if (next) {
-                const first = (meta?.count || 0) === 1
-                toast(first ? `First found by ${name}` : `Found by ${name}`, {
-                    description: first ? 'This is the first time this species was found on this quest.' : `Total found count is now ${meta?.count}.`,
-                })
-            } else {
-                toast(`Unmarked by ${name}`, {
-                    description: 'This species has been cleared for this link.',
-                })
-            }
-        } catch (e) {
-            console.error('Failed to toggle', e)
-            toast('Action failed', { description: 'Please try again.' })
-        }
-    }
-
-    if (loading) return <div className="p-6">Loading…</div>
-    if (error)
-        return (
-            <div className="p-6">
-                <Card className="p-6 text-center text-destructive">{error}</Card>
-            </div>
-        )
-
-    // totals for header
-    const total = taxaMappings.length
-    const totalFound = aggregate.filter((a) => a.count && a.count > 0).length
+    const {
+        questData,
+        taxa,
+        mappings,
+        aggregatedProgress,
+        detailedProgress,
+        isLoading,
+        isError,
+        updateStatus,
+        share,
+    } = useQuest({ token });
+    console.log(taxa);
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <Card className="bg-card p-6 rounded-lg shadow-lg">
-                <div className="mb-4">
-                    <h1 className="text-2xl font-bold">{questName}</h1>
-                    {guestName ? <div className="text-sm text-muted-foreground">For: {guestName}</div> : null}
-                    <div className="mt-1 text-sm">
-            <span className="inline-block bg-emerald-600 text-white px-2 py-0.5 rounded">
-              {totalFound}/{total} Found
-            </span>
-                    </div>
-                    {questData?.status && (
-                        <div className="mt-4 flex items-center gap-2">
-              <span
-                  className={`px-3 py-1 text-sm font-bold rounded-full flex items-center gap-2 ${
-                      questData.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : questData.status === 'paused'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : questData.status === 'pending'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-red-100 text-red-800'
-                  }`}
-              >
-                {questData.status === 'active' && <Play className="h-4 w-4" />}
-                  {questData.status === 'paused' && <Pause className="h-4 w-4" />}
-                  {questData.status === 'pending' && (
-                      <svg
-                          className="h-4 w-4 text-blue-800"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          viewBox="0 0 24 24"
-                      >
-                          <circle cx={12} cy={12} r={10} />
-                          <path d="M12 6v6l4 2" />
-                      </svg>
-                  )}
-                  {questData.status === 'ended' && <StopCircle className="h-4 w-4" />}
-                  <span className="capitalize">{questData.status}</span>
-              </span>
-                        </div>
-                    )}
-                </div>
-
-                {taxa.length === 0 ? (
-                    <div>No species on this quest.</div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr">
-                        {taxa.map((taxon) => {
-                            const mapping = taxaMappings.find((m) => m.taxon_id === taxon.id)
-                            if (!mapping) return null
-                            const isObserved = observedSet.has(mapping.id)
-                            const meta = aggregate.find((a) => a.mapping_id === mapping.id)
-                            const metaLine = (() => {
-                                if (!meta) return null
-                                const name = meta.last_guest_name || 'Someone'
-                                try {
-                                    const d = meta.last_observed_at ? new Date(meta.last_observed_at) : null
-                                    const formatted = d ? d.toLocaleString() : ''
-                                    return `${name} • ${formatted}`
-                                } catch {
-                                    return name
-                                }
-                            })()
-                            return (
-                                <div key={taxon.id} className="relative">
-                                    <SpeciesCardWithObservations species={taxon} questData={questData} />
-                                    <div className="absolute top-2 right-2">
-                                        <div className="bg-emerald-600 text-white text-xs px-2 py-1 rounded-md shadow text-right">
-                                            <div>
-                                                Found
-                                                {(() => {
-                                                    const count = aggregate.find((a) => a.mapping_id === mapping.id)?.count || 0
-                                                    return count > 1 ? ` x${count}` : ''
-                                                })()}
-                                            </div>
-                                            {metaLine && <div className="text-[10px] opacity-90 mt-0.5">{metaLine}</div>}
-                                        </div>
-                                    </div>
-                                    <div className="absolute bottom-2 right-2">
-                                        <Button
-                                            size="sm"
-                                            variant={isObserved ? 'neutral' : 'default'}
-                                            onClick={() => toggleObserved(mapping.id, !isObserved)}
-                                            disabled={questData?.status !== 'active'}
-                                        >
-                                            Found
-                                        </Button>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
-                )}
-            </Card>
-        </div>
-    )
+        <QuestView
+            questData={questData}
+            taxa={taxa}
+            mappings={mappings}
+            aggregatedProgress={aggregatedProgress}
+            detailedProgress={detailedProgress}
+            isLoading={isLoading}
+            isError={isError}
+            updateStatus={updateStatus}
+            isOwner={false}
+            token={token}
+            share={share}
+        />
+    );
 }

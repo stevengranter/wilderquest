@@ -62,7 +62,10 @@ export function createQuestShareService(
 
         return {
             share,
-            quest,
+            quest: {
+                ...quest,
+                taxon_ids: taxaMappings.map((t) => t.taxon_id),
+            },
             taxa_mappings: taxaMappings, // contains id (mapping id) and taxon_id (iNat id)
             progress,
         }
@@ -94,10 +97,10 @@ export function createQuestShareService(
         if (observed) {
             try {
                 await progressRepo.addProgress(share.id, mappingId)
-                sendEvent(String(questId), { type: 'SPECIES_FOUND', payload: { mappingId, guestName } });
             } catch (_err) {
                 // ignore duplicates because of unique constraint
             }
+            sendEvent(String(questId), { type: 'SPECIES_FOUND', payload: { mappingId, guestName } });
         } else {
             await progressRepo.removeProgress(share.id, mappingId)
             sendEvent(String(questId), { type: 'SPECIES_UNFOUND', payload: { mappingId, guestName } });
