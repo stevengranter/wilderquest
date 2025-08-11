@@ -109,6 +109,7 @@ export function createQuestService(
         if (!quest) throw new Error('Quest not found or access denied')
 
         const taxa = await getTaxaForQuestId(questId)
+        console.log(taxa)
 
         return {
             ...quest,

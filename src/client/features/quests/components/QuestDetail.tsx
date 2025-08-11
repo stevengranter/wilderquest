@@ -14,6 +14,7 @@ import { SpeciesCardWithObservations } from '@/features/quests/components/Specie
 import ShareQuest from '@/features/quests/components/ShareQuest'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
+import titleCase from '@/components/search/titleCase'
 
 type Quest = {
     id: string
@@ -63,6 +64,7 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
         try {
             const response = await api.get(`/quests/${activeQuestId}`)
             setQuestData(response.data)
+            
 
             if (response.data.taxon_ids?.length) {
                 const taxaIdsChunks = chunk(response.data.taxon_ids, 30)
@@ -141,7 +143,7 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
     }, [activeQuestId, fetchMappingsAndProgress])
 
     useEffect(() => {
-        if (!activeQuestId) return;
+        if (!activeQuestId || !taxa.length || !taxaMappings.length) return;
 
         const eventSource = new EventSource(`/api/quests/${activeQuestId}/events`);
 
@@ -151,20 +153,36 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
                 toast.info(`Quest status updated to ${data.payload.status}`);
                 setQuestData(prev => prev ? { ...prev, status: data.payload.status } : null);
             } else if (data.type === 'SPECIES_FOUND') {
+                console.log('SSE Data:', data);
+                console.log('Taxa Mappings:', taxaMappings);
+                console.log('Taxa:', taxa);
                 const guestName = data.payload.guestName || (data.payload.owner ? 'The owner' : 'A guest');
-                toast.success(`${guestName} found a species!`);
+
+                // Lookup species name
+                
+                const mapping = taxaMappings.find(m => m.id === data.payload.mappingId);
+                const species = taxa.find(t => t.id === mapping?.taxon_id);
+                const speciesName = species?.preferred_common_name && titleCase(species.preferred_common_name) || species?.name || 'a species';
+
+                toast.success(`${guestName} found ${speciesName}!`);
                 fetchMappingsAndProgress();
             } else if (data.type === 'SPECIES_UNFOUND') {
                 const guestName = data.payload.guestName || (data.payload.owner ? 'The owner' : 'A guest');
-                toast.info(`${guestName} unmarked a species.`);
+
+                const mapping = taxaMappings.find(m => m.id === data.payload.mappingId);
+                const species = taxa.find(t => t.id === mapping?.taxon_id);
+                const speciesName = species?.preferred_common_name && titleCase(species.preferred_common_name) || species?.name || 'a species';
+
+                toast.info(`${guestName} unmarked ${speciesName}.`);
                 fetchMappingsAndProgress();
             }
+
         };
 
         return () => {
             eventSource.close();
         };
-    }, [activeQuestId, fetchMappingsAndProgress]);
+    }, [activeQuestId, fetchMappingsAndProgress, taxa, taxaMappings]);
 
     const updateStatus = async (status: 'pending' |'active' | 'paused' | 'ended') => {
         if (!questData) return;
