@@ -1,4 +1,4 @@
-import { Pool, RowDataPacket } from 'mysql2/promise'
+import { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import { createBaseRepository } from './BaseRepository.js'
 
 export type QuestShare = {
@@ -19,6 +19,21 @@ export type SharedQuestProgress = {
     observed_at: Date
 }
 
+export type AggregatedProgress = {
+    mapping_id: number // p.taxon_id
+    count: number // COUNT(*)
+    last_observed_at: Date // p_last.observed_at
+    last_display_name: string | null // COALESCE(s_last.guest_name, u.username)
+}
+
+export type DetailedProgress = {
+    progress_id: number // p.id
+    mapping_id: number // p.taxon_id
+    observed_at: Date // p.observed_at
+    quest_share_id: number // s.id
+    display_name: string | null // COALESCE(s.guest_name, u.username)
+}
+
 export type QuestShareRepository = ReturnType<typeof createQuestShareRepository>
 export type SharedQuestProgressRepository = ReturnType<
     typeof createSharedQuestProgressRepository
@@ -29,7 +44,11 @@ export function createQuestShareRepository(
     dbPool: Pool,
     validColumns: (keyof QuestShare)[]
 ) {
-    const base = createBaseRepository<QuestShare>(tableName, dbPool, validColumns)
+    const base = createBaseRepository<QuestShare>(
+        tableName,
+        dbPool,
+        validColumns
+    )
 
     async function findById(shareId: number): Promise<QuestShare | null> {
         const row = await base.findOne({ id: shareId })
@@ -41,7 +60,9 @@ export function createQuestShareRepository(
         return (row as QuestShare) ?? null
     }
 
-    async function findActiveByToken(token: string): Promise<QuestShare | null> {
+    async function findActiveByToken(
+        token: string
+    ): Promise<QuestShare | null> {
         const [rows] = await dbPool.execute<RowDataPacket[]>(
             `SELECT * FROM ${tableName}
              WHERE token = ?
@@ -88,7 +109,9 @@ export function createSharedQuestProgressRepository(
         validColumns
     )
 
-    async function findByShareId(shareId: number): Promise<SharedQuestProgress[]> {
+    async function findByShareId(
+        shareId: number
+    ): Promise<SharedQuestProgress[]> {
         return base.findMany({ quest_share_id: shareId })
     }
 
@@ -103,17 +126,89 @@ export function createSharedQuestProgressRepository(
         quest_share_id: number,
         taxon_id: number
     ): Promise<{ success: boolean; affectedRows: number }> {
-        const [result] = await dbPool.execute<RowDataPacket[]>(
+        const [result] = await dbPool.execute<ResultSetHeader>(
             `DELETE FROM ${tableName} WHERE quest_share_id = ? AND taxon_id = ?`,
             [quest_share_id, taxon_id]
         )
-        // mysql2 returns ResultSetHeader for execute on DELETE, but using RowDataPacket typing here to avoid import duplication
-        // We will surface a boolean based on affectedRows if present
-        const anyResult: any = result
         return {
-            success: (anyResult?.affectedRows ?? 0) > 0,
-            affectedRows: anyResult?.affectedRows ?? 0,
+            success: result.affectedRows > 0,
+            affectedRows: result.affectedRows,
         }
+    }
+
+    async function getAggregatedProgress(
+        questId: number
+    ): Promise<AggregatedProgress[]> {
+        const [rows] = await dbPool.query(
+            `SELECT
+                 p.taxon_id AS mapping_id,
+                 COUNT(*) AS count,
+                 p_last.observed_at AS last_observed_at,
+                 COALESCE(s_last.guest_name, u.username) AS last_display_name
+             FROM shared_quest_progress p
+             INNER JOIN quest_shares s ON s.id = p.quest_share_id
+             LEFT JOIN shared_quest_progress p_last
+               ON p_last.taxon_id = p.taxon_id
+             LEFT JOIN quest_shares s_last ON s_last.id = p_last.quest_share_id
+             LEFT JOIN users u ON u.id = s_last.created_by_user_id
+             WHERE s.quest_id = ?
+               AND s_last.quest_id = s.quest_id
+               AND p_last.observed_at = (
+                   SELECT MAX(p3.observed_at)
+                   FROM shared_quest_progress p3
+                   INNER JOIN quest_shares s3 ON s3.id = p3.quest_share_id
+                   WHERE p3.taxon_id = p.taxon_id AND s3.quest_id = s.quest_id
+               )
+             GROUP BY p.taxon_id, p_last.observed_at, COALESCE(s_last.guest_name, u.username)`,
+            [questId]
+        )
+        return rows as AggregatedProgress[]
+    }
+
+    async function getDetailedProgress(
+        questId: number
+    ): Promise<DetailedProgress[]> {
+        const [rows] = await dbPool.query(
+            `SELECT
+                p.id AS progress_id,
+                p.taxon_id AS mapping_id,
+                p.observed_at,
+                s.id AS quest_share_id,
+                COALESCE(s.guest_name, u.username) AS display_name
+             FROM shared_quest_progress p
+             INNER JOIN quest_shares s ON s.id = p.quest_share_id
+             LEFT JOIN users u ON u.id = s.created_by_user_id
+             WHERE s.quest_id = ?
+             ORDER BY p.observed_at DESC`,
+            [questId]
+        )
+        return rows as DetailedProgress[]
+    }
+
+    async function deleteProgressEntry(
+        progressId: number,
+        questId: number
+    ): Promise<boolean> {
+        const [result] = await dbPool.execute<ResultSetHeader>(
+            `DELETE p FROM shared_quest_progress p
+             INNER JOIN quest_shares s ON s.id = p.quest_share_id
+             WHERE p.id = ? AND s.quest_id = ?`,
+            [progressId, questId]
+        )
+        return result.affectedRows > 0
+    }
+
+    async function clearMappingProgress(
+        questId: number,
+        mappingId: number
+    ): Promise<boolean> {
+        const [result] = await dbPool.execute<ResultSetHeader>(
+            `DELETE p FROM shared_quest_progress p
+             INNER JOIN quest_shares s ON s.id = p.quest_share_id
+             WHERE s.quest_id = ? AND p.taxon_id = ?`,
+            [questId, mappingId]
+        )
+        return result.affectedRows > 0
     }
 
     return {
@@ -121,8 +216,9 @@ export function createSharedQuestProgressRepository(
         findByShareId,
         addProgress,
         removeProgress,
+        getAggregatedProgress,
+        getDetailedProgress,
+        deleteProgressEntry,
+        clearMappingProgress,
     }
 }
-
-
-

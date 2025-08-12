@@ -128,7 +128,7 @@ export function createQuestRepository(
     }
 }
 
-type QuestToTaxa = {
+export type QuestToTaxa = {
     id: number
     quest_id: number
     taxon_id: number

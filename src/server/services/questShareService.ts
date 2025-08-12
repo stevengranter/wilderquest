@@ -1,7 +1,15 @@
-import type { QuestRepository, QuestToTaxaRepository } from '../repositories/QuestRepository.js'
-import type { QuestShareRepository, SharedQuestProgressRepository } from '../repositories/QuestShareRepository.js'
-import { sendEvent } from './questEventsService.js'
+import {
+    QuestRepository,
+    QuestToTaxa,
+    QuestToTaxaRepository,
+} from '../repositories/QuestRepository.js'
+import type {
+    QuestShare,
+    QuestShareRepository,
+    SharedQuestProgressRepository,
+} from '../repositories/QuestShareRepository.js'
 import { UserRepository } from '../repositories/UserRepository.js'
+import { sendEvent } from './questEventsService.js'
 
 export type QuestShareService = ReturnType<typeof createQuestShareService>
 
@@ -10,7 +18,7 @@ export function createQuestShareService(
     questToTaxaRepo: QuestToTaxaRepository,
     questShareRepo: QuestShareRepository,
     progressRepo: SharedQuestProgressRepository,
-    userRepo: UserRepository,
+    userRepo: UserRepository
 ) {
     async function assertQuestOwnership(questId: number, userId: number) {
         const quest = await questRepo.findById(questId)
@@ -45,7 +53,8 @@ export function createQuestShareService(
         const share = await questShareRepo.findById(shareId)
         if (!share) throw new Error('Share not found')
         // Only the creator (quest owner) can delete
-        if (share.created_by_user_id !== userId) throw new Error('Access denied')
+        if (share.created_by_user_id !== userId)
+            throw new Error('Access denied')
         await questShareRepo.deleteShare(shareId)
         return { success: true }
     }
@@ -88,9 +97,11 @@ export function createQuestShareService(
         const questId = share.quest_id ?? null
 
         // Validate the mapping belongs to the quest of the share
-        const mapping = await questToTaxaRepo.findOne({ id: mappingId })
+        const mapping = (await questToTaxaRepo.findOne({
+            id: mappingId,
+        })) as QuestToTaxa
         if (!mapping) throw new Error('Invalid taxon mapping')
-        if ((mapping as any).quest_id !== share.quest_id) {
+        if (mapping.quest_id !== share.quest_id) {
             throw new Error('Mapping does not belong to this quest')
         }
 
@@ -100,10 +111,16 @@ export function createQuestShareService(
             } catch (_err) {
                 // ignore duplicates because of unique constraint
             }
-            sendEvent(String(questId), { type: 'SPECIES_FOUND', payload: { mappingId, guestName } });
+            sendEvent(String(questId), {
+                type: 'SPECIES_FOUND',
+                payload: { mappingId, guestName },
+            })
         } else {
             await progressRepo.removeProgress(share.id, mappingId)
-            sendEvent(String(questId), { type: 'SPECIES_UNFOUND', payload: { mappingId, guestName } });
+            sendEvent(String(questId), {
+                type: 'SPECIES_UNFOUND',
+                payload: { mappingId, guestName },
+            })
         }
 
         return progressRepo.findByShareId(share.id)
@@ -113,45 +130,12 @@ export function createQuestShareService(
         questId: number,
         viewerUserId?: number
     ) {
-        // Ensure quest is accessible (public or owner)
         const accessible = await questRepo.findAccessibleById(
             questId,
             viewerUserId
         )
         if (!accessible) throw new Error('Quest not found or access denied')
-
-        // Query progress across all shares for this quest
-        const db = questShareRepo.getDb()
-        const table = (questShareRepo as any).getTableName?.() || 'quest_shares'
-        const [rows] = await db.query(
-            `SELECT 
-                 p.taxon_id AS mapping_id,
-                 COUNT(*) AS count,
-                 p_last.observed_at AS last_observed_at,
-                 COALESCE(s_last.guest_name, u.username) AS last_display_name
-             FROM shared_quest_progress p
-             INNER JOIN ${table} s ON s.id = p.quest_share_id
-             LEFT JOIN shared_quest_progress p_last
-               ON p_last.taxon_id = p.taxon_id
-             LEFT JOIN ${table} s_last ON s_last.id = p_last.quest_share_id
-             LEFT JOIN users u ON u.id = s_last.created_by_user_id
-             WHERE s.quest_id = ?
-               AND s_last.quest_id = s.quest_id
-               AND p_last.observed_at = (
-                   SELECT MAX(p3.observed_at)
-                   FROM shared_quest_progress p3
-                   INNER JOIN ${table} s3 ON s3.id = p3.quest_share_id
-                   WHERE p3.taxon_id = p.taxon_id AND s3.quest_id = s.quest_id
-               )
-             GROUP BY p.taxon_id, p_last.observed_at, COALESCE(s_last.guest_name, u.username)`,
-            [questId]
-        )
-        return rows as Array<{
-            mapping_id: number
-            count: number
-            last_observed_at: Date
-            last_display_name: string | null
-        }>
+        return progressRepo.getAggregatedProgress(questId)
     }
 
     async function getQuestTaxaMappings(
@@ -169,38 +153,7 @@ export function createQuestShareService(
     async function getAggregatedProgressByToken(token: string) {
         const share = await questShareRepo.findActiveByToken(token)
         if (!share) throw new Error('Share not found or expired')
-
-        const db = questShareRepo.getDb()
-        const table = (questShareRepo as any).getTableName?.() || 'quest_shares'
-        const [rows] = await db.query(
-            `SELECT 
-                 p.taxon_id AS mapping_id,
-                 COUNT(*) AS count,
-                 p_last.observed_at AS last_observed_at,
-                 COALESCE(s_last.guest_name, u.username) AS last_display_name
-             FROM shared_quest_progress p
-             INNER JOIN ${table} s ON s.id = p.quest_share_id
-             LEFT JOIN shared_quest_progress p_last
-               ON p_last.taxon_id = p.taxon_id
-             LEFT JOIN ${table} s_last ON s_last.id = p_last.quest_share_id
-             LEFT JOIN users u ON u.id = s_last.created_by_user_id
-             WHERE s.quest_id = ?
-               AND s_last.quest_id = s.quest_id
-               AND p_last.observed_at = (
-                   SELECT MAX(p3.observed_at)
-                   FROM shared_quest_progress p3
-                   INNER JOIN ${table} s3 ON s3.id = p3.quest_share_id
-                   WHERE p3.taxon_id = p.taxon_id AND s3.quest_id = s.quest_id
-               )
-             GROUP BY p.taxon_id, p_last.observed_at, COALESCE(s_last.guest_name, u.username)`,
-            [share.quest_id]
-        )
-        return rows as Array<{
-            mapping_id: number
-            count: number
-            last_observed_at: Date
-            last_display_name: string | null
-        }>
+        return progressRepo.getAggregatedProgress(share.quest_id)
     }
 
     async function setObservedAsOwner(
@@ -211,13 +164,13 @@ export function createQuestShareService(
     ) {
         // Ensure ownership
         await assertQuestOwnership(questId, userId)
-        const user = await userRepo.findUser({ id: userId });
+        const user = await userRepo.findUser({ id: userId })
         // Find or create an owner share for this quest (guest_name null)
-        const possibleShares = await questShareRepo.findMany({
+        const possibleShares = (await questShareRepo.findMany({
             quest_id: questId,
             created_by_user_id: userId,
-        } as any)
-        let share = possibleShares.find((s: any) => !s.guest_name) || null
+        })) as QuestShare[]
+        let share = possibleShares.find((s) => !s.guest_name) || null
         if (!share) {
             const shareId = await questShareRepo.createShare({
                 quest_id: questId,
@@ -233,13 +186,19 @@ export function createQuestShareService(
         if (observed) {
             try {
                 await progressRepo.addProgress(share.id, mappingId)
-                sendEvent(String(questId), { type: 'SPECIES_FOUND', payload: { mappingId, guestName: user?.username } });
+                sendEvent(String(questId), {
+                    type: 'SPECIES_FOUND',
+                    payload: { mappingId, guestName: user?.username },
+                })
             } catch (_err) {
                 // ignore unique constraint violation
             }
         } else {
             await progressRepo.removeProgress(share.id, mappingId)
-            sendEvent(String(questId), { type: 'SPECIES_UNFOUND', payload: { mappingId, guestName: user?.username } });
+            sendEvent(String(questId), {
+                type: 'SPECIES_UNFOUND',
+                payload: { mappingId, guestName: user?.username },
+            })
         }
 
         return true
@@ -254,30 +213,7 @@ export function createQuestShareService(
             viewerUserId
         )
         if (!accessible) throw new Error('Quest not found or access denied')
-
-        const db = questShareRepo.getDb()
-        const table = (questShareRepo as any).getTableName?.() || 'quest_shares'
-        const [rows] = await db.query(
-            `SELECT 
-                p.id AS progress_id,
-                p.taxon_id AS mapping_id,
-                p.observed_at,
-                s.id AS quest_share_id,
-                COALESCE(s.guest_name, u.username) AS display_name
-             FROM shared_quest_progress p
-             INNER JOIN ${table} s ON s.id = p.quest_share_id
-             LEFT JOIN users u ON u.id = s.created_by_user_id
-             WHERE s.quest_id = ?
-             ORDER BY p.observed_at DESC`,
-            [questId]
-        )
-        return rows as Array<{
-            progress_id: number
-            mapping_id: number
-            observed_at: Date
-            quest_share_id: number
-            display_name: string | null
-        }>
+        return progressRepo.getDetailedProgress(questId)
     }
 
     async function deleteProgressEntry(
@@ -286,14 +222,7 @@ export function createQuestShareService(
         userId: number
     ) {
         await assertQuestOwnership(questId, userId)
-        const db = questShareRepo.getDb()
-        const table = (questShareRepo as any).getTableName?.() || 'quest_shares'
-        await db.execute(
-            `DELETE p FROM shared_quest_progress p
-             INNER JOIN ${table} s ON s.id = p.quest_share_id
-             WHERE p.id = ? AND s.quest_id = ?`,
-            [progressId, questId]
-        )
+        await progressRepo.deleteProgressEntry(progressId, questId)
         return { success: true }
     }
 
@@ -303,14 +232,7 @@ export function createQuestShareService(
         userId: number
     ) {
         await assertQuestOwnership(questId, userId)
-        const db = questShareRepo.getDb()
-        const table = (questShareRepo as any).getTableName?.() || 'quest_shares'
-        await db.execute(
-            `DELETE p FROM shared_quest_progress p
-             INNER JOIN ${table} s ON s.id = p.quest_share_id
-             WHERE s.quest_id = ? AND p.taxon_id = ?`,
-            [questId, mappingId]
-        )
+        await progressRepo.clearMappingProgress(questId, mappingId)
         return { success: true }
     }
 
@@ -330,5 +252,3 @@ export function createQuestShareService(
         clearMappingProgress,
     }
 }
-
-
