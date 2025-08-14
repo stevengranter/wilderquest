@@ -216,6 +216,18 @@ export function createQuestShareService(
         return progressRepo.getDetailedProgress(questId)
     }
 
+    async function getLeaderboardForQuest(
+        questId: number,
+        viewerUserId?: number
+    ) {
+        const accessible = await questRepo.findAccessibleById(
+            questId,
+            viewerUserId
+        )
+        if (!accessible) throw new Error('Quest not found or access denied')
+        return progressRepo.getLeaderboardProgress(questId)
+    }
+
     async function deleteProgressEntry(
         questId: number,
         progressId: number,
@@ -250,5 +262,6 @@ export function createQuestShareService(
         getDetailedProgressForQuest,
         deleteProgressEntry,
         clearMappingProgress,
+        getLeaderboardForQuest,
     }
 }

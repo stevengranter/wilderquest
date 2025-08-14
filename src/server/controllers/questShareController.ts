@@ -114,26 +114,50 @@ export function createQuestShareController(service: QuestShareService) {
         }
     }
 
-    async function setObservedAsOwner(req: AuthenticatedRequest, res: Response) {
-        console.log("setObservedAsOwner")
+    async function getLeaderboard(req: Request, res: Response) {
+        const questId = Number(req.params.questId)
+        try {
+            const leaderboard = await service.getLeaderboardForQuest(
+                questId,
+                (req as any).user?.id
+            )
+            res.status(200).json(leaderboard)
+        } catch (err) {
+            res.status(404).json({ message: (err as Error).message })
+        }
+    }
+
+    async function setObservedAsOwner(
+        req: AuthenticatedRequest,
+        res: Response
+    ) {
+        console.log('setObservedAsOwner')
         const userId = req.user?.id
         if (!userId) return res.status(401).json({ message: 'Unauthorized' })
-        console.log("userId: " + userId)
+        console.log('userId: ' + userId)
         const questId = Number(req.params.questId)
-        console.log("questId: " + questId)
+        console.log('questId: ' + questId)
         const mappingId = Number(req.params.mappingId)
-        console.log("mappingId: " + mappingId)
+        console.log('mappingId: ' + mappingId)
         const observed = Boolean(req.body?.observed)
-        console.log("observedId: " + observed)
+        console.log('observedId: ' + observed)
         try {
-            await service.setObservedAsOwner(questId, mappingId, observed, userId)
+            await service.setObservedAsOwner(
+                questId,
+                mappingId,
+                observed,
+                userId
+            )
             res.status(200).json({ success: true })
         } catch (err) {
             res.status(400).json({ message: (err as Error).message })
         }
     }
 
-    async function getDetailedProgress(req: AuthenticatedRequest, res: Response) {
+    async function getDetailedProgress(
+        req: AuthenticatedRequest,
+        res: Response
+    ) {
         const questId = Number(req.params.questId)
         try {
             const rows = await service.getDetailedProgressForQuest(
@@ -176,6 +200,7 @@ export function createQuestShareController(service: QuestShareService) {
         deleteShare,
         getShareByToken,
         getProgress,
+        getLeaderboard,
         setObserved,
         getAggregatedProgressByToken,
         getAggregatedProgress,
@@ -188,5 +213,3 @@ export function createQuestShareController(service: QuestShareService) {
 }
 
 export type QuestShareController = ReturnType<typeof createQuestShareController>
-
-

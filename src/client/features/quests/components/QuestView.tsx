@@ -1,30 +1,30 @@
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { Lock, LockOpen, Pause, Pencil, Play, StopCircle } from 'lucide-react'
 import { Link } from 'react-router'
+import { toast } from 'sonner'
+import api from '@/api/api'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import ShareQuest from '@/features/quests/components/ShareQuest'
+import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { useAuth } from '@/hooks/useAuth'
-import api from '@/api/api'
-import { toast } from 'sonner'
 import { Quest } from '../../../../server/repositories/QuestRepository'
 
 type QuestViewProps = {
-    questData: Quest | null | undefined;
-    taxa: INatTaxon[] | undefined;
-    mappings: any[] | undefined;
-    aggregatedProgress: any[] | undefined;
-    detailedProgress: any[] | undefined;
-    isLoading: boolean;
-    isError: boolean;
-    updateStatus: (status: 'pending' | 'active' | 'paused' | 'ended') => void;
-    isOwner: boolean;
-    token?: string;
-    share?: any;
-};
-
+    questData: Quest | null | undefined
+    taxa: INatTaxon[] | undefined
+    mappings: any[] | undefined
+    aggregatedProgress: any[] | undefined
+    detailedProgress: any[] | undefined
+    isLoading: boolean
+    isError: boolean
+    updateStatus: (status: 'pending' | 'active' | 'paused' | 'ended') => void
+    isOwner: boolean
+    token?: string
+    share?: any
+    leaderboard?: any[]
+}
 
 export const QuestView = ({
     questData,
@@ -38,19 +38,20 @@ export const QuestView = ({
     isOwner,
     token,
     share,
+    leaderboard,
 }: QuestViewProps) => {
-    const { user } = useAuth();
+    const { user } = useAuth()
 
     if (isLoading) {
-        return <LoadingSkeleton />;
+        return <LoadingSkeleton />
     }
 
     if (isError) {
-        return <ErrorState error="Failed to load quest data." />;
+        return <ErrorState error="Failed to load quest data." />
     }
 
     if (!questData) {
-        return <EmptyState />;
+        return <EmptyState />
     }
 
     return (
@@ -72,9 +73,12 @@ export const QuestView = ({
                     )}
                 </div>
                 {isOwner && (
-                    <QuestStatusControls handleActive={() => updateStatus('active')} status={questData.status}
-                                         handlePaused={() => updateStatus('paused')}
-                                         handleEnded={() => updateStatus('ended')} />
+                    <QuestStatusControls
+                        handleActive={() => updateStatus('active')}
+                        status={questData.status}
+                        handlePaused={() => updateStatus('paused')}
+                        handleEnded={() => updateStatus('ended')}
+                    />
                 )}
                 <div className="flex justify-between items-start mb-6">
                     <div>
@@ -90,7 +94,10 @@ export const QuestView = ({
                                     Edit Quest
                                 </Link>
                             </Button>
-                            <ShareQuest questId={Number(questData.id)} ownerUserId={Number(questData.user_id)} />
+                            <ShareQuest
+                                questId={Number(questData.id)}
+                                ownerUserId={Number(questData.user_id)}
+                            />
                         </div>
                     )}
                 </div>
@@ -103,13 +110,16 @@ export const QuestView = ({
                     {mappings && mappings.length > 0 && (
                         <div className="mb-2 text-sm">
                             {(() => {
-                                const total = mappings.length;
-                                const found = aggregatedProgress?.filter((a) => (a.count || 0) > 0).length || 0;
+                                const total = mappings.length
+                                const found =
+                                    aggregatedProgress?.filter(
+                                        (a) => (a.count || 0) > 0
+                                    ).length || 0
                                 return (
                                     <span className="inline-block bg-emerald-600 text-white px-2 py-0.5 rounded">
                                         {found}/{total} Found
                                     </span>
-                                );
+                                )
                             })()}
                         </div>
                     )}
@@ -120,14 +130,19 @@ export const QuestView = ({
                         {taxa?.map((taxon) => {
                             const mapping = mappings?.find(
                                 (m) => m.taxon_id === taxon.id
-                            );
+                            )
                             const progressCount = mapping
-                                ?
-                                (aggregatedProgress?.find(
-                                    (p) => p.mapping_id === mapping.id
-                                )?.count || 0)
-                                : 0;
-                            const recentEntries = mapping ? detailedProgress?.filter(d => d.mapping_id === mapping.id).slice(0, 3) : [];
+                                ? aggregatedProgress?.find(
+                                      (p) => p.mapping_id === mapping.id
+                                  )?.count || 0
+                                : 0
+                            const recentEntries = mapping
+                                ? detailedProgress
+                                      ?.filter(
+                                          (d) => d.mapping_id === mapping.id
+                                      )
+                                      .slice(0, 3)
+                                : []
                             return (
                                 <div key={taxon.id} className="relative">
                                     <SpeciesCardWithObservations
@@ -139,25 +154,58 @@ export const QuestView = ({
                                             <Button
                                                 size="sm"
                                                 variant="neutral"
-                                                disabled={questData.status !== 'active'}
+                                                disabled={
+                                                    questData.status !==
+                                                    'active'
+                                                }
                                                 onClick={async () => {
                                                     try {
-                                                        let progress;
+                                                        let progress
                                                         if (isOwner) {
-                                                            progress = detailedProgress?.find(p => p.display_name === user?.username && p.mapping_id === mapping.id);
+                                                            progress =
+                                                                detailedProgress?.find(
+                                                                    (p) =>
+                                                                        p.display_name ===
+                                                                            user?.username &&
+                                                                        p.mapping_id ===
+                                                                            mapping.id
+                                                                )
                                                         } else if (token) {
-                                                            progress = detailedProgress?.find(p => p.display_name === share?.guest_name && p.mapping_id === mapping.id);
+                                                            progress =
+                                                                detailedProgress?.find(
+                                                                    (p) =>
+                                                                        p.display_name ===
+                                                                            share?.guest_name &&
+                                                                        p.mapping_id ===
+                                                                            mapping.id
+                                                                )
                                                         }
-                                                        const next = !progress;
+                                                        const next = !progress
                                                         if (isOwner) {
-                                                            await api.post(`/quest-sharing/quests/${questData.id}/progress/${mapping.id}`, { observed: next });
+                                                            await api.post(
+                                                                `/quest-sharing/quests/${questData.id}/progress/${mapping.id}`,
+                                                                {
+                                                                    observed:
+                                                                        next,
+                                                                }
+                                                            )
                                                         } else if (token) {
-                                                            await api.post(`/quest-sharing/shares/token/${token}/progress/${mapping.id}`, { observed: next });
+                                                            await api.post(
+                                                                `/quest-sharing/shares/token/${token}/progress/${mapping.id}`,
+                                                                {
+                                                                    observed:
+                                                                        next,
+                                                                }
+                                                            )
                                                         }
                                                         // toast.success('Progress updated');
-                                                        console.log("Progress updated")
+                                                        console.log(
+                                                            'Progress updated'
+                                                        )
                                                     } catch (e) {
-                                                        toast.error('Action failed');
+                                                        toast.error(
+                                                            'Action failed'
+                                                        )
                                                     }
                                                 }}
                                             >
@@ -169,92 +217,165 @@ export const QuestView = ({
                                         <div className="absolute top-2 right-2">
                                             <div className="bg-emerald-600 text-white text-xs px-2 py-1 rounded-md shadow">
                                                 <div>
-                                                    Found{progressCount > 1 ? ` x${progressCount}` : ''}
+                                                    Found
+                                                    {progressCount > 1
+                                                        ? ` x${progressCount}`
+                                                        : ''}
                                                 </div>
                                                 {mapping && (
                                                     <div className="text-[10px] opacity-90 mt-0.5">
                                                         {(() => {
-                                                            const meta = aggregatedProgress?.find(p => p.mapping_id === mapping.id);
-                                                            if (!meta) return null;
-                                                            const ts = meta.last_observed_at;
-                                                            const name = (meta as any).last_display_name || 'Someone';
+                                                            const meta =
+                                                                aggregatedProgress?.find(
+                                                                    (p) =>
+                                                                        p.mapping_id ===
+                                                                        mapping.id
+                                                                )
+                                                            if (!meta)
+                                                                return null
+                                                            const ts =
+                                                                meta.last_observed_at
+                                                            const name =
+                                                                (meta as any)
+                                                                    .last_display_name ||
+                                                                'Someone'
                                                             try {
-                                                                const d = ts ? new Date(ts) : null;
-                                                                const formatted = d ? d.toLocaleString() : '';
-                                                                return `${name} • ${formatted}`;
+                                                                const d = ts
+                                                                    ? new Date(
+                                                                          ts
+                                                                      )
+                                                                    : null
+                                                                const formatted =
+                                                                    d
+                                                                        ? d.toLocaleString()
+                                                                        : ''
+                                                                return `${name} • ${formatted}`
                                                             } catch {
-                                                                return name;
+                                                                return name
                                                             }
                                                         })()}
                                                     </div>
                                                 )}
-                                                {recentEntries && recentEntries.length > 0 && (
-                                                    <div className="text-[10px] opacity-90 mt-1">
-                                                        {recentEntries.map((e) => {
-                                                            const d = new Date(e.observed_at);
-                                                            return (
-                                                                <div key={e.progress_id}>{e.display_name || 'Someone'} • {d.toLocaleString()}</div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
+                                                {recentEntries &&
+                                                    recentEntries.length >
+                                                        0 && (
+                                                        <div className="text-[10px] opacity-90 mt-1">
+                                                            {recentEntries.map(
+                                                                (e) => {
+                                                                    const d =
+                                                                        new Date(
+                                                                            e.observed_at
+                                                                        )
+                                                                    return (
+                                                                        <div
+                                                                            key={
+                                                                                e.progress_id
+                                                                            }
+                                                                        >
+                                                                            {e.display_name ||
+                                                                                'Someone'}{' '}
+                                                                            •{' '}
+                                                                            {d.toLocaleString()}
+                                                                        </div>
+                                                                    )
+                                                                }
+                                                            )}
+                                                        </div>
+                                                    )}
                                             </div>
                                         </div>
                                     )}
                                 </div>
-                            );
+                            )
                         })}
                     </div>
                 </div>
+
+                {leaderboard && leaderboard.length > 0 && (
+                    <div className="mt-8">
+                        <h2 className="text-xl font-semibold mb-4">
+                            Leaderboard
+                        </h2>
+                        <div className="space-y-2">
+                            {leaderboard.map((entry: any, index: number) => (
+                                <div
+                                    key={index}
+                                    className="flex justify-between items-center p-2 bg-gray-100 rounded-md"
+                                >
+                                    <span className="font-medium">
+                                        {index + 1}.{' '}
+                                        {entry.display_name || 'Anonymous'}
+                                    </span>
+                                    <span className="text-lg font-bold">
+                                        {entry.observation_count}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </Card>
         </div>
-    );
-};
+    )
+}
 
-
-function QuestStatusControls(props: { handleActive: () => void, status: any, handlePaused: () => void, handleEnded: () => void }) {
-    return <div className="flex items-center gap-2 w-full">
-        <Button
-            className="flex-1"
-            onClick={props.handleActive}
-            disabled={props.status === 'active'}
-        >
-            <Play /> {props.status === 'pending' ? 'Start' : 'Resume'}
-        </Button>
-        <Button
-            className="flex-1"
-            onClick={props.handlePaused}
-            disabled={props.status === 'paused' || props.status === 'pending'}
-        >
-            <Pause /> Pause
-        </Button>
-        <Button
-            className="flex-1"
-            onClick={props.handleEnded}
-            disabled={props.status === 'ended'}
-        >
-            <StopCircle /> End
-        </Button>
-    </div>
+function QuestStatusControls(props: {
+    handleActive: () => void
+    status: any
+    handlePaused: () => void
+    handleEnded: () => void
+}) {
+    return (
+        <div className="flex items-center gap-2 w-full">
+            <Button
+                className="flex-1"
+                onClick={props.handleActive}
+                disabled={props.status === 'active'}
+            >
+                <Play /> {props.status === 'pending' ? 'Start' : 'Resume'}
+            </Button>
+            <Button
+                className="flex-1"
+                onClick={props.handlePaused}
+                disabled={
+                    props.status === 'paused' || props.status === 'pending'
+                }
+            >
+                <Pause /> Pause
+            </Button>
+            <Button
+                className="flex-1"
+                onClick={props.handleEnded}
+                disabled={props.status === 'ended'}
+            >
+                <StopCircle /> End
+            </Button>
+        </div>
+    )
 }
 
 function QuestStatus(props: { status: any }) {
-    return <div className="mt-4 flex items-center gap-2">
-                            <span
-                                className={`px-3 py-1 text-sm font-bold rounded-full flex items-center gap-2 ${
-                                    props.status === 'pending' ? 'bg-gray-200 text-gray-700' :
-                                        props.status === 'active' ? 'bg-green-100 text-green-800' :
-                                            props.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
-                                                'bg-red-100 text-red-800'
-                                }`}
-                            >
-                                {props.status === 'pending' && <Lock className="h-4 w-4" />}
-                                {props.status === 'active' && <Play className="h-4 w-4" />}
-                                {props.status === 'paused' && <Pause className="h-4 w-4" />}
-                                {props.status === 'ended' && <StopCircle className="h-4 w-4" />}
-                                <span className="capitalize">{props.status}</span>
-                            </span>
-    </div>
+    return (
+        <div className="mt-4 flex items-center gap-2">
+            <span
+                className={`px-3 py-1 text-sm font-bold rounded-full flex items-center gap-2 ${
+                    props.status === 'pending'
+                        ? 'bg-gray-200 text-gray-700'
+                        : props.status === 'active'
+                          ? 'bg-green-100 text-green-800'
+                          : props.status === 'paused'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                }`}
+            >
+                {props.status === 'pending' && <Lock className="h-4 w-4" />}
+                {props.status === 'active' && <Play className="h-4 w-4" />}
+                {props.status === 'paused' && <Pause className="h-4 w-4" />}
+                {props.status === 'ended' && <StopCircle className="h-4 w-4" />}
+                <span className="capitalize">{props.status}</span>
+            </span>
+        </div>
+    )
 }
 
 function LoadingSkeleton() {
@@ -270,7 +391,7 @@ function LoadingSkeleton() {
                 </div>
             </Card>
         </div>
-    );
+    )
 }
 
 function ErrorState({ error }: { error: string }) {
@@ -283,7 +404,7 @@ function ErrorState({ error }: { error: string }) {
                 <p className="text-muted-foreground">{error}</p>
             </Card>
         </div>
-    );
+    )
 }
 
 function EmptyState() {
@@ -300,5 +421,5 @@ function EmptyState() {
                 </Button>
             </Card>
         </div>
-    );
+    )
 }

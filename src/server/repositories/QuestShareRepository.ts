@@ -34,6 +34,11 @@ export type DetailedProgress = {
     display_name: string | null // COALESCE(s.guest_name, u.username)
 }
 
+export type LeaderboardEntry = {
+    display_name: string | null
+    observation_count: number
+}
+
 export type QuestShareRepository = ReturnType<typeof createQuestShareRepository>
 export type SharedQuestProgressRepository = ReturnType<
     typeof createSharedQuestProgressRepository
@@ -185,6 +190,24 @@ export function createSharedQuestProgressRepository(
         return rows as DetailedProgress[]
     }
 
+    async function getLeaderboardProgress(
+        questId: number
+    ): Promise<LeaderboardEntry[]> {
+        const [rows] = await dbPool.query(
+            `SELECT 
+                    COALESCE(s.guest_name, u.username) AS display_name,
+                    COUNT(*) AS observation_count
+                    FROM shared_quest_progress p
+                    INNER JOIN quest_shares s ON s.id = p.quest_share_id
+                    LEFT JOIN users u ON u.id = s.created_by_user_id
+                    WHERE s.quest_id = ?
+                    GROUP BY display_name
+                    ORDER BY observation_count DESC, display_name ASC;
+                `,
+            [questId]
+        )
+        return rows as LeaderboardEntry[]
+    }
     async function deleteProgressEntry(
         progressId: number,
         questId: number
@@ -218,6 +241,7 @@ export function createSharedQuestProgressRepository(
         removeProgress,
         getAggregatedProgress,
         getDetailedProgress,
+        getLeaderboardProgress,
         deleteProgressEntry,
         clearMappingProgress,
     }
