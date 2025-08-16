@@ -4,14 +4,17 @@ import { Outlet } from 'react-router'
 import { Toaster } from '@/components/ui/sonner'
 import { SearchProvider } from '@/contexts/search/SearchContext'
 import { SelectionProvider } from '@/contexts/selection/SelectionContext'
-import UserToolbar from '@/features/login/UserToolbar'
+import { MainMenu } from '@/components/MainMenu'
 
 export function AppLayout() {
     return (
-        <>
+<>
             <SearchProvider>
                 <SelectionProvider>
-                    <UserToolbar />
+                    <div className="main-content p-3 md:p-5 ">
+                        <MainMenu />
+
+                    {/*<UserToolbar />*/}
                     <Outlet />
                     {/*<SidebarProvider defaultOpen={true}>*/}
                     {/*    <div className='flex flex-row'>*/}
@@ -23,10 +26,11 @@ export function AppLayout() {
                     {/*    </div>*/}
                     {/*</SidebarProvider>*/}
                     {/*<SelectionDrawer />*/}
+                    </div>
                 </SelectionProvider>
             </SearchProvider>
             <Toaster />
-        </>
+</>
     )
 }
 

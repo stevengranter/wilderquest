@@ -6,7 +6,22 @@
 body {
     background-size: cover;
     height: 100vh;
+
 }
+
+html {
+    overflow-y:scroll;
+    /*scrollbar-gutter: stable;*/
+}
+
+
+.sora-regular {
+           font-family: "Sora", sans-serif;
+           font-optical-sizing: auto;
+           font-weight: 400;
+           font-style: normal;
+       }
+
 
 .fredoka-sans-regular {
     font-family: "Fredoka", sans-serif;
@@ -46,6 +61,7 @@ body {
     --font-display: "Fredoka", sans-serif;
     --font-league: "League Gothic", sans-serif;
     --font-barlow: "Barlow Semi Condensed", sans-serif;
+    --font-heading: "Sora", sans-serif;
 }
 
 :root {
@@ -120,6 +136,7 @@ body {
     h5,
     h6 {
         @apply font-heading;
+        font-weight: bold
     }
 }
 
