@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for db-wildernest on 2025-08-04T13:46:42-02:30
+# fly.toml app configuration file generated for db-wildernest on 2025-08-17T12:39:12-02:30
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -9,19 +9,18 @@ primary_region = 'yyz'
 [build]
   image = 'mysql:8.0.37'
 
-[[vm]]
-  memory = '512mb'
-  cpu_kind = 'shared'
-  cpus = 1
+[env]
+  MYSQL_DATABASE = 'app_db'
+  MYSQL_USER = 'api_user'
 
 [processes]
-  app = """--datadir /data/mysql \
-    --default-authentication-plugin mysql_native_password  --performance-schema=OFF --innodb-buffer-pool-size 64M"""
+  app = '--datadir /data/mysql --default-authentication-plugin mysql_native_password'
 
-[mounts]
-  source = "mysqldata"
-  destination = "/data"
+[[mounts]]
+  source = 'mysqldata'
+  destination = '/data'
 
-[env]
-  MYSQL_DATABASE = "app_db"
-  MYSQL_USER = "app_user"
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1

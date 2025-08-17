@@ -85,6 +85,7 @@ export function createQuestService(
             const questId = await questsRepo.create({
                 ...questTableData,
                 user_id: userId, // enforce ownership here
+                status: 'pending', // explicitly set status to avoid constraint violation
             })
 
             if (taxon_ids.length > 0) {
@@ -202,7 +203,7 @@ export function createQuestService(
             throw new Error('Access denied')
         }
 
-        if (!['active', 'paused', 'ended'].includes(status)) {
+        if (!['pending', 'active', 'paused', 'ended'].includes(status)) {
             throw new Error('Invalid status')
         }
 

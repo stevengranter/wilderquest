@@ -9,7 +9,7 @@ export type Quest = {
     description?: string
     is_private: boolean
     user_id: number
-    status: 'active' | 'paused' | 'ended'
+    status: 'pending' | 'active' | 'paused' | 'ended'
 }
 
 export type QuestWithTaxa = Quest & {
