@@ -46,23 +46,26 @@ interface SpeciesCardWithObservationsProps {
         latitude?: number
         longitude?: number
     }
+    children?: React.ReactNode
 }
 
 export function SpeciesCardWithObservations(
-    props: SpeciesCardWithObservationsProps,
+    props: SpeciesCardWithObservationsProps
 ) {
-    const { species, questData, locationData } = props
+    const { species, questData, locationData, children } = props
     const displayData = questData || locationData
 
     if (!displayData?.latitude || !displayData?.longitude) {
-        return <SpeciesCard species={species} className="h-full" />
+        return children || <SpeciesCard species={species} className="h-full" />
     }
 
     return (
         <Dialog>
             <DialogTrigger className="h-full w-full" asChild>
                 <div className="h-full transform transition-transform hover:scale-105 cursor-pointer">
-                    <SpeciesCard species={species} className="h-full" />
+                    {children || (
+                        <SpeciesCard species={species} className="h-full" />
+                    )}
                 </div>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[80vw] max-h-[85vh] flex flex-row gap-6 p-6">
@@ -76,9 +79,7 @@ export function SpeciesCardWithObservations(
                         <DialogHeader className="-mt-4">
                             <DialogTitle>
                                 <VisuallyHidden>
-                                    {titleCase(
-                                        species.preferred_common_name
-                                    )}
+                                    {titleCase(species.preferred_common_name)}
                                 </VisuallyHidden>
                             </DialogTitle>
                             <DialogDescription className="text-center">
@@ -107,10 +108,10 @@ export function SpeciesCardWithObservations(
 type ViewMode = 'grid' | 'list' | 'map'
 
 function ObservationList({
-                             taxonId,
-                             lat,
-                             lon,
-                         }: {
+    taxonId,
+    lat,
+    lon,
+}: {
     taxonId: number
     lat: number
     lon: number
@@ -147,7 +148,9 @@ function ObservationList({
                 <ToggleGroup
                     type="single"
                     value={viewMode}
-                    onValueChange={(value: ViewMode) => value && setViewMode(value)}
+                    onValueChange={(value: ViewMode) =>
+                        value && setViewMode(value)
+                    }
                     className="border rounded-lg"
                 >
                     <ToggleGroupItem value="grid" aria-label="Grid view">
@@ -196,10 +199,14 @@ function ObservationList({
                             ) : observations && observations.length > 0 ? (
                                 <>
                                     {viewMode === 'grid' && (
-                                        <ObservationGridView observations={observations} />
+                                        <ObservationGridView
+                                            observations={observations}
+                                        />
                                     )}
                                     {viewMode === 'list' && (
-                                        <ObservationListView observations={observations} />
+                                        <ObservationListView
+                                            observations={observations}
+                                        />
                                     )}
                                     {viewMode === 'map' && (
                                         <ObservationMapView
@@ -215,7 +222,8 @@ function ObservationList({
                                     transition={{ duration: 0.4, delay: 0.3 }}
                                     className="text-center py-8 text-muted-foreground"
                                 >
-                                    No observations found for this species in this area.
+                                    No observations found for this species in
+                                    this area.
                                 </motion.p>
                             )}
                         </motion.div>
@@ -225,8 +233,6 @@ function ObservationList({
         </motion.div>
     )
 }
-
-
 
 function ObservationLoadingState() {
     return (
@@ -251,7 +257,11 @@ function ObservationLoadingState() {
                         key={i}
                         initial={{ opacity: 0, y: 30, scale: 1 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ duration: 0.6, delay: i * 0.15, ease: 'easeOut' }}
+                        transition={{
+                            duration: 0.6,
+                            delay: i * 0.15,
+                            ease: 'easeOut',
+                        }}
                         className="cursor-pointer"
                     >
                         {/* Polaroid Card */}
@@ -298,7 +308,6 @@ function ObservationLoadingState() {
     )
 }
 
-
 // Error State Component
 function ObservationErrorState() {
     return (
@@ -316,10 +325,10 @@ function ObservationErrorState() {
 async function getObservationsFromINat(
     taxonId: number,
     lat: number,
-    lon: number,
+    lon: number
 ) {
     const response = await api.get(
-        `/iNatAPI/observations?taxon_id=${taxonId}&lat=${lat}&lng=${lon}&radius=10&per_page=6&order_by=observed_on`,
+        `/iNatAPI/observations?taxon_id=${taxonId}&lat=${lat}&lng=${lon}&radius=10&per_page=6&order_by=observed_on`
     )
     if (!response.data) {
         return []

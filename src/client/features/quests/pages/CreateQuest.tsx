@@ -14,6 +14,8 @@ import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { useAuth } from '@/hooks/useAuth'
 import { SpeciesCard } from '@/components/cards/SpeciesCard'
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
+import { SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeSelector'
+import { SpeciesAnimationProvider } from '@/features/quests/components/SpeciesAnimationProvider'
 
 export const formSchema = z.object({
     questName: z.string().min(2, {
@@ -69,6 +71,9 @@ export function CreateQuest() {
     const [questSpecies, setQuestSpecies] = useState<
         Map<number, SpeciesCountItem>
     >(new Map())
+    const [selectionMode, setSelectionMode] = useState<'traditional' | 'swipe'>(
+        'traditional'
+    )
     const navigate = useNavigate()
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -115,30 +120,103 @@ export function CreateQuest() {
     }
 
     return (
-        <div className="p-4">
-            <h1>Create Quest</h1>
-            <p>Step {step} of 2</p>
-            <FormProvider {...form}>
-                <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-8"
-                >
-                    {step === 1 && <QuestDetails setStep={setStep} />}
-                    {step === 2 && (
-                        <SpeciesSelector
-                            questSpecies={questSpecies}
-                            setQuestSpecies={setQuestSpecies}
-                            setStep={setStep}
-                        />
-                    )}
-                </form>
-            </FormProvider>
-        </div>
+        <SpeciesAnimationProvider>
+            <div className="p-4">
+                <h1>Create Quest</h1>
+                <p>Step {step} of 2</p>
+                <FormProvider {...form}>
+                    <form
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-8"
+                    >
+                        {step === 1 && <QuestDetails setStep={setStep} />}
+                        {step === 2 && (
+                            <div className="space-y-6">
+                                <div className="flex justify-center mb-6">
+                                    <div className="bg-gray-100 p-1 rounded-lg">
+                                        <button
+                                            type="button"
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                                selectionMode === 'traditional'
+                                                    ? 'bg-white text-gray-900 shadow-sm'
+                                                    : 'text-gray-600 hover:text-gray-900'
+                                            }`}
+                                            onClick={() =>
+                                                setSelectionMode('traditional')
+                                            }
+                                        >
+                                            📋 List View
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                                selectionMode === 'swipe'
+                                                    ? 'bg-white text-gray-900 shadow-sm'
+                                                    : 'text-gray-600 hover:text-gray-900'
+                                            }`}
+                                            onClick={() =>
+                                                setSelectionMode('swipe')
+                                            }
+                                        >
+                                            📱 Swipe Mode
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {selectionMode === 'traditional' ? (
+                                    <div>
+                                        <SpeciesSelector
+                                            questSpecies={questSpecies}
+                                            setQuestSpecies={setQuestSpecies}
+                                            setStep={setStep}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="space-y-6">
+                                        <SpeciesSwipeSelector
+                                            questSpecies={questSpecies}
+                                            setQuestSpecies={setQuestSpecies}
+                                            onSpeciesAdded={(species) => {
+                                                console.log(
+                                                    'Added species:',
+                                                    species.taxon
+                                                        .preferred_common_name
+                                                )
+                                            }}
+                                            onSpeciesRejected={(species) => {
+                                                console.log(
+                                                    'Rejected species:',
+                                                    species.taxon
+                                                        .preferred_common_name
+                                                )
+                                            }}
+                                        />
+
+                                        <div className="flex justify-between">
+                                            <Button
+                                                type="button"
+                                                onClick={() => setStep(1)}
+                                            >
+                                                Back
+                                            </Button>
+                                            <Button type="submit">
+                                                Save Quest
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </form>
+                </FormProvider>
+            </div>
+        </SpeciesAnimationProvider>
     )
 }
 
-function QuestDetails({ setStep }) {
-    const { control, watch, setValue, trigger } = useFormContext()
+function QuestDetails({ setStep }: { setStep: (step: number) => void }) {
+    const { control, watch, setValue, trigger } =
+        useFormContext<z.infer<typeof formSchema>>()
     const lat = useWatch({ control, name: 'latitude' })
     const lon = useWatch({ control, name: 'longitude' })
 
@@ -216,7 +294,12 @@ function QuestDetails({ setStep }) {
                         <FormItem>
                             <FormLabel>Longitude</FormLabel>
                             <FormControl>
-                                <Input placeholder="0.00" {...field} readOnly />
+                                <Input
+                                    placeholder="0.00"
+                                    {...field}
+                                    value={field.value ?? ''}
+                                    readOnly
+                                />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -231,11 +314,23 @@ function QuestDetails({ setStep }) {
     )
 }
 
-function SpeciesSelector({ questSpecies, setQuestSpecies, setStep }) {
+function SpeciesSelector({
+    questSpecies,
+    setQuestSpecies,
+    setStep,
+}: {
+    questSpecies: Map<number, SpeciesCountItem>
+    setQuestSpecies: (
+        fn: (
+            prev: Map<number, SpeciesCountItem>
+        ) => Map<number, SpeciesCountItem>
+    ) => void
+    setStep: (step: number) => void
+}) {
     const [page, setPage] = useState(1)
     const [perPage, setPerPage] = useState(6)
     const speciesListRef = useRef<HTMLDivElement>(null)
-    const { control } = useFormContext()
+    const { control } = useFormContext<z.infer<typeof formSchema>>()
 
     const lat = useWatch({ control, name: 'latitude' })
     const lon = useWatch({ control, name: 'longitude' })
@@ -248,9 +343,9 @@ function SpeciesSelector({ questSpecies, setQuestSpecies, setStep }) {
     } = useQuery<SpeciesCountItem[], Error>({
         queryKey: ['speciesCounts', lat, lon, page, perPage],
         queryFn: () =>
-            getSpeciesCountsByGeoLocation(lat, lon, 10, page, perPage),
-        enabled: !!lat && !!lon,
-        keepPreviousData: true,
+            getSpeciesCountsByGeoLocation(lat!, lon!, 10, page, perPage),
+        enabled: lat !== null && lon !== null,
+        placeholderData: (previousData) => previousData,
     })
 
     useLayoutEffect(() => {
@@ -261,7 +356,7 @@ function SpeciesSelector({ questSpecies, setQuestSpecies, setStep }) {
 
     const toggleSpeciesInQuest = useCallback(
         (species: SpeciesCountItem) => {
-            setQuestSpecies((prev) => {
+            setQuestSpecies((prev: Map<number, SpeciesCountItem>) => {
                 const newMap = new Map(prev)
                 if (newMap.has(species.taxon.id)) {
                     newMap.delete(species.taxon.id)
@@ -300,30 +395,39 @@ function SpeciesSelector({ questSpecies, setQuestSpecies, setStep }) {
                 {isLoading && <p>Loading species...</p>}
                 {isError && <p>Error fetching species.</p>}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr">
-                {speciesCounts &&
-                    speciesCounts.map((s) => (
-                        <div key={s.taxon.id} className="flex flex-col gap-2">
-                        <SpeciesCardWithObservations
-                            species={s.taxon}
-                            locationData={{
-                                latitude: lat,
-                                longitude: lon,
-                                location_name: locationName
-                            }}
-                        />
-                        <Button
-                            onClick={(e) => {
-                                e.stopPropagation() // Prevent card click from firing
-                                e.preventDefault()
-                                toggleSpeciesInQuest(s)
-                            }}
-                            variant={questSpecies.has(s.taxon.id) ? 'neutral' : 'default'}
-                            className="self-center"
-                        >
-                            {questSpecies.has(s.taxon.id) ? 'Remove' : 'Add'}
-                        </Button>
-                        </div>
-                    ))}
+                    {speciesCounts &&
+                        speciesCounts.map((s: SpeciesCountItem) => (
+                            <div
+                                key={s.taxon.id}
+                                className="flex flex-col gap-2"
+                            >
+                                <SpeciesCardWithObservations
+                                    species={s.taxon as any}
+                                    locationData={{
+                                        latitude: lat!,
+                                        longitude: lon!,
+                                        location_name: locationName,
+                                    }}
+                                />
+                                <Button
+                                    onClick={(e) => {
+                                        e.stopPropagation() // Prevent card click from firing
+                                        e.preventDefault()
+                                        toggleSpeciesInQuest(s)
+                                    }}
+                                    variant={
+                                        questSpecies.has(s.taxon.id)
+                                            ? 'neutral'
+                                            : 'default'
+                                    }
+                                    className="self-center"
+                                >
+                                    {questSpecies.has(s.taxon.id)
+                                        ? 'Remove'
+                                        : 'Add'}
+                                </Button>
+                            </div>
+                        ))}
                 </div>
 
                 <div className="flex justify-between mt-4">
@@ -340,15 +444,15 @@ function SpeciesSelector({ questSpecies, setQuestSpecies, setStep }) {
                     </Button>
                 </div>
             </div>
-            <Button type="button" onClick={() => setStep(1)}>
-                Back
-            </Button>
-            <Button type="submit">Save Quest</Button>
+            <div className="flex justify-between">
+                <Button type="button" onClick={() => setStep(1)}>
+                    Back
+                </Button>
+                <Button type="submit">Save Quest</Button>
+            </div>
         </>
     )
 }
-
-
 
 async function getSpeciesCountsByGeoLocation(
     latitude: number,
