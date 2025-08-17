@@ -1,18 +1,33 @@
-import { Quest, QuestRepository, QuestToTaxaRepository, QuestWithTaxa } from '../repositories/QuestRepository.js'
-import { sendEvent } from './questEventsService.js'
+import {
+    Quest,
+    QuestRepository,
+    QuestToTaxaRepository,
+    QuestWithTaxa,
+} from '../repositories/QuestRepository.js'
 import { QuestShareRepository } from '../repositories/QuestShareRepository.js'
+import { sendEvent } from './questEventsService.js'
 
 export type QuestService = ReturnType<typeof createQuestService>
 
 export function createQuestService(
     questsRepo: QuestRepository,
     questsToTaxaRepo: QuestToTaxaRepository,
-    questShareRepo: QuestShareRepository,
+    questShareRepo: QuestShareRepository
 ) {
     // 1. Get all public quests
-    async function getAllPublicQuests(): Promise<Quest[]> {
+    async function getAllPublicQuests(): Promise<QuestWithTaxa[]> {
         try {
-            return await questsRepo.findMany({ is_private: false })
+            const quests = await questsRepo.findMany({ is_private: false })
+            const questsWithTaxa = await Promise.all(
+                quests.map(async (quest) => {
+                    const taxa = await getTaxaForQuestId(quest.id)
+                    return {
+                        ...quest,
+                        taxon_ids: taxa.map((t) => t.taxon_id),
+                    }
+                })
+            )
+            return questsWithTaxa
         } catch (error) {
             console.error('Error in getAllPublicQuests:', error)
             throw new Error('Error getting public quests')
@@ -37,8 +52,21 @@ export function createQuestService(
     async function getUserQuests(
         targetUserId: number,
         viewerId?: number
-    ): Promise<Quest[]> {
-        return questsRepo.findAccessibleByUserId(targetUserId, viewerId)
+    ): Promise<QuestWithTaxa[]> {
+        const quests = await questsRepo.findAccessibleByUserId(
+            targetUserId,
+            viewerId
+        )
+        const questsWithTaxa = await Promise.all(
+            quests.map(async (quest) => {
+                const taxa = await getTaxaForQuestId(quest.id)
+                return {
+                    ...quest,
+                    taxon_ids: taxa.map((t) => t.taxon_id),
+                }
+            })
+        )
+        return questsWithTaxa
     }
 
     // 4. Get all taxon mappings for a quest
@@ -180,7 +208,10 @@ export function createQuestService(
 
         await questsRepo.updateStatus(questId, status)
 
-        sendEvent(String(questId), { type: 'QUEST_STATUS_UPDATED', payload: { status } });
+        sendEvent(String(questId), {
+            type: 'QUEST_STATUS_UPDATED',
+            payload: { status },
+        })
     }
 
     return {

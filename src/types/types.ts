@@ -1,10 +1,8 @@
-import {z} from 'zod'
+import { z } from 'zod'
 import { CollectionSchema, CollectionToTaxaSchema } from '../server/schemas/collection.schemas.js'
-import {
-    LoginRequestSchema,
-    RegisterRequestSchema,
-} from '../shared/schemas/Auth.js'
-import {UserSchema} from '../shared/schemas/UserSchema.js'
+import { LoginRequestSchema, RegisterRequestSchema } from '../shared/schemas/Auth.js'
+import { UserSchema } from '../shared/schemas/UserSchema.js'
+import { Quest, QuestWithTaxa } from '../server/repositories/QuestRepository.js'
 
 export type UserData = z.infer<typeof UserSchema>
 
@@ -13,3 +11,5 @@ export type CollectionToTaxaSchema = z.infer<typeof CollectionToTaxaSchema>
 
 export type LoginRequestBody = z.infer<typeof LoginRequestSchema>
 export type RegisterRequestBody = z.infer<typeof RegisterRequestSchema>
+
+export type { Quest, QuestWithTaxa }
