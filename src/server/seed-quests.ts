@@ -581,6 +581,6 @@ for (const questData of sampleQuests) {
 db.end()
 
 console.log('Seed completed!')
-console.log(`Created ${users.length} users with quests`)
+console.log(`Created ${users?.length} users with quests`)
 console.log('Created admin user')
 console.log('Created sample quests')
