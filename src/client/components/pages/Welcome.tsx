@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { ReactSVG } from 'react-svg'
 import avatar from 'animal-avatar-generator'
@@ -8,8 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
-import { INatTaxon } from '@shared/types/iNatTypes'
 import { QuestWithTaxa } from '../../../types/types'
+import { useQuestPhotos } from '@/hooks/useTaxonPhotos'
 
 interface QuestCardProps {
     quest: QuestWithTaxa
@@ -73,9 +72,6 @@ function QuestCard({ quest, photo }: QuestCardProps) {
 
 function UserQuests() {
     const { user } = useAuth()
-    const [questPhotos, setQuestPhotos] = useState<Map<number, string>>(
-        new Map()
-    )
 
     const {
         data: quests = [],
@@ -88,84 +84,9 @@ function UserQuests() {
         enabled: !!user?.id,
     })
 
-    // Fetch photos for quests
-    useEffect(() => {
-        const fetchPhotos = async () => {
-            if (quests.length === 0) return
-
-            const photoMap = new Map<number, string>()
-            const questTaxonMap = new Map<number, number[]>()
-            const allTaxonIds = new Set<number>()
-
-            // Collect taxon IDs from all quests
-            for (const quest of quests) {
-                let taxonIds = quest.taxon_ids || []
-
-                if (taxonIds.length === 0) {
-                    try {
-                        const questResponse = await api.get(
-                            `/quests/${quest.id}`
-                        )
-                        taxonIds = questResponse.data.taxon_ids || []
-                    } catch (error) {
-                        continue
-                    }
-                }
-
-                if (taxonIds && taxonIds.length > 0) {
-                    const selectedIds = taxonIds.slice(0, 3)
-                    questTaxonMap.set(quest.id, selectedIds)
-                    selectedIds.forEach((id: number) => allTaxonIds.add(id))
-                }
-            }
-
-            // Batch taxon IDs into chunks
-            const uniqueTaxonIds = Array.from(allTaxonIds)
-            const chunks = []
-            for (let i = 0; i < uniqueTaxonIds.length; i += 20) {
-                chunks.push(uniqueTaxonIds.slice(i, i + 20))
-            }
-
-            const allTaxa = new Map<number, INatTaxon>()
-
-            for (let i = 0; i < chunks.length; i++) {
-                try {
-                    if (i > 0) {
-                        await new Promise((resolve) => setTimeout(resolve, 100))
-                    }
-
-                    const response = await api.get(
-                        `/iNatAPI/taxa/${chunks[i].join(',')}`
-                    )
-                    const taxa: INatTaxon[] = response.data.results || []
-                    taxa.forEach((taxon) => {
-                        allTaxa.set(taxon.id, taxon)
-                    })
-                } catch (error: any) {
-                    if (error.response?.status === 429) {
-                        await new Promise((resolve) =>
-                            setTimeout(resolve, 2000)
-                        )
-                    }
-                }
-            }
-
-            // Assign photos to quests
-            for (const [questId, taxonIds] of questTaxonMap) {
-                for (const taxonId of taxonIds) {
-                    const taxon = allTaxa.get(taxonId)
-                    if (taxon?.default_photo?.medium_url) {
-                        photoMap.set(questId, taxon.default_photo.medium_url)
-                        break
-                    }
-                }
-            }
-
-            setQuestPhotos(photoMap)
-        }
-
-        fetchPhotos()
-    }, [quests])
+    // Use React Query to fetch photos for all quests
+    const { photoMap: questPhotos, isLoading: photosLoading } =
+        useQuestPhotos(quests)
 
     if (isLoading) {
         return (
@@ -218,7 +139,7 @@ function UserQuests() {
                 <QuestCard
                     key={quest.id}
                     quest={quest}
-                    photo={questPhotos.get(quest.id)}
+                    photo={questPhotos.get(quest.id) || undefined}
                 />
             ))}
         </div>

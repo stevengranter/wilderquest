@@ -10,17 +10,23 @@ import { createUserController } from './controllers/userController.js'
 import { rateLimiter } from './middlewares/rateLimiter.js'
 import { rateSlowDown } from './middlewares/rateSlowDown.js'
 import { CollectionRepository } from './repositories/CollectionRepository.js'
-import { QuestRepository, QuestToTaxaRepository } from './repositories/QuestRepository.js'
-import type { QuestShareRepository, SharedQuestProgressRepository } from './repositories/QuestShareRepository.js'
+import {
+    QuestRepository,
+    QuestToTaxaRepository,
+} from './repositories/QuestRepository.js'
+import type {
+    QuestShareRepository,
+    SharedQuestProgressRepository,
+} from './repositories/QuestShareRepository.js'
 import { type UserRepository } from './repositories/UserRepository.js'
 import { mapTilesProxyRouter } from './routes/api/proxies.routes.js'
 import { serviceRouter } from './routes/api/services.routes.js'
 import { createAuthRouter } from './routes/authRouter.js'
 import { createCollectionRouter } from './routes/collectionRouter.js'
+import questEventsRouter from './routes/questEventsRouter.js'
 import { createQuestRouter } from './routes/questRouter.js'
 import { createQuestShareRouter } from './routes/questShareRouter.js'
 import { userRouter } from './routes/userRouter.js'
-import questEventsRouter from './routes/questEventsRouter.js'
 import { createAuthService } from './services/authService.js'
 import { createQuestService } from './services/questService.js'
 import { createQuestShareService } from './services/questShareService.js'
@@ -90,11 +96,12 @@ export function buildApp({
     // apiRouter.use('/chat', chatRouter(chatController))
 
     const iNatController = createINaturalistAPIController()
-    // apiRouter.use('/iNatAPI', rateLimiter(1000, 1), iNatController)
+    // More conservative rate limiting to prevent 429 errors
+    // iNaturalist recommends staying under 60 requests/minute
     apiRouter.use(
         '/iNatAPI',
         rateSlowDown,
-        rateLimiter(60 * 1000, 60),
+        rateLimiter(60 * 1000, 30), // Reduced from 60 to 30 requests per minute
         iNatController
     )
     apiRouter.use('/tiles', mapTilesProxyRouter)
