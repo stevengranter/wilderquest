@@ -1,17 +1,24 @@
-import { useParams } from 'react-router'
+import { useLoaderData, useParams } from 'react-router'
 import { useQuest } from '@/hooks/useQuest'
 import { QuestView } from './QuestView'
 import { useAuth } from '@/hooks/useAuth'
+import { useEffect } from 'react'
 
 interface QuestProps {
-    questId?: string | number;
+    questId?: string | number
 }
 
 export default function QuestDetail({ questId: propQuestId }: QuestProps) {
-    const routeParams = useParams();
-    const urlQuestId = routeParams.questId;
-    const activeQuestId = propQuestId || urlQuestId;
-    const { user } = useAuth();
+    const routeParams = useParams()
+    const urlQuestId = routeParams.questId
+    const activeQuestId = propQuestId || urlQuestId
+    const { user } = useAuth()
+    const initialData = useLoaderData()
+
+    useEffect(() => {
+        console.log("initialData: ")
+        console.log(initialData)
+    },[initialData])
 
     const {
         questData,
@@ -20,11 +27,30 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
         aggregatedProgress,
         detailedProgress,
         isLoading,
+        isTaxaLoading,
         isError,
         updateStatus,
-    } = useQuest({ questId: activeQuestId });
+    } = useQuest({ questId: activeQuestId, initialData })
 
-    const isOwner = !!user && questData && Number(user.id) === Number(questData.user_id);
+    useEffect(() => {
+        console.log("Quest Data:")
+        console.log(questData)
+    }, [])
+
+    const isOwner =
+        !!user && questData && Number(user.id) === Number(questData.user_id)
+
+    if (!activeQuestId) {
+        return <div>Quest not found</div>
+    }
+
+    if (isLoading) {
+        return <div>Loading...</div>
+    }
+
+    if (isError) {
+        return <div>Error loading quest</div>
+    }
 
     return (
         <QuestView
@@ -34,9 +60,10 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
             aggregatedProgress={aggregatedProgress}
             detailedProgress={detailedProgress}
             isLoading={isLoading}
+            isTaxaLoading={isTaxaLoading}
             isError={isError}
             updateStatus={updateStatus}
             isOwner={isOwner}
         />
-    );
+    )
 }

@@ -1,9 +1,4 @@
-import {
-    Quest,
-    QuestRepository,
-    QuestToTaxaRepository,
-    QuestWithTaxa,
-} from '../repositories/QuestRepository.js'
+import { Quest, QuestRepository, QuestToTaxaRepository, QuestWithTaxa } from '../repositories/QuestRepository.js'
 import { QuestShareRepository } from '../repositories/QuestShareRepository.js'
 import { sendEvent } from './questEventsService.js'
 
@@ -136,14 +131,7 @@ export function createQuestService(
     ): Promise<QuestWithTaxa> {
         const quest = await questsRepo.findAccessibleById(questId, userId)
         if (!quest) throw new Error('Quest not found or access denied')
-
-        const taxa = await getTaxaForQuestId(questId)
-        console.log(taxa)
-
-        return {
-            ...quest,
-            taxon_ids: taxa.map((t) => t.taxon_id),
-        }
+        return quest
     }
 
     async function updateQuest(

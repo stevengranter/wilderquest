@@ -10,6 +10,9 @@ export type Quest = {
     is_private: boolean
     user_id: number
     status: 'pending' | 'active' | 'paused' | 'ended'
+    location_name?: string
+    latitude?: number
+    longitude?: number
 }
 
 export type QuestWithTaxa = Quest & {
@@ -41,17 +44,45 @@ export function createQuestRepository(
     async function findAccessibleById(
         id: number,
         userId?: number
-    ): Promise<Quest | null> {
+    ): Promise<QuestWithTaxa | null> {
         const query = `
-      SELECT * FROM ${tableName}
-      WHERE id = ?
-        AND (is_private = FALSE OR user_id = ?)
+      SELECT
+        q.*,
+        GROUP_CONCAT(qt.taxon_id) AS taxon_ids
+      FROM ${tableName} q
+      LEFT JOIN quests_to_taxa qt ON q.id = qt.quest_id
+      WHERE q.id = ?
+        AND (q.is_private = FALSE OR q.user_id = ?)
+      GROUP BY q.id
       LIMIT 1
     `
         const [rows] = await base
             .getDb()
             .execute<RowDataPacket[]>(query, [id, userId ?? -1])
-        return rows.length > 0 ? (rows[0] as Quest) : null
+
+        if (rows.length === 0) {
+            return null
+        }
+
+        const row = rows[0]
+        const quest: QuestWithTaxa = {
+            id: row.id,
+            name: row.name,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+            description: row.description,
+            is_private: row.is_private,
+            user_id: row.user_id,
+            status: row.status,
+            location_name: row.location_name,
+            latitude: row.latitude,
+            longitude: row.longitude,
+            taxon_ids: row.taxon_ids
+                ? row.taxon_ids.split(',').map(Number)
+                : [],
+        }
+
+        return quest
     }
 
     async function findAccessibleByUserId(

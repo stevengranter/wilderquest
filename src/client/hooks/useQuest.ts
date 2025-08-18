@@ -14,7 +14,9 @@ type ProgressData = {
 }
 type GuestProgressData = { aggregatedProgress: any[]; detailedProgress: any[] }
 
-const fetchQuest = async (questId?: string | number): Promise<Quest | null> => {
+export const fetchQuest = async (
+    questId?: string | number
+): Promise<Quest | null> => {
     const { data } = await api.get(`/quests/${questId}`)
     console.log(data)
     return data
@@ -26,14 +28,18 @@ const fetchQuestByToken = async (token?: string) => {
     return data
 }
 
-const fetchTaxa = async (taxonIds: number[]): Promise<any[]> => {
-    const chunks = chunk(taxonIds, 30)
-    const results: any[] = []
-    for (const c of chunks) {
-        const { data } = await api.get(`/iNatAPI/taxa/${c.join(',')}`)
-        if (data.results) results.push(...data.results)
+export const fetchTaxa = async (taxonIds: number[]) => {
+    if (!taxonIds || taxonIds.length === 0) {
+        return []
     }
-    return results
+    const taxonIdChunks = chunk(taxonIds, 30)
+    const taxaData = await Promise.all(
+        taxonIdChunks.map(async (ids) => {
+            const { data } = await api.get(`/iNatAPI/taxa/${ids.join(',')}`)
+            return data.results || []
+        })
+    )
+    return taxaData.flatMap((data) => data)
 }
 
 const fetchMappingsAndProgress = async (
@@ -72,17 +78,22 @@ const fetchLeaderboard = async (questId: string | number) => {
 export const useQuest = ({
     questId,
     token,
+    initialData
 }: {
     questId?: string | number
-    token?: string
+    token?: string,
+    initialData?: {quest?: Quest, taxa?: any[]}
 }) => {
     const queryClient = useQueryClient()
 
     const questQuery = useQuery({
         queryKey: ['quest', questId],
         queryFn: () => fetchQuest(questId),
+        initialData: initialData?.quest,
         enabled: !!questId,
+        staleTime: 1000 * 60 * 5, // 5 minutes
     })
+
     const sharedQuestQuery = useQuery({
         queryKey: ['sharedQuest', token],
         queryFn: () => fetchQuestByToken(token),
@@ -92,16 +103,24 @@ export const useQuest = ({
     const quest = questQuery.data || sharedQuestQuery.data?.quest
     const share = sharedQuestQuery.data?.share
     console.log('quest', quest)
+
     const taxaQuery = useQuery({
-        queryKey: ['taxa', quest?.id],
-        queryFn: () => fetchTaxa(quest!.taxon_ids!),
+        queryKey: ['taxa', questId || token],
+        queryFn: () => fetchTaxa(quest?.taxon_ids || []),
+        initialData: initialData?.taxa,
         enabled: !!quest?.taxon_ids?.length,
+        staleTime: 1000 * 60 * 5, // 5 minutes - match quest query
     })
+
+    const taxaData = taxaQuery.data || []
+    const isTaxaLoading = questQuery.isLoading || taxaQuery.isLoading
+    const isTaxaError = taxaQuery.isError
 
     const progressQuery = useQuery({
         queryKey: ['progress', quest?.id],
         queryFn: () => fetchMappingsAndProgress(quest!.id),
         enabled: !!quest?.id && !!questId,
+        staleTime: 1000 * 60 * 5, // 5 minutes
     })
     const guestProgressQuery = useQuery({
         queryKey: ['guestProgress', token],
@@ -112,6 +131,7 @@ export const useQuest = ({
         queryKey: ['leaderboard', quest?.id],
         queryFn: () => fetchLeaderboard(quest!.id),
         enabled: !!quest?.id,
+        staleTime: 1000 * 60 * 5, // 5 minutes
     })
 
     const updateStatus = useMutation({
@@ -138,7 +158,7 @@ export const useQuest = ({
     }, [guestProgressQuery.isSuccess, guestProgressQuery.data])
 
     useEffect(() => {
-        if (!quest?.id || !taxaQuery.data) return
+        if (!quest?.id || !taxaQuery.isSuccess) return
         const eventSource = new EventSource(`/api/quests/${quest.id}/events`)
         eventSource.onmessage = (e) => {
             const data = JSON.parse(e.data)
@@ -160,7 +180,7 @@ export const useQuest = ({
                 const mapping = mappings.find(
                     (m: TaxonMapping) => m.id === data.payload.mappingId
                 )
-                const species = taxaQuery.data?.find(
+                const species = taxaData?.find(
                     (t: any) => t.id === mapping?.taxon_id
                 )
                 const speciesName = species?.preferred_common_name
@@ -185,7 +205,8 @@ export const useQuest = ({
         return () => eventSource.close()
     }, [
         quest?.id,
-        taxaQuery.data,
+        taxaQuery,
+        taxaData,
         progressQuery.data,
         sharedQuestQuery.data,
         queryClient,
@@ -202,20 +223,21 @@ export const useQuest = ({
 
     return {
         questData: quest,
-        taxa: taxaQuery.data,
+        taxa: taxaData,
         share,
         ...finalProgress,
         isLoading:
             questQuery.isLoading ||
             sharedQuestQuery.isLoading ||
-            taxaQuery.isLoading ||
             progressQuery.isLoading ||
             guestProgressQuery.isLoading ||
             leaderboardQuery.isLoading,
+        isTaxaLoading,
         isError:
             questQuery.isError ||
             sharedQuestQuery.isError ||
-            leaderboardQuery.isError,
+            leaderboardQuery.isError ||
+            isTaxaError,
         updateStatus: updateStatus.mutate,
         leaderboard: leaderboardQuery.data,
     }

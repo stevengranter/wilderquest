@@ -10,6 +10,7 @@ import getKingdomIcon from '@/components/search/getKingdomIcon'
 import titleCase from '@/components/search/titleCase'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 import { cn } from '@/lib/utils'
 
@@ -76,6 +77,28 @@ export function SpeciesCard({
             geoObservationsCount={geoObservationsCount}
             rarity={rarity}
         />
+    )
+}
+
+export function SpeciesCardSkeleton() {
+    return (
+        <Card className="aspect-2.5/3.5 overflow-hidden bg-gradient-to-b from-gray-200 via-gray-100 to-gray-200 shadow-0 py-0 gap-0 border-3 rounded-xl border-gray-300">
+            <CardHeader className="gap-0 pt-2 pb-2">
+                <Skeleton className="h-6 w-3/4" />
+            </CardHeader>
+            <CardContent className="relative px-0 mx-6">
+                <Skeleton className="w-full aspect-square rounded-sm" />
+            </CardContent>
+            <CardContent className="block sm:hidden md:block">
+                <div className="h-full bg-gray-200 text-xs content-start text-left p-2 outline-2 rounded-sm">
+                    <Skeleton className="h-3 w-full mb-1" />
+                    <Skeleton className="h-3 w-2/3" />
+                </div>
+            </CardContent>
+            <CardFooter className="py-4 gap-2">
+                <Skeleton className="h-6 w-1/4" />
+            </CardFooter>
+        </Card>
     )
 }
 
