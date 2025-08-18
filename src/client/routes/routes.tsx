@@ -19,7 +19,6 @@ import { ExploreTab } from './explore/ExploreTab'
 import { IdentifyTab } from './identify/IdentifyTab'
 import { LocateTab } from './locate/LocateTab'
 import { QueryClient } from '@tanstack/react-query'
-import { questLoader } from './loaders'
 
 export const queryClient = new QueryClient()
 
@@ -93,7 +92,7 @@ export const router = createBrowserRouter([
                     {
                         path: ':questId',
                         element: <QuestDetail />,
-                        loader: questLoader(queryClient),
+                        // loader: questLoader(queryClient),
                     },
                     {
                         path: ':questId/edit',

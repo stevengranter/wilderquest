@@ -116,7 +116,7 @@ export function Home() {
                 </div>
 
                 <Link to="/quests" viewTransition>
-                <Button size="lg" className="w-60 h-18 text-2xl cursor-pointer" >
+                <Button size="lg" className="w-70 h-18 text-2xl cursor-pointer" >
                   <Compass />Explore Quests</Button></Link>
 
 

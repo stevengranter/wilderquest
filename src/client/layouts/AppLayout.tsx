@@ -11,6 +11,7 @@ export function AppLayout() {
 <>
             <SearchProvider>
                 <SelectionProvider>
+                    <div className="min-h-screen flex flex-col m-4">
 
                         <MainMenu />
 
@@ -26,7 +27,7 @@ export function AppLayout() {
                     {/*    </div>*/}
                     {/*</SidebarProvider>*/}
                     {/*<SelectionDrawer />*/}
-                   
+                    </div>
                 </SelectionProvider>
             </SearchProvider>
             <Toaster />
