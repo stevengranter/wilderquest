@@ -1,11 +1,4 @@
-import {
-    ArrowRight,
-    ChevronRight,
-    Compass,
-    Sparkles,
-    Trophy,
-    Users,
-} from 'lucide-react'
+import { ArrowRight, ChevronRight, Compass } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import api from '@/api/api'
@@ -111,104 +104,40 @@ export function Home() {
             {/* Hero Section */}
             <section className="relative px-4 pt-20 pb-16 text-center">
                 <div className="max-w-4xl mx-auto">
-                    <div className="flex justify-center mb-6">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-900 border border-emerald-200 dark:border-emerald-800">
-                            <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                                Discover. Observe. Protect.
-                            </span>
-                        </div>
-                    </div>
+
 
                     <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
                         wilderQuest
                     </h1>
 
                     <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                        Embark on nature quests to discover and document
-                        wildlife. Join a community of explorers making
-                        biodiversity discoveries.
+                      Join a community of explorers
                     </p>
-
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                        <Button
-                            size="lg"
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-8"
-                            asChild
-                        >
-                            <Link to="/quests">
-                                <Compass className="mr-2 h-5 w-5" />
-                                Explore Quests
-                            </Link>
-                        </Button>
-
-                        {isAuthenticated ? (
-                            <Button
-                                variant="outline"
-                                size="lg"
-                                className="px-8"
-                                asChild
-                            >
-                                <Link to="/quests/create">
-                                    Create Quest
-                                    <ArrowRight className="ml-2 h-5 w-5" />
-                                </Link>
-                            </Button>
-                        ) : (
-                            <Button
-                                variant="outline"
-                                size="lg"
-                                className="px-8"
-                                asChild
-                            >
-                                <Link to="/login">
-                                    Join Community
-                                    <ArrowRight className="ml-2 h-5 w-5" />
-                                </Link>
-                            </Button>
-                        )}
-                    </div>
                 </div>
+
+                <Link to="/quests" viewTransition>
+                <Button size="lg" className="w-60 h-18 text-2xl cursor-pointer" >
+                  <Compass />Explore Quests</Button></Link>
+
+
             </section>
 
-            {/* Stats Section */}
-            <section className="px-4 py-16 max-w-6xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <StatsCard
-                        icon={Trophy}
-                        label="Active Quests"
-                        value={stats.activeQuests.toString()}
-                        description="Currently running adventures"
-                    />
-                    <StatsCard
-                        icon={Users}
-                        label="Total Quests"
-                        value={stats.totalQuests.toString()}
-                        description="Community-created quests"
-                    />
-                    <StatsCard
-                        icon={Compass}
-                        label="Species"
-                        value={stats.totalSpecies.toString()}
-                        description="Species across all quests"
-                    />
-                </div>
-            </section>
+
+
 
             {/* Recent Quests Section */}
             <section className="px-4 py-16 max-w-6xl mx-auto">
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h2 className="text-3xl font-bold text-foreground mb-2">
-                            Recent Quests
+                            Explore
                         </h2>
                         <p className="text-muted-foreground">
-                            Discover the latest nature adventures from our
-                            community
+                            See quests from our community
                         </p>
                     </div>
-                    <Button variant="ghost" className="group" asChild>
-                        <Link to="/quests">
+                    <Button className="group" asChild>
+                        <Link to="/quests" viewTransition>
                             View All
                             <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </Link>
@@ -268,7 +197,7 @@ export function Home() {
                             Ready to Start Your Nature Adventure?
                         </h2>
                         <p className="text-xl mb-8 text-emerald-50">
-                            Join thousands of nature enthusiasts documenting
+                            Join other nature enthusiasts documenting
                             biodiversity around the world.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -1,13 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
-import {
-    Card,
-    CardContent,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { QuestWithTaxa } from '../../../types/types'
 
 interface QuestCardProps {
@@ -21,7 +15,7 @@ export function QuestCard({ quest, photo }: QuestCardProps) {
 
     return (
         <Link to={`/quests/${quest.id}`} className="block">
-            <Card className="h-full hover:shadow-lg transition-shadow duration-200 overflow-hidden p-0">
+            <Card className="h-full bg-secondary-background shadow-0 hover:-rotate-3 hover:scale-105 hover:shadow-shadow transition-all duration-200 overflow-hidden p-0">
                 {photo && (
                     <div className="h-48 overflow-hidden relative">
                         {!imageLoaded && !imageError && (
@@ -33,7 +27,7 @@ export function QuestCard({ quest, photo }: QuestCardProps) {
                         <img
                             src={photo}
                             alt={`Photo from ${quest.name}`}
-                            className={`w-full h-full object-cover transition-all duration-300 hover:scale-110 ${
+                            className={`w-full h-full object-cover ${
                                 imageLoaded ? 'opacity-100' : 'opacity-0'
                             }`}
                             onLoad={() => {

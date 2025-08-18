@@ -5,14 +5,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import api from '@/api/api'
 import { SpeciesCard } from '@/components/cards/SpeciesCard'
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import titleCase from '@/components/search/titleCase'
@@ -23,6 +16,7 @@ import {
     ObservationListView,
     ObservationMapView,
 } from '@/features/quests/components/ObservationGridView'
+import { MdOutlineLocationOn } from 'react-icons/md'
 
 type Quest = {
     id: string | number
@@ -68,7 +62,7 @@ export function SpeciesCardWithObservations(
                     )}
                 </div>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[80vw] max-h-[85vh] flex flex-row gap-6 p-6">
+            <DialogContent className="sm:max-w-[80vw] max-h-[85vh] flex flex-row gap-6 p-6 bg-secondary-background">
                 {/* Left Column: Species Card */}
                 <div className="w-1/3 flex-shrink-0">
                     <div className="sticky top-0">
@@ -82,21 +76,21 @@ export function SpeciesCardWithObservations(
                                     {titleCase(species.preferred_common_name)}
                                 </VisuallyHidden>
                             </DialogTitle>
-                            <DialogDescription className="text-center">
-                                Recent observations near{' '}
-                                <strong>{displayData.location_name}</strong>
-                            </DialogDescription>
+
                         </DialogHeader>
                     </div>
                 </div>
 
                 {/* Right Column: Observations */}
+
                 <div className="flex-1 overflow-hidden">
+
                     {displayData.latitude && displayData.longitude && (
                         <ObservationList
                             taxonId={species.id}
                             lat={displayData.latitude}
                             lon={displayData.longitude}
+                            locationName={displayData.location_name}
                         />
                     )}
                 </div>
@@ -111,10 +105,12 @@ function ObservationList({
     taxonId,
     lat,
     lon,
+    locationName
 }: {
     taxonId: number
     lat: number
     lon: number
+    locationName?: string
 }) {
     const [viewMode, setViewMode] = useState<ViewMode>('grid')
     const {
@@ -142,9 +138,12 @@ function ObservationList({
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
             >
+                <div className="flex flex-col">
                 <h3 className="text-lg font-semibold">
                     Recent Observations ({observations?.length || 0})
                 </h3>
+                <div className="flex flex-row items-center"><MdOutlineLocationOn className="mr-1" /> {locationName} </div>
+                </div>
                 <ToggleGroup
                     type="single"
                     value={viewMode}

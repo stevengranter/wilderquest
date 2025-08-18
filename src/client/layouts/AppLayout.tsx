@@ -11,7 +11,7 @@ export function AppLayout() {
 <>
             <SearchProvider>
                 <SelectionProvider>
-                    <div className="main-content p-3 md:p-5 ">
+
                         <MainMenu />
 
                     {/*<UserToolbar />*/}
@@ -26,7 +26,7 @@ export function AppLayout() {
                     {/*    </div>*/}
                     {/*</SidebarProvider>*/}
                     {/*<SelectionDrawer />*/}
-                    </div>
+                   
                 </SelectionProvider>
             </SearchProvider>
             <Toaster />
