@@ -2,10 +2,17 @@ import { INatTaxon } from '@shared/types/iNatTypes'
 import { useQuery } from '@tanstack/react-query'
 import { Grid, List, Map } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 import api from '@/api/api'
 import { SpeciesCard } from '@/components/cards/SpeciesCard'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import titleCase from '@/components/search/titleCase'
@@ -40,7 +47,7 @@ interface SpeciesCardWithObservationsProps {
         latitude?: number
         longitude?: number
     }
-    children?: React.ReactNode
+    children?: ReactNode
 }
 
 export function SpeciesCardWithObservations(
@@ -76,6 +83,11 @@ export function SpeciesCardWithObservations(
                                     {titleCase(species.preferred_common_name)}
                                 </VisuallyHidden>
                             </DialogTitle>
+                            <DialogDescription>
+                                <VisuallyHidden>
+                                    Recent observations located near: {displayData.location_name}
+                                </VisuallyHidden>
+                            </DialogDescription>
 
                         </DialogHeader>
                     </div>

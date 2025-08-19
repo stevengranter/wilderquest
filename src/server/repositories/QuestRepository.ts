@@ -17,6 +17,7 @@ export type Quest = {
 
 export type QuestWithTaxa = Quest & {
     taxon_ids: number[]
+    photoUrl?: string | null
 }
 
 export type QuestRepository = ReturnType<typeof createQuestRepository>

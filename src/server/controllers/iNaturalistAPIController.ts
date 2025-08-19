@@ -1,6 +1,7 @@
 import axios from 'axios'
 import chalk from 'chalk'
 import { RequestHandler } from 'express'
+import { cacheService } from '../services/cacheService.js'
 import { globalINaturalistRateLimiter } from '../utils/rateLimiterGlobal.js'
 
 const INATURALIST_API_BASE_URL = 'https://api.inaturalist.org/v1'
@@ -16,6 +17,14 @@ const iNaturalistAPIController: RequestHandler = async (req, res) => {
             req.query as Record<string, string>
         ).toString()
         const url = `${INATURALIST_API_BASE_URL}${path}${query ? `?${query}` : ''}`
+        const cacheKey = `inat-proxy:${url}`
+
+        // Check cache first
+        const cachedData = cacheService.get<any>(cacheKey)
+        if (cachedData) {
+            console.log(chalk.blue('Serving from cache:', url))
+            return res.status(200).json(cachedData)
+        }
 
         const isTile = path.match(/\.(png|jpg|jpeg|webp)$/)
 
@@ -33,7 +42,7 @@ const iNaturalistAPIController: RequestHandler = async (req, res) => {
         console.log('Resets in:', days.toFixed(2), 'days')
 
         if (isTile) {
-            // ⛲ Image response (stream)
+            // ⛲ Image response (stream) - not caching tiles for now
             const imageResponse = await axios.get(url, {
                 responseType: 'stream',
             })
@@ -43,6 +52,12 @@ const iNaturalistAPIController: RequestHandler = async (req, res) => {
         } else {
             // 🧠 JSON response
             const jsonResponse = await axios.get(url)
+
+            // Cache the successful response
+            if (jsonResponse.status === 200) {
+                cacheService.set(cacheKey, jsonResponse.data)
+            }
+
             res.status(jsonResponse.status).json(jsonResponse.data)
         }
     } catch (error) {

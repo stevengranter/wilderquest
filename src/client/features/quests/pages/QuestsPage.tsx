@@ -6,9 +6,8 @@ import { QuestCard } from '@/components/quest/QuestCard'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { useAuth } from '@/hooks/useAuth'
-import { useQuestPhotos } from '@/hooks/useTaxonPhotos'
 import { QuestWithTaxa } from '../../../../types/types'
+import { useAuth } from '@/hooks/useAuth'
 
 export function QuestsPage() {
     const { isAuthenticated, user } = useAuth()
@@ -62,9 +61,6 @@ export function QuestsPage() {
 }
 
 function QuestsList({ quests }: { quests: QuestWithTaxa[] }) {
-    // Use React Query to fetch photos for all quests
-    const { photoMap: questPhotos, isLoading: photosLoading } =
-        useQuestPhotos(quests)
     if (!quests || quests.length === 0) {
         return (
             <div className="text-center py-12">
@@ -78,11 +74,7 @@ function QuestsList({ quests }: { quests: QuestWithTaxa[] }) {
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {quests.map((quest) => (
-                <QuestCard
-                    key={quest.id}
-                    quest={quest}
-                    photo={questPhotos.get(quest.id) || undefined}
-                />
+                <QuestCard key={quest.id} quest={quest} />
             ))}
         </div>
     )

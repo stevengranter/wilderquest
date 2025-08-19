@@ -1,5 +1,6 @@
 import { Quest, QuestRepository, QuestToTaxaRepository, QuestWithTaxa } from '../repositories/QuestRepository.js'
 import { QuestShareRepository } from '../repositories/QuestShareRepository.js'
+import { iNatService } from './iNatService.js'
 import { sendEvent } from './questEventsService.js'
 
 export type QuestService = ReturnType<typeof createQuestService>
@@ -13,16 +14,22 @@ export function createQuestService(
     async function getAllPublicQuests(): Promise<QuestWithTaxa[]> {
         try {
             const quests = await questsRepo.findMany({ is_private: false })
-            const questsWithTaxa = await Promise.all(
+            const questsWithTaxaAndPhotos = await Promise.all(
                 quests.map(async (quest) => {
                     const taxa = await getTaxaForQuestId(quest.id)
+                    const taxon_ids = taxa.map((t) => t.taxon_id)
+                    const photoUrl =
+                        taxon_ids.length > 0
+                            ? await iNatService.getTaxonPhoto(taxon_ids[0])
+                            : null
                     return {
                         ...quest,
-                        taxon_ids: taxa.map((t) => t.taxon_id),
+                        taxon_ids,
+                        photoUrl,
                     }
                 })
             )
-            return questsWithTaxa
+            return questsWithTaxaAndPhotos
         } catch (error) {
             console.error('Error in getAllPublicQuests:', error)
             throw new Error('Error getting public quests')
@@ -52,16 +59,22 @@ export function createQuestService(
             targetUserId,
             viewerId
         )
-        const questsWithTaxa = await Promise.all(
+        const questsWithTaxaAndPhotos = await Promise.all(
             quests.map(async (quest) => {
                 const taxa = await getTaxaForQuestId(quest.id)
+                const taxon_ids = taxa.map((t) => t.taxon_id)
+                const photoUrl =
+                    taxon_ids.length > 0
+                        ? await iNatService.getTaxonPhoto(taxon_ids[0])
+                        : null
                 return {
                     ...quest,
-                    taxon_ids: taxa.map((t) => t.taxon_id),
+                    taxon_ids,
+                    photoUrl,
                 }
             })
         )
-        return questsWithTaxa
+        return questsWithTaxaAndPhotos
     }
 
     // 4. Get all taxon mappings for a quest
