@@ -1,23 +1,19 @@
-import { logEvents } from './logger.js' // Adjust path as needed
-import { ErrorRequestHandler, Request, Response, NextFunction } from 'express' // Import all necessary types
+import { type ErrorRequestHandler, type NextFunction, type Request, type Response } from 'express'
+import logger from '../config/logger.js'
 
 // Define a general error interface that includes the custom statusCode property
 interface HttpError extends Error {
-    statusCode?: number;
+    statusCode?: number
 }
 
 const errorHandler: ErrorRequestHandler = (err: HttpError, req: Request, res: Response, next: NextFunction) => {
-    // Log the error details
-    logEvents(
-        `${err.name}: ${err.message}\t${req.method}\t${req.url}\t${req.headers.origin}`,
-        'error.log'
-    ).then(() => {
-        // Log the stack trace to the console for development debugging
-        console.error(err.stack)
-    }).catch(logError => {
-        // Handle potential errors during logging itself
-        console.error('Error logging to file:', logError)
-    });
+    // Construct a detailed error message
+    const errorMessage = `${req.method} ${req.url} - ${err.name}: ${err.message} - Origin: ${req.headers.origin ?? 'N/A'}`
+
+    // Log the error using Winston. This will also include the stack trace.
+    // In development, this logs to the console.
+    // In production, it logs to `logs/error.log` and `logs/combined.log`.
+    logger.error(`${errorMessage}\n${err.stack}`)
 
     // Determine the HTTP status code
     // Prioritize a custom status code set on the error object (e.g., from validation)
@@ -49,5 +45,4 @@ const errorHandler: ErrorRequestHandler = (err: HttpError, req: Request, res: Re
     // but the response has already been sent, leading to the "Cannot set headers" error.
     // The response cycle for this request should end here.
 };
-
 export default errorHandler

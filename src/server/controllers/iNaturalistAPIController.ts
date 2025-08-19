@@ -3,6 +3,7 @@ import chalk from 'chalk'
 import { RequestHandler } from 'express'
 import { cacheService } from '../services/cacheService.js'
 import { globalINaturalistRateLimiter } from '../utils/rateLimiterGlobal.js'
+import logger from '../config/logger.js'
 
 const INATURALIST_API_BASE_URL = 'https://api.inaturalist.org/v1'
 
@@ -22,24 +23,24 @@ const iNaturalistAPIController: RequestHandler = async (req, res) => {
         // Check cache first
         const cachedData = cacheService.get<any>(cacheKey)
         if (cachedData) {
-            console.log(chalk.blue('Serving from cache:', url))
+            logger.info(chalk.blue('Serving from cache:', url))
             return res.status(200).json(cachedData)
         }
 
         const isTile = path.match(/\.(png|jpg|jpeg|webp)$/)
 
-        console.log('Proxying to:', url)
+        logger.info('Proxying to:', url)
 
         await globalINaturalistRateLimiter.consume('global')
         const status = await globalINaturalistRateLimiter.get('global')
-        console.log(
+        logger.info(
             chalk.green(`Used: ${10_000 - (status?.remainingPoints ?? 0)}`) +
                 ', ' +
                 chalk.yellow(`Remaining: ${status?.remainingPoints ?? 0}`)
         )
         const ms = status?.msBeforeNext ?? 0
         const days = ms / 1000 / 60 / 60 / 24
-        console.log('Resets in:', days.toFixed(2), 'days')
+        logger.info('Resets in:', days.toFixed(2), 'days')
 
         if (isTile) {
             // ⛲ Image response (stream) - not caching tiles for now

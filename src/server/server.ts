@@ -7,6 +7,7 @@ import path from 'path'
 // Internal imports
 import ViteExpress from 'vite-express'
 import errorHandler from './middlewares/errorHandler.js'
+import logger from './config/logger.js'
 
 import { SCRIPT_DIR } from './constants.js'
 import env from './config/app.config.js'
@@ -29,7 +30,7 @@ async function startServer() {
             // Error Handler
             app.use(errorHandler)
             ViteExpress.listen(app, PORT, () => {
-                console.log(
+                logger.info(
                     `Server running on ${env.PROTOCOL}://${env.HOST}:${PORT} ✅ `
                 )
             })
@@ -48,13 +49,13 @@ async function startServer() {
             app.use(errorHandler)
 
             app.listen(PORT, () => {
-                console.log(
+                logger.info(
                     `Server running on ${PORT} ✅ `
                 ) //Log the actual port
             })
         }
         const shutdownHandler = () => {
-            console.log('Shutting down server...')
+            logger.info('Shutting down server...')
             // Close database connections, etc.
             process.exit(0)
         }
@@ -62,11 +63,11 @@ async function startServer() {
         process.on('SIGINT', shutdownHandler)
         return true
     } catch (error) {
-        console.error('⛔️ Failed to start server:', error)
+        logger.error('⛔️ Failed to start server:', error)
         process.exit(1)
     }
 }
 
 startServer().then(
-    (result) => result && console.log('Server setup complete ✅ ')
+    (result) => result && logger.info('Server setup complete ✅ ')
 )

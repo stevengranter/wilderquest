@@ -4,7 +4,7 @@
     "version": "0.0.1",
     "type": "module",
     "scripts": {
-        "dev": "nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts",
+        "dev": "NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts",
         "start:preview": "NODE_ENV=production tsx src/server/server.ts",
         "start": "NODE_ENV=production node dist/server/server.js",
         "build": "NODE_ENV=production rm -rf dist && vite build && tsc -p src/server/tsconfig.json && tsc-alias -p src/server/tsconfig.json"
@@ -113,6 +113,7 @@
         "vaul": "^1.1.2",
         "vite-express": "*",
         "weighted": "^1.0.0",
+        "winston": "^3.17.0",
         "zod": "3.25.39"
     },
     "devDependencies": {
