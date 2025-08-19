@@ -117,7 +117,7 @@ function ObservationList({
     taxonId,
     lat,
     lon,
-    locationName
+    locationName,
 }: {
     taxonId: number
     lat: number
@@ -125,14 +125,19 @@ function ObservationList({
     locationName?: string
 }) {
     const [viewMode, setViewMode] = useState<ViewMode>('grid')
+
+    // Ensure coords are numbers and round for stable caching
+    const roundedLat = Math.round(Number(lat) * 10000) / 10000
+    const roundedLon = Math.round(Number(lon) * 10000) / 10000
+
     const {
         data: observations,
         isLoading,
         isError,
     } = useQuery<Observation[], Error>({
-        queryKey: ['observations', taxonId, lat, lon],
-        queryFn: () => getObservationsFromINat(taxonId, lat, lon),
-        enabled: !!taxonId && !!lat && !!lon,
+        queryKey: ['observations', taxonId, roundedLat, roundedLon],
+        queryFn: () => getObservationsFromINat(taxonId, roundedLat, roundedLon),
+        enabled: !!taxonId && !isNaN(roundedLat) && !isNaN(roundedLon),
     })
 
     const MIN_HEIGHT = 'min-h-[500px]' // consistent height for all states
