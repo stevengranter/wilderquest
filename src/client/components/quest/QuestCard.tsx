@@ -1,45 +1,72 @@
-import { useState } from 'react'
 import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { useQuestPhoto, useTaxonPhotos } from '@/hooks/useTaxonPhotos'
 import { QuestWithTaxa } from '../../../types/types'
 
 interface QuestCardProps {
     quest: QuestWithTaxa
-    photo?: string
 }
 
-export function QuestCard({ quest, photo }: QuestCardProps) {
-    const [imageLoaded, setImageLoaded] = useState(false)
-    const [imageError, setImageError] = useState(false)
+export function QuestCard({ quest }: QuestCardProps) {
+    const {
+        data: mainPhoto,
+        isLoading: isMainPhotoLoading,
+        isError: isMainPhotoError,
+    } = useQuestPhoto(quest.taxon_ids)
+
+    // Fetch photos for up to 6 other species in the quest
+    const thumbnailTaxonIds = quest.taxon_ids?.slice(1, 7) || []
+    const { data: thumbnailPhotos } = useTaxonPhotos(thumbnailTaxonIds)
+
+    const renderMainPhoto = () => {
+        if (isMainPhotoLoading) {
+            return (
+                <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-muted-foreground/20 border-t-muted-foreground/60 rounded-full animate-spin" />
+                </div>
+            )
+        }
+
+        if (isMainPhotoError || !mainPhoto) {
+            return (
+                <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <span className="text-muted-foreground text-xs">
+                        No photo
+                    </span>
+                </div>
+            )
+        }
+
+        return (
+            <img
+                src={mainPhoto}
+                alt={`Photo for ${quest.name}`}
+                className="w-full h-full object-cover"
+            />
+        )
+    }
 
     return (
         <Link to={`/quests/${quest.id}`} className="block">
             <Card className="h-full bg-secondary-background shadow-0 hover:-rotate-3 hover:scale-105 hover:shadow-shadow transition-all duration-200 overflow-hidden p-0">
-                {photo && (
-                    <div className="h-48 overflow-hidden relative">
-                        {!imageLoaded && !imageError && (
-                            <div className="w-full h-full bg-muted flex items-center justify-center">
-                                <div className="w-8 h-8 border-2 border-muted-foreground/20 border-t-muted-foreground/60 rounded-full animate-spin" />
-                            </div>
-                        )}
+                <CardContent className="overflow-hidden object-cover relative m-0 p-0">
+                    {renderMainPhoto()}
 
-                        <img
-                            src={photo}
-                            alt={`Photo from ${quest.name}`}
-                            className={`w-full h-full object-cover ${
-                                imageLoaded ? 'opacity-100' : 'opacity-0'
-                            }`}
-                            onLoad={() => {
-                                setImageLoaded(true)
-                                setImageError(false)
-                            }}
-                            onError={() => {
-                                setImageError(true)
-                                setImageLoaded(false)
-                            }}
-                        />
-                    </div>
+                </CardContent>
+                {thumbnailPhotos && thumbnailPhotos.length > 0 && (
+                    <CardContent className="flex items-center">
+                        {thumbnailPhotos
+                            .filter((p) => p)
+                            .map((photo, index) => (
+                                <img
+                                    key={index}
+                                    src={photo!}
+                                    alt={`Species ${index + 2}`}
+                                    className="w-8 h-8 rounded-full border-2 border-secondary-background -ml-3"
+                                />
+                            ))}
+                    </CardContent>
                 )}
                 <CardHeader className="px-6 pt-4 pb-2">
                     <div className="flex items-start justify-between">
@@ -62,36 +89,25 @@ export function QuestCard({ quest, photo }: QuestCardProps) {
                         </p>
                     </CardContent>
                 )}
-                <CardFooter className="px-6 pb-4 pt-2 flex justify-between items-center">
-                    <div className="flex items-center gap-1">
-                        <Badge
-                            variant={
-                                quest.status === 'active'
-                                    ? 'default'
-                                    : 'neutral'
-                            }
-                            className="text-xs"
-                        >
-                            {quest.status === 'active'
-                                ? '🟢'
-                                : quest.status === 'paused'
-                                  ? '⏸️'
-                                  : '🏁'}{' '}
-                            {quest.status}
+                <CardFooter className="px-6 pb-4 pt-4 flex justify-between items-center">
+                    <Badge
+                        variant={
+                            quest.status === 'active' ? 'default' : 'neutral'
+                        }
+                        className="text-xs"
+                    >
+                        {quest.status === 'active'
+                            ? '🟢'
+                            : quest.status === 'paused'
+                              ? '⏸️'
+                              : '🏁'}{' '}
+                        {quest.status}
+                    </Badge>
+                    {quest.taxon_ids && quest.taxon_ids.length > 0 && (
+                        <Badge variant="neutral" className="text-xs">
+                            {quest.taxon_ids.length} species
                         </Badge>
-                    </div>
-                    <div className="flex gap-2">
-                        {quest.taxon_ids && quest.taxon_ids.length > 0 && (
-                            <Badge variant="neutral" className="text-xs">
-                                {quest.taxon_ids.length} species
-                            </Badge>
-                        )}
-                        {quest.status === 'ended' && (
-                            <Badge variant="neutral" className="text-xs">
-                                0 found
-                            </Badge>
-                        )}
-                    </div>
+                    )}
                 </CardFooter>
             </Card>
         </Link>
