@@ -1,5 +1,5 @@
 // src/init.ts
-import { initializeDb } from './db/index.js'
+import { initializeDb } from './db/db.js'
 import { createCollectionRepository } from './repositories/CollectionRepository.js'
 import { createQuestRepository, createQuestToTaxaRepository } from './repositories/QuestRepository.js'
 import { createUserRepository } from './repositories/UserRepository.js'
