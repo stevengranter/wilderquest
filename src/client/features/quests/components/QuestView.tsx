@@ -12,6 +12,7 @@ import { SpeciesCardWithObservations } from '@/features/quests/components/Specie
 import { useAuth } from '@/hooks/useAuth'
 import { Quest } from '../../../../server/repositories/QuestRepository'
 import { Badge } from '@/components/ui/badge'
+import { paths } from '@/routes/paths'
 
 type QuestViewProps = {
     questData: Quest | null | undefined
@@ -124,7 +125,7 @@ export const QuestView = ({
                     {isOwner && (
                         <div className="flex items-center gap-2">
                             <Button variant="default" size="sm" asChild>
-                                <Link to={`/quests/${questData.id}/edit`}>
+                                <Link to={paths.editQuest(questData.id)}>
                                     <Pencil className="h-4 w-4 mr-2" />
                                     Edit Quest
                                 </Link>

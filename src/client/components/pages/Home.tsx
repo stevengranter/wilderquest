@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuestPhotos } from '@/hooks/useTaxonPhotos'
 import { QuestWithTaxa } from '../../../types/types'
+import { paths } from '@/routes/paths'
 
 function StatsCard({
     icon: Icon,
@@ -115,7 +116,7 @@ export function Home() {
                     </p>
                 </div>
 
-                <Link to="/quests" viewTransition>
+                <Link to={paths.quests()} viewTransition>
                 <Button size="lg" className="w-70 h-18 text-2xl cursor-pointer" >
                   <Compass />Explore Quests</Button></Link>
 
@@ -137,7 +138,7 @@ export function Home() {
                         </p>
                     </div>
                     <Button className="group" asChild>
-                        <Link to="/quests" viewTransition>
+                        <Link to={paths.quests()} viewTransition>
                             View All
                             <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </Link>
@@ -183,7 +184,7 @@ export function Home() {
                             Be the first to create a nature quest!
                         </p>
                         <Button asChild>
-                            <Link to="/quests/create">Create First Quest</Link>
+                            <Link to={paths.newQuest()}>Create First Quest</Link>
                         </Button>
                     </div>
                 )}

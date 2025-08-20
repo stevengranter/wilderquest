@@ -1,9 +1,10 @@
-import {useEffect, useState} from 'react'
+import { useEffect, useState } from 'react'
 import axios from 'axios'
-import {UserData} from '../../types/types.js'
+import { UserData } from '../../types/types.js'
 import avatar from 'animal-avatar-generator'
-import {ReactSVG} from 'react-svg'
-import {Link} from 'react-router'
+import { ReactSVG } from 'react-svg'
+import { Link } from 'react-router'
+import { paths } from '@/routes/paths'
 
 export default function UserList() {
     const [users, setUsers] = useState<UserData[]>([])
@@ -28,7 +29,7 @@ export default function UserList() {
                     {users.map((user) => {
                         const userAvatar = avatar(user.user_cuid, {size: 100})
                         return (
-                            <Link to={`/users/${user.id}`}>
+                            <Link to={paths.userProfile(user.username)}>
                                 <div
                                     className='flex flex-col p-5 border-1 items-center justify-center'
                                     key={user.id}

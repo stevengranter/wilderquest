@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTaxonPhotos } from '@/hooks/useTaxonPhotos'
 import { QuestWithTaxa } from '../../../types/types'
+import { paths } from '@/routes/paths'
 
 interface QuestCardProps {
     quest: QuestWithTaxa
@@ -38,7 +39,7 @@ export function QuestCard({ quest }: QuestCardProps) {
     }
 
     return (
-        <Link to={`/quests/${quest.id}`} className="block">
+        <Link to={paths.questDetail(quest.id)} className="block">
             <Card className="h-full bg-secondary-background shadow-0 hover:-rotate-3 hover:scale-105 hover:shadow-shadow transition-all duration-200 overflow-hidden p-0">
                 <CardContent className="overflow-hidden object-cover relative m-0 p-0">
                     {renderMainPhoto()}

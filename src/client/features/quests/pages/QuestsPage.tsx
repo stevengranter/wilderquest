@@ -6,6 +6,7 @@ import { QuestCard } from '@/components/quest/QuestCard'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { paths } from '@/routes/paths'
 import { QuestWithTaxa } from '../../../../types/types'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -51,7 +52,7 @@ export function QuestsPage() {
                         <Label htmlFor="airplane-mode">My Quests</Label>
                     </div>
                     <Button>
-                        <Link to="/quests/create">Create Quest</Link>
+                        <Link to={paths.newQuest()}>Create Quest</Link>
                     </Button>
                 </div>
             </div>

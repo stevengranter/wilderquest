@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth'
 import avatar from 'animal-avatar-generator'
 import { ReactSVG } from 'react-svg'
 import { Button } from '@/components/ui/button'
+import { paths } from '@/routes/paths'
 
 export function MainMenu() {
     const { isAuthenticated, user, logout } = useAuth();
@@ -40,7 +41,7 @@ export function MainMenu() {
                     </MenubarTrigger>
                     <MenubarContent>
                         <MenubarItem asChild>
-                            <Link to={`/users/${user.username}`}>Profile</Link>
+                            <Link to={paths.userProfile(user.username)}>Profile</Link>
                         </MenubarItem>
                         <MenubarSeparator />
                         <MenubarItem onSelect={handleLogout}>Logout</MenubarItem>
@@ -62,7 +63,7 @@ export function MainMenu() {
     return (
         <Menubar
             className={`flex w-full items-center border-0 mb-2 ${
-                isHome ? 'justify-end bg-transparent' : 'justify-between'
+                isHome ? 'justify-end bg-transparent' : 'justify-between bg-transparent'
             }`}
         >
             {/* Left section (title) → show only if NOT home */}
