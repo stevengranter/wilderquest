@@ -48,16 +48,21 @@ interface SpeciesCardWithObservationsProps {
         longitude?: number
     }
     children?: ReactNode
+    found?: boolean
 }
 
 export function SpeciesCardWithObservations(
     props: SpeciesCardWithObservationsProps
 ) {
-    const { species, questData, locationData, children } = props
+    const { species, questData, locationData, children, found } = props
     const displayData = questData || locationData
 
     if (!displayData?.latitude || !displayData?.longitude) {
-        return children || <SpeciesCard species={species} className="h-full" />
+        return (
+            children || (
+                <SpeciesCard species={species} className="h-full" found={found} />
+            )
+        )
     }
 
     return (
@@ -65,7 +70,11 @@ export function SpeciesCardWithObservations(
             <DialogTrigger className="h-full w-full" asChild>
                 <div className="h-full transform transition-transform hover:scale-105 cursor-pointer">
                     {children || (
-                        <SpeciesCard species={species} className="h-full" />
+                        <SpeciesCard
+                            species={species}
+                            className="h-full"
+                            found={found}
+                        />
                     )}
                 </div>
             </DialogTrigger>
@@ -76,6 +85,7 @@ export function SpeciesCardWithObservations(
                         <SpeciesCard
                             species={species}
                             className="relative -top-10 md:-left-15 -rotate-5"
+                            found={found}
                         />
                         <DialogHeader className="-mt-4">
                             <DialogTitle>
@@ -85,10 +95,10 @@ export function SpeciesCardWithObservations(
                             </DialogTitle>
                             <DialogDescription>
                                 <VisuallyHidden>
-                                    Recent observations located near: {displayData.location_name}
+                                    Recent observations located near:{' '}
+                                    {displayData.location_name}
                                 </VisuallyHidden>
                             </DialogDescription>
-
                         </DialogHeader>
                     </div>
                 </div>
@@ -96,7 +106,6 @@ export function SpeciesCardWithObservations(
                 {/* Right Column: Observations */}
 
                 <div className="flex-1 overflow-hidden">
-
                     {displayData.latitude && displayData.longitude && (
                         <ObservationList
                             taxonId={species.id}
@@ -156,10 +165,12 @@ function ObservationList({
                 transition={{ duration: 0.4, delay: 0.1 }}
             >
                 <div className="flex flex-col">
-                <h3 className="text-lg font-semibold">
-                    Recent Observations ({observations?.length || 0})
-                </h3>
-                <div className="flex flex-row items-center"><MdOutlineLocationOn className="mr-1" /> {locationName} </div>
+                    <h3 className="text-lg font-semibold">
+                        Recent Observations ({observations?.length || 0})
+                    </h3>
+                    <div className="flex flex-row items-center">
+                        <MdOutlineLocationOn className="mr-1" /> {locationName}{' '}
+                    </div>
                 </div>
                 <ToggleGroup
                     type="single"

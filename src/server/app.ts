@@ -21,11 +21,10 @@ import { createCollectionRouter } from './routes/collectionRouter.js'
 import questEventsRouter from './routes/questEventsRouter.js'
 import { createQuestRouter } from './routes/questRouter.js'
 import { createQuestShareRouter } from './routes/questShareRouter.js'
-import { userRouter } from './routes/userRouter.js'
+import { createUserRouter } from './routes/userRouter.js'
 import { createAuthService } from './services/authService.js'
 import { createQuestService } from './services/questService.js'
 import { createQuestShareService } from './services/questShareService.js'
-import { createUserService } from './services/userService.js'
 
 export function buildApp({
     userRepository,
@@ -50,16 +49,14 @@ export function buildApp({
     // initialize main router
     const apiRouter = express.Router()
 
-    // TODO: create userService
-    const userService = createUserService(userRepository)
-    const userController = createUserController(userService)
-    apiRouter.use('/users', userRouter(userController))
+    const userController = createUserController(userRepository)
+    const userRouter = createUserRouter(userController)
+    apiRouter.use('/users', userRouter)
 
     const collectionController =
         createCollectionController(collectionRepository)
     const collectionRouter = createCollectionRouter(collectionController)
     apiRouter.use('/collections', collectionRouter)
-    // apiRouter.use('/collections', createCollectionRouter(collectionController))
 
     const questService = createQuestService(
         questRepository,
@@ -81,23 +78,16 @@ export function buildApp({
     apiRouter.use('/quest-sharing', questShareRouter)
     apiRouter.use('/quests', questEventsRouter)
 
-    // apiRouter.use('/quests', createQuestRouter(questController))
-
     const authService = createAuthService(userRepository)
     const authController = createAuthController(authService)
     const authRouter = createAuthRouter(authController)
     apiRouter.use('/auth', authRouter)
 
-    // const chatController = createChatController()
-    // apiRouter.use('/chat', chatRouter(chatController))
-
     const iNatController = createINaturalistAPIController()
-    // More conservative rate limiting to prevent 429 errors
-    // iNaturalist recommends staying under 60 requests/minute
     apiRouter.use(
         '/iNatAPI',
         rateSlowDown,
-        rateLimiter(60 * 1000, 30), // Reduced from 60 to 30 requests per minute
+        rateLimiter(60 * 1000, 30),
         iNatController
     )
     apiRouter.use('/tiles', mapTilesProxyRouter)
@@ -112,14 +102,11 @@ export function buildApp({
         res.status(404).json({ error: 'No such endpoint' })
     })
 
-    // Mount /api
     app.use('/api', apiRouter)
 
-    // 📎 Middleware
     app.use(cors(corsConfig))
     app.use(express.json({ limit: '10mb' }))
     app.use(express.urlencoded({ extended: true, limit: '10mb' }))
-    // app.use('/api', apiRouter)
 
     return app
 }

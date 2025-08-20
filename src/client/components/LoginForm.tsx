@@ -31,15 +31,13 @@ const LoginForm = React.forwardRef(() => {
         },
     })
 
-    // Updates to LoginForm.tsx - modify the onSubmit function
-
     async function onSubmit(values: z.infer<typeof LoginRequestSchema>) {
         try {
             const response = await login(values)
 
-            if (response?.success) {
+            if (response?.user) {
                 toast.success('Logged in successfully!')
-                navigate('/welcome')
+                navigate(`/users/${response.user.username}`)
             } else {
                 form.setError('root.serverError', {
                     type: 'server',

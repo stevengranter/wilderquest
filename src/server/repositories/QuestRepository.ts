@@ -9,6 +9,7 @@ export type Quest = {
     description?: string
     is_private: boolean
     user_id: number
+    username: string
     status: 'pending' | 'active' | 'paused' | 'ended'
     location_name?: string
     latitude?: number
@@ -49,8 +50,10 @@ export function createQuestRepository(
         const query = `
       SELECT
         q.*,
+        u.username,
         GROUP_CONCAT(qt.taxon_id) AS taxon_ids
       FROM ${tableName} q
+      LEFT JOIN users u ON q.user_id = u.id
       LEFT JOIN quests_to_taxa qt ON q.id = qt.quest_id
       WHERE q.id = ?
         AND (q.is_private = FALSE OR q.user_id = ?)
@@ -74,6 +77,7 @@ export function createQuestRepository(
             description: row.description,
             is_private: row.is_private,
             user_id: row.user_id,
+            username: row.username,
             status: row.status,
             location_name: row.location_name,
             latitude: row.latitude,

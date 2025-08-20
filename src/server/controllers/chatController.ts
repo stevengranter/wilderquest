@@ -1,4 +1,4 @@
-import logger from '../config/logger'
+import logger from '../config/logger.js'
 import 'dotenv/config'
 import { google } from '@ai-sdk/google'
 import { streamText } from 'ai'

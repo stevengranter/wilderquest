@@ -22,6 +22,7 @@ interface SpeciesCardProps {
     isSelectable?: boolean
     geoObservationsCount?: number
     rarity?: 'common' | 'uncommon' | 'rare'
+    found?: boolean
 }
 
 export function SpeciesCard({
@@ -31,6 +32,7 @@ export function SpeciesCard({
     isSelectable = true,
     geoObservationsCount,
     rarity,
+    found,
 }: SpeciesCardProps) {
     const {
         isSelectionMode,
@@ -76,6 +78,7 @@ export function SpeciesCard({
             handleClick={handleClick}
             geoObservationsCount={geoObservationsCount}
             rarity={rarity}
+            found={found}
         />
     )
 }
@@ -111,6 +114,7 @@ function SpeciesGridItem({
     handleClick,
     geoObservationsCount,
     rarity,
+    found,
 }: {
     species: INatTaxon
     className?: string
@@ -120,9 +124,9 @@ function SpeciesGridItem({
     isSelectable?: boolean
     geoObservationsCount?: number
     rarity?: 'common' | 'uncommon' | 'rare'
+    found?: boolean
 }) {
     const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
-
     return (
         <AnimatePresence mode="wait">
             <motion.div
@@ -153,9 +157,10 @@ function SpeciesGridItem({
             >
                 <Card
                     className={cn(
-                        'aspect-2.5/3.5 overflow-hidden bg-gradient-to-b from-emerald-400 via-cyan-300 to-violet-400 shadow-0 py-0 gap-0 border-3 rounded-xl border-teal-600 rotate-0 z-100 flex flex-column justify-between',
+                        'aspect-2.5/3.5 overflow-hidden bg-slate-100 shadow-0 py-0 gap-0 border-3 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
                         isSelected && 'ring-2 ring-blue-500 shadow-blue-200/50',
-                        'hover:shadow-shadow transition-shadow duration-500'
+                        'hover:shadow-shadow transition-shadow duration-500',
+                        found && 'bg-amber-50 border-amber-400'
                     )}
                 >
                     <CardHeader
@@ -180,7 +185,10 @@ function SpeciesGridItem({
                             <img
                                 src={species.default_photo.medium_url}
                                 alt={species.name}
-                                className="w-full h-full aspect-square object-cover border-2 border-white outline-black outline-2 rounded-sm"
+                                className={cn(
+                                    'w-full h-full aspect-square object-cover border-2 border-white outline-black outline-2 rounded-sm',
+                                    found && 'bg-teal-300'
+                                )}
                             />
                         ) : (
                             <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">

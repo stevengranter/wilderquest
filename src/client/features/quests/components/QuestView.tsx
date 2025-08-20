@@ -11,6 +11,7 @@ import ShareQuest from '@/features/quests/components/ShareQuest'
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { useAuth } from '@/hooks/useAuth'
 import { Quest } from '../../../../server/repositories/QuestRepository'
+import { Badge } from '@/components/ui/badge'
 
 type QuestViewProps = {
     questData: Quest | null | undefined
@@ -76,11 +77,22 @@ export const QuestView = ({
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <Card className="bg-card p-6 rounded-lg shadow-lg">
+            {/*<Card className="bg-card p-6 rounded-lg shadow-lg">*/}
                 <div className="flex flex-row justify-between align-middle">
-                    <h1 className="text-3xl font-bold text-primary">
-                        {questData.name}
-                    </h1>
+                    <div className="flex flex-row">
+                        <div className="flex flex-col">
+                        <h2 className="text-3xl font-bold text-primary">
+                            {questData.name}
+                        </h2>
+                        {questData?.location_name && (
+                            <h3>Location: {questData?.location_name}</h3>
+                        )}
+                        </div>
+                        {/*{questData.status && (*/}
+                        {/*        <QuestStatus status={questData.status} />*/}
+                        {/*    )}*/}
+
+                    </div>
                     <div className="flex items-center gap-3">
                         {questData.is_private ? (
                             <Lock className="h-5 w-5 text-muted-foreground" />
@@ -88,9 +100,7 @@ export const QuestView = ({
                             <LockOpen className="h-5 w-5 text-muted-foreground" />
                         )}
                     </div>
-                    {questData.status && (
-                        <QuestStatus status={questData.status} />
-                    )}
+
                 </div>
                 {isOwner && (
                     <QuestStatusControls
@@ -105,6 +115,11 @@ export const QuestView = ({
                         <p className="text-muted-foreground mt-2">
                             {questData.description}
                         </p>
+                        {!isOwner && questData?.username && (
+                            <h4>
+                                Organizer: <Link to={`/users/${questData.username}`}>{questData.username}</Link>
+                            </h4>
+                        )}
                     </div>
                     {isOwner && (
                         <div className="flex items-center gap-2">
@@ -122,9 +137,7 @@ export const QuestView = ({
                     )}
                 </div>
 
-                {questData?.location_name && (
-                    <div>Location: {questData?.location_name}</div>
-                )}
+
 
                 <div className="mt-8">
                     {mappings && mappings.length > 0 && (
@@ -152,6 +165,7 @@ export const QuestView = ({
                                 <SpeciesCardWithObservations
                                     species={taxon}
                                     questData={questData}
+                                    found={taxon.progressCount > 0}
                                 />
                                 {(isOwner || token) && taxon.mapping && (
                                     <div className="absolute bottom-2 right-2">
@@ -319,7 +333,7 @@ export const QuestView = ({
                         </div>
                     </div>
                 )}
-            </Card>
+            {/*</Card>*/}
         </div>
     )
 }
@@ -361,7 +375,7 @@ function QuestStatusControls(props: {
 
 function QuestStatus(props: { status: any }) {
     return (
-        <div className="mt-4 flex items-center gap-2">
+        <Badge className="mt-4 flex items-center gap-2">
             <span
                 className={`px-3 py-1 text-sm font-bold rounded-full flex items-center gap-2 ${
                     props.status === 'pending'
@@ -379,7 +393,7 @@ function QuestStatus(props: { status: any }) {
                 {props.status === 'ended' && <StopCircle className="h-4 w-4" />}
                 <span className="capitalize">{props.status}</span>
             </span>
-        </div>
+        </Badge>
     )
 }
 

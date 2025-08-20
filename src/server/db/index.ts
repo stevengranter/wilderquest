@@ -1,6 +1,6 @@
 import mysql, { Pool } from 'mysql2/promise'
 import env from '../config/app.config.js'
-import logger from '../config/logger'
+import logger from '../config/logger.js'
 
 let dbPool: Pool | undefined;
 

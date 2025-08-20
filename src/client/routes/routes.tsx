@@ -5,7 +5,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { Home } from '@/components/pages/Home'
 import Login from '@/components/pages/Login'
 import Register from '@/components/pages/Register'
-import Welcome from '@/components/pages/Welcome'
+import UserProfile from '@/components/pages/UserProfile'
 import CollectionDetail from '@/features/collections/CollectionDetail'
 import UserCollectionsManager from '@/features/collections/UserCollectionsManager'
 import EditQuest from '@/features/quests/components/EditQuest'
@@ -66,8 +66,8 @@ export const router = createBrowserRouter([
                 element: <Register />,
             },
             {
-                path: 'welcome',
-                element: <Welcome />,
+                path: 'users/:username',
+                element: <UserProfile />,
             },
             {
                 path: 'collections',
@@ -107,7 +107,7 @@ export const router = createBrowserRouter([
                         element: <UserQuestsPage />,
                     },
                     {
-                        path: 'create/*',
+                        path: 'new/*',
                         element: (
                             <ProtectedRoute>
                                 <CreateQuest />
