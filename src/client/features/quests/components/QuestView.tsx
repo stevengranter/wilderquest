@@ -30,6 +30,30 @@ type QuestViewProps = {
     leaderboard?: any[]
 }
 
+function QuestTimestamps({ startsAt, endsAt }: { startsAt?: Date, endsAt?: Date }) {
+    if (!startsAt) {
+        return null;
+    }
+
+    const formattedStartsAt = new Date(startsAt).toLocaleString();
+
+    if (!endsAt) {
+        return (
+            <div className="text-sm text-muted-foreground">
+                Starts: {formattedStartsAt}
+            </div>
+        );
+    }
+
+    const formattedEndsAt = new Date(endsAt).toLocaleString();
+
+    return (
+        <div className="text-sm text-muted-foreground">
+            {formattedStartsAt} - {formattedEndsAt}
+        </div>
+    );
+}
+
 export const QuestView = ({
     questData,
     taxa,
@@ -88,6 +112,7 @@ export const QuestView = ({
                         {questData?.location_name && (
                             <h3>Location: {questData?.location_name}</h3>
                         )}
+                        <QuestTimestamps startsAt={questData.starts_at} endsAt={questData.ends_at} />
                         </div>
                         {/*{questData.status && (*/}
                         {/*        <QuestStatus status={questData.status} />*/}

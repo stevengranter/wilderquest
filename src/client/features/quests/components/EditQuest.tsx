@@ -66,6 +66,8 @@ export default function EditQuest() {
             latitude: null,
             longitude: null,
             isPrivate: false,
+            starts_at: '',
+            ends_at: '',
         },
     })
 
@@ -84,6 +86,8 @@ export default function EditQuest() {
                         ? parseFloat(quest.longitude)
                         : null,
                     isPrivate: !!quest.is_private,
+                    starts_at: quest.starts_at ? new Date(quest.starts_at).toISOString().substring(0, 16) : '',
+                    ends_at: quest.ends_at ? new Date(quest.ends_at).toISOString().substring(0, 16) : '',
                 })
                 if (quest.taxon_ids?.length) {
                     setInitialTaxonIds(quest.taxon_ids)
@@ -185,6 +189,8 @@ export default function EditQuest() {
             latitude: data.latitude,
             longitude: data.longitude,
             is_private: data.isPrivate,
+            starts_at: data.starts_at || null,
+            ends_at: data.ends_at || null,
             taxon_ids,
         }
         try {
@@ -385,6 +391,34 @@ function QuestDetails() {
                 watch={watch}
                 setValue={setValue}
             />
+            <div className="flex flex-row gap-4">
+                <FormField
+                    control={control}
+                    name="starts_at"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Start Date</FormLabel>
+                            <FormControl>
+                                <Input type="datetime-local" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={control}
+                    name="ends_at"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>End Date</FormLabel>
+                            <FormControl>
+                                <Input type="datetime-local" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
             <QuestMapView options={mapOptions} />
             <FormField
                 control={control}

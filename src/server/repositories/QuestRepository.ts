@@ -6,6 +6,8 @@ export type Quest = {
     name: string
     created_at: Date
     updated_at: Date
+    starts_at?: Date
+    ends_at?: Date
     description?: string
     is_private: boolean
     user_id: number
@@ -74,6 +76,8 @@ export function createQuestRepository(
             name: row.name,
             created_at: row.created_at,
             updated_at: row.updated_at,
+            starts_at: row.starts_at,
+            ends_at: row.ends_at,
             description: row.description,
             is_private: row.is_private,
             user_id: row.user_id,

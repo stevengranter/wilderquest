@@ -27,6 +27,8 @@ export const formSchema = z.object({
     latitude: z.number().nullable(),
     longitude: z.number().nullable(),
     isPrivate: z.boolean(),
+    starts_at: z.string().optional(),
+    ends_at: z.string().optional(),
 })
 
 interface TaxonData {
@@ -84,19 +86,23 @@ export function CreateQuest() {
             latitude: null,
             longitude: null,
             isPrivate: false,
+            starts_at: '',
+            ends_at: '',
         },
     })
 
     const onSubmit = useCallback(
         async (values: z.infer<typeof formSchema>) => {
             const taxonIds = Array.from(questSpecies.keys())
-            const { questName, locationName, latitude, longitude } = values
+            const { questName, locationName, latitude, longitude, starts_at, ends_at } = values
             const payload = {
                 name: questName,
                 location_name: locationName,
                 latitude: latitude,
                 longitude: longitude,
                 taxon_ids: taxonIds,
+                starts_at: starts_at || null,
+                ends_at: ends_at || null,
             }
 
             console.log('Submitting quest with:', payload)
@@ -300,6 +306,34 @@ function QuestDetails({ setStep }: { setStep: (step: number) => void }) {
                                     value={field.value ?? ''}
                                     readOnly
                                 />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+            <div className="flex flex-row gap-4">
+                <FormField
+                    control={control}
+                    name="starts_at"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Start Date</FormLabel>
+                            <FormControl>
+                                <Input type="datetime-local" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={control}
+                    name="ends_at"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>End Date</FormLabel>
+                            <FormControl>
+                                <Input type="datetime-local" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
