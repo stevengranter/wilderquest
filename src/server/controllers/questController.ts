@@ -4,7 +4,9 @@ import { QuestService } from '../services/questService.js'
 
 export function createQuestController(questService: QuestService) {
     async function getPublicQuests(req: Request, res: Response) {
-        const quests = await questService.getAllPublicQuests()
+        const page = parseInt(req.query.page as string) || 1
+        const limit = parseInt(req.query.limit as string) || 10
+        const quests = await questService.getAllPublicQuests(page, limit)
         res.status(200).json(quests)
     }
 

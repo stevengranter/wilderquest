@@ -14,9 +14,16 @@ interface QuestCardProps {
     quest: QuestWithTaxa
     className?: string
     hoverEffect?: 'lift' | 'shadow' | 'none'
+    /** when true, enable image hover animations */
+    animate?: boolean
 }
 
-export function QuestCard({ quest, className, hoverEffect = 'lift' }: QuestCardProps) {
+export function QuestCard({
+                              quest,
+                              className,
+                              hoverEffect = 'lift',
+                              animate = false, // <-- animate means "enable animations"
+                          }: QuestCardProps) {
     const [hoveredImage, setHoveredImage] = useState<string | null>(null)
 
     const collageTaxonIds = quest.taxon_ids?.slice(0, 3) || []
@@ -36,12 +43,15 @@ export function QuestCard({ quest, className, hoverEffect = 'lift' }: QuestCardP
         })
         : 'Date TBD'
 
-    // Define hover effect class sets
     const hoverClasses = {
         lift: 'transition-all duration-200 hover:-translate-2 hover:shadow-shadow',
         shadow: 'transition-all duration-200 hover:shadow-shadow',
         none: '',
     }
+
+    // Only attach handlers when animations are enabled
+    const maybeHover = (img: string) => (animate ? () => setHoveredImage(img) : undefined)
+    const maybeResetHover = animate ? () => setHoveredImage(null) : undefined
 
     return (
         <Link to={paths.questDetail(quest.id)} className="block w-full">
@@ -51,29 +61,45 @@ export function QuestCard({ quest, className, hoverEffect = 'lift' }: QuestCardP
                     hoverClasses[hoverEffect],
                     className
                 )}
-                onMouseLeave={() => setHoveredImage(null)}
+                onMouseLeave={maybeResetHover}
             >
-                <div className="p-2 space-y-2" onMouseLeave={() => setHoveredImage(null)}>
-                    {/*<div>*/}
-                    {/*    <h3>{quest.name}</h3>*/}
-                    {/*</div>*/}
+                <div className="p-2 space-y-2" onMouseLeave={maybeResetHover}>
                     {/* First row */}
                     <div className="flex h-48 gap-3">
                         <div
                             className={cn(
-                                'transition-all duration-300 ease-in-out overflow-hidden rounded-xl opacity-80 hover:opacity-100',
-                                hoveredImage === 'img1' ? 'flex-1' : hoveredImage === 'img2' ? 'w-0' : 'flex-1'
+                                'overflow-hidden rounded-xl',
+                                animate
+                                    ? clsx(
+                                        'transition-all duration-300 ease-in-out opacity-80 hover:opacity-100',
+                                        hoveredImage === 'img1'
+                                            ? 'flex-1'
+                                            : hoveredImage === 'img2'
+                                                ? 'w-0'
+                                                : 'flex-1'
+                                    )
+                                    : 'flex-1 opacity-100'
                             )}
-                            onMouseEnter={() => setHoveredImage('img1')}
+                            onMouseEnter={maybeHover('img1')}
                         >
                             <img src={photoSlots[0]} alt="Quest wildlife 1" className="w-full h-full object-cover" />
                         </div>
+
                         <div
                             className={cn(
-                                'transition-all duration-300 ease-in-out overflow-hidden rounded-xl opacity-80 hover:opacity-100',
-                                hoveredImage === 'img2' ? 'flex-1' : hoveredImage === 'img1' ? 'w-0' : 'flex-1'
+                                'overflow-hidden rounded-xl',
+                                animate
+                                    ? clsx(
+                                        'transition-all duration-300 ease-in-out opacity-80 hover:opacity-100',
+                                        hoveredImage === 'img2'
+                                            ? 'flex-1'
+                                            : hoveredImage === 'img1'
+                                                ? 'w-0'
+                                                : 'flex-1'
+                                    )
+                                    : 'flex-1 opacity-100'
                             )}
-                            onMouseEnter={() => setHoveredImage('img2')}
+                            onMouseEnter={maybeHover('img2')}
                         >
                             <img src={photoSlots[1]} alt="Quest wildlife 2" className="w-full h-full object-cover" />
                         </div>
@@ -82,26 +108,41 @@ export function QuestCard({ quest, className, hoverEffect = 'lift' }: QuestCardP
                     {/* Second row */}
                     <div className="flex h-64 gap-3">
                         <div
-                            className="transition-all duration-300 ease-in-out overflow-hidden rounded-xl flex-1 opacity-80 hover:opacity-100"
-                            onMouseEnter={() => setHoveredImage('img3')}
+                            className={cn(
+                                'overflow-hidden rounded-xl flex-1',
+                                animate
+                                    ? 'transition-all duration-300 ease-in-out opacity-80 hover:opacity-100'
+                                    : 'opacity-100'
+                            )}
+                            onMouseEnter={maybeHover('img3')}
                         >
                             <img src={photoSlots[2]} alt="Quest wildlife 3" className="w-full h-full object-cover" />
                         </div>
-                        <div className={cn('transition-all duration-300 ease-in-out', hoveredImage === 'img3' ? 'w-0' : 'flex-1')}>
+
+                        <div
+                            className={cn(
+                                animate
+                                    ? clsx(
+                                        'transition-all duration-300 ease-in-out',
+                                        hoveredImage === 'img3' ? 'w-0' : 'flex-1'
+                                    )
+                                    : 'flex-1'
+                            )}
+                        >
                             <div
                                 className={cn(
-                                    'rounded-xl flex flex-col h-full transition-opacity duration-300',
-                                    hoveredImage === 'img3' ? 'opacity-0' : 'opacity-100'
+                                    'rounded-xl flex flex-col h-full',
+                                    animate
+                                        ? clsx(
+                                            'transition-opacity duration-300',
+                                            hoveredImage === 'img3' ? 'opacity-0' : 'opacity-100'
+                                        )
+                                        : 'opacity-100'
                                 )}
                             >
                                 <div className="flex-[2] bg-secondary-background flex items-center justify-center text-center rounded-xl p-2 min-h-0">
                                     <h3 className="text-base text-green-800 tracking-wider leading-tight overflow-hidden">
                                         {quest.name}
-                                        {/*{quest.name.split(' ').map((word, idx) => (*/}
-                                        {/*    <div key={idx} className="truncate">*/}
-                                        {/*        {word}*/}
-                                        {/*    </div>*/}
-                                        {/*))}*/}
                                     </h3>
                                 </div>
                             </div>

@@ -162,6 +162,7 @@ export function Home() {
                                 key={quest.id}
                                 quest={quest}
                                 hoverEffect="lift"
+                                animate={false}
                                 photo={questPhotos.get(quest.id) || undefined}
 
                             />

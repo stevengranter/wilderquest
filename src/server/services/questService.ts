@@ -11,9 +11,16 @@ export function createQuestService(
     questShareRepo: QuestShareRepository
 ) {
     // 1. Get all public quests
-    async function getAllPublicQuests(): Promise<QuestWithTaxa[]> {
+    async function getAllPublicQuests(
+        page: number = 1,
+        limit: number = 10
+    ): Promise<QuestWithTaxa[]> {
         try {
-            const quests = await questsRepo.findMany({ is_private: false })
+            const offset = (page - 1) * limit
+            const quests = await questsRepo.findMany(
+                { is_private: false },
+                { limit, offset }
+            )
             const questsWithTaxaAndPhotos = await Promise.all(
                 quests.map(async (quest) => {
                     const taxa = await getTaxaForQuestId(quest.id)
