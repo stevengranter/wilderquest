@@ -12,11 +12,11 @@ import { QuestWithTaxa } from '../../../types/types'
 import { paths } from '@/routes/paths'
 
 function StatsCard({
-    icon: Icon,
-    label,
-    value,
-    description,
-}: {
+                       icon: Icon,
+                       label,
+                       value,
+                       description,
+                   }: {
     icon: any
     label: string
     value: string
@@ -105,26 +105,19 @@ export function Home() {
             {/* Hero Section */}
             <section className="relative px-4 pt-20 pb-16 text-center">
                 <div className="max-w-4xl mx-auto">
-
-
                     <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
                         wilderQuest
                     </h1>
 
                     <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                      Join a community of explorers
+                        Join a community of explorers
                     </p>
                 </div>
 
                 <Link to={paths.quests()} viewTransition>
-                <Button size="lg" className="w-70 h-18 text-2xl cursor-pointer" >
-                  <Compass />Explore Quests</Button></Link>
-
-
+                    <Button size="lg" className="w-70 h-18 text-2xl cursor-pointer" >
+                        <Compass />Explore Quests</Button></Link>
             </section>
-
-
-
 
             {/* Recent Quests Section */}
             <section className="px-4 py-16 max-w-6xl mx-auto">
@@ -146,7 +139,7 @@ export function Home() {
                 </div>
 
                 {isLoading ? (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {Array.from({ length: 6 }).map((_, i) => (
                             <Card key={i} className="h-full">
                                 <div className="h-48">
@@ -163,12 +156,14 @@ export function Home() {
                         ))}
                     </div>
                 ) : recentQuests.length > 0 ? (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-4 auto-rows-fr" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
                         {recentQuests.map((quest) => (
                             <QuestCard
                                 key={quest.id}
                                 quest={quest}
+                                hoverEffect="lift"
                                 photo={questPhotos.get(quest.id) || undefined}
+
                             />
                         ))}
                     </div>
