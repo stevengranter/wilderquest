@@ -96,7 +96,9 @@ export function createQuestRepository(
 
     async function findAccessibleByUserId(
         userId: number,
-        viewerId?: number
+        viewerId?: number,
+        limit: number = 10,
+        offset: number = 0
     ): Promise<Quest[]> {
         const isOwner = userId === viewerId
         console.log('isOwner', isOwner)
@@ -105,16 +107,16 @@ export function createQuestRepository(
         if (isOwner) {
             // return all quests (public and private)
             const [rows] = await dbPool.query(
-                `SELECT * FROM quests WHERE user_id = ?`,
-                [userId]
+                `SELECT * FROM quests WHERE user_id = ? LIMIT ? OFFSET ?`,
+                [userId, limit, offset]
             )
             return rows as Quest[]
         } else {
             // only return public quests
             console.log('getting public quests')
             const [rows] = await dbPool.query(
-                `SELECT * FROM quests WHERE user_id = ? AND is_private = false`,
-                [userId]
+                `SELECT * FROM quests WHERE user_id = ? AND is_private = false LIMIT ? OFFSET ?`,
+                [userId, limit, offset]
             )
             return rows as Quest[]
         }

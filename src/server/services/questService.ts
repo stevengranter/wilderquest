@@ -60,11 +60,16 @@ export function createQuestService(
     // 3. Get a user's visible quests (all their own, or public ones if not their account)
     async function getUserQuests(
         targetUserId: number,
-        viewerId?: number
+        viewerId?: number,
+        page: number = 1,
+        limit: number = 10
     ): Promise<QuestWithTaxa[]> {
+        const offset = (page - 1) * limit
         const quests = await questsRepo.findAccessibleByUserId(
             targetUserId,
-            viewerId
+            viewerId,
+            limit,
+            offset
         )
         const questsWithTaxaAndPhotos = await Promise.all(
             quests.map(async (quest) => {

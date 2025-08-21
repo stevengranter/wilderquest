@@ -28,6 +28,9 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
         detailedProgress,
         isLoading,
         isTaxaLoading,
+        isTaxaFetchingNextPage,
+        taxaHasNextPage,
+        fetchNextTaxaPage,
         isError,
         updateStatus,
     } = useQuest({ questId: activeQuestId, initialData })
@@ -61,6 +64,9 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
             detailedProgress={detailedProgress}
             isLoading={isLoading}
             isTaxaLoading={isTaxaLoading}
+            isTaxaFetchingNextPage={isTaxaFetchingNextPage}
+            taxaHasNextPage={taxaHasNextPage}
+            fetchNextTaxaPage={fetchNextTaxaPage}
             isError={isError}
             updateStatus={updateStatus}
             isOwner={isOwner}

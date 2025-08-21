@@ -34,9 +34,16 @@ export function createQuestController(questService: QuestService) {
     ) {
         const userId = Number(req.params.user_id)
         const viewerId = req.user?.id
+        const page = parseInt(req.query.page as string) || 1
+        const limit = parseInt(req.query.limit as string) || 10
 
         try {
-            const quests = await questService.getUserQuests(userId, viewerId)
+            const quests = await questService.getUserQuests(
+                userId,
+                viewerId,
+                page,
+                limit
+            )
             res.status(200).json(quests)
         } catch (_error) {
             res.status(404).json({

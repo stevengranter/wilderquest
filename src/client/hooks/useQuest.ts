@@ -14,6 +14,22 @@ type ProgressData = {
 }
 type GuestProgressData = { aggregatedProgress: any[]; detailedProgress: any[] }
 
+export const fetchQuests = async ({
+    pageParam = 1,
+    questId,
+}: {
+    pageParam?: number
+    questId?: string | number
+}): Promise<{ quests: Quest[]; nextPage: number | undefined }> => {
+    const { data } = await api.get(
+        `/quests/${questId}?page=${pageParam}&limit=10`
+    )
+    return {
+        quests: data,
+        nextPage: data.length === 10 ? pageParam + 1 : undefined,
+    }
+}
+
 export const fetchQuest = async (
     questId?: string | number
 ): Promise<Quest | null> => {
@@ -233,6 +249,9 @@ export const useQuest = ({
             guestProgressQuery.isLoading ||
             leaderboardQuery.isLoading,
         isTaxaLoading,
+        isTaxaFetchingNextPage: taxaQuery.isFetchingNextPage,
+        taxaHasNextPage: taxaQuery.hasNextPage,
+        fetchNextTaxaPage: taxaQuery.fetchNextPage,
         isError:
             questQuery.isError ||
             sharedQuestQuery.isError ||
