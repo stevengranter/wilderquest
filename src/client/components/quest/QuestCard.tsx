@@ -1,104 +1,122 @@
-import { Link } from 'react-router'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { useTaxonPhotos } from '@/hooks/useTaxonPhotos'
+import { Link } from 'react-router-dom'
+import { Card } from '@/components/ui/card'
 import { QuestWithTaxa } from '../../../types/types'
 import { paths } from '@/routes/paths'
+import { useTaxonPhotos } from '@/hooks/useTaxonPhotos'
+import { MapPin } from 'lucide-react'
+import { useState } from 'react'
 
 interface QuestCardProps {
     quest: QuestWithTaxa
 }
 
 export function QuestCard({ quest }: QuestCardProps) {
-    // Fetch photos for up to 6 other species in the quest
-    const thumbnailTaxonIds = quest.taxon_ids?.slice(1, 7) || []
-    const { data: thumbnailPhotosData } = useTaxonPhotos(thumbnailTaxonIds)
+    const [hoveredImage, setHoveredImage] = useState<string | null>(null)
 
-    const thumbnailPhotos: string[] = Array.isArray(thumbnailPhotosData)
-        ? thumbnailPhotosData.filter((p): p is string => !!p)
+    const collageTaxonIds = quest.taxon_ids?.slice(0, 3) || []
+    const { data: collagePhotosData } = useTaxonPhotos(collageTaxonIds)
+
+    const photos: string[] = Array.isArray(collagePhotosData)
+        ? collagePhotosData.filter((p): p is string => !!p)
         : []
 
-    const renderMainPhoto = () => {
-        if (!quest.photoUrl) {
-            return (
-                <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <span className="text-muted-foreground text-xs">
-                        No photo
-                    </span>
-                </div>
-            )
-        }
+    const photoSlots = Array.from({ length: 3 }, (_, i) => photos[i] || '/placeholder.jpg')
 
-        return (
-            <img
-                src={quest.photoUrl}
-                alt={`Photo for ${quest.name}`}
-                className="w-full h-full object-cover"
-            />
-        )
-    }
+    const formattedDate = quest.starts_at
+        ? new Date(quest.starts_at).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+          })
+        : 'Date TBD'
 
     return (
         <Link to={paths.questDetail(quest.id)} className="block">
-            <Card className="h-full bg-secondary-background shadow-0 hover:-rotate-3 hover:scale-105 hover:shadow-shadow transition-all duration-200 overflow-hidden p-0">
-                <CardContent className="overflow-hidden object-cover relative m-0 p-0">
-                    {renderMainPhoto()}
-                </CardContent>
-                <CardContent>
-                    {thumbnailPhotos.length > 0 && (
-                        <CardContent className="flex items-center">
-                            {thumbnailPhotos.map((photo, index) => (
+            <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 bg-cream rounded-2xl max-w-sm">
+                <div className="p-2 space-y-2" onMouseLeave={() => setHoveredImage(null)}>
+                    {/* First row - Two square images */}
+                    <div className="flex h-48">
+                        <div
+                            className={`transition-all duration-300 ease-in-out ${hoveredImage === 'img1' ? 'w-full' : hoveredImage === 'img2' ? 'w-0 p-0' : 'w-1/2'} p-1`}
+                            onMouseEnter={() => setHoveredImage('img1')}
+                        >
+                            <div className="overflow-hidden rounded-xl h-full">
                                 <img
-                                    key={index}
-                                    src={photo}
-                                    alt={`Species ${index + 2}`}
-                                    className="w-8 h-8 rounded-full border-2 border-secondary-background -ml-3"
+                                    src={photoSlots[0]}
+                                    alt="Quest wildlife 1"
+                                    className="w-full h-full object-cover"
                                 />
-                            ))}
-                        </CardContent>
-                    )}
-                </CardContent>
-                <CardHeader className="px-6 pt-4 pb-2">
-                    <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                            <CardTitle className="flex items-center gap-2">
-                                {quest.name}
-                            </CardTitle>
+                            </div>
                         </div>
-                        {quest.is_private && (
-                            <Badge variant="neutral" className="ml-2">
-                                Private
-                            </Badge>
-                        )}
+                        <div
+                            className={`transition-all duration-300 ease-in-out ${hoveredImage === 'img2' ? 'w-full' : hoveredImage === 'img1' ? 'w-0 p-0' : 'w-1/2'} p-1`}
+                            onMouseEnter={() => setHoveredImage('img2')}
+                        >
+                            <div className="overflow-hidden rounded-xl h-full">
+                                <img
+                                    src={photoSlots[1]}
+                                    alt="Quest wildlife 2"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        </div>
                     </div>
-                </CardHeader>
-                {quest.description && (
-                    <CardContent className="px-6 pb-2">
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                            {quest.description}
+
+                    {/* Second row - Portrait image and map/title section */}
+                    <div className="flex h-64">
+                        <div
+                            className={`transition-all duration-300 ease-in-out ${hoveredImage === 'img3' ? 'w-full' : 'w-1/2'} p-1`}
+                            onMouseEnter={() => setHoveredImage('img3')}
+                        >
+                            <div className="overflow-hidden rounded-xl h-full">
+                                <img
+                                    src={photoSlots[2]}
+                                    alt="Quest wildlife 3"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        </div>
+                        <div
+                            className={`transition-all duration-300 ease-in-out ${hoveredImage === 'img3' ? 'w-0 p-0' : 'w-1/2'} p-1`}>
+                            <div
+                                className={`bg-orange-50 rounded-xl flex flex-col h-full transition-opacity duration-300 ${hoveredImage === 'img3' ? 'opacity-0' : 'opacity-100'}`}>
+                                {/* Map section - 1/3 height */}
+                                <div className="flex-1 flex flex-col items-center justify-center p-2 min-h-0">
+                                    <div className="text-green-700 mb-1">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 2L8 8h2v12h4V8h2l-4-6z" />
+                                        </svg>
+                                    </div>
+
+                                    {/* Map pin */}
+                                    <div className="bg-orange-500 rounded-full p-1.5 shadow-lg">
+                                        <MapPin className="w-3 h-3 text-white fill-white" />
+                                    </div>
+                                </div>
+
+                                {/* Quest title - 2/3 height */}
+                                <div className="flex-[2] flex items-center justify-center text-center p-2 min-h-0">
+                                    <h3 className="text-base font-black text-green-800 uppercase tracking-wider leading-tight overflow-hidden">
+                                        {quest.name.split(' ').map((word, idx) => (
+                                            <div key={idx} className="truncate">
+                                                {word}
+                                            </div>
+                                        ))}
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Third row - Location and date */}
+                    <div className="bg-green-800 rounded-xl px-4 py-3 text-center mx-1">
+                        <p className="text-white font-bold text-sm uppercase tracking-wide">
+                            <span>{quest.location_name || 'Location TBD'}</span>
+                            <span className="mx-2">&bull;</span>
+                            <span>{formattedDate}</span>
                         </p>
-                    </CardContent>
-                )}
-                <CardFooter className="px-6 pb-4 pt-4 flex justify-between items-center">
-                    <Badge
-                        variant={
-                            quest.status === 'active' ? 'default' : 'neutral'
-                        }
-                        className="text-xs"
-                    >
-                        {quest.status === 'active'
-                            ? '🟢'
-                            : quest.status === 'paused'
-                              ? '⏸️'
-                              : '🏁'}{' '}
-                        {quest.status}
-                    </Badge>
-                    {quest.taxon_ids && quest.taxon_ids.length > 0 && (
-                        <Badge variant="neutral" className="text-xs">
-                            {quest.taxon_ids.length} species
-                        </Badge>
-                    )}
-                </CardFooter>
+                    </div>
+                </div>
             </Card>
         </Link>
     )
