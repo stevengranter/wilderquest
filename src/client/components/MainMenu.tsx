@@ -60,7 +60,7 @@ export function MainMenu() {
     const isHome = location.pathname === '/';
     const isLogin = location.pathname === '/login';
 
-    return (
+    return !isLogin && (
         <Menubar
             className={`flex w-full items-center border-0 mb-2 ${
                 isHome ? 'justify-end bg-transparent' : 'justify-between bg-transparent'
@@ -77,6 +77,7 @@ export function MainMenu() {
 
             {/* Right section (login/avatar) → hide on /login */}
             {!isLogin && <div>{renderUserMenu()}</div>}
+
         </Menubar>
     );
 }

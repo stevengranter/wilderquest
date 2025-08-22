@@ -1,7 +1,7 @@
 import LoginForm from '../LoginForm.js'
-import {Card} from '@/components/ui/card.js'
-import {useAuth} from '@/hooks/useAuth.js'
-import {Button} from '@/components/ui/button.js'
+import { Card } from '@/components/ui/card.js'
+import { useAuth } from '@/hooks/useAuth.js'
+import { Button } from '@/components/ui/button.js'
 import React from 'react'
 
 export default function Login() {
@@ -20,7 +20,10 @@ export default function Login() {
     )
 
     return (
-        <div className='flex content-center justify-center p-10'>
+        <div className='flex flex-col items-center justify-center h-full p-10'>
+            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
+                wilderQuest
+            </h1>
             <Card className='flex w-100 p-5'>
                 {isAuthenticated ? logoutPrompt : <LoginForm/>}
             </Card>
