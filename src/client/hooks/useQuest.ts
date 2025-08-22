@@ -1,6 +1,7 @@
+import QuestEventToast from '@/components/ui/QuestEventToast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { chunk } from 'lodash'
-import { useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { toast } from 'sonner'
 import api from '@/api/api'
 import titleCase from '@/components/search/titleCase'
@@ -174,10 +175,13 @@ export const useQuest = ({
     }, [guestProgressQuery.isSuccess, guestProgressQuery.data])
 
     useEffect(() => {
-        if (!quest?.id || !taxaQuery.isSuccess) return
+        if (!quest?.id) return
+
         const eventSource = new EventSource(`/api/quests/${quest.id}/events`)
+
         eventSource.onmessage = (e) => {
             const data = JSON.parse(e.data)
+
             if (data.type === 'QUEST_STATUS_UPDATED') {
                 toast.info(`Quest status updated to ${data.payload.status}`)
                 queryClient.invalidateQueries({ queryKey: ['quest', questId] })
@@ -187,26 +191,68 @@ export const useQuest = ({
             } else if (
                 ['SPECIES_FOUND', 'SPECIES_UNFOUND'].includes(data.type)
             ) {
+                // Get fresh data from the query cache to build the toast message.
+                // This avoids adding query data to the useEffect dependency array,
+                // which would cause the EventSource to reconnect every time the data changes.
+                const progressData: ProgressData | undefined =
+                    queryClient.getQueryData(['progress', quest.id])
+                const sharedQuestData: any | undefined =
+                    queryClient.getQueryData(['sharedQuest', token])
+                const taxaData: any[] | undefined = queryClient.getQueryData([
+                    'taxa',
+                    questId || token,
+                ])
+
                 const guestName =
                     data.payload.guestName ||
                     (data.payload.owner ? 'The owner' : 'A guest')
+
                 const mappings =
-                    progressQuery.data?.mappings ||
-                    sharedQuestQuery.data?.taxa_mappings
+                    progressData?.mappings || sharedQuestData?.taxa_mappings
+
+                if (!mappings) return
+
                 const mapping = mappings.find(
                     (m: TaxonMapping) => m.id === data.payload.mappingId
                 )
+
+                if (!mapping) return
+
                 const species = taxaData?.find(
-                    (t: any) => t.id === mapping?.taxon_id
+                    (t: any) => t.id === mapping.taxon_id
                 )
                 const speciesName = species?.preferred_common_name
                     ? titleCase(species.preferred_common_name)
                     : species?.name || 'a species'
 
-                if (data.type === 'SPECIES_FOUND')
-                    toast.success(`${guestName} found ${speciesName}!`)
-                else toast.info(`${guestName} unmarked ${speciesName}.`)
+                const action =
+                    data.type === 'SPECIES_FOUND' ? 'found' : 'unmarked'
 
+                toast(
+                    React.createElement(QuestEventToast, {
+                        guestName: guestName,
+                        speciesName: speciesName,
+                        action: action,
+                        speciesImage: species?.default_photo?.square_url,
+                    }),
+                    {
+                        position: 'top-left',
+                        style: {
+                            padding:0,
+                            margin:0,
+                            width:"90svw",
+                            borderWidth:0,
+                            boxShadow:"none",
+                            background:'none',
+                        outline:"none"}
+                        // style: {
+                        //     width: '100vw',
+                        //     maxWidth: '90vw',
+                        // },
+                    }
+                )
+
+                // Invalidate queries to refetch data and update the UI
                 queryClient.invalidateQueries({
                     queryKey: ['progress', quest.id],
                 })
@@ -218,17 +264,11 @@ export const useQuest = ({
                 })
             }
         }
-        return () => eventSource.close()
-    }, [
-        quest?.id,
-        taxaQuery,
-        taxaData,
-        progressQuery.data,
-        sharedQuestQuery.data,
-        queryClient,
-        questId,
-        token,
-    ])
+
+        return () => {
+            eventSource.close()
+        }
+    }, [quest?.id, queryClient, questId, token])
 
     const finalProgress = questId
         ? progressQuery.data
