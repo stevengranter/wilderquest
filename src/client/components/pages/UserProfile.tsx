@@ -4,11 +4,12 @@ import { ReactSVG } from 'react-svg'
 import avatar from 'animal-avatar-generator'
 import api from '@/api/api'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
 import { QuestWithTaxa } from '../../../types/types'
 import { QuestCard } from '@/components/quest/QuestCard'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
+import { QuestCardSkeleton } from '@/components/quest/QuestCardSkeleton'
 
 function UserQuests({ userId, isOwnProfile }: { userId: string, isOwnProfile: boolean }) {
   const {
@@ -28,15 +29,7 @@ function UserQuests({ userId, isOwnProfile }: { userId: string, isOwnProfile: bo
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="animate-pulse">
-            <Card className="h-full">
-              <div className="h-32 bg-gray-200 rounded-t-lg"></div>
-              <CardHeader>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2 mt-2"></div>
-              </CardHeader>
-            </Card>
-          </div>
+          <QuestCardSkeleton key={i} />
         ))}
       </div>
     );

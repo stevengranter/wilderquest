@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import api from '@/api/api'
 import { QuestCard } from '@/components/quest/QuestCard'
+import { QuestCardSkeleton } from '@/components/quest/QuestCardSkeleton'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -96,8 +97,8 @@ export function QuestsPage() {
                 lastQuestElementRef={lastQuestElementRef}
                 questToPhotosMap={questToPhotosMap}
                 photosLoading={collagePhotosIsLoading}
+                loading={loading}
             />
-            {loading && <p>Loading...</p>}
         </div>
     )
 }
@@ -107,12 +108,24 @@ function QuestsList({
     lastQuestElementRef,
     questToPhotosMap,
     photosLoading,
+    loading,
 }: {
     quests: QuestWithTaxa[]
     lastQuestElementRef: (node: HTMLDivElement) => void
     questToPhotosMap: Map<number, string[]>
     photosLoading: boolean
+    loading: boolean
 }) {
+    if (loading && quests.length === 0) {
+        return (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                    <QuestCardSkeleton key={i} />
+                ))}
+            </div>
+        )
+    }
+
     if (!quests || quests.length === 0) {
         return (
             <div className="text-center py-12">
@@ -146,6 +159,10 @@ function QuestsList({
                     return card
                 }
             })}
+            {loading &&
+                Array.from({ length: 3 }).map((_, i) => (
+                    <QuestCardSkeleton key={`skeleton-${i}`} />
+                ))}
         </div>
     )
 }

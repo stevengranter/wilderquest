@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '@/api/api'
 import { QuestCard } from '@/components/quest/QuestCard'
+import { QuestCardSkeleton } from '@/components/quest/QuestCardSkeleton'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 import { paths } from '@/routes/paths'
@@ -140,20 +140,15 @@ export function Home() {
                 </div>
 
                 {isLoading ? (
-                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div
+                        className="grid gap-4 auto-rows-fr"
+                        style={{
+                            gridTemplateColumns:
+                                'repeat(auto-fit, minmax(280px, 1fr))'
+                        }}
+                    >
                         {Array.from({ length: 6 }).map((_, i) => (
-                            <Card key={i} className="h-full">
-                                <div className="h-48">
-                                    <Skeleton className="w-full h-full" />
-                                </div>
-                                <CardHeader>
-                                    <Skeleton className="h-6 w-3/4" />
-                                </CardHeader>
-                                <CardContent>
-                                    <Skeleton className="h-4 w-full mb-2" />
-                                    <Skeleton className="h-4 w-2/3" />
-                                </CardContent>
-                            </Card>
+                            <QuestCardSkeleton key={i} />
                         ))}
                     </div>
                 ) : recentQuests.length > 0 ? (

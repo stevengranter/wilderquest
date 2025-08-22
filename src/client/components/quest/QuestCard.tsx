@@ -146,6 +146,10 @@ function QuestCardWithData(props: QuestCardProps) {
 }
 
 export function QuestCard(props: QuestCardProps) {
+    if (props.isLoading) {
+        return <QuestCardSkeleton />
+    }
+
     if (props.photos !== undefined && props.isLoading !== undefined) {
         return <QuestCardContent {...props} />
     }
