@@ -21,7 +21,7 @@ const iNaturalistAPIController: RequestHandler = async (req, res) => {
         const cacheKey = `inat-proxy:${url}`
 
         // Check cache first
-        const cachedData = cacheService.get<any>(cacheKey)
+        const cachedData = await cacheService.get<any>(cacheKey)
         if (cachedData) {
             logger.info(chalk.blue('Serving from cache:', url))
             return res.status(200).json(cachedData)
@@ -56,7 +56,7 @@ const iNaturalistAPIController: RequestHandler = async (req, res) => {
 
             // Cache the successful response
             if (jsonResponse.status === 200) {
-                cacheService.set(cacheKey, jsonResponse.data)
+                await cacheService.set(cacheKey, jsonResponse.data)
             }
 
             res.status(jsonResponse.status).json(jsonResponse.data)

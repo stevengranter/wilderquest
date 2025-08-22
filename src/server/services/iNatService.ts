@@ -22,7 +22,7 @@ async function fetchTaxaByIds(taxonIds: number[]): Promise<INatTaxon[]> {
 
 async function getTaxonPhoto(taxonId: number): Promise<string | null> {
     const cacheKey = `taxon-photo-${taxonId}`
-    const cachedPhoto = cacheService.get<string>(cacheKey)
+    const cachedPhoto = await cacheService.get<string>(cacheKey)
     if (cachedPhoto) {
         return cachedPhoto
     }
@@ -31,7 +31,7 @@ async function getTaxonPhoto(taxonId: number): Promise<string | null> {
     const photoUrl = taxa[0]?.default_photo?.medium_url || null
 
     if (photoUrl) {
-        cacheService.set(cacheKey, photoUrl)
+        await cacheService.set(cacheKey, photoUrl)
     }
 
     return photoUrl
