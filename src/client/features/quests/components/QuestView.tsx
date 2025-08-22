@@ -1,6 +1,7 @@
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { isSameDay, isSameYear } from 'date-fns'
 import { formatInTimeZone } from 'date-fns-tz'
+import { AnimatePresence, motion } from 'motion/react'
 import { Lock, LockOpen, Pause, Pencil, Play, StopCircle } from 'lucide-react'
 import { useCallback, useRef } from 'react'
 import { Link } from 'react-router'
@@ -289,6 +290,37 @@ export const QuestView = ({
                         })()}
                     </div>
                 )}
+                <div className="mt-8">
+                    <h2 className="text-xl font-semibold mb-4">Leaderboard</h2>
+                    {leaderboard && leaderboard.length > 0 ? (
+                        <div className="space-y-2">
+                            <AnimatePresence>
+                                {leaderboard.map((entry: any, index: number) => (
+                                    <motion.div
+                                        key={entry.display_name || index}
+                                        layout
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="flex justify-between items-center p-2 bg-gray-100 rounded-md"
+                                    >
+                                    <span className="font-medium">
+                                        {index + 1}.{' '}
+                                        {entry.display_name || 'Anonymous'}
+                                    </span>
+                                        <span className="text-sm">
+                                        {entry.observation_count} taxa found
+                                    </span>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        </div>
+                    ) : (
+                        <div className="text-center text-muted-foreground py-4">
+                            No participants have joined yet.
+                        </div>
+                    )}
+                </div>
                 <h2 className="text-xl font-semibold mb-4">
                     Species ({taxa?.length ?? '...'})
                 </h2>
@@ -446,26 +478,7 @@ export const QuestView = ({
                 </div>
             </div>
 
-            {leaderboard && leaderboard.length > 0 && (
-                <div className="mt-8">
-                    <h2 className="text-xl font-semibold mb-4">Leaderboard</h2>
-                    <div className="space-y-2">
-                        {leaderboard.map((entry: any, index: number) => (
-                            <div
-                                key={index}
-                                className="flex justify-between items-center p-2 bg-gray-100 rounded-md"
-                            >
-                                <span className="font-medium">
-                                    {index + 1}. {entry.display_name || 'Anonymous'}
-                                </span>
-                                <span className="text-lg font-bold">
-                                    {entry.observation_count}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+
         </div>
     )
 }

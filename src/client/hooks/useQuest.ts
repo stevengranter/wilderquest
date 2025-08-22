@@ -262,6 +262,9 @@ export const useQuest = ({
                 queryClient.invalidateQueries({
                     queryKey: ['sharedQuest', token],
                 })
+                queryClient.invalidateQueries({
+                    queryKey: ['leaderboard', quest.id],
+                })
             }
         }
 

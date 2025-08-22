@@ -15,6 +15,7 @@ export default function SharedQuestGuest() {
         isError,
         updateStatus,
         share,
+        leaderboard,
     } = useQuest({ token });
     console.log(taxa);
 
@@ -31,6 +32,7 @@ export default function SharedQuestGuest() {
             isOwner={false}
             token={token}
             share={share}
+            leaderboard={leaderboard}
         />
     );
 }

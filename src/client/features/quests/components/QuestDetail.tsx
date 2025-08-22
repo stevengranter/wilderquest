@@ -31,6 +31,7 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
         isTaxaFetchingNextPage,
         taxaHasNextPage,
         fetchNextTaxaPage,
+        leaderboard,
         isError,
         updateStatus,
     } = useQuest({ questId: activeQuestId, initialData })
@@ -70,6 +71,7 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
             isError={isError}
             updateStatus={updateStatus}
             isOwner={isOwner}
+            leaderboard={leaderboard}
         />
     )
 }
