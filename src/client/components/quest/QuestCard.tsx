@@ -61,6 +61,10 @@ function QuestCardContent({ quest, className, hoverEffect, photos, isLoading }: 
         none: '',
     }
 
+    if (isLoading) {
+        return <QuestCardSkeleton />
+    }
+
     return (
         <Link to={paths.questDetail(quest.id)} className="block">
             <Card
@@ -70,15 +74,17 @@ function QuestCardContent({ quest, className, hoverEffect, photos, isLoading }: 
                     className
                 )}
             >
-                {totalTaxaCount > 0 && (
-                    <CardContent className="p-0 m-0">
-                        <div
-                            className={cn(
-                                'relative w-full grid gap-0',
-                                getGridClasses(gridSlotCount)
-                            )}
-                        >
-                            {Array.from({ length: gridSlotCount }).map((_, i) => {
+                <CardContent className="p-0 m-0 bg-background">
+                    <div
+                        className={cn(
+                            'relative w-full h-40 gap-0',
+                            totalTaxaCount > 0
+                                ? `grid ${getGridClasses(gridSlotCount)}`
+                                : 'flex items-center justify-center bg-orange-50'
+                        )}
+                    >
+                        {totalTaxaCount > 0 ? (
+                            Array.from({ length: gridSlotCount }).map((_, i) => {
                                 const isLastSlot = i === gridSlotCount - 1
                                 const shouldShowOverlay =
                                     totalTaxaCount > 6 && isLastSlot
@@ -94,13 +100,15 @@ function QuestCardContent({ quest, className, hoverEffect, photos, isLoading }: 
                                         key={i}
                                         className={cn(
                                             'relative overflow-hidden',
-                                            'aspect-[4/3]',
                                             extraClass,
                                             !photoSrc && 'bg-gray-100'
                                         )}
                                     >
                                         <img
-                                            src={photoSrc || '/placeholder.jpg'}
+                                            src={
+                                                photoSrc ||
+                                                '/placeholder.jpg'
+                                            }
                                             alt={`Quest wildlife ${i + 1}`}
                                             className="w-full h-full object-cover"
                                         />
@@ -111,10 +119,12 @@ function QuestCardContent({ quest, className, hoverEffect, photos, isLoading }: 
                                         )}
                                     </div>
                                 )
-                            })}
-                        </div>
-                    </CardContent>
-                )}
+                            })
+                        ) : (
+                            <p className="text-gray-500">No wildlife yet</p>
+                        )}
+                    </div>
+                </CardContent>
 
                 <CardContent className="px-4 py-2 m-0 space-y-1 relative">
                     <IoMdCompass className="z-5 absolute -top-2 -right-12 -translate-x-1/2 text-orange-200 opacity-20 w-28 h-28 pointer-events-none" />
