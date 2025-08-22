@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { QuestWithTaxa } from '../../../types/types'
 import { paths } from '@/routes/paths'
 import { useTaxonPhotos } from '@/hooks/useTaxonPhotos'
@@ -14,7 +14,6 @@ interface QuestCardProps {
     quest: QuestWithTaxa
     className?: string
     hoverEffect?: 'lift' | 'shadow' | 'none'
-    /** when true, enable image hover animations */
     animate?: boolean
 }
 
@@ -22,18 +21,48 @@ export function QuestCard({
                               quest,
                               className,
                               hoverEffect = 'lift',
-                              animate = false, // <-- animate means "enable animations"
+                              animate = false,
                           }: QuestCardProps) {
-    const [hoveredImage, setHoveredImage] = useState<string | null>(null)
+    const [hoveredImage, setHoveredImage] = useState<number | null>(null)
 
-    const collageTaxonIds = quest.taxon_ids?.slice(0, 3) || []
+    const totalTaxaCount = quest.taxon_ids?.length || 0
+    // Show max 6 photos in the collage
+    const displayPhotoLimit = 6;
+
+    const collageTaxonIds = quest.taxon_ids?.slice(0, displayPhotoLimit) || []
     const { data: collagePhotosData } = useTaxonPhotos(collageTaxonIds)
 
     const photos: string[] = Array.isArray(collagePhotosData)
         ? collagePhotosData.filter((p): p is string => !!p)
         : []
 
-    const photoSlots = Array.from({ length: 3 }, (_, i) => photos[i] || '/placeholder.jpg')
+    // Calculate remaining taxa for the overlay
+    const remainingTaxaCount = totalTaxaCount - photos.length;
+
+    // The number of slots to render in the grid (max 6). If totalTaxaCount is 0, gridSlotCount is 0.
+    const gridSlotCount = Math.min(totalTaxaCount > 0 ? (totalTaxaCount > 6 ? 6 : totalTaxaCount) : 0, 6);
+
+
+    // decide grid layout based on count
+// Update getGridClasses to only control columns/rows
+    const getGridClasses = (n: number) => {
+        switch (n) {
+            case 1:
+                return 'grid-cols-1'
+            case 2:
+                return 'grid-cols-2 grid-rows-1'
+            case 3:
+                return 'grid-cols-3 grid-rows-1'
+            case 4:
+                return 'grid-cols-2 grid-rows-2'
+            case 5:
+            case 6:
+                return 'grid-cols-3 grid-rows-2'
+            default:
+                return ''
+        }
+    }
+
 
     const formattedDate = quest.starts_at
         ? new Date(quest.starts_at).toLocaleDateString('en-US', {
@@ -44,119 +73,78 @@ export function QuestCard({
         : 'Date TBD'
 
     const hoverClasses = {
-        lift: 'transition-all duration-200 hover:-translate-2 hover:shadow-shadow',
-        shadow: 'transition-all duration-200 hover:shadow-shadow',
+        lift: 'transition-transform duration-200 hover:-translate-1 hover:shadow-shadow hover:scale-105',
+        shadow: 'transition-shadow duration-200 hover:shadow-shadow',
         none: '',
     }
 
-    // Only attach handlers when animations are enabled
-    const maybeHover = (img: string) => (animate ? () => setHoveredImage(img) : undefined)
-    const maybeResetHover = animate ? () => setHoveredImage(null) : undefined
-
     return (
-        <Link to={paths.questDetail(quest.id)} className="block w-full">
+        <Link to={paths.questDetail(quest.id)} className="block">
             <Card
                 className={cn(
-                    'overflow-hidden shadow-0 bg-amber-50 border-1 p-2 m-0 rounded-xl w-full',
+                    'm-0 p-0 shadow-0 overflow-hidden bg-white border rounded-2xl gap-2 hover:bg-amber-50',
                     hoverClasses[hoverEffect],
                     className
                 )}
-                onMouseLeave={maybeResetHover}
+
             >
-                <div className="p-2 space-y-2" onMouseLeave={maybeResetHover}>
-                    {/* First row */}
-                    <div className="flex h-48 gap-3">
+                {/* Collage only if there are taxa to show */}
+                {/* Collage only if there are taxa to show */}
+                {totalTaxaCount > 0 && (
+                    <CardContent className="p-0 m-0">
                         <div
                             className={cn(
-                                'overflow-hidden rounded-xl',
-                                animate
-                                    ? clsx(
-                                        'transition-all duration-300 ease-in-out opacity-80 hover:opacity-100',
-                                        hoveredImage === 'img1'
-                                            ? 'flex-1'
-                                            : hoveredImage === 'img2'
-                                                ? 'w-0'
-                                                : 'flex-1'
-                                    )
-                                    : 'flex-1 opacity-100'
-                            )}
-                            onMouseEnter={maybeHover('img1')}
-                        >
-                            <img src={photoSlots[0]} alt="Quest wildlife 1" className="w-full h-full object-cover" />
-                        </div>
-
-                        <div
-                            className={cn(
-                                'overflow-hidden rounded-xl',
-                                animate
-                                    ? clsx(
-                                        'transition-all duration-300 ease-in-out opacity-80 hover:opacity-100',
-                                        hoveredImage === 'img2'
-                                            ? 'flex-1'
-                                            : hoveredImage === 'img1'
-                                                ? 'w-0'
-                                                : 'flex-1'
-                                    )
-                                    : 'flex-1 opacity-100'
-                            )}
-                            onMouseEnter={maybeHover('img2')}
-                        >
-                            <img src={photoSlots[1]} alt="Quest wildlife 2" className="w-full h-full object-cover" />
-                        </div>
-                    </div>
-
-                    {/* Second row */}
-                    <div className="flex h-64 gap-3">
-                        <div
-                            className={cn(
-                                'overflow-hidden rounded-xl flex-1',
-                                animate
-                                    ? 'transition-all duration-300 ease-in-out opacity-80 hover:opacity-100'
-                                    : 'opacity-100'
-                            )}
-                            onMouseEnter={maybeHover('img3')}
-                        >
-                            <img src={photoSlots[2]} alt="Quest wildlife 3" className="w-full h-full object-cover" />
-                        </div>
-
-                        <div
-                            className={cn(
-                                animate
-                                    ? clsx(
-                                        'transition-all duration-300 ease-in-out',
-                                        hoveredImage === 'img3' ? 'w-0' : 'flex-1'
-                                    )
-                                    : 'flex-1'
+                                'relative w-full grid gap-0',
+                                getGridClasses(gridSlotCount)
                             )}
                         >
-                            <div
-                                className={cn(
-                                    'rounded-xl flex flex-col h-full',
-                                    animate
-                                        ? clsx(
-                                            'transition-opacity duration-300',
-                                            hoveredImage === 'img3' ? 'opacity-0' : 'opacity-100'
-                                        )
-                                        : 'opacity-100'
-                                )}
-                            >
-                                <div className="flex-[2] bg-secondary-background flex items-center justify-center text-center rounded-xl p-2 min-h-0">
-                                    <h3 className="text-base text-green-800 tracking-wider leading-tight overflow-hidden">
-                                        {quest.name}
-                                    </h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                            {Array.from({ length: gridSlotCount }).map((_, i) => {
+                                const isLastSlot = i === gridSlotCount - 1
+                                const shouldShowOverlay = totalTaxaCount > 6 && isLastSlot
+                                const photoSrc = photos[i] || '/placeholder.jpg'
 
-                    {/* Third row */}
-                    <div className="bg-green-800 rounded-xl px-4 py-3 text-center mx-1">
-                        <p className="text-white font-bold text-sm uppercase tracking-wide">
-                            <div className="truncate">{quest.location_name || 'Location TBD'}</div>
-                            <div>{formattedDate}</div>
-                        </p>
-                    </div>
-                </div>
+                                // For 5 images, center the last one
+                                const extraClass =
+                                    gridSlotCount === 5 && i === 4 ? 'col-start-2 row-start-2' : ''
+
+                                return (
+                                    <div
+                                        key={i}
+                                        className={cn(
+                                            'relative overflow-hidden',
+                                            'aspect-[4/3]', // Maintain a consistent aspect ratio
+                                            extraClass
+                                        )}
+                                    >
+                                        <img
+                                            src={photoSrc}
+                                            alt={`Quest wildlife ${i + 1}`}
+                                            className="w-full h-full object-cover"
+                                        />
+                                        {shouldShowOverlay && (
+                                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-lg font-semibold">
+                                                +{remainingTaxaCount} more
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </CardContent>
+                )}
+
+
+                {/* Text content */}
+                <CardContent className="p-4 m-0 space-y-2">
+                    <h3 className="text-lg font-semibold text-green-900 line-clamp-1">
+                        {quest.name}
+                    </h3>
+
+            <div className="truncate">
+              {quest.location_name || 'Location TBD'}
+            </div>
+                        <div>{formattedDate}</div>
+                </CardContent>
             </Card>
         </Link>
     )
