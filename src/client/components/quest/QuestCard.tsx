@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { QuestWithTaxa } from '../../../types/types'
 import { paths } from '@/routes/paths'
 import { useTaxonPhotos } from '@/hooks/useTaxonPhotos'
 import { useState } from 'react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { MdLocationPin } from 'react-icons/md'
+import { IoMdCompass } from 'react-icons/io'
 
 const cn = (...classes: Array<string | undefined | null | false>) =>
     twMerge(clsx(classes))
@@ -73,7 +75,7 @@ export function QuestCard({
         : 'Date TBD'
 
     const hoverClasses = {
-        lift: 'transition-transform duration-200 hover:-translate-1 hover:shadow-shadow hover:scale-105',
+        lift: 'transition-transform duration-200 hover:-translate-1 hover:shadow-shadow',
         shadow: 'transition-shadow duration-200 hover:shadow-shadow',
         none: '',
     }
@@ -82,7 +84,7 @@ export function QuestCard({
         <Link to={paths.questDetail(quest.id)} className="block">
             <Card
                 className={cn(
-                    'm-0 p-0 shadow-0 overflow-hidden bg-white border rounded-2xl gap-2 hover:bg-amber-50',
+                    'm-0 p-0 shadow-0 overflow-hidden bg-white border rounded-2xl gap-2 hover:bg-orange-50',
                     hoverClasses[hoverEffect],
                     className
                 )}
@@ -135,16 +137,25 @@ export function QuestCard({
 
 
                 {/* Text content */}
-                <CardContent className="p-4 m-0 space-y-2">
-                    <h3 className="text-lg font-semibold text-green-900 line-clamp-1">
+                <CardContent className="px-4 py-2 m-0 space-y-1 relative">
+                    <IoMdCompass className="z-5 absolute -top-2 -right-12 -translate-x-1/2 text-orange-200 opacity-20 w-28 h-28 pointer-events-none" />
+
+
+                    <h3 className="text-lg font-semibold text-green-900 line-clamp-1 z-10 relative">
                         {quest.name}
                     </h3>
 
-            <div className="truncate">
-              {quest.location_name || 'Location TBD'}
-            </div>
-                        <div>{formattedDate}</div>
+                        <div className="text-xs">{formattedDate}</div>
+
                 </CardContent>
+                <CardFooter className="relative m-0 p-2 bg-orange-100 z-10">
+                    <div className="flex flex-row items-center justify-right relative z-10">
+                        <MdLocationPin />
+                        <h4 className="truncate text-xs font-normal ">
+                            {quest.location_name || 'Location TBD'}
+                        </h4>
+                    </div>
+                </CardFooter>
             </Card>
         </Link>
     )
