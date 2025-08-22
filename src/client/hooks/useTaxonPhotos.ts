@@ -31,7 +31,7 @@ const fetchTaxaInBatches = async (taxonIds: number[]) => {
  * This hook will now batch requests to the iNaturalist API.
  */
 export function useTaxonPhotos(taxonIds: number[]) {
-    return useQuery({
+    return useQuery<(string | null)[]>({
         queryKey: ['taxonPhotos', taxonIds],
         queryFn: async () => {
             if (taxonIds.length === 0) return []
@@ -40,13 +40,12 @@ export function useTaxonPhotos(taxonIds: number[]) {
             const taxaById = new Map(taxa.map((t) => [t.id, t]))
 
             return taxonIds.map(
-                (id) =>
-                    taxaById.get(id)?.default_photo?.medium_url || null
+                (id) => taxaById.get(id)?.default_photo?.medium_url || null
             )
         },
         enabled: taxonIds.length > 0,
         staleTime: 30 * 60 * 1000, // 30 minutes
-        cacheTime: 60 * 60 * 1000, // 1 hour
+        gcTime: 60 * 60 * 1000, // 1 hour (was cacheTime in v4)
     })
 }
 
@@ -55,10 +54,10 @@ export function useTaxonPhotos(taxonIds: number[]) {
  * Leverages the batched query for efficiency.
  */
 export function useTaxonPhoto(taxonId: number | undefined) {
-    const { data: photos } = useTaxonPhotos(taxonId ? [taxonId] : [])
+    const { data: photos, isLoading } = useTaxonPhotos(taxonId ? [taxonId] : [])
     return {
         data: photos?.[0] || null,
-        isLoading: !photos,
+        isLoading,
     }
 }
 
@@ -66,7 +65,7 @@ export function useTaxonPhoto(taxonId: number | undefined) {
  * Hook to get the first available photo from a list of taxon IDs
  */
 export function useQuestPhoto(taxonIds: number[] = []) {
-    const selectedIds = taxonIds.slice(0, 5) // Increased to 5 to have more chances for a photo
+    const selectedIds = taxonIds.slice(0, 5) // Up to 5 to increase chance of having a photo
     const { data: photos, isLoading, isError } = useTaxonPhotos(selectedIds)
 
     const photoUrl = photos?.find((photo) => photo) || null
@@ -109,11 +108,6 @@ export function useQuestPhotos(
 /**
  * Hook to fetch collage photos for multiple quests.
  * It fetches up to `photosPerQuest` photos for each quest.
- *
- * @param quests - An array of quests.
- * @param options - Options object.
- * @param options.photosPerQuest - The number of photos to fetch for each quest's collage. Defaults to 6.
- * @returns An object containing a map of quest IDs to their photo URLs and a loading state.
  */
 export function useQuestPhotoCollage(
     quests: QuestWithTaxa[],
@@ -156,7 +150,7 @@ export function useQuestPhotoCollage(
 
     return {
         questToPhotosMap,
-        isLoading: isLoading,
+        isLoading,
     }
 }
 
@@ -166,8 +160,8 @@ export function useQuestPhotoCollage(
 export function usePrefetchTaxonPhoto() {
     const queryClient = useQueryClient()
 
-    return (taxonId: number) => {
-        queryClient.prefetchQuery({
+    return async (taxonId: number): Promise<void> => {
+        await queryClient.prefetchQuery<(string | null)[]>({
             queryKey: ['taxonPhotos', [taxonId]],
             queryFn: async () => {
                 const taxa = await fetchTaxaInBatches([taxonId])

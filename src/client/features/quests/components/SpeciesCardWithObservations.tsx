@@ -24,24 +24,15 @@ import {
     ObservationMapView,
 } from '@/features/quests/components/ObservationGridView'
 import { MdOutlineLocationOn } from 'react-icons/md'
+import { Quest as ServerQuest } from '../../../../server/repositories/QuestRepository'
 
-type Quest = {
-    id: string | number
-    name: string
-    description?: string
-    taxon_ids?: number[]
-    is_private: boolean
+export type ClientQuest = Omit<ServerQuest, 'user_id'> & {
     user_id: string
-    created_at: string
-    updated_at: string
-    location_name?: string
-    latitude?: number
-    longitude?: number
 }
 
 interface SpeciesCardWithObservationsProps {
     species: INatTaxon
-    questData?: Quest
+    questData?: ClientQuest
     locationData?: {
         location_name?: string
         latitude?: number

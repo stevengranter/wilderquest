@@ -13,13 +13,13 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import ShareQuest from '@/features/quests/components/ShareQuest'
-import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
+import { ClientQuest, SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { useAuth } from '@/hooks/useAuth'
 import { paths } from '@/routes/paths'
-import { Quest } from '../../../../server/repositories/QuestRepository'
+
 
 type QuestViewProps = {
-    questData: Quest | null | undefined
+    questData: ClientQuest | null | undefined
     taxa: INatTaxon[] | undefined
     mappings: any[] | undefined
     aggregatedProgress: any[] | undefined
