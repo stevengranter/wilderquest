@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router'
 import { z } from 'zod'
 import api from '@/api/api'
 import { Button } from '@/components/ui/button'
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LocationInput } from '@/features/quests/components/LocationInput'
@@ -14,22 +14,9 @@ import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { useAuth } from '@/hooks/useAuth'
 import { SpeciesCard } from '@/components/cards/SpeciesCard'
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
-import { SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeSelector'
+import { SpeciesCountItem, SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeSelector'
 import { SpeciesAnimationProvider } from '@/features/quests/components/SpeciesAnimationProvider'
-
-export const formSchema = z.object({
-    questName: z.string().min(2, {
-        message: 'Quest name must be at least 2 characters.',
-    }),
-    locationName: z.string().min(2, {
-        message: 'Location name must be at least 2 characters.',
-    }),
-    latitude: z.number().nullable(),
-    longitude: z.number().nullable(),
-    isPrivate: z.boolean(),
-    starts_at: z.string().optional(),
-    ends_at: z.string().optional(),
-})
+import { formSchema } from '@/features/quests/schemas/formSchema'
 
 interface TaxonData {
     default_photo: DefaultPhoto
@@ -60,11 +47,6 @@ interface DefaultPhoto {
     attribution_name: string | null
     square_url: string
     medium_url: string
-}
-
-interface SpeciesCountItem {
-    taxon: TaxonData
-    count: number
 }
 
 export function CreateQuest() {
@@ -128,14 +110,14 @@ export function CreateQuest() {
     return (
         <SpeciesAnimationProvider>
             <div className="p-4">
-                <h1>Create Quest</h1>
-                <p>Step {step} of 2</p>
+                <h1 className="text-2xl">Create Quest</h1>
+                <h2 className="text-xl">Step {step}</h2>
                 <FormProvider {...form}>
                     <form
                         onSubmit={form.handleSubmit(onSubmit)}
                         className="space-y-8"
                     >
-                        {step === 1 && <QuestDetails setStep={setStep} />}
+                        {step === 1 && <Step1_QuestDetails setStep={setStep} />}
                         {step === 2 && (
                             <div className="space-y-6">
                                 <div className="flex justify-center mb-6">
@@ -171,7 +153,7 @@ export function CreateQuest() {
 
                                 {selectionMode === 'traditional' ? (
                                     <div>
-                                        <SpeciesSelector
+                                        <Step2_SpeciesSelector
                                             questSpecies={questSpecies}
                                             setQuestSpecies={setQuestSpecies}
                                             setStep={setStep}
@@ -220,7 +202,7 @@ export function CreateQuest() {
     )
 }
 
-function QuestDetails({ setStep }: { setStep: (step: number) => void }) {
+function Step1_QuestDetails({ setStep }: { setStep: (step: number) => void }) {
     const { control, watch, setValue, trigger } =
         useFormContext<z.infer<typeof formSchema>>()
     const lat = useWatch({ control, name: 'latitude' })
@@ -242,113 +224,114 @@ function QuestDetails({ setStep }: { setStep: (step: number) => void }) {
     }
 
     return (
-        <>
-            <FormField
-                control={control}
-                name="questName"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Quest Name</FormLabel>
-                        <FormControl>
-                            <Input placeholder="My Awesome Quest" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                            This is the display name for your quest.
-                        </FormDescription>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
+        <> <div>When and where?</div>
+            <div className="flex flex-row  gap-4 h-96">
 
-            <LocationInput
-                name="locationName"
-                control={control}
-                watch={watch}
-                setValue={setValue}
-            />
+                {/* Form fields - Left column */}
+                <div className="w-1/2 flex flex-col gap-4 p-4">
+                    <FormField
+                        control={control}
+                        name="questName"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Quest Name</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="My Awesome Quest" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-            <div className="flex flex-row gap-4">
-                <FormField
-                    control={control}
-                    name="latitude"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Latitude</FormLabel>
-                            <FormControl>
-                                <Input
-                                    placeholder="0.00"
-                                    {...field}
-                                    value={field.value ?? ''}
-                                    onChange={(e) => {
-                                        const value = e.target.value
-                                            ? Number(e.target.value)
-                                            : undefined
-                                        field.onChange(value)
-                                    }}
-                                    readOnly
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                    <LocationInput
+                        name="locationName"
+                        control={control}
+                        watch={watch}
+                        setValue={setValue}
+                    />
 
-                <FormField
-                    control={control}
-                    name="longitude"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Longitude</FormLabel>
-                            <FormControl>
-                                <Input
-                                    placeholder="0.00"
-                                    {...field}
-                                    value={field.value ?? ''}
-                                    readOnly
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                    {/* Hidden form fields for latitude and longitude */}
+                    <FormField
+                        control={control}
+                        name="latitude"
+                        render={({ field }) => (
+                            <FormItem className="hidden">
+                                <FormControl>
+                                    <Input
+                                        {...field}
+                                        value={field.value ?? ''}
+                                        onChange={(e) => {
+                                            const value = e.target.value
+                                                ? Number(e.target.value)
+                                                : undefined
+                                            field.onChange(value)
+                                        }}
+                                        type="hidden"
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={control}
+                        name="longitude"
+                        render={({ field }) => (
+                            <FormItem className="hidden">
+                                <FormControl>
+                                    <Input
+                                        {...field}
+                                        value={field.value ?? ''}
+                                        type="hidden"
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+
+                    <div className="flex flex-row gap-4">
+                        <FormField
+                            control={control}
+                            name="starts_at"
+                            render={({ field }) => (
+                                <FormItem className="flex-1">
+                                    <FormLabel>Start Date</FormLabel>
+                                    <FormControl>
+                                        <Input type="datetime-local" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={control}
+                            name="ends_at"
+                            render={({ field }) => (
+                                <FormItem className="flex-1">
+                                    <FormLabel>End Date</FormLabel>
+                                    <FormControl>
+                                        <Input type="datetime-local" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                </div>
+
+                {/* Map view - Right column */}
+                <div className="w-1/2">
+                    <QuestMapView options={mapOptions} className="w-full" style={{ height: '100%' }}/>
+                </div>
             </div>
-            <div className="flex flex-row gap-4">
-                <FormField
-                    control={control}
-                    name="starts_at"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Start Date</FormLabel>
-                            <FormControl>
-                                <Input type="datetime-local" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={control}
-                    name="ends_at"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>End Date</FormLabel>
-                            <FormControl>
-                                <Input type="datetime-local" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </div>
-            <QuestMapView options={mapOptions} />
-            <Button type="button" onClick={handleNext}>
+
+            <Button type="button" onClick={handleNext} className="w-full mt-4">
                 Next
             </Button>
         </>
     )
 }
-
-function SpeciesSelector({
+function Step2_SpeciesSelector({
     questSpecies,
     setQuestSpecies,
     setStep,

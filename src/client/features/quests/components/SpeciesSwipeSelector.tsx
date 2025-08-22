@@ -34,7 +34,7 @@ interface TaxonData {
     wikipedia_url?: string
 }
 
-interface SpeciesCountItem {
+export interface SpeciesCountItem {
     taxon: TaxonData
     count: number
 }

@@ -14,12 +14,12 @@ import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessa
 import { Input } from '@/components/ui/input'
 import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
-import { formSchema } from '@/features/quests/pages/CreateQuest'
 import { useAuth } from '@/hooks/useAuth'
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { SpeciesSelector } from '@/features/quests/components/SpeciesSelector'
 import { SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeSelector'
 import { SpeciesAnimationProvider } from '@/features/quests/components/SpeciesAnimationProvider'
+import { formSchema } from '@/features/quests/schemas/formSchema'
 
 type QuestFormValues = z.infer<typeof formSchema>
 

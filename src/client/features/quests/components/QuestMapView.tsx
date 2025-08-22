@@ -4,21 +4,23 @@ import { MapContainer, Marker, MarkerProps, Popup, TileLayer, useMap, useMapEven
 
 type QuestMapOptions = {
     center?: [number, number]
-    zoom?: number
+    zoom?: number,
+
 }
 type QuestMapProps = {
     options?: QuestMapOptions
     markerData?: MarkerProps[]
+    style?: React.CSSProperties
+    className: string
 }
 
-function MapUpdater({ center }: { center?: [number, number] }) {
+function MapUpdater({ center, zoom }: { center?: [number, number], zoom?: number }) {
     const map = useMap()
     useEffect(() => {
         if (center) {
-            // map.flyTo(center, map.getZoom())  // DISABLED: To save on tile calls,  uncomment if you want to fly to the center on mount
-            map.setView([center[0], center[1]])
+            map.setView([center[0], center[1]], zoom || 13)
         }
-    }, [center, map])
+    }, [center, zoom, map])
     return null
 }
 
@@ -38,9 +40,13 @@ function MapSyncHandler({
     return null
 }
 
-export const QuestMapView = React.memo(({ options, markerData }: QuestMapProps) => {
-    const initialCenter: [number, number] = [49.18, -57.43] // Deer Lake, NL
-    const { center, zoom } = options || { center: initialCenter, zoom: 13 }
+export const QuestMapView = React.memo(({ options, markerData, className, style }: QuestMapProps) => {
+    const initialCenter: [number, number] = [0, 0]; // World map center
+    const initialZoom = 2;
+
+    const center = options?.center;
+    const zoom = center ? (options?.zoom || 13) : initialZoom;
+
     const [bounds, setBounds] = useState<LatLngBounds | null>(null)
     const [markers, _setMarkers] = useState<MarkerProps[]>(markerData || [])
 
@@ -57,12 +63,8 @@ export const QuestMapView = React.memo(({ options, markerData }: QuestMapProps) 
             center={center || initialCenter}
             zoom={zoom}
             scrollWheelZoom={true}
-            style={{
-                height: '300px',
-                width: '50%',
-                aspectRatio: '1/1',
-                borderRadius: '8px',
-            }}
+            className={className}
+            style={style}
         >
             <TileLayer
                 attribution='Maps &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, Data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -72,7 +74,7 @@ export const QuestMapView = React.memo(({ options, markerData }: QuestMapProps) 
             {/* Sync bounds with map */}
             <MapSyncHandler onBoundsChange={setBounds} />
 
-            <MapUpdater center={center} />
+            <MapUpdater center={center} zoom={zoom} />
 
             {center && (
                 <Marker position={center}>
