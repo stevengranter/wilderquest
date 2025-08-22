@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import api from '@/api/api'
 import { QuestCard } from '@/components/quest/QuestCard'
@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch'
 import { paths } from '@/routes/paths'
 import { QuestWithTaxa } from '../../../../types/types'
 import { useAuth } from '@/hooks/useAuth'
+import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 
 export function QuestsPage() {
     const { isAuthenticated, user } = useAuth()
@@ -44,27 +45,33 @@ export function QuestsPage() {
 
     useEffect(() => {
         setLoading(true)
-        if (!isMyQuests) {
-            api.get(`/quests?page=${page}&limit=10`).then((response) => {
+        const fetchQuests = async () => {
+            try {
+                const endpoint = isMyQuests
+                    ? `/quests/user/${user?.id}?page=${page}&limit=10`
+                    : `/quests?page=${page}&limit=10`
+
+                if (isMyQuests && (!isAuthenticated || !user)) {
+                    toast.error('You are not logged in!')
+                    setLoading(false)
+                    return
+                }
+
+                const response = await api.get(endpoint)
                 setQuests((prevQuests) => [...prevQuests, ...response.data])
                 setHasMore(response.data.length > 0)
+            } catch (error) {
+                toast.error('Failed to fetch quests.')
+            } finally {
                 setLoading(false)
-            })
-            return
+            }
         }
 
-        if (!isAuthenticated || !user) {
-            toast.error('You are not logged in!')
-            setLoading(false)
-            return
-        }
-
-        api.get(`/quests/user/${user.id}?page=${page}&limit=10`).then((response) => {
-            setQuests((prevQuests) => [...prevQuests, ...response.data])
-            setHasMore(response.data.length > 0)
-            setLoading(false)
-        })
+        fetchQuests()
     }, [isMyQuests, isAuthenticated, user, page])
+
+    const { questToPhotosMap, isLoading: collagePhotosIsLoading } =
+        useQuestPhotoCollage(quests)
 
     return (
         <div className="container mx-auto px-4 py-6">
@@ -84,13 +91,28 @@ export function QuestsPage() {
                     </Button>
                 </div>
             </div>
-            <QuestsList quests={quests} lastQuestElementRef={lastQuestElementRef} />
+            <QuestsList
+                quests={quests}
+                lastQuestElementRef={lastQuestElementRef}
+                questToPhotosMap={questToPhotosMap}
+                photosLoading={collagePhotosIsLoading}
+            />
             {loading && <p>Loading...</p>}
         </div>
     )
 }
 
-function QuestsList({ quests, lastQuestElementRef }: { quests: QuestWithTaxa[], lastQuestElementRef: (node: HTMLDivElement) => void }) {
+function QuestsList({
+    quests,
+    lastQuestElementRef,
+    questToPhotosMap,
+    photosLoading,
+}: {
+    quests: QuestWithTaxa[]
+    lastQuestElementRef: (node: HTMLDivElement) => void
+    questToPhotosMap: Map<number, string[]>
+    photosLoading: boolean
+}) {
     if (!quests || quests.length === 0) {
         return (
             <div className="text-center py-12">
@@ -104,10 +126,24 @@ function QuestsList({ quests, lastQuestElementRef }: { quests: QuestWithTaxa[], 
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {quests.map((quest, index) => {
+                const questPhotos = questToPhotosMap.get(quest.id) || []
+                const card = (
+                    <QuestCard
+                        key={quest.id}
+                        quest={quest}
+                        photos={questPhotos}
+                        isLoading={photosLoading && questPhotos.length === 0}
+                    />
+                )
+
                 if (quests.length === index + 1) {
-                    return <div ref={lastQuestElementRef} key={quest.id}><QuestCard quest={quest} /></div>
+                    return (
+                        <div ref={lastQuestElementRef} key={quest.id}>
+                            {card}
+                        </div>
+                    )
                 } else {
-                    return <QuestCard key={quest.id} quest={quest} />
+                    return card
                 }
             })}
         </div>

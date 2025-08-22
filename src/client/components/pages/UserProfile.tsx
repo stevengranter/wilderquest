@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
 import { QuestWithTaxa } from '../../../types/types'
 import { QuestCard } from '@/components/quest/QuestCard'
+import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 
 function UserQuests({ userId, isOwnProfile }: { userId: string, isOwnProfile: boolean }) {
   const {
@@ -17,9 +18,11 @@ function UserQuests({ userId, isOwnProfile }: { userId: string, isOwnProfile: bo
   } = useQuery({
     queryKey: ['userQuests', userId, { isOwnProfile }],
     queryFn: () =>
-      api.get(`/quests/user/${userId}`).then((res) => res.data),
+      api.get(`/quests/user/${userId}`).then((res) => res.data as QuestWithTaxa[]),
     enabled: !!userId,
   });
+
+  const { questToPhotosMap, isLoading: photosLoading } = useQuestPhotoCollage(quests);
 
   if (isLoading) {
     return (
@@ -71,9 +74,16 @@ function UserQuests({ userId, isOwnProfile }: { userId: string, isOwnProfile: bo
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {quests.map((quest: QuestWithTaxa) => (
-        <QuestCard key={quest.id} quest={quest} />
-      ))}
+      {quests.map((quest: QuestWithTaxa) => {
+        const questPhotos = questToPhotosMap.get(quest.id) || [];
+        return (
+        <QuestCard 
+        key={quest.id} 
+        quest={quest} 
+        photos={questPhotos} 
+        isLoading={photosLoading && questPhotos.length === 0}
+        />
+      )})}
     </div>
   );
 }

@@ -2,12 +2,12 @@ import { Link } from 'react-router-dom'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { QuestWithTaxa } from '../../../types/types'
 import { paths } from '@/routes/paths'
-import { useTaxonPhotos } from '@/hooks/useTaxonPhotos'
-import { useState } from 'react'
+import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { MdLocationPin } from 'react-icons/md'
 import { IoMdCompass } from 'react-icons/io'
+import { QuestCardSkeleton } from './QuestCardSkeleton'
 
 const cn = (...classes: Array<string | undefined | null | false>) =>
     twMerge(clsx(classes))
@@ -17,36 +17,18 @@ interface QuestCardProps {
     className?: string
     hoverEffect?: 'lift' | 'shadow' | 'none'
     animate?: boolean
+    photos?: string[]
+    isLoading?: boolean
 }
 
-export function QuestCard({
-                              quest,
-                              className,
-                              hoverEffect = 'lift',
-                              animate = false,
-                          }: QuestCardProps) {
-    const [hoveredImage, setHoveredImage] = useState<number | null>(null)
-
+function QuestCardContent({ quest, className, hoverEffect, photos, isLoading }: QuestCardProps) {
     const totalTaxaCount = quest.taxon_ids?.length || 0
-    // Show max 6 photos in the collage
-    const displayPhotoLimit = 6;
+    const remainingTaxaCount = totalTaxaCount - (photos?.length || 0)
+    const gridSlotCount = Math.min(
+        totalTaxaCount > 0 ? (totalTaxaCount > 6 ? 6 : totalTaxaCount) : 0,
+        6
+    )
 
-    const collageTaxonIds = quest.taxon_ids?.slice(0, displayPhotoLimit) || []
-    const { data: collagePhotosData } = useTaxonPhotos(collageTaxonIds)
-
-    const photos: string[] = Array.isArray(collagePhotosData)
-        ? collagePhotosData.filter((p): p is string => !!p)
-        : []
-
-    // Calculate remaining taxa for the overlay
-    const remainingTaxaCount = totalTaxaCount - photos.length;
-
-    // The number of slots to render in the grid (max 6). If totalTaxaCount is 0, gridSlotCount is 0.
-    const gridSlotCount = Math.min(totalTaxaCount > 0 ? (totalTaxaCount > 6 ? 6 : totalTaxaCount) : 0, 6);
-
-
-    // decide grid layout based on count
-// Update getGridClasses to only control columns/rows
     const getGridClasses = (n: number) => {
         switch (n) {
             case 1:
@@ -65,13 +47,12 @@ export function QuestCard({
         }
     }
 
-
     const formattedDate = quest.starts_at
         ? new Date(quest.starts_at).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-        })
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+          })
         : 'Date TBD'
 
     const hoverClasses = {
@@ -85,13 +66,10 @@ export function QuestCard({
             <Card
                 className={cn(
                     'm-0 p-0 shadow-0 overflow-hidden bg-white border rounded-2xl gap-2 hover:bg-orange-50',
-                    hoverClasses[hoverEffect],
+                    hoverClasses[hoverEffect || 'lift'],
                     className
                 )}
-
             >
-                {/* Collage only if there are taxa to show */}
-                {/* Collage only if there are taxa to show */}
                 {totalTaxaCount > 0 && (
                     <CardContent className="p-0 m-0">
                         <div
@@ -102,24 +80,27 @@ export function QuestCard({
                         >
                             {Array.from({ length: gridSlotCount }).map((_, i) => {
                                 const isLastSlot = i === gridSlotCount - 1
-                                const shouldShowOverlay = totalTaxaCount > 6 && isLastSlot
-                                const photoSrc = photos[i] || '/placeholder.jpg'
+                                const shouldShowOverlay =
+                                    totalTaxaCount > 6 && isLastSlot
+                                const photoSrc = photos?.[i]
 
-                                // For 5 images, center the last one
                                 const extraClass =
-                                    gridSlotCount === 5 && i === 4 ? 'col-start-2 row-start-2' : ''
+                                    gridSlotCount === 5 && i === 4
+                                        ? 'col-start-2 row-start-2'
+                                        : ''
 
                                 return (
                                     <div
                                         key={i}
                                         className={cn(
                                             'relative overflow-hidden',
-                                            'aspect-[4/3]', // Maintain a consistent aspect ratio
-                                            extraClass
+                                            'aspect-[4/3]',
+                                            extraClass,
+                                            !photoSrc && 'bg-gray-100'
                                         )}
                                     >
                                         <img
-                                            src={photoSrc}
+                                            src={photoSrc || '/placeholder.jpg'}
                                             alt={`Quest wildlife ${i + 1}`}
                                             className="w-full h-full object-cover"
                                         />
@@ -135,18 +116,14 @@ export function QuestCard({
                     </CardContent>
                 )}
 
-
-                {/* Text content */}
                 <CardContent className="px-4 py-2 m-0 space-y-1 relative">
                     <IoMdCompass className="z-5 absolute -top-2 -right-12 -translate-x-1/2 text-orange-200 opacity-20 w-28 h-28 pointer-events-none" />
-
 
                     <h3 className="text-lg font-semibold text-green-900 line-clamp-1 z-10 relative">
                         {quest.name}
                     </h3>
 
-                        <div className="text-xs">{formattedDate}</div>
-
+                    <div className="text-xs">{formattedDate}</div>
                 </CardContent>
                 <CardFooter className="relative m-0 p-2 bg-orange-100 z-10">
                     <div className="flex flex-row items-center justify-right relative z-10">
@@ -159,4 +136,19 @@ export function QuestCard({
             </Card>
         </Link>
     )
+}
+
+function QuestCardWithData(props: QuestCardProps) {
+    const { questToPhotosMap, isLoading } = useQuestPhotoCollage([props.quest])
+    const photos = questToPhotosMap.get(props.quest.id)
+
+    return <QuestCardContent {...props} photos={photos} isLoading={isLoading} />
+}
+
+export function QuestCard(props: QuestCardProps) {
+    if (props.photos !== undefined && props.isLoading !== undefined) {
+        return <QuestCardContent {...props} />
+    }
+
+    return <QuestCardWithData {...props} />
 }

@@ -1,6 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '@/api/api'
 import { INatTaxon } from '@shared/types/iNatTypes'
+import { useMemo } from 'react'
+import { QuestWithTaxa } from '@/../types/types'
 
 const BATCH_SIZE = 30
 
@@ -101,6 +103,60 @@ export function useQuestPhotos(
     return {
         photoMap,
         isLoading,
+    }
+}
+
+/**
+ * Hook to fetch collage photos for multiple quests.
+ * It fetches up to `photosPerQuest` photos for each quest.
+ *
+ * @param quests - An array of quests.
+ * @param options - Options object.
+ * @param options.photosPerQuest - The number of photos to fetch for each quest's collage. Defaults to 6.
+ * @returns An object containing a map of quest IDs to their photo URLs and a loading state.
+ */
+export function useQuestPhotoCollage(
+    quests: QuestWithTaxa[],
+    options: { photosPerQuest?: number } = {}
+) {
+    const { photosPerQuest = 6 } = options
+
+    const allTaxonIdsForCollage = useMemo(
+        () =>
+            quests.flatMap(
+                (quest) => quest.taxon_ids?.slice(0, photosPerQuest) || []
+            ),
+        [quests, photosPerQuest]
+    )
+
+    const { data: collagePhotosData, isLoading } = useTaxonPhotos(
+        allTaxonIdsForCollage
+    )
+
+    const questToPhotosMap = useMemo(() => {
+        const newMap = new Map<number, string[]>()
+        if (collagePhotosData) {
+            let photoIdx = 0
+            for (const quest of quests) {
+                const collageTaxonIds =
+                    quest.taxon_ids?.slice(0, photosPerQuest) || []
+                const questPhotos = collagePhotosData.slice(
+                    photoIdx,
+                    photoIdx + collageTaxonIds.length
+                )
+                newMap.set(
+                    quest.id,
+                    questPhotos.filter((p): p is string => !!p)
+                )
+                photoIdx += collageTaxonIds.length
+            }
+        }
+        return newMap
+    }, [quests, collagePhotosData, photosPerQuest])
+
+    return {
+        questToPhotosMap,
+        isLoading: isLoading,
     }
 }
 
