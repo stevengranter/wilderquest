@@ -100,7 +100,13 @@ export function createQuestService(
         userId: number
     ): Promise<QuestWithTaxa> {
         try {
-            const { taxon_ids = [], ...questTableData } = questData
+            const { taxon_ids = [], starts_at, ends_at, ...restQuestData } = questData
+
+            const questTableData = {
+                ...restQuestData,
+                starts_at: starts_at ? new Date(starts_at) : undefined,
+                ends_at: ends_at ? new Date(ends_at) : undefined,
+            }
 
             const questId = await questsRepo.create({
                 ...questTableData,
@@ -175,7 +181,14 @@ export function createQuestService(
             throw new Error('Access denied')
         }
 
-        const { taxon_ids, description, ...questTableData } = updatedData
+        const { taxon_ids, description, starts_at, ends_at, ...restQuestData } =
+            updatedData
+
+        const questTableData = {
+            ...restQuestData,
+            starts_at: starts_at ? new Date(starts_at) : undefined,
+            ends_at: ends_at ? new Date(ends_at) : undefined,
+        }
 
         // Update the quest (exclude undefined fields)
         if (Object.keys(questTableData).length > 0) {

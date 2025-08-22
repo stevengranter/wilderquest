@@ -83,8 +83,8 @@ export function CreateQuest() {
                 latitude: latitude,
                 longitude: longitude,
                 taxon_ids: taxonIds,
-                starts_at: starts_at || null,
-                ends_at: ends_at || null,
+                starts_at: starts_at ? new Date(starts_at).toISOString() : null,
+                ends_at: ends_at ? new Date(ends_at).toISOString() : null,
             }
 
             console.log('Submitting quest with:', payload)
@@ -217,6 +217,8 @@ function Step1_QuestDetails({ setStep }: { setStep: (step: number) => void }) {
             'locationName',
             'latitude',
             'longitude',
+            'starts_at',
+            'ends_at',
         ])
         if (isValid) {
             setStep(2)

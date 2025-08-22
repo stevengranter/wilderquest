@@ -10,6 +10,10 @@ export const formSchema = z.object({
     latitude: z.number().nullable(),
     longitude: z.number().nullable(),
     isPrivate: z.boolean(),
-    starts_at: z.string().optional(),
-    ends_at: z.string().optional(),
+    starts_at: z.string().min(1, { message: "Start date is required." }).refine((val) => !isNaN(Date.parse(val)), {
+        message: "Start date must be a valid date and time.",
+    }),
+    ends_at: z.string().min(1, { message: "End date is required." }).refine((val) => !isNaN(Date.parse(val)), {
+        message: "End date must be a valid date and time.",
+    }),
 })
