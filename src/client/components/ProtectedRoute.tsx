@@ -10,7 +10,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     const { isAuthenticated, verifyToken } = useAuth()
 
     if (!isAuthenticated || !verifyToken(localStorage.getItem('accessToken'))) {
-        return <Navigate to="/login" />
+        return <Navigate to="/login" replace />
     }
 
     return <>{children}</>
