@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { Grid, List, Lock, LockOpen, Map, Pause, Pencil, Play, StopCircle } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
 import api from '@/api/api'
 import { SpeciesCardSkeleton } from '@/components/cards/SpeciesCard'
@@ -153,6 +154,45 @@ function QuestTimestamps({
     )
 }
 
+const TaxaPieChart = ({ found, total }: { found: number; total: number }) => {
+    const data = [
+        { name: 'Found', value: found },
+        { name: 'Not Found', value: total - found },
+    ]
+    const COLORS = ['#4ade80', '#f1f5f9'] // green-400, gray-200
+    const isComplete = found === total
+
+    return (
+        <div className="w-full h-full relative">
+            <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                    <Pie
+                        data={data}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius="60%"
+                        outerRadius="80%"
+                        fill="#8884d8"
+                        paddingAngle={isComplete ? 0 : 5}
+                        dataKey="value"
+                    >
+                        {data.map((entry, index) => (
+                            <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[index % COLORS.length]}
+                            />
+                        ))}
+                    </Pie>
+                </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                <div className="text-5xl font-bold">{found}</div>
+                <div className="text-xl text-muted-foreground">of {total}</div>
+            </div>
+        </div>
+    )
+}
+
 export const QuestView = ({
     questData,
     taxa,
@@ -202,64 +242,62 @@ export const QuestView = ({
     }
 
     const taxaWithProgress =
-        taxa?.map((taxon) => {
-            const mapping = mappings?.find((m) => m.taxon_id === taxon.id)
-            const progressCount =
-                mapping?.id && aggregatedProgress
-                    ? aggregatedProgress.find(
-                          (p) => p.mapping_id === mapping.id
-                      )?.count || 0
-                    : 0
-            const recentEntries =
-                mapping?.id && detailedProgress
-                    ? detailedProgress
-                          .filter((d) => d.mapping_id === mapping.id)
-                          .slice(0, 3)
-                    : []
-            return { ...taxon, mapping, progressCount, recentEntries }
-        })
-        .sort((a, b) => {
-            // Sort found species to the end
-            const aFound = a.progressCount > 0
-            const bFound = b.progressCount > 0
-            if (aFound && !bFound) return 1
-            if (!aFound && bFound) return -1
-            return 0
-        }) || []
+        taxa
+            ?.map((taxon) => {
+                const mapping = mappings?.find((m) => m.taxon_id === taxon.id)
+                const progressCount =
+                    mapping?.id && aggregatedProgress
+                        ? aggregatedProgress.find(
+                              (p) => p.mapping_id === mapping.id
+                          )?.count || 0
+                        : 0
+                const recentEntries =
+                    mapping?.id && detailedProgress
+                        ? detailedProgress
+                              .filter((d) => d.mapping_id === mapping.id)
+                              .slice(0, 3)
+                        : []
+                return { ...taxon, mapping, progressCount, recentEntries }
+            })
+            .sort((a, b) => {
+                // Sort found species to the end
+                const aFound = a.progressCount > 0
+                const bFound = b.progressCount > 0
+                if (aFound && !bFound) return 1
+                if (!aFound && bFound) return -1
+                return 0
+            }) || []
 
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex flex-row justify-between align-middle">
-                <div className="flex flex-row">
-                    <div className="flex flex-col">
-                        <h2 className="text-3xl font-bold text-primary">
-                            {questData.name}
-                        </h2>
-                        {questData?.location_name && (
-                            <h3>Location: {questData?.location_name}</h3>
-                        )}
-                                        <QuestTimestamps
-                    startsAt={questData.starts_at || undefined}
-                    endsAt={questData.ends_at || undefined}
-                />
-                    </div>
+                <div className="flex flex-col">
+                    <h2 className="text-3xl font-bold text-primary">
+                        {questData.name}
+                    </h2>
+                    {questData?.location_name && (
+                        <h3>Location: {questData?.location_name}</h3>
+                    )}
+                    <QuestTimestamps
+                        startsAt={questData.starts_at || undefined}
+                        endsAt={questData.ends_at || undefined}
+                    />
                 </div>
                 <div className="flex items-center gap-3">
                     {questData.is_private ? (
-                        <Lock className="h-5 w-5 text-muted-foreground" />
+                        <Badge>
+                            <Lock className="h-5 w-5 text-muted-foreground" />
+                            Private
+                        </Badge>
                     ) : (
-                        <LockOpen className="h-5 w-5 text-muted-foreground" />
+                        <Badge>
+                            <LockOpen className="h-5 w-5 text-muted-foreground" />
+                            Public
+                        </Badge>
                     )}
                 </div>
             </div>
-            {isOwner && (
-                <QuestStatusControls
-                    handleActive={() => updateStatus('active')}
-                    status={questData.status}
-                    handlePaused={() => updateStatus('paused')}
-                    handleEnded={() => updateStatus('ended')}
-                />
-            )}
+
             <div className="flex justify-between items-start mb-6">
                 <div>
                     <p className="text-muted-foreground mt-2">
@@ -290,24 +328,7 @@ export const QuestView = ({
                 )}
             </div>
 
-            <div className="mt-8">
-                {mappings && mappings.length > 0 && (
-                    <div className="mb-2 text-sm">
-                        {(() => {
-                            const total = mappings.length
-                            const found =
-                                aggregatedProgress?.filter(
-                                    (a) => (a.count || 0) > 0
-                                ).length || 0
-                            return (
-                                <span className="inline-block bg-emerald-600 text-white px-2 py-0.5 rounded">
-                                    {found}/{total} Found
-                                </span>
-                            )
-                        })()}
-                    </div>
-                )}
-                
+            <div className="grid grid-cols-2 justify-between items-start">
                 {/* Leaderboard */}
                 <div className="mt-8 mb-6">
                     <h2 className="text-xl font-semibold mb-4">Leaderboard</h2>
@@ -339,12 +360,34 @@ export const QuestView = ({
                             </AnimatePresence>
                         </div>
                     ) : (
-                        <div className="text-center text-muted-foreground py-4">
+                        <div className="text-left text-muted-foreground py-4">
                             No participants have joined yet.
                         </div>
                     )}
                 </div>
 
+                {/* n/total taxa found */}
+                <div className="flex justify-center items-center">
+                    {mappings && mappings.length > 0 && (
+                        <div className="w-64 h-64">
+                            {(() => {
+                                const total = mappings.length
+                                const found =
+                                    aggregatedProgress?.filter(
+                                        (a) => (a.count || 0) > 0
+                                    ).length || 0
+                                return (
+                                    <TaxaPieChart
+                                        found={found}
+                                        total={total}
+                                    />
+                                )
+                            })()}
+                        </div>
+                    )}
+                </div>
+            </div>
+            <div className="mt-8">
                 {/* View Mode Controls */}
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold">
@@ -401,74 +444,131 @@ export const QuestView = ({
                                               questData={questData}
                                               found={taxon.progressCount > 0}
                                           />
-                                          {(isOwner || token) && taxon.mapping && (
-                                              <div className="absolute bottom-2 right-2">
-                                                  <Button
-                                                      size="sm"
-                                                      variant="neutral"
-                                                      disabled={questData.status !== 'active'}
-                                                      onClick={async () => {
-                                                          if (!taxon.mapping) return // ✅ extra safety
-                                                          try {
-                                                              let progress
-                                                              if (isOwner) {
-                                                                  progress = detailedProgress?.find(
-                                                                      (p) =>
-                                                                          p.display_name === user?.username &&
-                                                                          p.mapping_id === taxon.mapping!.id
-                                                                  )
-                                                              } else if (token) {
-                                                                  progress = detailedProgress?.find(
-                                                                      (p) =>
-                                                                          p.display_name === share?.guest_name &&
-                                                                          p.mapping_id === taxon.mapping!.id
-                                                                  )
-                                                              }
-                                                              const next = !progress
-                                                              if (isOwner) {
-                                                                  await api.post(
-                                                                      `/quest-sharing/quests/${questData.id}/progress/${taxon.mapping!.id}`,
-                                                                      { observed: next }
-                                                                  )
-                                                              } else if (token) {
-                                                                  await api.post(
-                                                                      `/quest-sharing/shares/token/${token}/progress/${taxon.mapping!.id}`,
-                                                                      { observed: next }
-                                                                  )
-                                                              }
-                                                              console.log('Progress updated')
-                                                          } catch (_e) {
-                                                              toast.error('Action failed')
+                                          {(isOwner || token) &&
+                                              taxon.mapping && (
+                                                  <div className="absolute bottom-2 right-2">
+                                                      <Button
+                                                          size="sm"
+                                                          variant="neutral"
+                                                          disabled={
+                                                              questData.status !==
+                                                              'active'
                                                           }
-                                                      }}
-                                                  >
-                                                      Found
-                                                  </Button>
-                                              </div>
-                                          )}
+                                                          onClick={async () => {
+                                                              if (!taxon.mapping)
+                                                                  return // ✅ extra safety
+                                                              try {
+                                                                  let progress
+                                                                  if (isOwner) {
+                                                                      progress =
+                                                                          detailedProgress?.find(
+                                                                              (
+                                                                                  p
+                                                                              ) =>
+                                                                                  p.display_name ===
+                                                                                      user?.username &&
+                                                                                  p.mapping_id ===
+                                                                                      taxon
+                                                                                          .mapping!
+                                                                                          .id
+                                                                          )
+                                                                  } else if (
+                                                                      token
+                                                                  ) {
+                                                                      progress =
+                                                                          detailedProgress?.find(
+                                                                              (
+                                                                                  p
+                                                                              ) =>
+                                                                                  p.display_name ===
+                                                                                      share?.guest_name &&
+                                                                                  p.mapping_id ===
+                                                                                      taxon
+                                                                                          .mapping!
+                                                                                          .id
+                                                                          )
+                                                                  }
+                                                                  const next =
+                                                                      !progress
+                                                                  if (isOwner) {
+                                                                      await api.post(
+                                                                          `/quest-sharing/quests/${questData.id}/progress/${taxon.mapping!.id}`,
+                                                                          {
+                                                                              observed:
+                                                                                  next,
+                                                                          }
+                                                                      )
+                                                                  } else if (
+                                                                      token
+                                                                  ) {
+                                                                      await api.post(
+                                                                          `/quest-sharing/shares/token/${token}/progress/${taxon.mapping!.id}`,
+                                                                          {
+                                                                              observed:
+                                                                                  next,
+                                                                          }
+                                                                      )
+                                                                  }
+                                                                  console.log(
+                                                                      'Progress updated'
+                                                                  )
+                                                              } catch (_e) {
+                                                                  toast.error(
+                                                                      'Action failed'
+                                                                  )
+                                                              }
+                                                          }}
+                                                      >
+                                                          Found
+                                                      </Button>
+                                                  </div>
+                                              )}
 
                                           {taxon.progressCount > 0 && (
                                               <div className="absolute top-2 right-2">
                                                   <div className="bg-emerald-600 text-white text-xs px-2 py-1 rounded-md shadow">
                                                       <div>
                                                           Found
-                                                          {taxon.progressCount > 1
+                                                          {taxon.progressCount >
+                                                          1
                                                               ? ` x${taxon.progressCount}`
                                                               : ''}
                                                       </div>
                                                       {taxon.mapping && (
                                                           <div className="text-[10px] opacity-90 mt-0.5">
                                                               {(() => {
-                                                                  if (!taxon.mapping) return null
-                                                                  const meta = aggregatedProgress?.find(
-                                                                      (p) => p.mapping_id === taxon.mapping!.id
+                                                                  if (
+                                                                      !taxon.mapping
                                                                   )
-                                                                  if (!meta) return null
-                                                                  const ts = meta.last_observed_at
-                                                                  const name = meta.last_display_name || 'Someone'
+                                                                      return null
+                                                                  const meta =
+                                                                      aggregatedProgress?.find(
+                                                                          (
+                                                                              p
+                                                                          ) =>
+                                                                              p.mapping_id ===
+                                                                              taxon
+                                                                                  .mapping!
+                                                                                  .id
+                                                                      )
+                                                                  if (!meta)
+                                                                      return null
+                                                                  const ts =
+                                                                      meta.last_observed_at
+                                                                  const name =
+                                                                      meta.last_display_name ||
+                                                                      'Someone'
                                                                   try {
-                                                                      const d = ts ? new Date(ts) : null
-                                                                      const formatted = d ? d.toLocaleString() : ''
+                                                                      const d =
+                                                                          ts
+                                                                              ? new Date(
+                                                                                    ts
+                                                                                )
+                                                                              : null
+                                                                      const formatted =
+                                                                          d
+                                                                              ? d.toLocaleString()
+                                                                              : ''
                                                                       return `${name} • ${formatted}`
                                                                   } catch {
                                                                       return name
@@ -477,30 +577,44 @@ export const QuestView = ({
                                                           </div>
                                                       )}
                                                       {taxon.recentEntries &&
-                                                          taxon.recentEntries.length > 0 && (
+                                                          taxon.recentEntries
+                                                              .length > 0 && (
                                                               <div className="text-[10px] opacity-90 mt-1">
-                                                                  {taxon.recentEntries.map((e: DetailedProgress) => {
-                                                                      const d = new Date(e.observed_at)
-                                                                      return (
-                                                                          <div key={e.progress_id}>
-                                                                              {e.display_name || 'Someone'} • {d.toLocaleString()}
-                                                                          </div>
-                                                                      )
-                                                                  })}
+                                                                  {taxon.recentEntries.map(
+                                                                      (
+                                                                          e: DetailedProgress
+                                                                      ) => {
+                                                                          const d =
+                                                                              new Date(
+                                                                                  e.observed_at
+                                                                              )
+                                                                          return (
+                                                                              <div
+                                                                                  key={
+                                                                                      e.progress_id
+                                                                                  }
+                                                                              >
+                                                                                  {e.display_name ||
+                                                                                      'Someone'}{' '}
+                                                                                  •{' '}
+                                                                                  {d.toLocaleString()}
+                                                                              </div>
+                                                                          )
+                                                                      }
+                                                                  )}
                                                               </div>
                                                           )}
                                                   </div>
                                               </div>
                                           )}
-
                                       </div>
-                              )
-                          })}
-                    {(isTaxaLoading || isTaxaFetchingNextPage) &&
-                        taxa?.length &&
-                        Array.from({
-                            length: 4,
-                        }).map((_, i) => <SpeciesCardSkeleton key={i} />)}
+                                  )
+                              })}
+                        {(isTaxaLoading || isTaxaFetchingNextPage) &&
+                            taxa?.length &&
+                            Array.from({
+                                length: 4,
+                            }).map((_, i) => <SpeciesCardSkeleton key={i} />)}
                     </div>
                 )}
 
@@ -527,6 +641,14 @@ export const QuestView = ({
                     />
                 )}
             </div>
+            {isOwner && (
+                <QuestStatusControls
+                    handleActive={() => updateStatus('active')}
+                    status={questData.status}
+                    handlePaused={() => updateStatus('paused')}
+                    handleEnded={() => updateStatus('ended')}
+                />
+            )}
         </div>
     )
 }
