@@ -115,7 +115,7 @@ function SpeciesGridItem({
     className,
     cardRef,
     isSelected,
-    isSelectable = true,
+    // _isSelectable = true,
     handleClick,
     geoObservationsCount,
     rarity,

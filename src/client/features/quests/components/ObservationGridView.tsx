@@ -64,9 +64,9 @@ export function ObservationGridView({
     const observationsWithPhotos = observations.filter(
         (obs) => obs.photos.length > 0
     )
-    const rotations = observationsWithPhotos.map(
-        () => (Math.random() - 0.5) * 16
-    )
+    // const rotations = observationsWithPhotos.map(
+    //     () => (Math.random() - 0.5) * 16
+    // )
 
     const handleNext = () => {
         if (zoomedIndex === null) return
@@ -89,7 +89,7 @@ export function ObservationGridView({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                 <AnimatePresence>
                     {observationsWithPhotos.map((obs, index) => {
-                        const _rotation = rotations[index]
+                        // const _rotation = rotations[index]
                         return (
                             <DialogTrigger
                                 key={obs.id}
@@ -120,16 +120,16 @@ export function ObservationGridView({
                                         damping: 15,
                                         stiffness: 100,
                                     }}
-                                    whileHover={{
-                                        scale: 1.05,
-                                        y: -8,
-                                        transition: {
-                                            duration: 0.3,
-                                            type: 'spring',
-                                            damping: 10,
-                                            stiffness: 200,
-                                        },
-                                    }}
+                                    // whileHover={{
+                                    //     scale: 1.05,
+                                    //     y: -8,
+                                    //     transition: {
+                                    //         duration: 0.3,
+                                    //         type: 'spring',
+                                    //         damping: 10,
+                                    //         stiffness: 200,
+                                    //     },
+                                    // }}
                                     whileTap={{
                                         scale: 0.95,
                                     }}
@@ -139,7 +139,7 @@ export function ObservationGridView({
                                     }}
                                 >
                                     {/* Polaroid Card */}
-                                    <div className="bg-white p-3 rounded-lg border-0 hover:shadow-shadow transtion:shadow duration-300">
+                                    <div className="bg-white p-3 rounded-lg border-1 hover:shadow-shadow hover:-translate-y-2 transition:shadow duration-300">
                                         {/* Photo Area */}
                                         <ProgressiveObservationImage
                                             photo={obs.photos[0]}
@@ -147,15 +147,15 @@ export function ObservationGridView({
                                         />
 
                                         {/* Polaroid Caption Area */}
-                                        <motion.div
-                                            className="text-xs text-gray-700 space-y-1"
-                                            initial={{ y: 10, opacity: 0 }}
-                                            animate={{ y: 0, opacity: 1 }}
-                                            transition={{
-                                                duration: 0.5,
-                                                delay: index * 0.15 + 0.4,
-                                            }}
-                                        >
+                                        {/*<motion.div*/}
+                                        {/*    className="text-xs text-gray-700 space-y-1"*/}
+                                        {/*    initial={{ y: 10, opacity: 0 }}*/}
+                                        {/*    animate={{ y: 0, opacity: 1 }}*/}
+                                        {/*    transition={{*/}
+                                        {/*        duration: 0.5,*/}
+                                        {/*        delay: index * 0.15 + 0.4,*/}
+                                        {/*    }}*/}
+                                        {/*>*/}
                                             <p className="font-medium truncate line-clamp-1">
                                                 {obs.user.login}
                                             </p>
@@ -167,7 +167,7 @@ export function ObservationGridView({
                                                     📍 {obs.place_guess}
                                                 </p>
                                             )}
-                                        </motion.div>
+                                        {/*</motion.div>*/}
                                     </div>
                                 </motion.div>
                             </DialogTrigger>
@@ -257,7 +257,7 @@ export function ObservationGridView({
                     })}
                 </AnimatePresence>
                 <Button
-                    variant="outline"
+                    variant="neutral"
                     size="icon"
                     className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 rounded-full bg-white z-50"
                     onClick={handlePrev}
@@ -265,7 +265,7 @@ export function ObservationGridView({
                     <ChevronLeft className="h-6 w-6" />
                 </Button>
                 <Button
-                    variant="outline"
+                    variant="neutral"
                     size="icon"
                     className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 rounded-full bg-white z-50"
                     onClick={handleNext}
