@@ -28,7 +28,7 @@ const markerStyles = `
     
     .custom-marker:hover, .custom-marker-fallback:hover {
         transform: scale(1.1);
-        z-index: 1000;
+        z-index: 500;
     }
     
     .custom-marker img {
@@ -153,7 +153,7 @@ function createMarkerIcon(photoUrl: string, speciesName: string) {
             max-width: 80px;
             overflow: hidden;
             text-overflow: ellipsis;
-            z-index: 1000;
+            z-index: 10;
         ">
             ${speciesName.length > 12 ? speciesName.substring(0, 10) + '...' : speciesName}
         </div>
@@ -207,7 +207,7 @@ function createFallbackMarkerIcon(speciesName: string, rank: string) {
             max-width: 80px;
             overflow: hidden;
             text-overflow: ellipsis;
-            z-index: 1000;
+            z-index: 10;
         ">
             ${speciesName.length > 12 ? speciesName.substring(0, 10) + '...' : speciesName}
         </div>
@@ -327,7 +327,7 @@ export const QuestMapView = React.memo(({
     }, [observations])
 
     return (
-        <div className="relative w-full h-full min-h-[400px]">
+        <div className="relative w-full h-full min-h-[400px] z-0">
             <MapContainer
                 center={center}
                 zoom={zoom}
