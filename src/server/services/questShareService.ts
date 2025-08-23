@@ -1,8 +1,4 @@
-import {
-    QuestRepository,
-    QuestToTaxa,
-    QuestToTaxaRepository,
-} from '../repositories/QuestRepository.js'
+import { QuestRepository, QuestToTaxa, QuestToTaxaRepository } from '../repositories/QuestRepository.js'
 import type {
     QuestShare,
     QuestShareRepository,
@@ -63,8 +59,10 @@ export function createQuestShareService(
         const share = await questShareRepo.findActiveByToken(token)
         if (!share) throw new Error('Share not found or expired')
 
-        const quest = await questRepo.findAccessibleById(share.quest_id)
+        const quest = await questRepo.findById(share.quest_id)
         if (!quest) throw new Error('Quest not found')
+
+        const owner = await userRepo.findUser({ id: quest.user_id })
 
         const taxaMappings = await questToTaxaRepo.findByQuestId(share.quest_id)
         const progress = await progressRepo.findByShareId(share.id)
@@ -73,6 +71,7 @@ export function createQuestShareService(
             share,
             quest: {
                 ...quest,
+                username: owner?.username,
                 taxon_ids: taxaMappings.map((t) => t.taxon_id),
             },
             taxa_mappings: taxaMappings, // contains id (mapping id) and taxon_id (iNat id)
