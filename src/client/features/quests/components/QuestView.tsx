@@ -420,7 +420,7 @@ export const QuestView = ({
 
                 {/* View Content */}
                 {viewMode === 'grid' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 lg:gap-6 auto-rows-fr">
                         {isTaxaLoading && !taxa?.length
                             ? Array.from({
                                   length: taxa?.length || 12,

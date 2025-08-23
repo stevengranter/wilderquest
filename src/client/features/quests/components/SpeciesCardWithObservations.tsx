@@ -65,7 +65,7 @@ export function SpeciesCardWithObservations(
                 asChild
                 onMouseEnter={() => prefetchTaxonPhoto(species.id)}
             >
-                <div className="h-full transform transition-transform hover:scale-105 cursor-pointer">
+                <div className="h-full cursor-pointer">
                     {children || (
                         <SpeciesCard
                             species={species}

@@ -1,11 +1,9 @@
 'use client'
 
 import { type INatTaxon } from '@shared/types/iNatTypes'
-import { random } from 'lodash'
 import { ExternalLink } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import React, { useRef } from 'react'
-import { TbBinocularsFilled } from 'react-icons/tb'
 import getKingdomIcon from '@/components/search/getKingdomIcon'
 
 import { Badge } from '@/components/ui/badge'
@@ -14,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 import { cn } from '@/lib/utils'
 import { useProgressiveImage } from '@/hooks/useProgressiveImage'
+import { BiWorld } from 'react-icons/bi'
 
 interface SpeciesCardProps {
     species: INatTaxon
@@ -151,12 +150,12 @@ function SpeciesGridItem({
                     },
                     default: { duration: 0.3 },
                 }}
-                whileHover={{
-                    scale: 1.04,
-                    rotateZ: random(-3, 3),
-                    y: -2,
-                    transition: { duration: 0.2, type: 'spring', damping: 15 },
-                }}
+                // whileHover={{
+                //     scale: 1.04,
+                //     rotateZ: random(-3, 3),
+                //     y: -2,
+                //     transition: { duration: 0.2, type: 'spring', damping: 15 },
+                // }}
                 whileTap={{ scale: 0.98 }}
                 className={cn('w-full cursor-pointer', className)}
                 onClick={handleClick}
@@ -164,17 +163,17 @@ function SpeciesGridItem({
             >
                 <Card
                     className={cn(
-                        'aspect-2.5/3.5 overflow-hidden shadow-0 py-0 gap-0 border-3 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
+                        'aspect-2.5/3.5 overflow-hidden duration-250 transition-all shadow-0 py-0 gap-0 border-1 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
                         isSelected && 'ring-2 ring-blue-500 shadow-blue-200/50',
-                        'hover:shadow-shadow transition-shadow duration-500',
+                        'hover:shadow-shadow  hover:-translate-2',
                         found 
-                            ? 'bg-green-100 border-green-400' 
-                            : 'bg-gray-100 border-slate-400'
+                            ? 'bg-green-100'
+                            : 'bg-background'
                     )}
                 >
                     <CardHeader
-                        className="gap-0 text-left justify-start pt-2 pb-2 relative text-white tracking-normal font-bold sm:text-md md:text-md lg:text-xl line-clamp-1 font-barlow"
-                        style={{ textShadow: '2px 2px 1px rgba(0, 0, 0, 0.3)' }}
+                        className="gap-0 text-left justify-start pb-1 pt-3 relative text-foreground tracking-normal font-bold sm:text-md md:text-md lg:text-xl line-clamp-1 font-barlow"
+                        // style={{ textShadow: '2px 2px 1px rgba(0, 0, 0, 0.3)' }}
                     >
                         {species.preferred_common_name && (
                             <h3>{species.preferred_common_name}</h3>
@@ -213,31 +212,32 @@ function SpeciesGridItem({
 
                         <div
                             className="space-y-1 text-right self-end mt-1 mb-2"
-                            style={{
-                                textShadow: '1px 1px 1px rgba(0,0,0,0.5)',
-                            }}
+                            // style={{
+                            //     textShadow: '1px 1px 1px rgba(0,0,0,0.5)',
+                            // }}
                         >
                             {species.preferred_common_name && (
-                                <p className="text-[11px] text-white italic leading-tight line-clamp-1">
+                                <p className="text-[11px] text-foreground italic leading-tight line-clamp-1">
                                     {species.name}
                                 </p>
                             )}
                         </div>
                     </CardContent>
 
-                    <CardContent className="block sm:hidden md:block">
-                        <div className="h-full bg-teal-100 text-xs content-start text-left p-2 outline-2 rounded-sm outline-white border-2 border-black">
-                            <p>
-                                Lorem ipsum dolor sit amet, consectetur
-                                adipiscing elit.
-                            </p>
-                        </div>
-                    </CardContent>
+                    {/*<CardContent className="block sm:hidden md:block">*/}
+                    {/*    <div className="h-full bg-teal-100 text-xs content-start text-left p-2 outline-2 rounded-sm outline-white border-2 border-black">*/}
+                    {/*        <p>*/}
+                    {/*            Lorem ipsum dolor sit amet, consectetur*/}
+                    {/*            adipiscing elit.*/}
+                    {/*        </p>*/}
+                    {/*    </div>*/}
+                    {/*</CardContent>*/}
 
-                    <CardFooter className="flex flex-row justify-start items-center py-4 gap-2 relative">
+                    <CardFooter className="flex flex-row justify-start items-center py-2 pb-4">
                         {/* Observations badge */}
-                        <Badge className="bg-violet-500 text-violet-50 border-0 outline-2 outline-violet-900 flex items-center gap-1">
-                            <TbBinocularsFilled size={15} />
+                        <Badge>
+                            <BiWorld size={15}/>
+                            {/*<TbBinocularsFilled size={15} />*/}
                             {(
                                 geoObservationsCount ??
                                 species.observations_count
@@ -294,6 +294,7 @@ function SpeciesListItem({
         species.default_photo?.square_url || '',
         species.default_photo?.medium_url || ''
     )
+    const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
 
     return (
         <motion.div
@@ -336,8 +337,11 @@ function SpeciesListItem({
                 )}
                 <div className="flex gap-2 items-center mt-1">
                     {species.iconic_taxon_name && (
-                        <Badge variant="default" className="text-xs">
-                            {getKingdomIcon(species.iconic_taxon_name)}{' '}
+                        <Badge
+                            variant="default"
+                            className="flex items-center gap-1.5 text-xs"
+                        >
+                            {KingdomIcon && <KingdomIcon size={12} />}
                             {species.iconic_taxon_name}
                         </Badge>
                     )}
