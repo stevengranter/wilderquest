@@ -2,7 +2,7 @@ import { INatTaxon } from '@shared/types/iNatTypes'
 import { useQuery } from '@tanstack/react-query'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { ReactNode, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import api from '@/api/api'
 import { SpeciesCard } from '@/components/cards/SpeciesCard'
 import {
@@ -10,6 +10,7 @@ import {
     DialogContent,
     DialogDescription,
     DialogHeader,
+    DialogPortal,
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog'
@@ -38,13 +39,25 @@ interface ObservationDialogProps {
 export function ObservationDialog(props: ObservationDialogProps) {
     const { species, latitude, longitude, locationName, children, found } = props
     const prefetchTaxonPhoto = usePrefetchTaxonPhoto()
+    const [open, setOpen] = useState(false)
+
+    // preserve scroll when dialog opens/closes
+    useEffect(() => {
+        let unlock: (() => void) | undefined
+        if (open) {
+            unlock = lockScroll()
+        } else {
+            unlock?.()
+        }
+        return () => unlock?.()
+    }, [open])
 
     if (!latitude || !longitude) {
         return <>{children}</>
     }
 
     return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen} modal={false}>
             <DialogTrigger
                 className="h-full w-full"
                 asChild
@@ -52,7 +65,22 @@ export function ObservationDialog(props: ObservationDialogProps) {
             >
                 <div className="h-full cursor-pointer">{children}</div>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[80vw] max-h-[85vh] flex flex-col md:flex-row gap-6 p-6 bg-background">
+
+            {/* Custom overlay (works even with modal={false}) */}
+            {open && (
+                <DialogPortal>
+                    <div
+                        aria-hidden="true"
+                        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-[2px]"
+                        onClick={() => setOpen(false)}
+                    />
+                </DialogPortal>
+            )}
+
+            <DialogContent
+                onOpenAutoFocus={(e) => e.preventDefault()}
+                className="sm:max-w-[80vw] max-h-[85vh] flex flex-col md:flex-row gap-6 p-6 bg-background z-50"
+            >
                 {/* Mobile Header */}
                 <div className="md:hidden flex items-center gap-4 border-b pb-4">
                     {species.default_photo && (
@@ -84,8 +112,7 @@ export function ObservationDialog(props: ObservationDialogProps) {
                             </DialogTitle>
                             <DialogDescription>
                                 <VisuallyHidden>
-                                    Recent observations located near:{' '}
-                                    {locationName}
+                                    Recent observations located near: {locationName}
                                 </VisuallyHidden>
                             </DialogDescription>
                         </DialogHeader>
@@ -93,7 +120,6 @@ export function ObservationDialog(props: ObservationDialogProps) {
                 </div>
 
                 {/* Right Column: Observations */}
-
                 <div className="flex-1 overflow-hidden -ml-10">
                     {latitude && longitude && (
                         <ObservationList
@@ -109,14 +135,32 @@ export function ObservationDialog(props: ObservationDialogProps) {
     )
 }
 
+// --- Scroll lock helper ---
+function lockScroll() {
+    const scrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.left = '0'
+    document.body.style.right = '0'
+    document.body.style.width = '100%'
+    return () => {
+        document.body.style.position = ''
+        document.body.style.top = ''
+        document.body.style.left = ''
+        document.body.style.right = ''
+        document.body.style.width = ''
+        window.scrollTo(0, scrollY)
+    }
+}
+
 type ViewMode = 'grid' | 'list' | 'map'
 
 function ObservationList({
-    taxonId,
-    lat,
-    lon,
-    locationName,
-}: {
+                             taxonId,
+                             lat,
+                             lon,
+                             locationName,
+                         }: {
     taxonId: number
     lat: number
     lon: number
@@ -164,9 +208,7 @@ function ObservationList({
                 <ToggleGroup
                     type="single"
                     value={viewMode}
-                    onValueChange={(value: ViewMode) =>
-                        value && setViewMode(value)
-                    }
+                    onValueChange={(value: ViewMode) => value && setViewMode(value)}
                     className="border-0 rounded-lg"
                 >
                     <ToggleGroupItem value="grid" aria-label="Grid view">
@@ -184,7 +226,6 @@ function ObservationList({
             {/* Content wrapper with fixed height and relative positioning */}
             <div className={`relative ${MIN_HEIGHT} pt-6 pb-6`}>
                 {/* Skeleton behind */}
-
                 {isLoading && (
                     <motion.div
                         key="loading-skeleton"
@@ -214,14 +255,10 @@ function ObservationList({
                             ) : observations && observations.length > 0 ? (
                                 <>
                                     {viewMode === 'grid' && (
-                                        <ObservationGridView
-                                            observations={observations}
-                                        />
+                                        <ObservationGridView observations={observations} />
                                     )}
                                     {viewMode === 'list' && (
-                                        <ObservationListView
-                                            observations={observations}
-                                        />
+                                        <ObservationListView observations={observations} />
                                     )}
                                     {viewMode === 'map' && (
                                         <ObservationMapView
@@ -234,14 +271,10 @@ function ObservationList({
                                 <motion.p
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{
-                                        duration: 0.4,
-                                        delay: 0.3,
-                                    }}
+                                    transition={{ duration: 0.4, delay: 0.3 }}
                                     className="text-center py-8 text-muted-foreground"
                                 >
-                                    No observations found for this species in
-                                    this area.
+                                    No observations found for this species in this area.
                                 </motion.p>
                             )}
                         </motion.div>
