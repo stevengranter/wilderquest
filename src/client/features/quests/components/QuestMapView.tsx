@@ -56,17 +56,17 @@ type QuestMapProps = {
     options?: QuestMapOptions
     markerData?: MarkerProps[]
     style?: React.CSSProperties
-    className: string
-    questData: ClientQuest
-    taxa: INatTaxon[]
-    mappings: QuestMapping[]
+    className?: string
+    questData?: ClientQuest
+    taxa?: INatTaxon[]
+    mappings?: QuestMapping[]
 }
 
 function MapUpdater({ center, zoom }: { center?: [number, number], zoom?: number }) {
     const map = useMap()
     useEffect(() => {
         if (center) {
-            map.setView([center[0], center[1]], zoom || 13)
+            map.setView([center[0], center[1]], zoom)
         }
     }, [center, zoom, map])
     return null
@@ -230,19 +230,22 @@ export const QuestMapView = React.memo(({
 
     // Calculate initial center from quest location or default to world center
     const initialCenter: [number, number] = useMemo(() => {
-        if (questData.latitude && questData.longitude) {
+        if (questData?.latitude && questData?.longitude) {
             return [questData.latitude, questData.longitude]
         }
-        return [0, 0] // World map center
-    }, [questData.latitude, questData.longitude])
+        if (options?.center) {
+            return options.center
+        }
+        return [0, 0] // World map center - equator and prime meridian
+    }, [questData?.latitude, questData?.longitude, options?.center])
 
-    const initialZoom = questData.latitude ? 13 : 2
+    const initialZoom = questData?.latitude ? 13 : (options?.center ? 13 : 3)
     const center = options?.center || initialCenter
-    const zoom = center ? (options?.zoom || 13) : initialZoom
+    const zoom = options?.zoom || initialZoom
 
     // Fetch observations when bounds change or taxa change
     useEffect(() => {
-        if (!bounds || taxa.length === 0) return
+        if (!bounds || !taxa || taxa.length === 0) return
 
         const fetchObservations = async () => {
             setIsLoading(true)
@@ -315,12 +318,12 @@ export const QuestMapView = React.memo(({
     }, [observations])
 
     return (
-        <div className="relative">
+        <div className="relative w-full h-full min-h-[400px]">
             <MapContainer
                 center={center}
                 zoom={zoom}
                 scrollWheelZoom={true}
-                className={className}
+                className={className || "w-full h-full min-h-[400px]"}
                 style={style}
             >
                 <TileLayer
@@ -333,7 +336,7 @@ export const QuestMapView = React.memo(({
                 <MapUpdater center={center} zoom={zoom} />
 
                 {/* Quest location marker */}
-                {questData.latitude && questData.longitude && (
+                {questData?.latitude && questData?.longitude && questData?.name && (
                     <Marker position={[questData.latitude, questData.longitude]}>
                         <Popup>
                             <div className="text-center">
@@ -415,32 +418,36 @@ export const QuestMapView = React.memo(({
             )}
             
             {/* Stats */}
-            <div className="absolute top-4 left-4 bg-white px-3 py-2 rounded-lg shadow-md">
-                <div className="text-sm text-gray-600">
-                    <div>Quest: {questData.name}</div>
-                    <div>Taxa: {taxa.length}</div>
-                    <div>Observations: {observations.length}</div>
+            {questData && (
+                <div className="absolute top-4 left-4 bg-white px-3 py-2 rounded-lg shadow-md">
+                    <div className="text-sm text-gray-600">
+                        <div>Quest: {questData.name || 'Unnamed Quest'}</div>
+                        <div>Taxa: {taxa?.length || 0}</div>
+                        <div>Observations: {observations.length}</div>
+                    </div>
                 </div>
-            </div>
+            )}
             
             {/* Legend */}
-            <div className="absolute bottom-4 left-4 bg-white px-3 py-2 rounded-lg shadow-md">
-                <div className="text-sm font-medium text-gray-700 mb-2">Legend</div>
-                <div className="space-y-1 text-xs text-gray-600">
-                    <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full bg-white border-2 border-gray-300 shadow-sm"></div>
-                        <span>Quest Location</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-sm"></div>
-                        <span>Species (no photo)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full bg-white border-2 border-gray-300 shadow-sm"></div>
-                        <span>Species (with photo)</span>
+            {taxa && taxa.length > 0 && (
+                <div className="absolute bottom-4 left-4 bg-white px-3 py-2 rounded-lg shadow-md">
+                    <div className="text-sm font-medium text-gray-700 mb-2">Legend</div>
+                    <div className="space-y-1 text-xs text-gray-600">
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-white border-2 border-gray-300 shadow-sm"></div>
+                            <span>Quest Location</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-sm"></div>
+                            <span>Species (no photo)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-white border-2 border-gray-300 shadow-sm"></div>
+                            <span>Species (with photo)</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     )
 })

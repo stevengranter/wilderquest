@@ -419,7 +419,9 @@ function QuestDetails() {
                     )}
                 />
             </div>
-            <QuestMapView options={mapOptions} />
+            <div className="h-96 w-full">
+                <QuestMapView options={mapOptions} className="w-full h-full" />
+            </div>
             <FormField
                 control={control}
                 name="isPrivate"

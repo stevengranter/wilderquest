@@ -217,6 +217,14 @@ export const QuestView = ({
                           .slice(0, 3)
                     : []
             return { ...taxon, mapping, progressCount, recentEntries }
+        })
+        .sort((a, b) => {
+            // Sort found species to the end
+            const aFound = a.progressCount > 0
+            const bFound = b.progressCount > 0
+            if (aFound && !bFound) return 1
+            if (!aFound && bFound) return -1
+            return 0
         }) || []
 
     return (
@@ -377,9 +385,10 @@ export const QuestView = ({
                             : taxaWithProgress.map((taxon, index) => {
                                   const isLastElement =
                                       index === taxaWithProgress.length - 1
+                                  const isFound = taxon.progressCount > 0
                                   return (
                                       <div
-                                          key={taxon.id}
+                                          key={`${taxon.id}-${isFound ? 'found' : 'unfound'}-${index}`}
                                           ref={
                                               isLastElement
                                                   ? lastTaxonElementRef

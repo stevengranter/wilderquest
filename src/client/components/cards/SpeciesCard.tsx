@@ -65,6 +65,7 @@ export function SpeciesCard({
                 cardRef={cardRef}
                 isSelected={isSelected}
                 handleClick={handleClick}
+                found={found}
             />
         )
     }
@@ -163,10 +164,12 @@ function SpeciesGridItem({
             >
                 <Card
                     className={cn(
-                        'aspect-2.5/3.5 overflow-hidden bg-slate-100 shadow-0 py-0 gap-0 border-3 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
+                        'aspect-2.5/3.5 overflow-hidden shadow-0 py-0 gap-0 border-3 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
                         isSelected && 'ring-2 ring-blue-500 shadow-blue-200/50',
                         'hover:shadow-shadow transition-shadow duration-500',
-                        found && 'bg-amber-50 border-amber-400'
+                        found 
+                            ? 'bg-green-100 border-green-400' 
+                            : 'bg-gray-100 border-slate-400'
                     )}
                 >
                     <CardHeader
@@ -278,12 +281,14 @@ function SpeciesListItem({
     cardRef,
     isSelected,
     handleClick,
+    found,
 }: {
     species: INatTaxon
     className?: string
     cardRef: React.RefObject<HTMLDivElement | null>
     isSelected: boolean
     handleClick: (e: React.MouseEvent) => void
+    found?: boolean
 }) {
     const { src, isBlurred } = useProgressiveImage(
         species.default_photo?.square_url || '',
@@ -299,6 +304,9 @@ function SpeciesListItem({
             className={cn(
                 'flex items-center gap-4 p-2 rounded-md transition-all duration-200 hover:bg-gray-100',
                 isSelected && 'ring-2 ring-blue-500 bg-blue-50',
+                found 
+                    ? 'bg-green-100 hover:bg-green-200' 
+                    : 'bg-gray-100 hover:bg-gray-200',
                 className
             )}
             onClick={handleClick}

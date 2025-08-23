@@ -322,8 +322,8 @@ function Step1_QuestDetails({ setStep }: { setStep: (step: number) => void }) {
                 </div>
 
                 {/* Map view - Right column */}
-                <div className="w-1/2">
-                    <QuestMapView options={mapOptions} className="w-full" style={{ height: '100%' }}/>
+                <div className="w-1/2 h-96">
+                    <QuestMapView options={mapOptions} className="w-full h-full" />
                 </div>
             </div>
 

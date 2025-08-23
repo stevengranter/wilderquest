@@ -138,15 +138,18 @@ export default function CollectionDetail({
                 </div>
 
                 <div>Location: {collectionData.location_name}</div>
-                <QuestMapView
-                    options={{
-                        center: [
-                            collectionData.latitude,
-                            collectionData.longitude,
-                        ],
-                        zoom: 10,
-                    }}
-                />
+                <div className="h-96 w-full">
+                    <QuestMapView
+                        options={{
+                            center: [
+                                collectionData.latitude,
+                                collectionData.longitude,
+                            ],
+                            zoom: 10,
+                        }}
+                        className="w-full h-full"
+                    />
+                </div>
                 <div className="mt-8">
                     <h2 className="text-xl font-semibold mb-4">
                         Species ({taxa.length})
