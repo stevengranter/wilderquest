@@ -16,7 +16,6 @@ import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { useAuth } from '@/hooks/useAuth'
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
-import { SpeciesSelector } from '@/features/quests/components/SpeciesSelector'
 import { SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeSelector'
 import { SpeciesAnimationProvider } from '@/features/quests/components/SpeciesAnimationProvider'
 import { formSchema } from '@/features/quests/schemas/formSchema'
@@ -51,9 +50,6 @@ export default function EditQuest() {
     const [taxa, setTaxa] = useState<INatTaxon[]>([])
     const [initialTaxonIds, setInitialTaxonIds] = useState<number[]>([])
     const [isLoading, setIsLoading] = useState(false)
-    const [selectionMode, setSelectionMode] = useState<'traditional' | 'swipe'>(
-        'traditional'
-    )
     const [questSpeciesMap, setQuestSpeciesMap] = useState<
         Map<number, SpeciesCountItem>
     >(new Map())
@@ -207,42 +203,6 @@ export default function EditQuest() {
         }
     }
 
-    const onToggleTaxon = (taxon: INatTaxon) => {
-        setTaxa((prev) => {
-            const updated = prev.find((t) => t.id === taxon.id)
-                ? prev.filter((t) => t.id !== taxon.id)
-                : [...prev, taxon]
-
-            // Also update the questSpeciesMap
-            const newMap = new Map(questSpeciesMap)
-            if (updated.find((t) => t.id === taxon.id)) {
-                newMap.set(taxon.id, {
-                    taxon: {
-                        id: taxon.id,
-                        name: taxon.name,
-                        preferred_common_name: taxon.preferred_common_name,
-                        rank: taxon.rank,
-                        default_photo: taxon.default_photo
-                            ? {
-                                  ...taxon.default_photo,
-                                  attribution_name:
-                                      taxon.default_photo.attribution || null,
-                                  license_code:
-                                      taxon.default_photo.license_code || '',
-                              }
-                            : undefined,
-                    },
-                    count: taxon.observations_count || 0,
-                })
-            } else {
-                newMap.delete(taxon.id)
-            }
-            setQuestSpeciesMap(newMap)
-
-            return updated
-        })
-    }
-
     const handleSpeciesAdded = (species: SpeciesCountItem) => {
         console.log('Added species:', species.taxon.preferred_common_name)
         toast.success(`Added ${species.taxon.preferred_common_name}`)
@@ -267,80 +227,40 @@ export default function EditQuest() {
                             >
                                 <QuestDetails />
 
-                                {/* Selection Mode Toggle */}
-                                <div className="flex justify-center mb-6">
-                                    <div className="bg-gray-100 p-1 rounded-lg">
-                                        <button
-                                            type="button"
-                                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                                selectionMode === 'traditional'
-                                                    ? 'bg-white text-gray-900 shadow-sm'
-                                                    : 'text-gray-600 hover:text-gray-900'
-                                            }`}
-                                            onClick={() =>
-                                                setSelectionMode('traditional')
-                                            }
-                                        >
-                                            📋 List View
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                                selectionMode === 'swipe'
-                                                    ? 'bg-white text-gray-900 shadow-sm'
-                                                    : 'text-gray-600 hover:text-gray-900'
-                                            }`}
-                                            onClick={() =>
-                                                setSelectionMode('swipe')
-                                            }
-                                        >
-                                            📱 Swipe Mode
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Species Selection Interface */}
-                                {selectionMode === 'traditional' ? (
-                                    <SpeciesSelector
-                                        selectedTaxa={taxa}
-                                        onToggleTaxon={onToggleTaxon}
-                                    />
-                                ) : (
-                                    <div className="space-y-6">
-                                        <div className="text-center">
-                                            <h3 className="text-lg font-semibold mb-2">
-                                                Edit Quest Species
-                                            </h3>
-                                            <p className="text-gray-600 text-sm">
-                                                Swipe through available species
-                                                to add new ones. Click existing
-                                                thumbnails above to remove them.
+                                <div className="space-y-6">
+                                    <div className="text-center">
+                                        <h3 className="text-lg font-semibold mb-2">
+                                            Edit Quest Species
+                                        </h3>
+                                        <p className="text-gray-600 text-sm">
+                                            Swipe through available species
+                                            to add new ones. Click existing
+                                            thumbnails above to remove them.
+                                        </p>
+                                        {questSpeciesMap.size > 0 && (
+                                            <p className="text-xs text-blue-600 mt-1">
+                                                💡 Your current{' '}
+                                                {questSpeciesMap.size}{' '}
+                                                species are shown as
+                                                thumbnails above
                                             </p>
-                                            {questSpeciesMap.size > 0 && (
-                                                <p className="text-xs text-blue-600 mt-1">
-                                                    💡 Your current{' '}
-                                                    {questSpeciesMap.size}{' '}
-                                                    species are shown as
-                                                    thumbnails above
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        <SpeciesSwipeSelector
-                                            questSpecies={
-                                                questSpeciesMap as any
-                                            }
-                                            setQuestSpecies={
-                                                syncQuestSpeciesToTaxa as any
-                                            }
-                                            onSpeciesAdded={handleSpeciesAdded}
-                                            onSpeciesRejected={
-                                                handleSpeciesRejected
-                                            }
-                                            editMode={true}
-                                        />
+                                        )}
                                     </div>
-                                )}
+
+                                    <SpeciesSwipeSelector
+                                        questSpecies={
+                                            questSpeciesMap as any
+                                        }
+                                        setQuestSpecies={
+                                            syncQuestSpeciesToTaxa as any
+                                        }
+                                        onSpeciesAdded={handleSpeciesAdded}
+                                        onSpeciesRejected={
+                                            handleSpeciesRejected
+                                        }
+                                        editMode={true}
+                                    />
+                                </div>
 
                                 <div className="flex justify-between items-center pt-6 border-t">
                                     <div className="text-sm text-gray-600">

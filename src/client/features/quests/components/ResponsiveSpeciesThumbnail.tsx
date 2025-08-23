@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { SpeciesCardWithObservations } from './SpeciesCardWithObservations'
@@ -68,9 +68,7 @@ export function ResponsiveSpeciesThumbnail({
     locationData,
     showObservationsModal = true,
 }: ResponsiveSpeciesThumbnailProps) {
-    const [isHovered, setIsHovered] = useState(false)
-
-    // Handle both SpeciesCountItem and TaxonData
+    const [imageError, setImageError] = useState(false)
     const taxon = 'taxon' in species ? species.taxon : species
     const count = 'count' in species ? species.count : undefined
 
@@ -102,37 +100,22 @@ export function ResponsiveSpeciesThumbnail({
     }
 
     const thumbnailContent = (
-        <motion.div
+        <div
             className={cn('relative group cursor-pointer', className)}
-            onHoverStart={() => setIsHovered(true)}
-            onHoverEnd={() => setIsHovered(false)}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.2 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            style={{ width: size, height: size }}
         >
-            {/* Main circular thumbnail */}
             <div
                 className={cn(
                     'rounded-full overflow-hidden border-2 border-green-500 bg-white shadow-md',
-                    'transition-all duration-200 hover:border-green-600 hover:shadow-lg'
+                    'transition-all duration-200 group-hover:border-green-600 group-hover:shadow-lg group-hover:scale-105'
                 )}
-                style={{ width: size, height: size }}
             >
-                {taxon.default_photo?.square_url ? (
+                {taxon.default_photo?.square_url && !imageError ? (
                     <img
                         src={taxon.default_photo.square_url}
                         alt={taxon.preferred_common_name || taxon.name}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                            const target = e.target as HTMLImageElement
-                            target.style.display = 'none'
-                            target.nextElementSibling?.classList.remove(
-                                'hidden'
-                            )
-                        }}
+                        onError={() => setImageError(true)}
                     />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
@@ -144,69 +127,37 @@ export function ResponsiveSpeciesThumbnail({
                         </span>
                     </div>
                 )}
-
-                {/* Fallback when image fails to load */}
-                <div className="hidden w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 items-center justify-center">
-                    <span
-                        className="text-gray-400"
-                        style={{ fontSize: size * 0.3 }}
-                    >
-                        🐾
-                    </span>
-                </div>
             </div>
 
-            {/* Remove button - appears on hover */}
-            <AnimatePresence>
-                {isHovered && onRemove && (
-                    <motion.button
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg z-20 flex items-center justify-center"
-                        onClick={handleRemove}
-                        style={{
-                            width: Math.max(16, size * 0.25),
-                            height: Math.max(16, size * 0.25),
-                        }}
-                        type="button"
-                    >
-                        <X size={Math.max(10, size * 0.15)} />
-                    </motion.button>
-                )}
-            </AnimatePresence>
+            {onRemove && (
+                <button
+                    onClick={handleRemove}
+                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 hover:bg-red-600 z-20"
+                    style={{
+                        width: Math.max(16, size * 0.3),
+                        height: Math.max(16, size * 0.3),
+                    }}
+                    type="button"
+                    aria-label="Remove species"
+                >
+                    <X size={Math.max(10, size * 0.18)} />
+                </button>
+            )}
 
-            {/* Species name tooltip - appears on hover */}
-            <AnimatePresence>
-                {isHovered && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        transition={{ duration: 0.2, delay: 0.1 }}
-                        className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10 pointer-events-none"
-                        style={{ fontSize: Math.max(10, size * 0.12) }}
-                    >
-                        {taxon.preferred_common_name || taxon.name}
-                        {count !== undefined && (
-                            <span className="text-gray-300 ml-1">
-                                ({count})
-                            </span>
-                        )}
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-b-2 border-transparent border-b-black" />
-                    </motion.div>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max max-w-xs bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100 z-30">
+                {taxon.preferred_common_name || taxon.name}
+                {count !== undefined && (
+                    <span className="text-gray-300 ml-1">({count})</span>
                 )}
-            </AnimatePresence>
-        </motion.div>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-black" />
+            </div>
+        </div>
     )
 
-    // If observations modal is disabled or no location data, return plain thumbnail
     if (!showObservationsModal || (!questData && !locationData)) {
         return thumbnailContent
     }
 
-    // Wrap with observations modal
     return (
         <SpeciesCardWithObservations
             species={inatTaxon}
@@ -261,17 +212,14 @@ export function ResponsiveSpeciesGrid({
         'current-species-list'
     ) as React.RefObject<HTMLDivElement>
 
-    // Calculate responsive thumbnail size
     const calculateThumbnailSize = () => {
         const { width } = containerSize
         const speciesCount = species.length
 
         if (speciesCount === 0) return 60
 
-        // Base size calculation
         let baseSize = 60
 
-        // Adjust based on container width
         if (width < 200) {
             baseSize = 40
         } else if (width < 300) {
@@ -280,7 +228,6 @@ export function ResponsiveSpeciesGrid({
             baseSize = 80
         }
 
-        // Adjust based on species count
         if (speciesCount > 20) {
             baseSize = Math.max(30, baseSize - 20)
         } else if (speciesCount > 10) {
@@ -295,8 +242,7 @@ export function ResponsiveSpeciesGrid({
     const thumbnailSize = calculateThumbnailSize()
     const gap = Math.max(8, thumbnailSize * 0.15)
 
-    // Update container size when component mounts and window resizes
-    useEffect(() => {
+    React.useEffect(() => {
         const updateSize = () => {
             if (targetRef.current) {
                 const rect = targetRef.current.getBoundingClientRect()
@@ -382,6 +328,8 @@ export function ResponsiveSpeciesGrid({
                                     scale: 0.8,
                                     transition: { duration: 0.2 },
                                 }}
+                                className="relative"
+                                whileHover={{ zIndex: 10 }}
                             >
                                 <ResponsiveSpeciesThumbnail
                                     species={item}

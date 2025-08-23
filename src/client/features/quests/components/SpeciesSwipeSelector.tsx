@@ -314,8 +314,7 @@ export function SpeciesSwipeSelector({
                 )}
             </div>
             {/* Right Column - Current Quest Species */}
-            <div className="flex flex-col lg:col-span-2 order-1 lg:order-2">
-                <div className="overflow-auto lg:max-h-[70vh] max-h-[60vh]">
+            <div className="flex flex-col lg:col-span-2 order-1 lg:order-2 overflow-y-auto lg:max-h-[70vh] max-h-[60vh]">
                 <ResponsiveSpeciesGrid
                     species={Array.from(questSpecies.values())}
                     onRemove={(species) => {
@@ -332,9 +331,7 @@ export function SpeciesSwipeSelector({
                         location_name: locationName,
                     }}
                     showObservationsModal={true}
-                    maxHeight="max-h-[70vh]"
                 />
-                </div>
             </div>
         </div>
     )
