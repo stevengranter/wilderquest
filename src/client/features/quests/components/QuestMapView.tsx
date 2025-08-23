@@ -64,13 +64,20 @@ type QuestMapProps = {
 
 function MapUpdater({ center, zoom }: { center?: [number, number], zoom?: number }) {
     const map = useMap()
+
     useEffect(() => {
         if (center) {
-            map.setView([center[0], center[1]], zoom)
+            map.setView([center[0], center[1]], zoom || 3)
+        } else {
+            // Fit the world, but respect minZoom (so you don’t zoom out to 0)
+            map.fitWorld({ maxZoom: 2 })
         }
     }, [center, zoom, map])
+
+
     return null
 }
+
 
 function MapSyncHandler({
     onBoundsChange,
@@ -228,20 +235,22 @@ export const QuestMapView = React.memo(({
     const [isLoading, setIsLoading] = useState(false)
     const [bounds, setBounds] = useState<LatLngBounds | null>(null)
 
-    // Calculate initial center from quest location or default to world center
-    const initialCenter: [number, number] = useMemo(() => {
+    // Remove [0,0] default here
+    const initialCenter: [number, number] | undefined = useMemo(() => {
         if (questData?.latitude && questData?.longitude) {
             return [questData.latitude, questData.longitude]
         }
         if (options?.center) {
             return options.center
         }
-        return [0, 0] // World map center - equator and prime meridian
+        return undefined // triggers fitWorld()
     }, [questData?.latitude, questData?.longitude, options?.center])
 
-    const initialZoom = questData?.latitude ? 13 : (options?.center ? 13 : 3)
+    const initialZoom = questData?.latitude ? 13 : (options?.center ? 13 : undefined)
+
     const center = options?.center || initialCenter
     const zoom = options?.zoom || initialZoom
+
 
     // Fetch observations when bounds change or taxa change
     useEffect(() => {
@@ -325,8 +334,15 @@ export const QuestMapView = React.memo(({
                 scrollWheelZoom={true}
                 className={className || "w-full h-full min-h-[400px]"}
                 style={style}
+                minZoom={2} // ⬅️ prevents zooming out too far
+                worldCopyJump={false} // ⬅️ disables repeated world copies when panning
+                maxBounds={[
+                    [-90, -180],
+                    [90, 180],
+                ]} // ⬅️ clamps to the actual world
             >
-                <TileLayer
+
+            <TileLayer
                     attribution='Maps &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, Data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                     url="/api/tiles/{z}/{x}/{y}.png"
                 />
