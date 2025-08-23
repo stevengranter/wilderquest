@@ -237,6 +237,7 @@ export function ObservationGridView({
                                         )}
                                         alt="Zoomed observation"
                                         className="w-full h-full object-cover"
+                                        draggable={false}
                                     />
                                 </div>
                                 <div className="text-center text-gray-800 space-y-1">
@@ -259,7 +260,12 @@ export function ObservationGridView({
                 <Button
                     variant="neutral"
                     size="icon"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 rounded-full bg-white z-50"
+                    className="absolute rounded-full bg-white z-50 shadow-lg hover:shadow-xl transition-shadow"
+                    style={{
+                        left: '-60px',
+                        top: '50%',
+                        transform: 'translateY(-50%)'
+                    }}
                     onClick={handlePrev}
                 >
                     <ChevronLeft className="h-6 w-6" />
@@ -267,7 +273,12 @@ export function ObservationGridView({
                 <Button
                     variant="neutral"
                     size="icon"
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 rounded-full bg-white z-50"
+                    className="absolute rounded-full bg-white z-50 shadow-lg hover:shadow-xl transition-shadow"
+                    style={{
+                        right: '-60px',
+                        top: '50%',
+                        transform: 'translateY(-50%)'
+                    }}
                     onClick={handleNext}
                 >
                     <ChevronRight className="h-6 w-6" />
