@@ -1,0 +1,48 @@
+import { Quest } from '@/../../types/types'
+import { INatTaxon } from '@shared/types/iNatTypes'
+
+export type QuestStatus = 'pending' | 'active' | 'paused' | 'ended'
+
+export type ClientQuest = Quest & {
+    username: string
+}
+
+export type QuestMapping = {
+    id: number
+    quest_id: number
+    taxon_id: number
+    created_at: string
+}
+
+export type AggregatedProgress = {
+    mapping_id: number
+    count: number
+    last_observed_at: string
+    last_display_name: string
+}
+
+export type DetailedProgress = {
+    progress_id: number
+    mapping_id: number
+    observed_at: string
+    display_name: string
+}
+
+export type Share = {
+    guest_name: string
+}
+
+export type LeaderboardEntry = {
+    display_name: string
+    observation_count: number
+}
+
+export type SpeciesCardWithObservationsProps = {
+    species: INatTaxon & {
+        mapping?: QuestMapping
+        progressCount: number
+        recentEntries: DetailedProgress[]
+    }
+    questData: ClientQuest
+    found: boolean
+}

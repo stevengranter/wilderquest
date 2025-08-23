@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import { useProgressiveImage } from '@/hooks/useProgressiveImage'
+import { cn } from '@/lib/utils'
 
 interface ObservationPhoto {
     id: number
@@ -26,9 +28,35 @@ export interface Observation {
     }
 }
 
+function ProgressiveObservationImage({
+    photo,
+    className,
+}: {
+    photo: ObservationPhoto
+    className?: string
+}) {
+    const { src, isBlurred } = useProgressiveImage(
+        photo.url,
+        photo.url.replace('square', 'medium')
+    )
+
+    return (
+        <div className={cn('overflow-hidden', className)}>
+            <img
+                src={src}
+                alt="Observation"
+                className={cn(
+                    'w-full h-full object-cover',
+                    isBlurred && 'filter blur-sm scale-110 transition-all duration-500'
+                )}
+            />
+        </div>
+    )
+}
+
 export function ObservationGridView({
-                                 observations,
-                             }: {
+    observations,
+}: {
     observations: Observation[]
 }) {
     const [zoomedIndex, setZoomedIndex] = useState<number | null>(null)
@@ -48,7 +76,8 @@ export function ObservationGridView({
     const handlePrev = () => {
         if (zoomedIndex === null) return
         setZoomedIndex(
-            (zoomedIndex - 1 + observationsWithPhotos.length) % observationsWithPhotos.length
+            (zoomedIndex - 1 + observationsWithPhotos.length) %
+                observationsWithPhotos.length
         )
     }
 
@@ -60,7 +89,7 @@ export function ObservationGridView({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                 <AnimatePresence>
                     {observationsWithPhotos.map((obs, index) => {
-                        const rotation = rotations[index]
+                        const _rotation = rotations[index]
                         return (
                             <DialogTrigger
                                 key={obs.id}
@@ -112,30 +141,10 @@ export function ObservationGridView({
                                     {/* Polaroid Card */}
                                     <div className="bg-white p-3 rounded-lg border-0 hover:shadow-shadow transtion:shadow duration-300">
                                         {/* Photo Area */}
-                                        <div className="aspect-square bg-gray-100 rounded-sm overflow-hidden mb-3 relative">
-                                            <motion.img
-                                                src={obs.photos[0].url.replace(
-                                                    'square',
-                                                    'medium'
-                                                )}
-                                                alt="Observation"
-                                                className="w-full h-full object-cover"
-                                                initial={{
-                                                    scale: 1.1,
-                                                    opacity: 0,
-                                                }}
-                                                animate={{
-                                                    scale: 1,
-                                                    opacity: 1,
-                                                }}
-                                                transition={{
-                                                    duration: 0.8,
-                                                    delay:
-                                                        index * 0.15 + 0.2,
-                                                    ease: 'easeOut',
-                                                }}
-                                            />
-                                        </div>
+                                        <ProgressiveObservationImage
+                                            photo={obs.photos[0]}
+                                            className="aspect-square bg-gray-100 rounded-sm mb-3"
+                                        />
 
                                         {/* Polaroid Caption Area */}
                                         <motion.div
@@ -169,10 +178,10 @@ export function ObservationGridView({
             <DialogContent className="p-0 border-0 w-full max-w-sm md:max-w-md lg:max-w-lg bg-transparent shadow-none flex items-center justify-center">
                 <AnimatePresence>
                     {observationsWithPhotos.map((obs, index) => {
-                         if (zoomedIndex === null) {
-                             return null
-                         }
-                        
+                        if (zoomedIndex === null) {
+                            return null
+                        }
+
                         if (index < zoomedIndex) {
                             return null
                         }
@@ -195,8 +204,7 @@ export function ObservationGridView({
                                     y: (index - zoomedIndex) * 20,
                                     rotate: (index - zoomedIndex) * 5,
                                     zIndex:
-                                        observationsWithPhotos.length -
-                                        index,
+                                        observationsWithPhotos.length - index,
                                 }}
                                 exit={{
                                     x: 300,
@@ -293,22 +301,9 @@ export function ObservationListView({
                         <Card className="p-3 cursor-pointer">
                             <div className="flex items-center gap-4">
                                 {obs.photos.length > 0 && (
-                                    <motion.img
-                                        src={obs.photos[0].url.replace(
-                                            'medium',
-                                            'square',
-                                        )}
-                                        alt="Observation"
-                                        className="w-16 h-16 rounded-md object-cover flex-shrink-0"
-                                        initial={{
-                                            scale: 0.8,
-                                            opacity: 0,
-                                        }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        transition={{
-                                            duration: 0.3,
-                                            delay: index * 0.1,
-                                        }}
+                                    <ProgressiveObservationImage
+                                        photo={obs.photos[0]}
+                                        className="w-16 h-16 rounded-md flex-shrink-0"
                                     />
                                 )}
                                 <div className="flex-1 min-w-0">
@@ -343,7 +338,7 @@ export function ObservationMapView({
 }) {
     // Filter observations that have coordinates
     const observationsWithCoords = observations.filter(
-        (obs) => obs.geojson?.coordinates || obs.location,
+        (obs) => obs.geojson?.coordinates || obs.location
     )
 
     return (
@@ -388,7 +383,7 @@ export function ObservationMapView({
                                         <img
                                             src={obs.photos[0].url.replace(
                                                 'square',
-                                                'medium',
+                                                'medium'
                                             )}
                                             alt="Observation"
                                             className="w-full h-32 object-cover rounded mb-2"

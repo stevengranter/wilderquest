@@ -13,6 +13,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 import { cn } from '@/lib/utils'
+import { useProgressiveImage } from '@/hooks/useProgressiveImage'
 
 interface SpeciesCardProps {
     species: INatTaxon
@@ -127,6 +128,11 @@ function SpeciesGridItem({
     found?: boolean
 }) {
     const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
+    const { src, isBlurred } = useProgressiveImage(
+        species.default_photo?.square_url || '',
+        species.default_photo?.medium_url || ''
+    )
+
     return (
         <AnimatePresence mode="wait">
             <motion.div
@@ -181,15 +187,19 @@ function SpeciesGridItem({
                             )}
                         </div>
 
-                        {species.default_photo ? (
-                            <img
-                                src={species.default_photo.medium_url}
-                                alt={species.name}
-                                className={cn(
-                                    'w-full h-full aspect-square object-cover border-2 border-white outline-black outline-2 rounded-sm',
-                                    found && 'bg-teal-300'
-                                )}
-                            />
+                        {src ? (
+                            <div className="overflow-hidden w-full h-full aspect-square rounded-sm">
+                                <img
+                                    src={src}
+                                    alt={species.name}
+                                    className={cn(
+                                        'w-full h-full object-cover border-2 border-white outline-black outline-2',
+                                        found && 'bg-teal-300',
+                                        isBlurred &&
+                                            'filter blur-sm scale-110 transition-all duration-500'
+                                    )}
+                                />
+                            </div>
                         ) : (
                             <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                                 <div className="text-gray-400 text-xs text-center px-2">
@@ -275,6 +285,11 @@ function SpeciesListItem({
     isSelected: boolean
     handleClick: (e: React.MouseEvent) => void
 }) {
+    const { src, isBlurred } = useProgressiveImage(
+        species.default_photo?.square_url || '',
+        species.default_photo?.medium_url || ''
+    )
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -289,15 +304,18 @@ function SpeciesListItem({
             onClick={handleClick}
             ref={cardRef}
         >
-            {species.default_photo && (
-                <img
-                    src={
-                        species.default_photo.square_url ||
-                        species.default_photo.medium_url
-                    }
-                    alt={species.name}
-                    className="h-16 w-16 object-cover rounded-sm flex-shrink-0"
-                />
+            {src && (
+                <div className="overflow-hidden h-16 w-16 rounded-sm flex-shrink-0">
+                    <img
+                        src={src}
+                        alt={species.name}
+                        className={cn(
+                            'h-full w-full object-cover',
+                            isBlurred &&
+                                'filter blur-sm scale-110 transition-all duration-500'
+                        )}
+                    />
+                </div>
             )}
             <div className="flex-grow">
                 <div className="font-semibold text-base">

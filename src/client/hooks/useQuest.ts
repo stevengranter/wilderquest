@@ -7,13 +7,19 @@ import api from '@/api/api'
 import titleCase from '@/components/search/titleCase'
 import { Quest } from '../../server/repositories/QuestRepository'
 
+import { AggregatedProgress, DetailedProgress } from '@/features/quests/types'
+import { INatTaxon } from '@shared/types/iNatTypes'
+
 type TaxonMapping = { id: number; quest_id: number; taxon_id: number }
 type ProgressData = {
     mappings: TaxonMapping[]
-    aggregatedProgress: any[]
-    detailedProgress: any[]
+    aggregatedProgress: AggregatedProgress[]
+    detailedProgress: DetailedProgress[]
 }
-type GuestProgressData = { aggregatedProgress: any[]; detailedProgress: any[] }
+type GuestProgressData = {
+    aggregatedProgress: AggregatedProgress[]
+    detailedProgress: DetailedProgress[]
+}
 
 export const fetchQuests = async ({
     pageParam = 1,
@@ -52,7 +58,9 @@ export const fetchTaxa = async (taxonIds: number[]) => {
     const taxonIdChunks = chunk(taxonIds, 30)
     const taxaData = await Promise.all(
         taxonIdChunks.map(async (ids) => {
-            const { data } = await api.get(`/iNatAPI/taxa/${ids.join(',')}`)
+            const { data } = await api.get(
+                `/iNatAPI/taxa/${ids.join(',')}?fields=all`
+            )
             return data.results || []
         })
     )
@@ -95,11 +103,11 @@ const fetchLeaderboard = async (questId: string | number) => {
 export const useQuest = ({
     questId,
     token,
-    initialData
+    initialData,
 }: {
     questId?: string | number
-    token?: string,
-    initialData?: {quest?: Quest, taxa?: any[]}
+    token?: string
+    initialData?: { quest?: Quest; taxa?: INatTaxon[] }
 }) => {
     const queryClient = useQueryClient()
 
@@ -196,12 +204,14 @@ export const useQuest = ({
                 // which would cause the EventSource to reconnect every time the data changes.
                 const progressData: ProgressData | undefined =
                     queryClient.getQueryData(['progress', quest.id])
-                const sharedQuestData: any | undefined =
-                    queryClient.getQueryData(['sharedQuest', token])
-                const taxaData: any[] | undefined = queryClient.getQueryData([
-                    'taxa',
-                    questId || token,
+                const sharedQuestData:
+                    | { taxa_mappings: TaxonMapping[] }
+                    | undefined = queryClient.getQueryData([
+                    'sharedQuest',
+                    token,
                 ])
+                const taxaData: INatTaxon[] | undefined =
+                    queryClient.getQueryData(['taxa', questId || token])
 
                 const guestName =
                     data.payload.guestName ||
@@ -219,7 +229,7 @@ export const useQuest = ({
                 if (!mapping) return
 
                 const species = taxaData?.find(
-                    (t: any) => t.id === mapping.taxon_id
+                    (t: INatTaxon) => t.id === mapping.taxon_id
                 )
                 const speciesName = species?.preferred_common_name
                     ? titleCase(species.preferred_common_name)

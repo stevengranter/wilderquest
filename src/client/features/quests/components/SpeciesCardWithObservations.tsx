@@ -1,6 +1,6 @@
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { useQuery } from '@tanstack/react-query'
-import { Grid, List, Map } from 'lucide-react'
+import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ReactNode, useState } from 'react'
 import api from '@/api/api'
@@ -25,6 +25,7 @@ import {
 } from '@/features/quests/components/ObservationGridView'
 import { MdOutlineLocationOn } from 'react-icons/md'
 import { Quest as ServerQuest } from '../../../../server/repositories/QuestRepository'
+import { usePrefetchTaxonPhoto } from '@/hooks/useTaxonPhotos'
 
 export type ClientQuest = Omit<ServerQuest, 'user_id'> & {
     user_id: string
@@ -47,6 +48,7 @@ export function SpeciesCardWithObservations(
 ) {
     const { species, questData, locationData, children, found } = props
     const displayData = questData || locationData
+    const prefetchTaxonPhoto = usePrefetchTaxonPhoto()
 
     if (!displayData?.latitude || !displayData?.longitude) {
         return (
@@ -58,7 +60,11 @@ export function SpeciesCardWithObservations(
 
     return (
         <Dialog>
-            <DialogTrigger className="h-full w-full" asChild>
+            <DialogTrigger
+                className="h-full w-full"
+                asChild
+                onMouseEnter={() => prefetchTaxonPhoto(species.id)}
+            >
                 <div className="h-full transform transition-transform hover:scale-105 cursor-pointer">
                     {children || (
                         <SpeciesCard
@@ -178,7 +184,7 @@ function ObservationList({
                         <List className="h-4 w-4" />
                     </ToggleGroupItem>
                     <ToggleGroupItem value="map" aria-label="Map view">
-                        <Map className="h-4 w-4" />
+                        <MapIcon className="h-4 w-4" />
                     </ToggleGroupItem>
                 </ToggleGroup>
             </motion.div>
