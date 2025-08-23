@@ -227,6 +227,12 @@ export function createQuestShareService(
         return progressRepo.getLeaderboardProgress(questId)
     }
 
+    async function getLeaderboardForQuestByToken(token: string) {
+        const share = await questShareRepo.findActiveByToken(token)
+        if (!share) throw new Error('Share not found or expired')
+        return progressRepo.getLeaderboardProgress(share.quest_id)
+    }
+
     async function deleteProgressEntry(
         questId: number,
         progressId: number,
@@ -262,5 +268,6 @@ export function createQuestShareService(
         deleteProgressEntry,
         clearMappingProgress,
         getLeaderboardForQuest,
+        getLeaderboardForQuestByToken,
     }
 }

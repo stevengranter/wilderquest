@@ -127,6 +127,16 @@ export function createQuestShareController(service: QuestShareService) {
         }
     }
 
+    async function getLeaderboardByToken(req: Request, res: Response) {
+        const token = String(req.params.token)
+        try {
+            const leaderboard = await service.getLeaderboardForQuestByToken(token)
+            res.status(200).json(leaderboard)
+        } catch (err) {
+            res.status(404).json({ message: (err as Error).message })
+        }
+    }
+
     async function setObservedAsOwner(
         req: AuthenticatedRequest,
         res: Response
@@ -201,6 +211,7 @@ export function createQuestShareController(service: QuestShareService) {
         getShareByToken,
         getProgress,
         getLeaderboard,
+        getLeaderboardByToken,
         setObserved,
         getAggregatedProgressByToken,
         getAggregatedProgress,

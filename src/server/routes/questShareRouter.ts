@@ -41,6 +41,11 @@ export function createQuestShareRouter(controller: QuestShareController) {
         optionalAuthMiddleware,
         controller.getAggregatedProgressByToken
     )
+    router.get(
+        '/shares/token/:token/progress/leaderboard',
+        optionalAuthMiddleware,
+        controller.getLeaderboardByToken
+    )
     router.post(
         '/shares/token/:token/progress/:mappingId',
         optionalAuthMiddleware,

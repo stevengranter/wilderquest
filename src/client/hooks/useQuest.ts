@@ -100,6 +100,13 @@ const fetchLeaderboard = async (questId: string | number) => {
     return data
 }
 
+const fetchLeaderboardByToken = async (token: string) => {
+    const { data } = await api.get(
+        `/quest-sharing/shares/token/${token}/progress/leaderboard`
+    )
+    return data
+}
+
 export const useQuest = ({
     questId,
     token,
@@ -155,8 +162,15 @@ export const useQuest = ({
     const leaderboardQuery = useQuery({
         queryKey: ['leaderboard', quest?.id],
         queryFn: () => fetchLeaderboard(quest!.id),
-        enabled: !!quest?.id,
+        enabled: !!quest?.id && !!questId,
         staleTime: 1000 * 60 * 5, // 5 minutes
+    })
+
+    const guestLeaderboardQuery = useQuery({
+        queryKey: ['leaderboard', token],
+        queryFn: () => fetchLeaderboardByToken(token!),
+        enabled: !!token,
+        staleTime: 1000 * 60 * 5,
     })
 
     const updateStatus = useMutation({
@@ -272,9 +286,15 @@ export const useQuest = ({
                 queryClient.invalidateQueries({
                     queryKey: ['sharedQuest', token],
                 })
-                queryClient.invalidateQueries({
-                    queryKey: ['leaderboard', quest.id],
-                })
+                if (token) {
+                    queryClient.invalidateQueries({
+                        queryKey: ['leaderboard', token],
+                    })
+                } else {
+                    queryClient.invalidateQueries({
+                        queryKey: ['leaderboard', quest.id],
+                    })
+                }
             }
         }
 
@@ -290,6 +310,10 @@ export const useQuest = ({
               mappings: sharedQuestQuery.data?.taxa_mappings,
           }
 
+    const leaderboard = token
+        ? guestLeaderboardQuery.data
+        : leaderboardQuery.data
+
     return {
         questData: quest,
         taxa: taxaData,
@@ -300,7 +324,8 @@ export const useQuest = ({
             sharedQuestQuery.isLoading ||
             progressQuery.isLoading ||
             guestProgressQuery.isLoading ||
-            leaderboardQuery.isLoading,
+            leaderboardQuery.isLoading ||
+            guestLeaderboardQuery.isLoading,
         isTaxaLoading,
         isTaxaFetchingNextPage: taxaQuery.isFetchingNextPage,
         taxaHasNextPage: taxaQuery.hasNextPage,
@@ -309,8 +334,9 @@ export const useQuest = ({
             questQuery.isError ||
             sharedQuestQuery.isError ||
             leaderboardQuery.isError ||
+            guestLeaderboardQuery.isError ||
             isTaxaError,
         updateStatus: updateStatus.mutate,
-        leaderboard: leaderboardQuery.data,
+        leaderboard,
     }
 }
