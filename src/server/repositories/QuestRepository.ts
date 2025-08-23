@@ -6,8 +6,8 @@ export type Quest = {
     name: string
     created_at: Date
     updated_at: Date
-    starts_at?: Date | string
-    ends_at?: Date | string
+    starts_at: Date | null
+    ends_at: Date | null
     description?: string
     is_private: boolean
     user_id: number
@@ -21,8 +21,6 @@ export type Quest = {
 export type QuestWithTaxa = Quest & {
     taxon_ids: number[]
     photoUrl?: string | null
-    starts_at?: Date | string
-    ends_at?: Date | string
 }
 
 export type QuestRepository = ReturnType<typeof createQuestRepository>

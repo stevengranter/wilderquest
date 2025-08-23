@@ -104,8 +104,8 @@ export function createQuestService(
 
             const questTableData = {
                 ...restQuestData,
-                starts_at: starts_at ? new Date(starts_at) : undefined,
-                ends_at: ends_at ? new Date(ends_at) : undefined,
+                starts_at: starts_at ? new Date(starts_at) : null,
+                ends_at: ends_at ? new Date(ends_at) :null,
             }
 
             const questId = await questsRepo.create({
