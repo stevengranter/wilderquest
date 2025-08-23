@@ -71,6 +71,7 @@ export function SpeciesCardWithObservations(
                             species={species}
                             className="h-full"
                             found={found}
+
                         />
                     )}
                 </div>
@@ -97,6 +98,7 @@ export function SpeciesCardWithObservations(
                             species={species}
                             className="relative -top-10 md:-left-15 -rotate-5"
                             found={found}
+                            hoverEffect="none"
                         />
                         <DialogHeader className="-mt-4">
                             <DialogTitle>

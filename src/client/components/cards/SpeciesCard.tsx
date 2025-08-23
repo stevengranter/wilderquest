@@ -23,6 +23,7 @@ interface SpeciesCardProps {
     geoObservationsCount?: number
     rarity?: 'common' | 'uncommon' | 'rare'
     found?: boolean
+    hoverEffect?: 'lift' | 'shadow' | 'none'
 }
 
 export function SpeciesCard({
@@ -33,6 +34,7 @@ export function SpeciesCard({
     geoObservationsCount,
     rarity,
     found,
+    hoverEffect,
 }: SpeciesCardProps) {
     const {
         isSelectionMode,
@@ -65,6 +67,7 @@ export function SpeciesCard({
                 isSelected={isSelected}
                 handleClick={handleClick}
                 found={found}
+                hoverEffect={hoverEffect}
             />
         )
     }
@@ -80,6 +83,7 @@ export function SpeciesCard({
             geoObservationsCount={geoObservationsCount}
             rarity={rarity}
             found={found}
+            hoverEffect={hoverEffect}
         />
     )
 }
@@ -116,6 +120,7 @@ function SpeciesGridItem({
     geoObservationsCount,
     rarity,
     found,
+    hoverEffect,
 }: {
     species: INatTaxon
     className?: string
@@ -126,12 +131,19 @@ function SpeciesGridItem({
     geoObservationsCount?: number
     rarity?: 'common' | 'uncommon' | 'rare'
     found?: boolean
+    hoverEffect?: 'lift' | 'shadow' | 'none'
 }) {
     const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
     const { src, isBlurred } = useProgressiveImage(
         species.default_photo?.square_url || '',
         species.default_photo?.medium_url || ''
     )
+
+    const hoverClasses = {
+        lift: 'hover:shadow-shadow hover:-translate-y-2 hover:-translate-x-2',
+        shadow: 'hover:shadow-shadow',
+        none: '',
+    }
 
     return (
         <AnimatePresence mode="wait">
@@ -150,12 +162,6 @@ function SpeciesGridItem({
                     },
                     default: { duration: 0.3 },
                 }}
-                // whileHover={{
-                //     scale: 1.04,
-                //     rotateZ: random(-3, 3),
-                //     y: -2,
-                //     transition: { duration: 0.2, type: 'spring', damping: 15 },
-                // }}
                 whileTap={{ scale: 0.98 }}
                 className={cn('w-full cursor-pointer', className)}
                 onClick={handleClick}
@@ -165,15 +171,12 @@ function SpeciesGridItem({
                     className={cn(
                         'aspect-2.5/3.5 overflow-hidden duration-250 transition-all shadow-0 py-0 gap-0 border-1 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
                         isSelected && 'ring-2 ring-blue-500 shadow-blue-200/50',
-                        'hover:shadow-shadow  hover:-translate-2',
-                        found 
-                            ? 'bg-green-100'
-                            : 'bg-background'
+                        hoverClasses[hoverEffect || 'lift'],
+                        found ? 'bg-green-100' : 'bg-background'
                     )}
                 >
                     <CardHeader
                         className="gap-0 text-left justify-start pb-1 pt-3 relative text-foreground tracking-normal font-bold sm:text-md md:text-md lg:text-xl line-clamp-1 font-barlow"
-                        // style={{ textShadow: '2px 2px 1px rgba(0, 0, 0, 0.3)' }}
                     >
                         {species.preferred_common_name && (
                             <h3>{species.preferred_common_name}</h3>
@@ -210,12 +213,7 @@ function SpeciesGridItem({
                             </div>
                         )}
 
-                        <div
-                            className="space-y-1 text-right self-end mt-1 mb-2"
-                            // style={{
-                            //     textShadow: '1px 1px 1px rgba(0,0,0,0.5)',
-                            // }}
-                        >
+                        <div className="space-y-1 text-right self-end mt-1 mb-2">
                             {species.preferred_common_name && (
                                 <p className="text-[11px] text-foreground italic leading-tight line-clamp-1">
                                     {species.name}
@@ -224,27 +222,12 @@ function SpeciesGridItem({
                         </div>
                     </CardContent>
 
-                    {/*<CardContent className="block sm:hidden md:block">*/}
-                    {/*    <div className="h-full bg-teal-100 text-xs content-start text-left p-2 outline-2 rounded-sm outline-white border-2 border-black">*/}
-                    {/*        <p>*/}
-                    {/*            Lorem ipsum dolor sit amet, consectetur*/}
-                    {/*            adipiscing elit.*/}
-                    {/*        </p>*/}
-                    {/*    </div>*/}
-                    {/*</CardContent>*/}
-
                     <CardFooter className="flex flex-row justify-start items-center py-2 pb-4">
-                        {/* Observations badge */}
                         <Badge>
-                            <BiWorld size={15}/>
-                            {/*<TbBinocularsFilled size={15} />*/}
-                            {(
-                                geoObservationsCount ??
-                                species.observations_count
-                            )?.toLocaleString()}
+                            <BiWorld size={15} />
+                            {( geoObservationsCount ?? species.observations_count )?.toLocaleString()}
                         </Badge>
 
-                        {/* Rarity badge */}
                         {rarity && (
                             <Badge
                                 className={cn(
@@ -260,7 +243,6 @@ function SpeciesGridItem({
                             </Badge>
                         )}
 
-                        {/* Selection indicator */}
                         {isSelected && (
                             <div className="absolute bottom-1 left-1 right-1">
                                 <div className="bg-blue-500 text-white text-[10px] font-medium px-2 py-0.5 rounded text-center">
@@ -282,6 +264,7 @@ function SpeciesListItem({
     isSelected,
     handleClick,
     found,
+    hoverEffect,
 }: {
     species: INatTaxon
     className?: string
@@ -289,12 +272,19 @@ function SpeciesListItem({
     isSelected: boolean
     handleClick: (e: React.MouseEvent) => void
     found?: boolean
+    hoverEffect?: 'lift' | 'shadow' | 'none'
 }) {
     const { src, isBlurred } = useProgressiveImage(
         species.default_photo?.square_url || '',
         species.default_photo?.medium_url || ''
     )
     const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
+
+    const hoverClasses = {
+        lift: 'hover:shadow-md hover:-translate-y-px',
+        shadow: 'hover:shadow-md',
+        none: '',
+    }
 
     return (
         <motion.div
@@ -303,10 +293,11 @@ function SpeciesListItem({
             exit={{ opacity: 0 }}
             transition={{ default: { duration: 0.5 } }}
             className={cn(
-                'flex items-center gap-4 p-2 rounded-md transition-all duration-200 hover:bg-gray-100',
+                'flex items-center gap-4 p-2 rounded-md transition-all duration-200',
+                hoverClasses[hoverEffect || 'lift'],
                 isSelected && 'ring-2 ring-blue-500 bg-blue-50',
-                found 
-                    ? 'bg-green-100 hover:bg-green-200' 
+                found
+                    ? 'bg-green-100 hover:bg-green-200'
                     : 'bg-gray-100 hover:bg-gray-200',
                 className
             )}
@@ -328,7 +319,7 @@ function SpeciesListItem({
             )}
             <div className="flex-grow">
                 <div className="font-semibold text-base">
-                                            {species.preferred_common_name || species.name}
+                    {species.preferred_common_name || species.name}
                 </div>
                 {species.preferred_common_name && (
                     <div className="text-sm text-muted-foreground italic">
@@ -360,6 +351,8 @@ function SpeciesListItem({
                     <a
                         href={species.wikipedia_url}
                         className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
                     >
                         <ExternalLink className="h-3 w-3" />
                         Wikipedia
