@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '@/api/api'
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { useMemo } from 'react'
@@ -46,6 +46,7 @@ export function useTaxonPhotos(taxonIds: number[]) {
         enabled: taxonIds.length > 0,
         staleTime: 30 * 60 * 1000, // 30 minutes
         gcTime: 60 * 60 * 1000, // 1 hour (was cacheTime in v4)
+        placeholderData: keepPreviousData,
     })
 }
 

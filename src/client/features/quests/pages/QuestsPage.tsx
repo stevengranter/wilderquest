@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -59,9 +60,18 @@ export function QuestsPage() {
                 }
 
                 const response = await api.get(endpoint)
-                setQuests((prevQuests) => [...prevQuests, ...response.data])
+                setQuests((prevQuests) => {
+                    const existingQuestIds = new Set(
+                        prevQuests.map((q) => q.id)
+                    )
+                    const newQuests = response.data.filter(
+                        (quest: QuestWithTaxa) =>
+                            !existingQuestIds.has(quest.id)
+                    )
+                    return [...prevQuests, ...newQuests]
+                })
                 setHasMore(response.data.length > 0)
-            } catch (error) {
+            } catch (_error) {
                 toast.error('Failed to fetch quests.')
             } finally {
                 setLoading(false)
@@ -138,27 +148,33 @@ function QuestsList({
 
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {quests.map((quest, index) => {
-                const questPhotos = questToPhotosMap.get(quest.id) || []
-                const card = (
-                    <QuestCard
-                        key={quest.id}
-                        quest={quest}
-                        photos={questPhotos}
-                        isLoading={photosLoading && questPhotos.length === 0}
-                    />
-                )
-
-                if (quests.length === index + 1) {
-                    return (
-                        <div ref={lastQuestElementRef} key={quest.id}>
-                            {card}
-                        </div>
+            <AnimatePresence>
+                {quests.map((quest, index) => {
+                    const questPhotos = questToPhotosMap.get(quest.id) || []
+                    const card = (
+                        <QuestCard
+                            key={quest.id}
+                            quest={quest}
+                            photos={questPhotos}
+                            isLoading={
+                                photosLoading &&
+                                (questToPhotosMap.get(quest.id) === undefined ||
+                                    questPhotos.length === 0)
+                            }
+                        />
                     )
-                } else {
-                    return card
-                }
-            })}
+
+                    if (quests.length === index + 1) {
+                        return (
+                            <div ref={lastQuestElementRef} key={quest.id}>
+                                {card}
+                            </div>
+                        )
+                    } else {
+                        return card
+                    }
+                })}
+            </AnimatePresence>
             {loading &&
                 Array.from({ length: 3 }).map((_, i) => (
                     <QuestCardSkeleton key={`skeleton-${i}`} />
