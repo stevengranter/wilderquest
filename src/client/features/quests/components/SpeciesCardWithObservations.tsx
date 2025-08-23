@@ -75,9 +75,23 @@ export function SpeciesCardWithObservations(
                     )}
                 </div>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[80vw] max-h-[85vh] flex flex-row gap-6 p-6 bg-secondary-background">
-                {/* Left Column: Species Card */}
-                <div className="w-1/3 flex-shrink-0">
+            <DialogContent className="sm:max-w-[80vw] max-h-[85vh] flex flex-col md:flex-row gap-6 p-6 bg-secondary-background">
+                {/* Mobile Header */}
+                <div className="md:hidden flex items-center gap-4 border-b pb-4">
+                    {species.default_photo && (
+                        <img
+                            src={species.default_photo.square_url}
+                            alt={species.name}
+                            className="w-12 h-12 rounded-md object-cover"
+                        />
+                    )}
+                    <DialogTitle className="text-lg">
+                        {species.preferred_common_name}
+                    </DialogTitle>
+                </div>
+
+                {/* Left Column: Species Card (Desktop) */}
+                <div className="hidden md:block w-1/3 flex-shrink-0">
                     <div className="sticky top-0">
                         <SpeciesCard
                             species={species}
@@ -192,7 +206,7 @@ function ObservationList({
             {/* Content wrapper with fixed height and relative positioning */}
             <div className={`relative ${MIN_HEIGHT} pt-6 pb-6`}>
                 {/* Skeleton behind */}
-                <AnimatePresence>
+
                     {isLoading && (
                         <motion.div
                             key="loading-skeleton"
@@ -205,7 +219,7 @@ function ObservationList({
                             <ObservationLoadingState />
                         </motion.div>
                     )}
-                </AnimatePresence>
+
 
                 {/* Actual content on top */}
                 {!isLoading && (
