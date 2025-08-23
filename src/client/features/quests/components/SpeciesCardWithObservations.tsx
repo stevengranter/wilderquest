@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
-import titleCase from '@/components/search/titleCase'
+
 // Grid View Component
 import {
     Observation,
@@ -87,7 +87,7 @@ export function SpeciesCardWithObservations(
                         <DialogHeader className="-mt-4">
                             <DialogTitle>
                                 <VisuallyHidden>
-                                    {titleCase(species.preferred_common_name)}
+                                    {species.preferred_common_name}
                                 </VisuallyHidden>
                             </DialogTitle>
                             <DialogDescription>

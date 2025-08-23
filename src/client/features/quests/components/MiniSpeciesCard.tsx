@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import React, { useState } from 'react'
 import { TbBinocularsFilled } from 'react-icons/tb'
 import getKingdomIcon from '@/components/search/getKingdomIcon'
-import titleCase from '@/components/search/titleCase'
+
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { SpeciesCardWithObservations } from './SpeciesCardWithObservations'
@@ -162,7 +162,7 @@ export function MiniSpeciesCard({
                         {/* Header */}
                         <CardHeader className="p-0 pb-1">
                             <h4 className="text-sm font-semibold text-gray-800 line-clamp-1">
-                                {titleCase(taxon.preferred_common_name) ||
+                                {taxon.preferred_common_name ||
                                     taxon.name}
                             </h4>
                             {taxon.preferred_common_name && (

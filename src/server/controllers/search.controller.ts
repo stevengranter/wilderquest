@@ -1,7 +1,8 @@
-import { NextFunction, Request, RequestHandler, Response } from 'express' // Keep RequestHandler here
+import { NextFunction, Request, Response } from 'express' // Keep RequestHandler here
 import { z } from 'zod'
 import { fetchInatData } from '../services/ai/iNaturalistService.js'
 import { identifySpecies } from '../services/ai/aiService.js'
+import { titleCase } from '../utils/titleCase.js'
 
 const SearchRequestSchema = z.object({
     type: z.enum(['image', 'text']),
@@ -27,6 +28,15 @@ export const search = async (
         let results
         if (type === 'image' && image) {
             results = await identifySpecies(image)
+            // Format common names and species guesses in AI results
+            if (results && typeof results === 'object' && 'subject' in results) {
+                const resultsObj = results as { subject: any[] };
+                resultsObj.subject = resultsObj.subject.map((item: any) => ({
+                    ...item,
+                    common_name: item.common_name ? titleCase(item.common_name) : item.common_name,
+                    species_guess: item.species_guess ? titleCase(item.species_guess) : item.species_guess
+                }))
+            }
         } else if (type === 'text' && (q || text)) {
             results = await fetchInatData(q ?? text ?? '')
         } else {

@@ -4,8 +4,36 @@ import { RequestHandler } from 'express'
 import { cacheService } from '../services/cacheService.js'
 import { globalINaturalistRateLimiter } from '../utils/rateLimiterGlobal.js'
 import logger from '../config/logger.js'
+import { titleCase } from '../utils/titleCase.js'
 
 const INATURALIST_API_BASE_URL = 'https://api.inaturalist.org/v1'
+
+// Function to recursively process iNaturalist data and format preferred_common_name fields
+function processINaturalistData(data: any): any {
+    if (Array.isArray(data)) {
+        return data.map(item => processINaturalistData(item))
+    }
+    
+    if (data && typeof data === 'object') {
+        const processed: any = {}
+        
+        for (const [key, value] of Object.entries(data)) {
+            if ((key === 'preferred_common_name' || key === 'species_guess' || key === 'common_name') && typeof value === 'string') {
+                const formatted = titleCase(value)
+                console.log(`🎯 Formatting ${key}: "${value}" -> "${formatted}"`)
+                processed[key] = formatted
+            } else if (typeof value === 'object' && value !== null) {
+                processed[key] = processINaturalistData(value)
+            } else {
+                processed[key] = value
+            }
+        }
+        
+        return processed
+    }
+    
+    return data
+}
 
 export const createINaturalistAPIController = () => {
     return iNaturalistAPIController
@@ -14,6 +42,13 @@ export const createINaturalistAPIController = () => {
 const iNaturalistAPIController: RequestHandler = async (req, res) => {
     try {
         const path = req.path
+        
+        // Add a special endpoint to clear cache for testing
+        if (path === '/clear-cache' && req.method === 'POST') {
+            await cacheService.flush()
+            return res.status(200).json({ message: 'Cache cleared successfully' })
+        }
+        
         const query = new URLSearchParams(
             req.query as Record<string, string>
         ).toString()
@@ -54,12 +89,22 @@ const iNaturalistAPIController: RequestHandler = async (req, res) => {
             // 🧠 JSON response
             const jsonResponse = await axios.get(url)
 
-            // Cache the successful response
+            // Process the data to format preferred_common_name fields
             if (jsonResponse.status === 200) {
-                await cacheService.set(cacheKey, jsonResponse.data)
+                console.log(`🔍 Processing iNaturalist data for path: ${path}`)
+                console.log(`📊 Data type: ${Array.isArray(jsonResponse.data) ? 'Array' : 'Object'}`)
+                if (Array.isArray(jsonResponse.data)) {
+                    console.log(`📊 Array length: ${jsonResponse.data.length}`)
+                }
+                const processedData = processINaturalistData(jsonResponse.data)
+                
+                // Cache the processed response
+                await cacheService.set(cacheKey, processedData)
+                
+                res.status(jsonResponse.status).json(processedData)
+            } else {
+                res.status(jsonResponse.status).json(jsonResponse.data)
             }
-
-            res.status(jsonResponse.status).json(jsonResponse.data)
         }
     } catch (error) {
         console.error('iNaturalist proxy error:', error)

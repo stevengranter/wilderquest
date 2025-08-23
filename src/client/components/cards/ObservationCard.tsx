@@ -4,10 +4,8 @@ import type React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { Calendar, MapPin, Camera } from 'lucide-react'
+import { Calendar, Camera, MapPin } from 'lucide-react'
 import { type INatObservation } from '../../../shared/types/iNatTypes'
-import titleCase from '@/components/search/titleCase'
-import { useSearchContext } from '@/contexts/search/SearchContext'
 import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 
 interface ObservationCardProps {
@@ -59,7 +57,7 @@ export function ObservationCard({ observation, className, viewMode }: Observatio
                 )}
                 <div className='flex-grow'>
                     <div className='font-semibold text-base'>
-                        {titleCase(observation.species_guess || 'Unknown Species')}
+                        {observation.species_guess || 'Unknown Species'}
                     </div>
                     <div className='flex items-center gap-1 text-sm text-muted-foreground mt-1'>
                         <Calendar className='h-3 w-3' />
@@ -114,7 +112,7 @@ export function ObservationCard({ observation, className, viewMode }: Observatio
                 <div className='space-y-2'>
                     {/* Species name */}
                     <div
-                        className='font-semibold text-lg'>{titleCase(observation.species_guess || 'Unknown Species')}</div>
+                        className='font-semibold text-lg'>{observation.species_guess || 'Unknown Species'}</div>
 
                     {/* Date observed */}
                     {observation.observed_on && (

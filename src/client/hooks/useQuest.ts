@@ -4,7 +4,7 @@ import { chunk } from 'lodash'
 import React, { useEffect } from 'react'
 import { toast } from 'sonner'
 import api from '@/api/api'
-import titleCase from '@/components/search/titleCase'
+
 import { Quest } from '../../server/repositories/QuestRepository'
 
 import { AggregatedProgress, DetailedProgress } from '@/features/quests/types'
@@ -232,7 +232,7 @@ export const useQuest = ({
                     (t: INatTaxon) => t.id === mapping.taxon_id
                 )
                 const speciesName = species?.preferred_common_name
-                    ? titleCase(species.preferred_common_name)
+                    ? species.preferred_common_name
                     : species?.name || 'a species'
 
                 const action =

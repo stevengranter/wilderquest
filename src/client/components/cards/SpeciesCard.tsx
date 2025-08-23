@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import React, { useRef } from 'react'
 import { TbBinocularsFilled } from 'react-icons/tb'
 import getKingdomIcon from '@/components/search/getKingdomIcon'
-import titleCase from '@/components/search/titleCase'
+
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -174,7 +174,7 @@ function SpeciesGridItem({
                         style={{ textShadow: '2px 2px 1px rgba(0, 0, 0, 0.3)' }}
                     >
                         {species.preferred_common_name && (
-                            <h3>{titleCase(species.preferred_common_name)}</h3>
+                            <h3>{species.preferred_common_name}</h3>
                         )}
                     </CardHeader>
 
@@ -319,7 +319,7 @@ function SpeciesListItem({
             )}
             <div className="flex-grow">
                 <div className="font-semibold text-base">
-                    {titleCase(species.preferred_common_name) || species.name}
+                                            {species.preferred_common_name || species.name}
                 </div>
                 {species.preferred_common_name && (
                     <div className="text-sm text-muted-foreground italic">
