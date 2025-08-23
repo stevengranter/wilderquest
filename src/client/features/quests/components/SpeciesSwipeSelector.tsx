@@ -2,16 +2,19 @@ import React, { useCallback, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { motion, useMotionValue, useTransform } from 'motion/react'
-import { Heart, Info, RotateCcw, TrendingUp, X } from 'lucide-react'
+import { Heart, RotateCcw, TrendingUp, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useSpeciesSwipe } from '@/features/quests/hooks/useSpeciesSwipe'
-import { ResponsiveSpeciesGrid } from '@/features/quests/components/ResponsiveSpeciesThumbnail'
+import {
+    ResponsiveSpeciesGrid,
+    ResponsiveSpeciesThumbnail,
+} from '@/features/quests/components/ResponsiveSpeciesThumbnail'
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { useSpeciesAddTrigger } from './SpeciesAnimationProvider'
 import api from '@/api/api'
+import { SpeciesCard } from '@/components/cards/SpeciesCard'
 
 interface TaxonData {
     id: number
@@ -50,14 +53,12 @@ interface SpeciesSwipeSelectorProps {
 }
 
 const SWIPE_THRESHOLD = 50
-const ROTATION_FACTOR = 0.1
 
 export function SpeciesSwipeSelector({
     questSpecies,
     setQuestSpecies,
     onSpeciesAdded,
     onSpeciesRejected,
-    editMode = false,
 }: SpeciesSwipeSelectorProps) {
     const { control } = useFormContext()
     const lat = useWatch({ control, name: 'latitude' })
@@ -154,30 +155,10 @@ export function SpeciesSwipeSelector({
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
-            {/* Left Column - Current Quest Species */}
-            <div className="flex flex-col lg:col-span-1">
-                <ResponsiveSpeciesGrid
-                    species={Array.from(questSpecies.values())}
-                    onRemove={(species) => {
-                        const speciesItem = species as SpeciesCountItem
-                        setQuestSpecies((prev) => {
-                            const newMap = new Map(prev)
-                            newMap.delete(speciesItem.taxon.id)
-                            return newMap
-                        })
-                    }}
-                    locationData={{
-                        latitude: lat,
-                        longitude: lon,
-                        location_name: locationName,
-                    }}
-                    showObservationsModal={true}
-                    maxHeight="max-h-[70vh]"
-                />
-            </div>
 
-            {/* Right Column - Swipe Interface */}
-            <div className="flex flex-col lg:col-span-3">
+
+            {/* Left Column - Swipe Interface */}
+            <div className="flex flex-col lg:col-span-2 order-2 lg:order-1">
                 <div className="mb-4 text-center space-y-3">
                     <h3 className="text-lg font-semibold">Add New Species</h3>
 
@@ -218,7 +199,10 @@ export function SpeciesSwipeSelector({
                     </div>
                 </div>
 
-                <div ref={swipeAreaRef} className="relative h-[600px] mb-6">
+                <div
+                    ref={swipeAreaRef}
+                    className="relative mb-6 flex h-[520px] items-center justify-center"
+                >
                     <SwipeCard
                         key={currentSpecies?.taxon.id}
                         species={currentSpecies}
@@ -329,6 +313,29 @@ export function SpeciesSwipeSelector({
                     </motion.div>
                 )}
             </div>
+            {/* Right Column - Current Quest Species */}
+            <div className="flex flex-col lg:col-span-2 order-1 lg:order-2">
+                <div className="overflow-auto lg:max-h-[70vh] max-h-[60vh]">
+                <ResponsiveSpeciesGrid
+                    species={Array.from(questSpecies.values())}
+                    onRemove={(species) => {
+                        const speciesItem = species as SpeciesCountItem
+                        setQuestSpecies((prev) => {
+                            const newMap = new Map(prev)
+                            newMap.delete(speciesItem.taxon.id)
+                            return newMap
+                        })
+                    }}
+                    locationData={{
+                        latitude: lat,
+                        longitude: lon,
+                        location_name: locationName,
+                    }}
+                    showObservationsModal={true}
+                    maxHeight="max-h-[70vh]"
+                />
+                </div>
+            </div>
         </div>
     )
 }
@@ -361,24 +368,16 @@ function SwipeCard({ species, onSwipeComplete, locationData }: SwipeCardProps) {
 
     const handleDragEnd = useCallback(
         (event: any, { offset, velocity }: any) => {
-            // Re-enable text selection
             document.body.style.userSelect = ''
-
-            // Prevent any default behavior that might cause scroll
-            event.preventDefault?.()
-            event.stopPropagation?.()
 
             if (!species) return
 
-            const swipeThreshold = SWIPE_THRESHOLD
-
             if (
-                Math.abs(offset.x) > swipeThreshold ||
+                Math.abs(offset.x) > SWIPE_THRESHOLD ||
                 Math.abs(velocity.x) > 500
             ) {
                 const direction = offset.x > 0 ? 'right' : 'left'
 
-                // Trigger animation for right swipe (add species)
                 if (direction === 'right' && cardRef.current) {
                     triggerAnimation(species, cardRef.current)
                 }
@@ -398,33 +397,24 @@ function SwipeCard({ species, onSwipeComplete, locationData }: SwipeCardProps) {
     return (
         <motion.div
             ref={cardRef}
-            data-species-card
-            className="absolute inset-0 cursor-grab active:cursor-grabbing"
+            className="h-[480px] w-full max-w-[320px] cursor-grab active:cursor-grabbing"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.1}
             dragMomentum={false}
             style={{ x, rotate, opacity }}
             onDragEnd={handleDragEnd}
-            onDragStart={(e) => {
-                e.preventDefault()
-                // Prevent text selection during drag
+            onDragStart={() => {
                 document.body.style.userSelect = 'none'
             }}
-            onDrag={(e) => {
-                // Prevent default browser behavior that might cause scrolling
-                e.preventDefault()
-                e.stopPropagation()
-            }}
-            onMouseDown={(e) => {
-                // Only handle mouse events for dragging, not clicking
-                if (e.detail > 1) {
-                    e.preventDefault()
-                }
-            }}
-            onTap={(e) => {
-                // Re-enable text selection after drag
+            onTapCancel={() => {
                 document.body.style.userSelect = ''
+            }}
+            onClickCapture={(e) => {
+                if (Math.abs(x.get()) > 5) {
+                    e.preventDefault()
+                    e.stopPropagation()
+                }
             }}
             whileHover={{ scale: 1.02 }}
             whileDrag={{
@@ -432,121 +422,44 @@ function SwipeCard({ species, onSwipeComplete, locationData }: SwipeCardProps) {
                 cursor: 'grabbing',
             }}
         >
-            <div className="h-full relative">
+            <div className="relative h-full w-full">
                 {/* Skip Indicator */}
                 <motion.div
-                    className="absolute top-1/2 left-8 transform -translate-y-1/2 z-10 pointer-events-none"
+                    className="pointer-events-none absolute left-8 top-1/2 z-20 -translate-y-1/2 transform"
                     style={{ opacity: skipOpacity, scale: skipScale }}
                 >
-                    <div className="bg-red-500 text-white rounded-full p-4 shadow-lg">
-                        <X className="w-8 h-8" />
+                    <div className="rounded-full bg-red-500 p-4 text-white shadow-lg">
+                        <X className="h-8 w-8" />
                     </div>
-                    <div className="text-center mt-2 font-bold text-red-500 text-lg">
+                    <div className="mt-2 text-center text-lg font-bold text-red-500">
                         SKIP
                     </div>
                 </motion.div>
 
                 {/* Add Indicator */}
                 <motion.div
-                    className="absolute top-1/2 right-8 transform -translate-y-1/2 z-10 pointer-events-none"
+                    className="pointer-events-none absolute right-8 top-1/2 z-20 -translate-y-1/2 transform"
                     style={{ opacity: addOpacity, scale: addScale }}
                 >
-                    <div className="bg-green-500 text-white rounded-full p-4 shadow-lg">
-                        <Heart className="w-8 h-8" />
+                    <div className="rounded-full bg-green-500 p-4 text-white shadow-lg">
+                        <Heart className="h-8 w-8" />
                     </div>
-                    <div className="text-center mt-2 font-bold text-green-500 text-lg">
+                    <div className="mt-2 text-center text-lg font-bold text-green-500">
                         ADD
                     </div>
                 </motion.div>
 
-                {/* Use SpeciesCardWithObservations with compact card as children */}
-                <div className="h-[600px] overflow-hidden">
-                    <SpeciesCardWithObservations
+                <SpeciesCardWithObservations
+                    species={taxon}
+                    locationData={locationData}
+                >
+                    <SpeciesCard
                         species={taxon}
-                        locationData={{
-                            latitude: locationData.latitude,
-                            longitude: locationData.longitude,
-                            location_name: locationData.location_name,
-                        }}
-                    >
-                        <Card
-                            className="h-full shadow-lg relative overflow-hidden"
-                            onMouseDown={(e) => {
-                                // Prevent dialog trigger on drag start
-                                if (x.get() !== 0) {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                }
-                            }}
-                            onClick={(e) => {
-                                // Only allow dialog to open if not dragging
-                                if (Math.abs(x.get()) > 10) {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                }
-                            }}
-                        >
-                            <CardContent className="p-0 h-full flex flex-col pointer-events-none">
-                                <div className="flex-1 relative overflow-hidden rounded-t-lg">
-                                    {taxon.default_photo?.medium_url ? (
-                                        <img
-                                            src={taxon.default_photo.medium_url}
-                                            alt={
-                                                taxon.preferred_common_name ||
-                                                taxon.name
-                                            }
-                                            className="w-full h-full object-cover select-none"
-                                            draggable={false}
-                                            onError={(e) => {
-                                                ;(
-                                                    e.target as HTMLImageElement
-                                                ).style.display = 'none'
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                                            <div className="text-center text-gray-500">
-                                                <div className="text-4xl mb-2">
-                                                    📷
-                                                </div>
-                                                <div className="text-sm">
-                                                    No image available
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="p-4 bg-white">
-                                    <div className="mb-2">
-                                        <h4 className="font-semibold text-lg leading-tight select-none">
-                                            {taxon.preferred_common_name ||
-                                                taxon.name}
-                                        </h4>
-                                        {taxon.preferred_common_name && (
-                                            <p className="text-sm text-gray-600 italic select-none">
-                                                {taxon.name}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center justify-between text-sm text-gray-600 select-none">
-                                        <div className="flex items-center gap-1">
-                                            <Info className="w-4 h-4" />
-                                            <span>
-                                                {taxon.rank || 'Species'}
-                                            </span>
-                                        </div>
-                                        <div className="text-right">
-                                            <div>
-                                                Near{' '}
-                                                {locationData.location_name}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </SpeciesCardWithObservations>
-                </div>
+                        hoverEffect="none"
+                        isSelectable={false}
+                        className="h-full w-full"
+                    />
+                </SpeciesCardWithObservations>
             </div>
         </motion.div>
     )

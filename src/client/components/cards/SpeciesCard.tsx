@@ -203,6 +203,7 @@ function SpeciesGridItem({
                                         isBlurred &&
                                             'filter blur-sm scale-110 transition-all duration-500'
                                     )}
+                                    draggable={false}
                                 />
                             </div>
                         ) : (
