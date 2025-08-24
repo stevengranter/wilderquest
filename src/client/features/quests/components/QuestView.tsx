@@ -12,6 +12,7 @@ import { SpeciesCardSkeleton } from '@/components/cards/SpeciesCard'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Skeleton } from '@/components/ui/skeleton'
 import ShareQuest from '@/features/quests/components/ShareQuest'
 import { ClientQuest, SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
@@ -393,29 +394,24 @@ export const QuestView = ({
                     <h2 className="text-xl font-semibold">
                         Species ({taxa?.length ?? '...'})
                     </h2>
-                    <div className="flex items-center gap-1 rounded-md p-1 bg-muted">
-                        <Button
-                            variant={viewMode === 'grid' ? 'default' : 'neutral'}
-                            size="sm"
-                            onClick={() => setViewMode('grid')}
-                        >
+                    <ToggleGroup
+                        type="single"
+                        value={viewMode}
+                        onValueChange={(value: 'grid' | 'list' | 'map') =>
+                            value && setViewMode(value)
+                        }
+                        className="border-0 rounded-lg"
+                    >
+                        <ToggleGroupItem value="grid" aria-label="Grid view">
                             <Grid className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant={viewMode === 'list' ? 'default' : 'neutral'}
-                            size="sm"
-                            onClick={() => setViewMode('list')}
-                        >
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="list" aria-label="List view">
                             <List className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant={viewMode === 'map' ? 'default' : 'neutral'}
-                            size="sm"
-                            onClick={() => setViewMode('map')}
-                        >
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="map" aria-label="Map view">
                             <Map className="h-4 w-4" />
-                        </Button>
-                    </div>
+                        </ToggleGroupItem>
+                    </ToggleGroup>
                 </div>
 
                 {/* View Content */}

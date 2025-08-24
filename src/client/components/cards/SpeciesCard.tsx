@@ -23,7 +23,8 @@ interface SpeciesCardProps {
     geoObservationsCount?: number
     rarity?: 'common' | 'uncommon' | 'rare'
     found?: boolean
-    hoverEffect?: 'lift' | 'shadow' | 'none'
+    hoverEffect?: 'lift' | 'shadow' | 'none',
+    hasShadow?: boolean
 }
 
 export function SpeciesCard({
@@ -35,6 +36,7 @@ export function SpeciesCard({
     rarity,
     found,
     hoverEffect,
+    hasShadow = false,
 }: SpeciesCardProps) {
     const {
         isSelectionMode,
@@ -84,6 +86,7 @@ export function SpeciesCard({
             rarity={rarity}
             found={found}
             hoverEffect={hoverEffect}
+            hasShadow={hasShadow}
         />
     )
 }
@@ -121,6 +124,7 @@ function SpeciesGridItem({
     rarity,
     found,
     hoverEffect,
+    hasShadow = false,
 }: {
     species: INatTaxon
     className?: string
@@ -131,7 +135,8 @@ function SpeciesGridItem({
     geoObservationsCount?: number
     rarity?: 'common' | 'uncommon' | 'rare'
     found?: boolean
-    hoverEffect?: 'lift' | 'shadow' | 'none'
+    hoverEffect?: 'lift' | 'shadow' | 'none',
+    hasShadow?: boolean
 }) {
     const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
     const { src, isBlurred } = useProgressiveImage(
@@ -143,6 +148,11 @@ function SpeciesGridItem({
         lift: 'hover:shadow-shadow hover:-translate-y-2 hover:-translate-x-2',
         shadow: 'hover:shadow-shadow',
         none: '',
+    }
+
+    const hasShadowClasses = {
+        true: 'shadow-shadow',
+        false: 'shadow-0'
     }
 
     return (
@@ -172,7 +182,8 @@ function SpeciesGridItem({
                         'aspect-2.5/3.5 overflow-hidden duration-250 transition-all shadow-0 py-0 gap-0 border-1 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
                         isSelected && 'ring-2 ring-blue-500 shadow-blue-200/50',
                         hoverClasses[hoverEffect || 'lift'],
-                        found ? 'bg-green-100' : 'bg-background'
+                        found ? 'bg-green-100' : 'bg-background',
+                        hasShadow ? hasShadowClasses['true']: hasShadowClasses['false']
                     )}
                 >
                     <CardHeader
