@@ -18,18 +18,25 @@ interface SpeciesCardWithObservationsProps {
     }
     children?: ReactNode
     found?: boolean
+    actionArea?: ReactNode
 }
 
 export function SpeciesCardWithObservations(
     props: SpeciesCardWithObservationsProps
 ) {
-    const { species, questData, locationData, children, found } = props
+    const { species, questData, locationData, children, found, actionArea } =
+        props
     const displayData = questData || locationData
 
     if (!displayData?.latitude || !displayData?.longitude) {
         return (
             children || (
-                <SpeciesCard species={species} className="h-full" found={found} />
+                <SpeciesCard
+                    species={species}
+                    className="h-full"
+                    found={found}
+                    actionArea={actionArea}
+                />
             )
         )
     }
@@ -42,7 +49,14 @@ export function SpeciesCardWithObservations(
             locationName={displayData.location_name}
             found={found}
         >
-            {children || <SpeciesCard species={species} className="h-full" found={found} />}
+            {children || (
+                <SpeciesCard
+                    species={species}
+                    className="h-full"
+                    found={found}
+                    actionArea={actionArea}
+                />
+            )}
         </ObservationDialog>
     )
 }

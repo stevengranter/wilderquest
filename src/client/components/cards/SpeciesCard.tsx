@@ -23,8 +23,9 @@ interface SpeciesCardProps {
     geoObservationsCount?: number
     rarity?: 'common' | 'uncommon' | 'rare'
     found?: boolean
-    hoverEffect?: 'lift' | 'shadow' | 'none',
+    hoverEffect?: 'lift' | 'shadow' | 'none'
     hasShadow?: boolean
+    actionArea?: React.ReactNode
 }
 
 export function SpeciesCard({
@@ -37,6 +38,7 @@ export function SpeciesCard({
     found,
     hoverEffect,
     hasShadow = false,
+    actionArea,
 }: SpeciesCardProps) {
     const {
         isSelectionMode,
@@ -87,6 +89,7 @@ export function SpeciesCard({
             found={found}
             hoverEffect={hoverEffect}
             hasShadow={hasShadow}
+            actionArea={actionArea}
         />
     )
 }
@@ -125,6 +128,7 @@ function SpeciesGridItem({
     found,
     hoverEffect,
     hasShadow = false,
+    actionArea,
 }: {
     species: INatTaxon
     className?: string
@@ -135,8 +139,9 @@ function SpeciesGridItem({
     geoObservationsCount?: number
     rarity?: 'common' | 'uncommon' | 'rare'
     found?: boolean
-    hoverEffect?: 'lift' | 'shadow' | 'none',
+    hoverEffect?: 'lift' | 'shadow' | 'none'
     hasShadow?: boolean
+    actionArea?: React.ReactNode
 }) {
     const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
     const { src, isBlurred } = useProgressiveImage(
@@ -263,6 +268,7 @@ function SpeciesGridItem({
                             </div>
                         )}
                     </CardFooter>
+                    {actionArea}
                 </Card>
             </motion.div>
         </AnimatePresence>
