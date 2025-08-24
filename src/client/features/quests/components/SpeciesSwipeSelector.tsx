@@ -161,100 +161,110 @@ export function SpeciesSwipeSelector({
             <div className="flex flex-col lg:col-span-2 order-2 lg:order-1">
 
                 {/*<h3 className="text-lg font-semibold">Add New Species</h3>*/}
-                <div
-                    ref={swipeAreaRef}
-                    className="relative mb-6 flex h-[520px] items-center justify-center"
-                >
-                    <SwipeCard
-                        key={currentSpecies?.taxon.id}
-                        species={currentSpecies}
-                        onSwipeComplete={handleSwipeComplete as any}
-                        locationData={{
-                            latitude: lat,
-                            longitude: lon,
-                            location_name: locationName,
-                        }}
-                    />
-                </div>
+                <div className="flex flex-col items-center justify-center">
+                    <div className="flex items-center justify-center w-full">
+                        {/* Skip Button */}
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        variant="neutral"
+                                        size="lg"
+                                        className="rounded-full w-14 h-14 border-red-200 hover:border-red-300 hover:bg-red-50 mr-2"
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            handleButtonAction('reject')
+                                        }}
+                                        disabled={!currentSpecies}
+                                    >
+                                        <X className="w-6 h-6 text-red-500" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Skip this species</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
 
-                <div className="flex justify-center items-center gap-4">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    type="button"
-                                    variant="neutral"
-                                    size="lg"
-                                    className="rounded-full w-14 h-14 border-red-200 hover:border-red-300 hover:bg-red-50"
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        handleButtonAction('reject')
-                                    }}
-                                    disabled={!currentSpecies}
-                                >
-                                    <X className="w-6 h-6 text-red-500" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Skip this species</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                        {/* Swipe Card */}
+                        <div
+                            ref={swipeAreaRef}
+                            className="relative flex h-[520px] w-[320px] items-center justify-center"
+                        >
+                            <SwipeCard
+                                key={currentSpecies?.taxon.id}
+                                species={currentSpecies}
+                                onSwipeComplete={
+                                    handleSwipeComplete as any
+                                }
+                                locationData={{
+                                    latitude: lat,
+                                    longitude: lon,
+                                    location_name: locationName,
+                                }}
+                            />
+                        </div>
 
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    type="button"
-                                    variant="neutral"
-                                    size="sm"
-                                    className="rounded-full"
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        handleUndoLastAction()
-                                    }}
-                                    disabled={!lastAction}
-                                >
-                                    <RotateCcw className="w-4 h-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Undo last action</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    type="button"
-                                    variant="neutral"
-                                    size="lg"
-                                    className="rounded-full w-14 h-14 border-green-200 hover:border-green-300 hover:bg-green-50"
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        if (
-                                            currentSpecies &&
-                                            swipeAreaRef.current
-                                        ) {
-                                            triggerAnimation(
-                                                currentSpecies,
+                        {/* Add Button */}
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        variant="neutral"
+                                        size="lg"
+                                        className="rounded-full w-14 h-14 border-green-200 hover:border-green-300 hover:bg-green-50 ml-2"
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            if (
+                                                currentSpecies &&
                                                 swipeAreaRef.current
-                                            )
-                                        }
-                                        handleButtonAction('add')
-                                    }}
-                                    disabled={!currentSpecies}
-                                >
-                                    <Heart className="w-6 h-6 text-green-500" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Add to quest</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                                            ) {
+                                                triggerAnimation(
+                                                    currentSpecies,
+                                                    swipeAreaRef.current
+                                                )
+                                            }
+                                            handleButtonAction('add')
+                                        }}
+                                        disabled={!currentSpecies}
+                                    >
+                                        <Heart className="w-6 h-6 text-green-500" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Add to quest</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
+
+                    {/* Undo Button */}
+                    <div className="flex justify-center items-center mt-4">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        variant="neutral"
+                                        size="sm"
+                                        className="rounded-full"
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            handleUndoLastAction()
+                                        }}
+                                        disabled={!lastAction}
+                                    >
+                                        <RotateCcw className="w-4 h-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Undo last action</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
                 </div>
 
                 {/* Progress Indicator */}
