@@ -389,6 +389,7 @@ export const QuestView = ({
                 </div>
             </div>
             <div className="mt-8">
+
                 {/* View Mode Controls */}
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold">
@@ -427,7 +428,7 @@ export const QuestView = ({
                                   const isFound = taxon.progressCount > 0
                                   return (
                                       <div
-                                          key={`${taxon.id}-${isFound ? 'found' : 'unfound'}-${index}`}
+                                          key={`${taxon.id}-${isFound ? 'found' : 'unfound'}`}
                                           ref={
                                               isLastElement
                                                   ? lastTaxonElementRef
@@ -649,18 +650,20 @@ export const QuestView = ({
                 )}
             </div>
             {isOwner && (
-                <QuestStatusControls
+                <div className="py-4">
+                <QuestControls
                     handleActive={() => updateStatus('active')}
                     status={questData.status}
                     handlePaused={() => updateStatus('paused')}
                     handleEnded={() => updateStatus('ended')}
                 />
+                </div>
             )}
         </div>
     )
 }
 
-function QuestStatusControls(props: {
+function QuestControls(props: {
     handleActive: () => void
     status: QuestStatusType
     handlePaused: () => void

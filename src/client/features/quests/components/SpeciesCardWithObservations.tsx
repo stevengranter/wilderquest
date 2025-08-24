@@ -22,23 +22,23 @@ interface SpeciesCardWithObservationsProps {
 }
 
 export function SpeciesCardWithObservations(
-    props: SpeciesCardWithObservationsProps
+    props: SpeciesCardWithObservationsProps,
 ) {
     const { species, questData, locationData, children, found, actionArea } =
         props
     const displayData = questData || locationData
 
+    const card = children || (
+        <SpeciesCard
+            species={species}
+            className="h-full"
+            found={found}
+            actionArea={actionArea}
+        />
+    )
+
     if (!displayData?.latitude || !displayData?.longitude) {
-        return (
-            children || (
-                <SpeciesCard
-                    species={species}
-                    className="h-full"
-                    found={found}
-                    actionArea={actionArea}
-                />
-            )
-        )
+        return card
     }
 
     return (
@@ -49,14 +49,7 @@ export function SpeciesCardWithObservations(
             locationName={displayData.location_name}
             found={found}
         >
-            {children || (
-                <SpeciesCard
-                    species={species}
-                    className="h-full"
-                    found={found}
-                    actionArea={actionArea}
-                />
-            )}
+            {card}
         </ObservationDialog>
     )
 }

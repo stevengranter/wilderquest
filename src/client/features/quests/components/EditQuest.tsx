@@ -18,6 +18,7 @@ import { SpeciesCardWithObservations } from '@/features/quests/components/Specie
 import { SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeSelector'
 import { SpeciesAnimationProvider } from '@/features/quests/components/SpeciesAnimationProvider'
 import { formSchema } from '@/features/quests/schemas/formSchema'
+import { useQueryClient } from '@tanstack/react-query'
 
 type QuestFormValues = z.infer<typeof formSchema>
 
@@ -45,6 +46,7 @@ interface SpeciesCountItem {
 export default function EditQuest() {
     const { questId } = useParams<{ questId: string }>()
     const navigate = useNavigate()
+    const queryClient = useQueryClient()
     // const { user } = useAuth()
     const [taxa, setTaxa] = useState<INatTaxon[]>([])
     const [initialTaxonIds, setInitialTaxonIds] = useState<number[]>([])
@@ -176,31 +178,53 @@ export default function EditQuest() {
     )
 
     const onSubmit = async (data: QuestFormValues) => {
-        setIsLoading(true)
-        const taxon_ids = taxa.map((t) => t.id)
-        const payload = {
-            name: data.questName,
-            location_name: data.locationName,
-            latitude: data.latitude,
-            longitude: data.longitude,
-            is_private: data.isPrivate,
-            starts_at: data.starts_at || null,
-            ends_at: data.ends_at || null,
-            taxon_ids,
-        }
-        try {
-            await api.patch(`/quests/${questId}`, payload)
-            toast.success('Quest Updated', {
-                description: 'Your quest has been successfully updated.',
-            })
-            navigate(`/quests/${questId}`)
-        } catch (err) {
-            console.error('Failed to update quest.', err)
-            toast.error('Failed to update quest.')
-        } finally {
-            setIsLoading(false)
-        }
+    setIsLoading(true)
+    const taxon_ids = taxa.map((t) => t.id)
+    const payload = {
+        name: data.questName,
+        location_name: data.locationName,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        is_private: data.isPrivate,
+        starts_at: data.starts_at || null,
+        ends_at: data.ends_at || null,
+        taxon_ids,
     }
+    try {
+        await api.patch(`/quests/${questId}`, payload)
+
+        const numericQuestId = questId ? parseInt(questId, 10) : undefined
+
+        if (numericQuestId) {
+            // First, invalidate the main quest data.
+            // This ensures the cache has the updated taxon_ids.
+            await queryClient.invalidateQueries({ queryKey: ['quest', questId] })
+
+            // Now, invalidate the dependent queries.
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: ['taxa', numericQuestId],
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: ['progress', numericQuestId],
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: ['leaderboard', numericQuestId],
+                }),
+            ])
+        }
+
+        toast.success('Quest Updated', {
+            description: 'Your quest has been successfully updated.',
+        })
+        navigate(`/quests/${questId}`)
+    } catch (err) {
+        console.error('Failed to update quest.', err)
+        toast.error('Failed to update quest.')
+    } finally {
+        setIsLoading(false)
+    }
+}
 
     const handleSpeciesAdded = (species: SpeciesCountItem) => {
         console.log('Added species:', species.taxon.preferred_common_name)

@@ -136,11 +136,15 @@ export const useQuest = ({
     const share = sharedQuestQuery.data?.share
     console.log('quest', quest)
 
+    const isQuestLoading =
+        questQuery.isFetching || sharedQuestQuery.isFetching
+    const isQuestSuccess = questQuery.isSuccess || sharedQuestQuery.isSuccess
+
     const taxaQuery = useQuery({
-        queryKey: ['taxa', questId || token],
-        queryFn: () => fetchTaxa(quest?.taxon_ids || []),
+        queryKey: ['taxa', quest?.id],
+        queryFn: () => fetchTaxa(quest!.taxon_ids || []),
         initialData: initialData?.taxa,
-        enabled: !!quest?.taxon_ids?.length,
+        enabled: isQuestSuccess && !isQuestLoading && !!quest?.taxon_ids?.length,
         staleTime: 1000 * 60 * 5, // 5 minutes - match quest query
     })
 
