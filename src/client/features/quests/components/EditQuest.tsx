@@ -8,7 +8,6 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import api from '@/api/api'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
@@ -215,11 +214,12 @@ export default function EditQuest() {
     return (
         <SpeciesAnimationProvider>
             <div className="container mx-auto px-4 py-8">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Edit Quest</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                {/*<Card>*/}
+                {/*    <CardHeader>*/}
+                {/*        <CardTitle>Edit Quest</CardTitle>*/}
+                {/*    </CardHeader>*/}
+                {/*    <CardContent>*/}
+                <h1>Edit quest</h1>
                         <FormProvider {...form}>
                             <form
                                 onSubmit={form.handleSubmit(onSubmit)}
@@ -274,8 +274,8 @@ export default function EditQuest() {
                                 </div>
                             </form>
                         </FormProvider>
-                    </CardContent>
-                </Card>
+                {/*    </CardContent>*/}
+                {/*</Card>*/}
             </div>
         </SpeciesAnimationProvider>
     )

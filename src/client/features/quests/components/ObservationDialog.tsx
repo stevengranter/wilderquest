@@ -183,14 +183,8 @@ function ObservationList({
         enabled: !!taxonId && !isNaN(roundedLat) && !isNaN(roundedLon),
     })
 
-    const MIN_HEIGHT = 'min-h-[500px]' // consistent height for all states
-
     return (
-        <motion.div
-            layout
-            transition={{ duration: 0.5, type: 'spring' }}
-            className={`mx-2 mt-2`}
-        >
+        <div className={`mx-2 mt-2 flex h-full flex-col`}>
             {/* Header / Toggle */}
             <motion.div
                 className="flex items-center justify-between mb-4 min-h-12 px-4"
@@ -225,7 +219,7 @@ function ObservationList({
             </motion.div>
 
             {/* Content wrapper with fixed height and relative positioning */}
-            <div className={`relative ${MIN_HEIGHT} pt-6 pb-6`}>
+            <div className={`relative flex-1`}>
                 {/* Skeleton behind */}
                 {isLoading && (
                     <motion.div
@@ -233,7 +227,7 @@ function ObservationList({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 overflow-y-auto"
+                        className="absolute inset-0 overflow-y-auto pt-6 pb-6"
                         style={{ pointerEvents: 'none' }}
                     >
                         <ObservationLoadingState />
@@ -249,7 +243,7 @@ function ObservationList({
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.3 }}
-                            className="absolute inset-0 overflow-y-auto"
+                            className="absolute inset-0 overflow-y-auto pt-6 pb-6"
                         >
                             {isError ? (
                                 <ObservationErrorState />
@@ -282,7 +276,7 @@ function ObservationList({
                     </AnimatePresence>
                 )}
             </div>
-        </motion.div>
+        </div>
     )
 }
 
