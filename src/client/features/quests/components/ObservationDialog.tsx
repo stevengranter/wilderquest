@@ -79,7 +79,7 @@ export function ObservationDialog(props: ObservationDialogProps) {
 
             <DialogContent
                 onOpenAutoFocus={(e) => e.preventDefault()}
-                className="sm:max-w-[80vw] max-h-[85vh] flex flex-col md:flex-row gap-6 p-6 bg-background z-50"
+                className="sm:max-w-[80%] h-[80%] max-h-[90%] flex flex-col md:flex-row gap-6 p-6 bg-background z-50"
             >
                 {/* Mobile Header */}
                 <div className="md:hidden flex items-center gap-4 border-b pb-4">
