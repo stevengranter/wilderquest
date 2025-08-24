@@ -159,46 +159,8 @@ export function SpeciesSwipeSelector({
 
             {/* Left Column - Swipe Interface */}
             <div className="flex flex-col lg:col-span-2 order-2 lg:order-1">
-                <div className="mb-4 text-center space-y-3">
-                    <h3 className="text-lg font-semibold">Add New Species</h3>
 
-                    {/* Progress bar */}
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
-                            style={{ width: `${progress}%` }}
-                        />
-                    </div>
-
-                    {/* Instructions */}
-                    <div className="flex justify-center items-center gap-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-1">
-                            <X className="w-4 h-4 text-red-500" />
-                            <span>Skip</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <Heart className="w-4 h-4 text-green-500" />
-                            <span>Add</span>
-                        </div>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex justify-center gap-2 text-xs">
-                        <Badge variant="neutral">
-                            {stats.totalRemaining} remaining
-                        </Badge>
-                        <Badge variant="neutral" className="text-green-600">
-                            {questSpecies.size} selected
-                        </Badge>
-                        {stats.totalAdded > 0 && (
-                            <Badge variant="neutral" className="text-blue-600">
-                                <TrendingUp className="w-3 h-3 mr-1" />
-                                {stats.totalAdded} added today
-                            </Badge>
-                        )}
-                    </div>
-                </div>
-
+                {/*<h3 className="text-lg font-semibold">Add New Species</h3>*/}
                 <div
                     ref={swipeAreaRef}
                     className="relative mb-6 flex h-[520px] items-center justify-center"
@@ -293,6 +255,47 @@ export function SpeciesSwipeSelector({
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
+                </div>
+
+                {/* Progress Indicator */}
+                <div className="mb-4 text-center space-y-3">
+
+
+                    {/* Progress bar */}
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+
+                    {/* Instructions */}
+                    {/*<div className="flex justify-center items-center gap-4 text-sm text-gray-600">*/}
+                    {/*    <div className="flex items-center gap-1">*/}
+                    {/*        <X className="w-4 h-4 text-red-500" />*/}
+                    {/*        <span>Skip</span>*/}
+                    {/*    </div>*/}
+                    {/*    <div className="flex items-center gap-1">*/}
+                    {/*        <Heart className="w-4 h-4 text-green-500" />*/}
+                    {/*        <span>Add</span>*/}
+                    {/*    </div>*/}
+                    {/*</div>*/}
+
+                    {/* Stats */}
+                    <div className="flex justify-center gap-2 text-xs">
+                        <Badge variant="neutral">
+                            {stats.totalRemaining} remaining
+                        </Badge>
+                        <Badge variant="neutral" className="text-green-600">
+                            {questSpecies.size} selected
+                        </Badge>
+                        {stats.totalAdded > 0 && (
+                            <Badge variant="neutral" className="text-blue-600">
+                                <TrendingUp className="w-3 h-3 mr-1" />
+                                {stats.totalAdded} added today
+                            </Badge>
+                        )}
+                    </div>
                 </div>
 
                 {lastAction && (

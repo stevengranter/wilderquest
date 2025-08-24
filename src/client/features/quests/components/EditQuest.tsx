@@ -256,19 +256,19 @@ export default function EditQuest() {
                                         <h3 className="text-lg font-semibold mb-2">
                                             Edit Quest Species
                                         </h3>
-                                        <p className="text-gray-600 text-sm">
-                                            Swipe through available species
-                                            to add new ones. Click existing
-                                            thumbnails above to remove them.
-                                        </p>
-                                        {questSpeciesMap.size > 0 && (
-                                            <p className="text-xs text-blue-600 mt-1">
-                                                💡 Your current{' '}
-                                                {questSpeciesMap.size}{' '}
-                                                species are shown as
-                                                thumbnails above
-                                            </p>
-                                        )}
+                                        {/*<p className="text-gray-600 text-sm">*/}
+                                        {/*    Swipe through available species*/}
+                                        {/*    to add new ones. Click existing*/}
+                                        {/*    thumbnails above to remove them.*/}
+                                        {/*</p>*/}
+                                        {/*{questSpeciesMap.size > 0 && (*/}
+                                        {/*    <p className="text-xs text-blue-600 mt-1">*/}
+                                        {/*        💡 Your current{' '}*/}
+                                        {/*        {questSpeciesMap.size}{' '}*/}
+                                        {/*        species are shown as*/}
+                                        {/*        thumbnails above*/}
+                                        {/*    </p>*/}
+                                        {/*)}*/}
                                     </div>
 
                                     <SpeciesSwipeSelector
@@ -314,79 +314,81 @@ function QuestDetails() {
     const mapOptions = useMemo(() => ({ center, zoom: 13 }), [center])
 
     return (
-        <>
-            <FormField
-                control={control}
-                name="questName"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Quest Name</FormLabel>
-                        <FormControl>
-                            <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
-
-            <LocationInput
-                name="locationName"
-                control={control}
-                watch={watch}
-                setValue={setValue}
-            />
-            <div className="flex flex-row gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
                 <FormField
                     control={control}
-                    name="starts_at"
+                    name="questName"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Start Date</FormLabel>
+                            <FormLabel>Quest Name</FormLabel>
                             <FormControl>
-                                <Input type="datetime-local" {...field} />
+                                <Input {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
                 />
+
+                <LocationInput
+                    name="locationName"
+                    control={control}
+                    watch={watch}
+                    setValue={setValue}
+                />
+                <div className="flex flex-row gap-4">
+                    <FormField
+                        control={control}
+                        name="starts_at"
+                        render={({ field }) => (
+                            <FormItem className="flex-1">
+                                <FormLabel>Start Date</FormLabel>
+                                <FormControl>
+                                    <Input type="datetime-local" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={control}
+                        name="ends_at"
+                        render={({ field }) => (
+                            <FormItem className="flex-1">
+                                <FormLabel>End Date</FormLabel>
+                                <FormControl>
+                                    <Input type="datetime-local" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
                 <FormField
                     control={control}
-                    name="ends_at"
+                    name="isPrivate"
                     render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>End Date</FormLabel>
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                             <FormControl>
-                                <Input type="datetime-local" {...field} />
+                                <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                />
                             </FormControl>
-                            <FormMessage />
+                            <div className="space-y-1 leading-none">
+                                <FormLabel>Private</FormLabel>
+                                <FormDescription>
+                                    If checked, this quest will not be visible to
+                                    other users.
+                                </FormDescription>
+                            </div>
                         </FormItem>
                     )}
                 />
             </div>
-            <div className="h-96 w-full">
+            <div className="h-96 w-full md:h-full">
                 <QuestMapView options={mapOptions} className="w-full h-full" />
             </div>
-            <FormField
-                control={control}
-                name="isPrivate"
-                render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                            <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                            />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                            <FormLabel>Private</FormLabel>
-                            <FormDescription>
-                                If checked, this quest will not be visible to
-                                other users.
-                            </FormDescription>
-                        </div>
-                    </FormItem>
-                )}
-            />
-        </>
+        </div>
     )
 }
