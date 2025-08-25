@@ -93,7 +93,7 @@ export function createQuestShareController(service: QuestShareService) {
         try {
             const rows = await service.getAggregatedProgressForQuest(
                 questId,
-                (req as any).user?.id
+                (req as AuthenticatedRequest).user?.id
             )
             res.status(200).json(rows)
         } catch (err) {
@@ -106,7 +106,7 @@ export function createQuestShareController(service: QuestShareService) {
         try {
             const rows = await service.getQuestTaxaMappings(
                 questId,
-                (req as any).user?.id
+                (req as AuthenticatedRequest).user?.id
             )
             res.status(200).json(rows)
         } catch (err) {
@@ -119,7 +119,7 @@ export function createQuestShareController(service: QuestShareService) {
         try {
             const leaderboard = await service.getLeaderboardForQuest(
                 questId,
-                (req as any).user?.id
+                (req as AuthenticatedRequest).user?.id
             )
             res.status(200).json(leaderboard)
         } catch (err) {

@@ -37,7 +37,7 @@ async function fetchAllSpeciesCounts(placeId: number): Promise<SpeciesCount[]> {
     return results
 }
 
-async function getSpeciesRarity(
+async function _getSpeciesRarity(
     placeId: number,
     taxonId: number
 ): Promise<Rarity> {

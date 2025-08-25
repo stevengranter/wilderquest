@@ -19,14 +19,18 @@ export const initializeDb = async () => {
 
         logger.info('Database connection successful ✅');
         return dbPool;
-    } catch (err: any) {
+    } catch (err: unknown) {
         // Log the full error object
         logger.error('⛔️ Error connecting to the database:');
+        if (err instanceof Error) {
         logger.error(`Message: ${err.message}`);
-        logger.error(`Code: ${err.code}`);
-        logger.error(`Errno: ${err.errno}`);
-        logger.error(`SQLState: ${err.sqlState}`);
+        // logger.error(`Code: ${err.code}`);
+        // logger.error(`Errno: ${err.errno}`);
+        // logger.error(`SQLState: ${err.sqlState}`);
         logger.error(`Stack: ${err.stack}`);
+        } else {
+            logger.error('An unknown error occurred', err);
+        }
 
         if (dbPool) await dbPool.end();
         process.exit(1);

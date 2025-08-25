@@ -9,7 +9,7 @@ import api from '@/api/api'
 import { toast } from 'sonner'
 import { ObservationDialog } from './ObservationDialog'
 import { cn } from '@/lib/utils'
-import { User } from '../../../../server/models/User'
+import { User } from '../../../../server/models/user'
 import { JSX } from 'react'
 
 type TaxaWithProgress = INatTaxon & {

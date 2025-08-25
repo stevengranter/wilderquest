@@ -31,7 +31,7 @@ export const subscribe = (req: Request, res: Response) => {
     });
 };
 
-export const sendEvent = (questId: string, event: any) => {
+export const sendEvent = (questId: string, event: Record<string, unknown>) => {
     const questClients = clients[questId];
     console.log(event);
     if (questClients) {

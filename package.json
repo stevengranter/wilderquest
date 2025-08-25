@@ -4,6 +4,8 @@
     "version": "0.0.1",
     "type": "module",
     "scripts": {
+        "lint-server": "npx biome lint --write src/server",
+        "lint-client": "npx biome lint --write src/client",
         "dev": "NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts",
         "start:preview": "NODE_ENV=production tsx src/server/server.ts",
         "start": "NODE_ENV=production node dist/server/server.js",

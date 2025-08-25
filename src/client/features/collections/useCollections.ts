@@ -116,7 +116,7 @@ export function useCollections(
             return {
                 success: true,
                 data: response.data,
-                message: 'Collection updated successfully',
+                message: 'Collections updated successfully',
             }
         } catch (error) {
             const errorMsg = axios.isAxiosError(error)

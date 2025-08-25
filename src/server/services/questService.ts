@@ -1,7 +1,8 @@
-import { Quest, QuestRepository, QuestToTaxaRepository, QuestWithTaxa } from '../repositories/QuestRepository.js'
+import { QuestRepository, QuestToTaxaRepository, QuestWithTaxa } from '../repositories/QuestRepository.js'
 import { QuestShareRepository } from '../repositories/QuestShareRepository.js'
 import { iNatService } from './iNatService.js'
 import { sendEvent } from './questEventsService.js'
+import { Quest } from '../models/quests.js'
 
 export type QuestService = ReturnType<typeof createQuestService>
 
@@ -181,7 +182,7 @@ export function createQuestService(
             throw new Error('Access denied')
         }
 
-        const { taxon_ids, description, starts_at, ends_at, ...restQuestData } =
+        const { taxon_ids, description: _description, starts_at, ends_at, ...restQuestData } =
             updatedData
 
         const questTableData = {

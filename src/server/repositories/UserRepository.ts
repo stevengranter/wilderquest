@@ -1,22 +1,16 @@
-import { Pool } from 'mysql2/promise'
-import { User } from '../models/User.js'
+import { type Pool } from 'mysql2/promise'
+import { type SafeUserDTO, type User } from '../models/index.js'
 import { createBaseRepository } from './BaseRepository.js'
 
-export type UserRepository = ReturnType<typeof createUserRepository>
-
-const safeUserColumns: (keyof User)[] = [
+// Explicitly list only the safe columns
+export const safeUserColumns = [
     'id',
     'username',
     'created_at',
     'updated_at',
-]
+] as const satisfies (keyof SafeUserDTO)[]
 
-export type SafeUserDTO = {
-    id: number
-    username: string
-    created_at: Date
-    updated_at: Date
-}
+export type UserRepository = ReturnType<typeof createUserRepository>
 
 export function createUserRepository(
     tableName: string,
@@ -37,10 +31,7 @@ export function createUserRepository(
     async function findUser(
         conditions: Partial<User>
     ): Promise<Partial<SafeUserDTO> | null> {
-        const user = await base.findOne(conditions, safeUserColumns)
-        if (!user) return null
-        const { id, username, created_at, updated_at } = user
-        return { id, username, created_at, updated_at }
+        return base.findOne(conditions, safeUserColumns)
     }
 
     return {

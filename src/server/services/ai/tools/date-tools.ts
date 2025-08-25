@@ -59,7 +59,7 @@ export const getDateInfoTool = tool({
                     timestamp: now.getTime(),
                 }
 
-            case 'add_days':
+            case 'add_days': {
                 const futureDate = new Date(now)
                 futureDate.setDate(now.getDate() + days)
                 return {
@@ -71,8 +71,9 @@ export const getDateInfoTool = tool({
                     }),
                     daysFromNow: days,
                 }
+            }
 
-            case 'days_until':
+            case 'days_until': {
                 if (!targetDay) return { error: 'Target day required' }
                 const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
                 const targetDayIndex = dayNames.findIndex(day =>
@@ -98,6 +99,7 @@ export const getDateInfoTool = tool({
                         day: 'numeric',
                     }),
                 }
+            }
 
             default:
                 return { error: 'Unknown operation' }

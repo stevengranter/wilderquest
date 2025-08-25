@@ -1,4 +1,5 @@
-import { SafeUserDTO, UserRepository } from '../repositories/UserRepository.js'
+import { type SafeUserDTO } from '../models/index.js'
+import { type UserRepository } from '../repositories/UserRepository.js'
 
 export type UserService = ReturnType<typeof createUserService>
 

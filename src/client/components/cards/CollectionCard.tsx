@@ -39,7 +39,7 @@ export function CollectionCard({ collection, className }: CollectionCardProps) {
         >
             <CardContent className='p-4'>
                 <div className='space-y-2'>
-                    {/* Collection icon and title */}
+                    {/* Collections icon and title */}
                     <div className='flex items-center gap-2'>
                         <Folder className='h-5 w-5 text-muted-foreground' />
                         <div className='font-semibold text-lg'>{collection.title}</div>

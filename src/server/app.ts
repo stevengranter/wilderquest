@@ -13,7 +13,6 @@ import requestLogger from './middlewares/requestLogger.js'
 import { CollectionRepository } from './repositories/CollectionRepository.js'
 import { QuestRepository, QuestToTaxaRepository } from './repositories/QuestRepository.js'
 import type { QuestShareRepository, SharedQuestProgressRepository } from './repositories/QuestShareRepository.js'
-import { type UserRepository } from './repositories/UserRepository.js'
 import { mapTilesProxyRouter } from './routes/api/proxies.routes.js'
 import { serviceRouter } from './routes/api/services.routes.js'
 import { createAuthRouter } from './routes/authRouter.js'
@@ -25,6 +24,7 @@ import { createUserRouter } from './routes/userRouter.js'
 import { createAuthService } from './services/authService.js'
 import { createQuestService } from './services/questService.js'
 import { createQuestShareService } from './services/questShareService.js'
+import { UserRepository } from './repositories/UserRepository.js'
 
 export function buildApp({
     userRepository,

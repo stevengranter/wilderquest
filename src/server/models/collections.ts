@@ -1,10 +1,6 @@
 import { z } from 'zod'
 
-export const CollectionToTaxaSchema = z.object({
-    id: z.number(),
-    collection_id: z.number(),
-    taxon_id: z.number(),
-})
+export type Collection = z.infer<typeof CollectionSchema>;
 
 export const CollectionSchema = z.object({
     id: z.number(),
@@ -20,11 +16,9 @@ export const CollectionSchema = z.object({
     updated_at: z.instanceof(Date).optional(),
 })
 
+
 export const CreateCollectionSchema = CollectionSchema.extend({
     taxon_ids: z.array(z.number()).optional(),
 }).omit({ id: true })
 
-export type Collection = z.infer<typeof CollectionSchema> & {
-    id: number
-    user_id: number
-}
+

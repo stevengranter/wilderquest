@@ -1,48 +1,12 @@
 import { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import { createBaseRepository } from './BaseRepository.js'
-
-export type QuestShare = {
-    id: number
-    token: string
-    quest_id: number
-    created_by_user_id: number
-    guest_name?: string | null
-    expires_at?: Date | null
-    created_at: Date
-    updated_at: Date
-}
-
-export type SharedQuestProgress = {
-    id: number
-    quest_share_id: number
-    taxon_id: number // refers to quests_to_taxa.id
-    observed_at: Date
-}
-
-export type AggregatedProgress = {
-    mapping_id: number // p.taxon_id
-    count: number // COUNT(*)
-    last_observed_at: Date // p_last.observed_at
-    last_display_name: string | null // COALESCE(s_last.guest_name, u.username)
-}
-
-export type DetailedProgress = {
-    progress_id: number // p.id
-    mapping_id: number // p.taxon_id
-    observed_at: Date // p.observed_at
-    quest_share_id: number // s.id
-    display_name: string | null // COALESCE(s.guest_name, u.username)
-}
-
-export type LeaderboardEntry = {
-    display_name: string | null
-    observation_count: number
-}
-
-export type QuestShareRepository = ReturnType<typeof createQuestShareRepository>
-export type SharedQuestProgressRepository = ReturnType<
-    typeof createSharedQuestProgressRepository
->
+import { QuestShare } from '../models/quest_shares.js'
+import {
+    AggregatedProgress,
+    DetailedProgress,
+    LeaderboardEntry,
+    SharedQuestProgress,
+} from '../models/shared_quest_progress.js'
 
 export function createQuestShareRepository(
     tableName: string,
@@ -246,3 +210,8 @@ export function createSharedQuestProgressRepository(
         clearMappingProgress,
     }
 }
+
+export type QuestShareRepository = ReturnType<typeof createQuestShareRepository>
+export type SharedQuestProgressRepository = ReturnType<
+    typeof createSharedQuestProgressRepository
+>

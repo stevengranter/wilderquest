@@ -1,6 +1,5 @@
 import { Pool, RowDataPacket } from 'mysql2/promise'
-import { Collection } from '../models/Collection.js'
-import { CollectionToTaxa } from '../models/CollectionToTaxa.js'
+import { Collection, CollectionsToTaxa } from '../models/index.js'
 import { createBaseRepository } from './BaseRepository.js'
 
 export type CollectionRepository = ReturnType<typeof createCollectionRepository>
@@ -58,8 +57,8 @@ export function createCollectionRepository(
 
     async function findTaxaByCollectionId(
         collectionId: number
-    ): Promise<CollectionToTaxa[]> {
-        return query<CollectionToTaxa>(
+    ): Promise<CollectionsToTaxa[]> {
+        return query<CollectionsToTaxa>(
             `SELECT taxon_id FROM collections_to_taxa WHERE collection_id = ?`,
             [collectionId]
         )

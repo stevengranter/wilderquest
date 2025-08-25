@@ -2,7 +2,7 @@ import { createId } from '@paralleldrive/cuid2'
 import { compareSync, genSaltSync, hashSync } from 'bcrypt-ts'
 import jwt from 'jsonwebtoken'
 import env from '../config/app.config.js'
-import { User } from '../models/User.js'
+import { User } from '../models/user.js'
 import { UserRepository } from '../repositories/UserRepository.js'
 
 // Constants

@@ -2,14 +2,8 @@ import { Request, Response } from 'express'
 import { z } from 'zod'
 import { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
 import { type CollectionRepository } from '../repositories/CollectionRepository.js'
-import {
-    CollectionSchema,
-    CreateCollectionSchema,
-} from '../schemas/collection.schemas.js'
-import {
-    CollectionModel,
-    createCollectionService,
-} from '../services/CollectionService.js'
+import { createCollectionService } from '../services/CollectionService.js'
+import { Collection, CollectionSchema, CreateCollectionSchema } from '../models/index.js'
 
 export function createCollectionController(
     collectionRepo: CollectionRepository
@@ -48,7 +42,7 @@ export function createCollectionController(
                 })
 
                 if (!collection) {
-                    res.status(404).json({ message: 'Collection not found' })
+                    res.status(404).json({ message: 'Collections not found' })
                     return
                 }
 
@@ -66,7 +60,7 @@ export function createCollectionController(
                     collection.user_id === undefined
                 ) {
                     res.status(500).json({
-                        message: 'Collection is missing required fields',
+                        message: 'Collections is missing required fields',
                     })
                     return
                 }
@@ -77,14 +71,14 @@ export function createCollectionController(
                     typeof collection.user_id !== 'number'
                 ) {
                     res.status(500).json({
-                        message: 'Collection is missing required fields',
+                        message: 'Collections is missing required fields',
                     })
                     return
                 }
 
                 const enrichedCollection =
                     await service.enrichCollectionWithTaxa(
-                        collection as CollectionModel
+                        collection as Collection
                     )
                 res.json(enrichedCollection)
             } catch (error) {
@@ -153,7 +147,7 @@ export function createCollectionController(
                 )
 
                 res.status(201).json({
-                    message: 'Collection created successfully!',
+                    message: 'Collections created successfully!',
                     collection: newCollection,
                 })
             } catch (error: unknown) {
@@ -202,13 +196,13 @@ export function createCollectionController(
 
                 if (updatedCollection) {
                     res.status(200).json({
-                        message: 'Collection updated successfully!',
+                        message: 'Collections updated successfully!',
                         collection: updatedCollection,
                     })
                 } else {
                     res.status(404).json({
                         message:
-                            'Collection not found or unauthorized to update',
+                            'Collections not found or unauthorized to update',
                     })
                 }
             } catch (error: unknown) {
@@ -244,7 +238,7 @@ export function createCollectionController(
                 } else {
                     res.status(404).json({
                         message:
-                            'Collection not found or unauthorized to delete',
+                            'Collections not found or unauthorized to delete',
                     })
                 }
             } catch (error: unknown) {
@@ -286,13 +280,13 @@ export function createCollectionController(
 
                 if (updatedCollection) {
                     res.status(200).json({
-                        message: 'Collection taxa updated successfully!',
+                        message: 'Collections taxa updated successfully!',
                         collection: updatedCollection,
                     })
                 } else {
                     res.status(404).json({
                         message:
-                            'Collection not found or unauthorized to update',
+                            'Collections not found or unauthorized to update',
                     })
                 }
             } catch (error: unknown) {

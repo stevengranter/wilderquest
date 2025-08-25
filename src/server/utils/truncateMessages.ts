@@ -1,8 +1,13 @@
+interface Message {
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+}
+
 /**
  * Truncate the message history to a manageable size.
  * Keeps the first system message + last N user/assistant messages.
  */
-export function truncateMessages(messages: any[], limit: number = 8): any[] {
+export function truncateMessages(messages: Message[], limit: number = 8): Message[] {
     if (!Array.isArray(messages)) return []
 
     const systemMessages = messages.filter((m) => m.role === 'system')

@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import mysql from 'mysql2/promise'
+import mysql, { ResultSetHeader } from 'mysql2/promise'
 import { faker } from '@faker-js/faker'
 import * as emoji from 'node-emoji'
 import { createId } from '@paralleldrive/cuid2'
@@ -81,7 +81,7 @@ const fetchLocationTaxa = async (
 
         // Extract taxon IDs and shuffle for variety
         const taxonIds = data.results
-            .map((result: any) => result.taxon.id)
+            .map((result: { taxon: { id: number } }) => result.taxon.id)
             .filter((id: number) => id && id > 0)
 
         // Shuffle and return requested number
@@ -117,7 +117,7 @@ function getRandomInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-function capitalizeString(str: string): string {
+function _capitalizeString(str: string): string {
     if (!str) {
         return str // Return the original string if it's empty or nullish
     }
@@ -297,8 +297,8 @@ const writeCsvHeader = () => {
 writeCsvHeader()
 
 const createFakeUser = () => {
-    const firstName = faker.person.firstName()
-    const lastName = faker.person.lastName()
+    const _firstName = faker.person.firstName()
+    const _lastName = faker.person.lastName()
     const username = createNameId({ capitalize: true, delimiter: '' })
     const email = username.toLowerCase() + '@' + faker.internet.domainName()
     const password = faker.internet.password({ length: 8, memorable: true })
@@ -454,7 +454,7 @@ const createUsers = async (quantity: number) => {
     return userIds
 }
 
-const dropTable = async (tableName: string) => {
+const _dropTable = async (tableName: string) => {
     await db.execute(`DROP TABLE ${tableName}`)
 }
 
@@ -470,7 +470,8 @@ async function addRowToTable<T extends object>(tableName: string, data: T) {
     const values = Object.values(data)
     const placeholders = values.map(() => '?').join(', ')
     try {
-        const [result] = await db.execute<any>(
+        // FIXME: This should be properly typed.
+        const [result] = await db.execute<ResultSetHeader>(
             `INSERT INTO ${tableName} (${columns}) VALUES (${placeholders})`,
             values
         )
@@ -482,13 +483,13 @@ async function addRowToTable<T extends object>(tableName: string, data: T) {
 }
 
 const users = await createUsers(12)
-let admin
+let _admin
 try {
-    admin = await addUserToDatabase(adminUser)
+    _admin = await addUserToDatabase(adminUser)
     console.log('Admin created successfully:')
     console.log(adminUser)
-} catch (error: any) {
-    if (error.code === 'ER_DUP_ENTRY') {
+} catch (error: unknown) {
+    if (error instanceof Error && 'code' in error && error.code === 'ER_DUP_ENTRY') {
         console.log('Admin user already exists, skipping creation')
     } else {
         console.error('Error creating admin user:', error)

@@ -1,11 +1,8 @@
 import { QuestRepository, QuestToTaxa, QuestToTaxaRepository } from '../repositories/QuestRepository.js'
-import type {
-    QuestShare,
-    QuestShareRepository,
-    SharedQuestProgressRepository,
-} from '../repositories/QuestShareRepository.js'
-import { UserRepository } from '../repositories/UserRepository.js'
+import type { QuestShareRepository, SharedQuestProgressRepository } from '../repositories/QuestShareRepository.js'
 import { sendEvent } from './questEventsService.js'
+import { QuestShare } from '../models/quest_shares.js'
+import { UserRepository } from '../repositories/UserRepository.js'
 
 export type QuestShareService = ReturnType<typeof createQuestShareService>
 

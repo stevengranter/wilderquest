@@ -1,6 +1,6 @@
-// _schemas/userSchema.ts
-
 import { z } from 'zod'
+
+export type User = z.infer<typeof UserSchema>;
 
 export const UserSchema = z.object({
     id: z.number().int().min(1),
@@ -13,3 +13,13 @@ export const UserSchema = z.object({
     role_id: z.number().int().min(1),
     refresh_token: z.string().jwt().nullish(),
 })
+
+
+export const SafeUserSchema = UserSchema.pick({
+    id: true,
+    username: true,
+    created_at: true,
+    updated_at: true,
+})
+
+export type SafeUserDTO = z.infer<typeof SafeUserSchema>

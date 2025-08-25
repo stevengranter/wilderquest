@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { UserRepository } from '../repositories/UserRepository.js'
 
+
 export function createUserController(userRepository: UserRepository) {
     async function getUserByUsername(req: Request, res: Response) {
         const username = req.params.username
