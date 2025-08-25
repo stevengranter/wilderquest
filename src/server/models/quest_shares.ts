@@ -11,4 +11,4 @@ export const QuestShareSchema = z.object({
     updated_at: z.date(),
 });
 
-export type QuestShare = z.infer<typeof QuestShareSchema>;
+export interface QuestShare extends z.infer<typeof QuestShareSchema> {}

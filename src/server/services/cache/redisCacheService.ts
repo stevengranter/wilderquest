@@ -1,5 +1,5 @@
-import redisClient from '../config/redisClient.js'
-import { ICacheService } from '../types/ICacheService.js'
+import redisClient from '../../config/redisClient.js'
+import { ICacheService } from './ICacheService.types.js'
 
 const CACHE_TTL = 86400 // 24 hours
 

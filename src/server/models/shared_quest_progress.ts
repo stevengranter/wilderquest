@@ -7,7 +7,8 @@ export const SharedQuestProgressSchema = z.object({
     observed_at: z.date(),
 });
 
-export type SharedQuestProgress = z.infer<typeof SharedQuestProgressSchema>;
+export interface SharedQuestProgress extends z.infer<typeof SharedQuestProgressSchema> {}
+
 export type AggregatedProgress = {
     mapping_id: number // p.taxon_id
     count: number // COUNT(*)

@@ -1,7 +1,7 @@
 import axios from 'axios'
 import chalk from 'chalk'
 import { RequestHandler } from 'express'
-import { cacheService } from '../services/cacheService.js'
+import { cacheService } from '../services/cache/cacheService.js'
 import { globalINaturalistRateLimiter } from '../utils/rateLimiterGlobal.js'
 import logger from '../config/logger.js'
 import { titleCase } from '../utils/titleCase.js'
@@ -23,9 +23,7 @@ function processINaturalistData(data: ProcessableData): ProcessableData {
 
         for (const [key, value] of Object.entries(data)) {
             if ((key === 'preferred_common_name' || key === 'species_guess' || key === 'common_name') && typeof value === 'string') {
-                const formatted = titleCase(value)
-                console.log(`🎯 Formatting ${key}: "${value}" -> "${formatted}"`)
-                processed[key] = formatted
+                processed[key] = titleCase(value)
             } else if (typeof value === 'object' && value !== null) {
                 processed[key] = processINaturalistData(value as ProcessableData)
             } else {

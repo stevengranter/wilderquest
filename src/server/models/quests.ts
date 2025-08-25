@@ -17,4 +17,4 @@ export const QuestSchema = z.object({
     longitude: z.number().optional(),
 });
 
-export type Quest = z.infer<typeof QuestSchema>;
+export interface Quest extends z.infer<typeof QuestSchema> {}

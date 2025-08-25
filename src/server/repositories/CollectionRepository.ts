@@ -1,5 +1,5 @@
 import { Pool, RowDataPacket } from 'mysql2/promise'
-import { Collection, CollectionsToTaxa } from '../models/index.js'
+import { Collection, CollectionsToTaxa } from '../models/_index.js'
 import { createBaseRepository } from './BaseRepository.js'
 
 export type CollectionRepository = ReturnType<typeof createCollectionRepository>

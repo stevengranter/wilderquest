@@ -6,7 +6,7 @@ import { createId } from '@paralleldrive/cuid2'
 import { createNameId } from 'mnemonic-id'
 import { genSaltSync, hashSync } from 'bcrypt-ts'
 import fs from 'fs'
-import env from './config/app.config.js'
+import env from '../config/app.config.js'
 import * as os from 'node:os'
 
 type User = {

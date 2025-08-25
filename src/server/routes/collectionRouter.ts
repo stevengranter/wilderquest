@@ -1,6 +1,6 @@
 // src/routes/collectionRouter.ts
 import { Router } from 'express'
-import type { CollectionController } from '../controllers/collectionController.js'
+import type { CollectionController } from '../controllers/_index.js'
 import verifyJWT, { optionalAuthMiddleware } from '../middlewares/verifyJWT.js'
 
 export function createCollectionRouter(controller: CollectionController) {

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
-import type { QuestShareService } from '../services/questShareService.js'
+import type { QuestShareService } from '../services/quests/questShareService.js'
 
 export function createQuestShareController(service: QuestShareService) {
     async function createShare(req: AuthenticatedRequest, res: Response) {

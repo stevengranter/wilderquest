@@ -1,12 +1,13 @@
 // src/init.ts
-import { initializeDb } from './db/db.js'
-import { createCollectionRepository } from './repositories/CollectionRepository.js'
-import { createQuestRepository, createQuestToTaxaRepository } from './repositories/QuestRepository.js'
-import { createUserRepository } from './repositories/UserRepository.js'
+import { initializeDb } from './config/db.js'
 import {
+    createCollectionRepository,
+    createQuestRepository,
     createQuestShareRepository,
+    createQuestToTaxaRepository,
     createSharedQuestProgressRepository,
-} from './repositories/QuestShareRepository.js'
+    createUserRepository,
+} from './repositories/_index.js'
 import { getTableColumns } from './utils/getTableColumns.js'
 
 // Initialize db and repositories

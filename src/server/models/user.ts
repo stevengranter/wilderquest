@@ -22,4 +22,4 @@ export const SafeUserSchema = UserSchema.pick({
     updated_at: true,
 })
 
-export type SafeUserDTO = z.infer<typeof SafeUserSchema>
+export interface SafeUserDTO extends z.infer<typeof SafeUserSchema> {}

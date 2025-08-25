@@ -6,4 +6,4 @@ export const CollectionToTaxaSchema = z.object({
     taxon_id: z.number(),
 })
 
-export type CollectionsToTaxa = z.infer<typeof CollectionToTaxaSchema>;
+export interface CollectionsToTaxa extends z.infer<typeof CollectionToTaxaSchema> {}

@@ -22,8 +22,8 @@ import { createQuestRouter } from './routes/questRouter.js'
 import { createQuestShareRouter } from './routes/questShareRouter.js'
 import { createUserRouter } from './routes/userRouter.js'
 import { createAuthService } from './services/authService.js'
-import { createQuestService } from './services/questService.js'
-import { createQuestShareService } from './services/questShareService.js'
+import { createQuestService } from './services/quests/questService.js'
+import { createQuestShareService } from './services/quests/questShareService.js'
 import { UserRepository } from './repositories/UserRepository.js'
 
 export function buildApp({

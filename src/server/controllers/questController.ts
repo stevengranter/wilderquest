@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
-import { QuestService } from '../services/questService.js'
+import { QuestService } from '../services/quests/questService.js'
 
 export function createQuestController(questService: QuestService) {
     async function getPublicQuests(req: Request, res: Response) {

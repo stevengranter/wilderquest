@@ -1,5 +1,5 @@
 import { type Pool } from 'mysql2/promise'
-import { type SafeUserDTO, type User } from '../models/index.js'
+import { type SafeUserDTO, type User } from '../models/_index.js'
 import { createBaseRepository } from './BaseRepository.js'
 
 // Explicitly list only the safe columns

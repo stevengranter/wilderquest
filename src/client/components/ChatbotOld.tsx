@@ -4,11 +4,10 @@ import { useChat } from '@ai-sdk/react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import TaxonCard from '@/components/TaxonCard'
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { INatObservation, INatTaxon } from '../../shared/types/iNatTypes'
 import type { LocationIQPlace } from '../../shared/types/LocationIQPlace'
 import Markdown from 'react-markdown'
-import type { Message } from 'ai'
 
 type UserLocation = {
     lat?: number
@@ -178,7 +177,7 @@ export default function ChatbotOld() {
 
                                             case 'displayTaxonomicData':
                                                 switch (state) {
-                                                    case 'result':
+                                                    case 'result': {
                                                         const { result } = toolInvocation as { result: INatTaxon[] }
                                                         if (result?.length > 0) {
                                                             const uniqueTaxaMap = new Map<number, INatTaxon>()
@@ -208,6 +207,7 @@ export default function ChatbotOld() {
                                                         } else {
                                                             return <div key={i}>No taxon data found.</div>
                                                         }
+                                                    }
 
                                                     case 'call':
                                                         return <div key={i}>Loading taxon data...</div>
@@ -256,7 +256,7 @@ export default function ChatbotOld() {
                                                 switch (state) {
                                                     case 'call':
                                                         return <div key={i}>Getting location information...</div>
-                                                    case 'result':
+                                                    case 'result': {
                                                         const { result } = toolInvocation as {
                                                             result: {
                                                                 display_name?: string
@@ -286,6 +286,7 @@ export default function ChatbotOld() {
                                                                 </p>
                                                             </div>
                                                         )
+                                                    }
                                                 }
                                                 break
 

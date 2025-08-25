@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export type Collection = z.infer<typeof CollectionSchema>;
+export interface Collection extends z.infer<typeof CollectionSchema> {}
 
 export const CollectionSchema = z.object({
     id: z.number(),

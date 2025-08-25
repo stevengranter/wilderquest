@@ -1,4 +1,4 @@
-import { ICacheService } from '../types/ICacheService.js'
+import { ICacheService } from './ICacheService.types.js'
 import { memoryCacheService } from './memoryCacheService.js'
 import { redisCacheService } from './redisCacheService.js'
 
