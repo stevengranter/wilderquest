@@ -16,7 +16,9 @@ const cleanToken = (token: string | null): string | null => {
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('accessToken')
     const cleanedToken = cleanToken(token)
-    if (cleanedToken) {
+
+    // Add token if it exists and the URL is not a public quest-sharing URL
+    if (cleanedToken && !config.url?.includes('/quest-sharing/')) {
         config.headers.Authorization = `Bearer ${cleanedToken}`
     }
     return config
