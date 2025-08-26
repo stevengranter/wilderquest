@@ -1,7 +1,7 @@
-import LoginForm from '../LoginForm.js'
-import { Card } from '@/components/ui/card.js'
-import { useAuth } from '@/hooks/useAuth.js'
-import { Button } from '@/components/ui/button.js'
+import LoginForm from '../../components/LoginForm'
+import { Card } from '@/components/ui/card'
+import { useAuth } from '@/hooks/useAuth'
+import { Button } from '@/components/ui/button'
 import React from 'react'
 
 export default function Login() {

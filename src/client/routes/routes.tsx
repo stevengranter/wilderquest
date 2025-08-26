@@ -2,12 +2,10 @@
 
 import { createBrowserRouter } from 'react-router'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
-import { Home } from '@/components/pages/Home'
-import Login from '@/components/pages/Login'
-import Register from '@/components/pages/Register'
-import UserProfile from '@/components/pages/UserProfile'
-import CollectionDetail from '@/features/collections/CollectionDetail'
-import UserCollectionsManager from '@/features/collections/UserCollectionsManager'
+import { Home } from '@/routes/pages/Home'
+import Login from '@/routes/pages/Login'
+import Register from '@/routes/pages/Register'
+import UserProfile from '@/routes/pages/UserProfile'
 import EditQuest from '@/features/quests/components/EditQuest'
 import QuestDetail from '@/features/quests/components/QuestDetail'
 import { CreateQuest } from '@/features/quests/pages/CreateQuest'
@@ -15,9 +13,6 @@ import { QuestsPage } from '@/features/quests/pages/QuestsPage'
 import UserQuestsPage from '@/features/quests/pages/UserQuestsPage'
 import SharedQuestGuest from '@/features/quests/pages/SharedQuestGuest'
 import { AppLayout } from '@/layouts/AppLayout'
-import { ExploreTab } from './explore/ExploreTab'
-import { IdentifyTab } from './identify/IdentifyTab'
-import { LocateTab } from './locate/LocateTab'
 import { QueryClient } from '@tanstack/react-query'
 
 export const queryClient = new QueryClient()
@@ -37,27 +32,6 @@ export const router = createBrowserRouter([
                 element: <SharedQuestGuest />,
             },
             {
-                path: 'explore',
-                children: [
-                    {
-                        index: true,
-                        element: <ExploreTab />,
-                    },
-                    {
-                        path: ':taxonId',
-                        element: <ExploreTab />,
-                    },
-                ],
-            },
-            {
-                path: 'identify',
-                element: <IdentifyTab />,
-            },
-            {
-                path: 'locate',
-                element: <LocateTab />,
-            },
-            {
                 path: 'login',
                 element: <Login />,
             },
@@ -69,19 +43,19 @@ export const router = createBrowserRouter([
                 path: 'users/:username',
                 element: <UserProfile />,
             },
-            {
-                path: 'collections',
-                children: [
-                    {
-                        index: true, // For /collection (no ID)
-                        element: <UserCollectionsManager />, // Or a component that shows all collections
-                    },
-                    {
-                        path: ':collectionId',
-                        element: <CollectionDetail />,
-                    },
-                ],
-            },
+            // {
+            //     path: 'collections',
+            //     children: [
+            //         {
+            //             index: true, // For /collection (no ID)
+            //             element: <UserCollectionsManager />, // Or a component that shows all collections
+            //         },
+            //         {
+            //             path: ':collectionId',
+            //             element: <CollectionDetail />,
+            //         },
+            //     ],
+            // },
             {
                 path: 'quests',
                 children: [

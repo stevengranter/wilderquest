@@ -14,7 +14,7 @@ import {
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { useSpeciesAddTrigger } from './SpeciesAnimationProvider'
 import api from '@/api/api'
-import { SpeciesCard } from '@/components/cards/SpeciesCard'
+import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
 
 interface TaxonData {
     id: number

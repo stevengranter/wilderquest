@@ -1,6 +1,6 @@
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { ReactNode } from 'react'
-import { SpeciesCard } from '@/components/cards/SpeciesCard'
+import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
 import { Quest as ServerQuest } from '../../../../server/repositories/QuestRepository'
 import { ObservationDialog } from './ObservationDialog'
 

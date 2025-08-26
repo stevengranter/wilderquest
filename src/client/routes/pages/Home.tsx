@@ -2,14 +2,14 @@ import { ArrowRight, ChevronRight, Compass } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '@/api/api'
-import { QuestCard } from '@/components/quest/QuestCard'
-import { QuestCardSkeleton } from '@/components/quest/QuestCardSkeleton'
+import { QuestCard } from '@/features/quests/components/QuestCard'
+import { QuestCardSkeleton } from '@/features/quests/components/QuestCardSkeleton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 import { paths } from '@/routes/paths'
-import { QuestWithTaxa } from '../../../types/types'
+import { QuestWithTaxa } from '../../../server/repositories/QuestRepository'
 
 function StatsCard({
     icon: Icon,
@@ -112,7 +112,7 @@ export function Home() {
                     </p>
                 </div>
 
-                <Link to={paths.quests()} unstable_viewTransition>
+                <Link to={paths.quests()} viewTransition>
                     <Button size="lg" className="w-70 h-18 text-2xl cursor-pointer">
                         <Compass />
                         Explore Quests
@@ -132,7 +132,7 @@ export function Home() {
                         </p>
                     </div>
                     <Button className="group" asChild>
-                        <Link to={paths.quests()} unstable_viewTransition>
+                        <Link to={paths.quests()} viewTransition>
                             View All
                             <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </Link>
@@ -208,7 +208,7 @@ export function Home() {
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <Button
                                 size="lg"
-                                variant="secondary"
+                                variant="neutral"
                                 className="px-8"
                                 asChild
                             >
@@ -220,7 +220,7 @@ export function Home() {
                             {!isAuthenticated && (
                                 <Button
                                     size="lg"
-                                    variant="outline"
+                                    variant="neutral"
                                     className="px-8 border-white text-white hover:bg-white hover:text-emerald-600 dark:hover:bg-gray-100 dark:hover:text-emerald-700"
                                     asChild
                                 >

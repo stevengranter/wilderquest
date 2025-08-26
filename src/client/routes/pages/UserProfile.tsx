@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
 import { QuestWithTaxa } from '../../../types/types'
-import { QuestCard } from '@/components/quest/QuestCard'
+import { QuestCard } from '@/features/quests/components/QuestCard'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
-import { QuestCardSkeleton } from '@/components/quest/QuestCardSkeleton'
+import { QuestCardSkeleton } from '@/features/quests/components/QuestCardSkeleton'
 
 function UserQuests({ userId, isOwnProfile }: { userId: string, isOwnProfile: boolean }) {
   const {

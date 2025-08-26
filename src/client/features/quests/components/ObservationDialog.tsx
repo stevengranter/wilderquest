@@ -4,7 +4,7 @@ import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ReactNode, useEffect, useState } from 'react'
 import api from '@/api/api'
-import { SpeciesCard } from '@/components/cards/SpeciesCard'
+import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
 import {
     Dialog,
     DialogContent,

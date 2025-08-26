@@ -1,7 +1,7 @@
 import { motion } from 'motion/react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
-import { QuestWithTaxa } from '../../../types/types'
+import { QuestWithTaxa } from '../../../../types/types'
 import { paths } from '@/routes/paths'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 import { clsx } from 'clsx'

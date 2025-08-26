@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router'
 import api from '@/api/api'
-import { QuestCard } from '@/components/quest/QuestCard'
+import { QuestCard } from '@/features/quests/components/QuestCard'
 import { QuestWithTaxa } from '../../../../types/types'
 import { useCallback, useRef } from 'react'
 
