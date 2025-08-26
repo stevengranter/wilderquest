@@ -579,9 +579,10 @@ for (const questData of sampleQuests) {
     await new Promise((resolve) => setTimeout(resolve, 200))
 }
 
-db.end()
+db.end().then(()=> {
+    console.log('Seed completed!')
+    console.log(`Created ${users?.length} users with quests`)
+    console.log('Created admin user')
+    console.log('Created sample quests')})
 
-console.log('Seed completed!')
-console.log(`Created ${users?.length} users with quests`)
-console.log('Created admin user')
-console.log('Created sample quests')
+
