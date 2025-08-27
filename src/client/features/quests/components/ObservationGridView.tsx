@@ -47,7 +47,8 @@ function ProgressiveObservationImage({
                 alt="Observation"
                 className={cn(
                     'w-full h-full object-cover',
-                    isBlurred && 'filter blur-sm scale-110 transition-all duration-500'
+                    isBlurred &&
+                        'filter blur-sm scale-110 transition-all duration-500'
                 )}
             />
         </div>
@@ -156,17 +157,17 @@ export function ObservationGridView({
                                         {/*        delay: index * 0.15 + 0.4,*/}
                                         {/*    }}*/}
                                         {/*>*/}
-                                            <p className="font-medium truncate line-clamp-1">
-                                                {obs.user.login}
+                                        <p className="font-medium truncate line-clamp-1">
+                                            {obs.user.login}
+                                        </p>
+                                        <p className="text-gray-500 line-clamp-1">
+                                            {obs.observed_on_string}
+                                        </p>
+                                        {obs.place_guess && (
+                                            <p className="text-gray-500 truncate text-[10px] line-clamp-1">
+                                                📍 {obs.place_guess}
                                             </p>
-                                            <p className="text-gray-500 line-clamp-1">
-                                                {obs.observed_on_string}
-                                            </p>
-                                            {obs.place_guess && (
-                                                <p className="text-gray-500 truncate text-[10px] line-clamp-1">
-                                                    📍 {obs.place_guess}
-                                                </p>
-                                            )}
+                                        )}
                                         {/*</motion.div>*/}
                                     </div>
                                 </motion.div>
@@ -264,7 +265,7 @@ export function ObservationGridView({
                     style={{
                         left: '-60px',
                         top: '50%',
-                        transform: 'translateY(-50%)'
+                        transform: 'translateY(-50%)',
                     }}
                     onClick={handlePrev}
                 >
@@ -277,7 +278,7 @@ export function ObservationGridView({
                     style={{
                         right: '-60px',
                         top: '50%',
-                        transform: 'translateY(-50%)'
+                        transform: 'translateY(-50%)',
                     }}
                     onClick={handleNext}
                 >

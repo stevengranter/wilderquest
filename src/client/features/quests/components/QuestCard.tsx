@@ -99,7 +99,8 @@ function QuestCardContent({
                             {totalTaxaCount > 0 ? (
                                 Array.from({ length: gridSlotCount }).map(
                                     (_, i) => {
-                                        const isLastSlot = i === gridSlotCount - 1
+                                        const isLastSlot =
+                                            i === gridSlotCount - 1
                                         const shouldShowOverlay =
                                             totalTaxaCount > 6 && isLastSlot
                                         const photoSrc = photos?.[i]
@@ -139,9 +140,7 @@ function QuestCardContent({
                                     }
                                 )
                             ) : (
-                                <p className="text-gray-500">
-                                    No wildlife yet
-                                </p>
+                                <p className="text-gray-500">No wildlife yet</p>
                             )}
                         </div>
                     </CardContent>

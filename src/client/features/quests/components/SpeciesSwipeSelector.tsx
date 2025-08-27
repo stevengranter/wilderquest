@@ -155,11 +155,8 @@ export function SpeciesSwipeSelector({
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
-
-
             {/* Left Column - Swipe Interface */}
             <div className="flex flex-col lg:col-span-2 order-2 lg:order-1">
-
                 {/*<h3 className="text-lg font-semibold">Add New Species</h3>*/}
                 <div className="flex flex-col items-center justify-center">
                     <div className="flex items-center justify-center w-full">
@@ -195,9 +192,7 @@ export function SpeciesSwipeSelector({
                             <SwipeCard
                                 key={currentSpecies?.taxon.id}
                                 species={currentSpecies}
-                                onSwipeComplete={
-                                    handleSwipeComplete as any
-                                }
+                                onSwipeComplete={handleSwipeComplete as any}
                                 locationData={{
                                     latitude: lat,
                                     longitude: lon,
@@ -269,8 +264,6 @@ export function SpeciesSwipeSelector({
 
                 {/* Progress Indicator */}
                 <div className="mb-4 text-center space-y-3">
-
-
                     {/* Progress bar */}
                     <div className="w-full bg-gray-200 rounded-full h-2">
                         <div

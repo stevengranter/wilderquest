@@ -22,7 +22,7 @@ interface SpeciesCardWithObservationsProps {
 }
 
 export function SpeciesCardWithObservations(
-    props: SpeciesCardWithObservationsProps,
+    props: SpeciesCardWithObservationsProps
 ) {
     const { species, questData, locationData, children, found, actionArea } =
         props

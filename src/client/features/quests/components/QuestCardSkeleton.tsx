@@ -15,5 +15,5 @@ export function QuestCardSkeleton() {
                 <Skeleton className="h-4 w-1/4 animate-pulse" />
             </CardFooter>
         </Card>
-    );
+    )
 }

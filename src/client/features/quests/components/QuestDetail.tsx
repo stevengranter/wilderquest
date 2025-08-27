@@ -16,9 +16,9 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
     const initialData = useLoaderData()
 
     useEffect(() => {
-        console.log("initialData: ")
+        console.log('initialData: ')
         console.log(initialData)
-    },[initialData])
+    }, [initialData])
 
     const {
         questData,
@@ -37,7 +37,7 @@ export default function QuestDetail({ questId: propQuestId }: QuestProps) {
     } = useQuest({ questId: activeQuestId, initialData })
 
     useEffect(() => {
-        console.log("Quest Data:")
+        console.log('Quest Data:')
         console.log(questData)
     }, [])
 

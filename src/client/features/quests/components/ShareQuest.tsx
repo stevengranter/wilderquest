@@ -67,7 +67,8 @@ export function ShareQuest({
         try {
             const payload: { guest_name?: string; expires_at?: string } = {}
             if (guestName) payload.guest_name = guestName
-            if (expiresAt) payload.expires_at = new Date(expiresAt).toISOString()
+            if (expiresAt)
+                payload.expires_at = new Date(expiresAt).toISOString()
             const res = await api.post(
                 `/quest-sharing/quests/${questId}/shares`,
                 payload
@@ -101,9 +102,7 @@ export function ShareQuest({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button size="sm">
-                    Share Quest
-                </Button>
+                <Button size="sm">Share Quest</Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
@@ -156,7 +155,9 @@ export function ShareQuest({
                                     className="border rounded-base p-3 flex flex-col gap-2"
                                 >
                                     <div className="text-sm break-all">
-                                        <span className="font-medium">Link:</span>{' '}
+                                        <span className="font-medium">
+                                            Link:
+                                        </span>{' '}
                                         <a
                                             href={buildShareLink(s.token)}
                                             className="underline"
@@ -171,7 +172,10 @@ export function ShareQuest({
                                     ) : null}
                                     {s.expires_at ? (
                                         <div className="text-xs text-muted-foreground">
-                                            Expires: {new Date(s.expires_at).toLocaleString()}
+                                            Expires:{' '}
+                                            {new Date(
+                                                s.expires_at
+                                            ).toLocaleString()}
                                         </div>
                                     ) : null}
                                     <div className="flex gap-2">
@@ -204,6 +208,3 @@ export function ShareQuest({
 }
 
 export default ShareQuest
-
-
-

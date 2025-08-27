@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Camera } from 'lucide-react'
 import { ClientQuest } from './SpeciesCardWithObservations'
-import { AggregatedProgress, DetailedProgress, Share } from '../types'
+import { AggregatedProgress, DetailedProgress, QuestMapping, QuestStatus, Share } from '../types'
 import { INatTaxon } from '@shared/types/iNatTypes'
 import api from '@/api/api'
 import { toast } from 'sonner'
@@ -13,7 +13,7 @@ import { User } from '../../../../server/models/user'
 import { JSX } from 'react'
 
 type TaxaWithProgress = INatTaxon & {
-    mapping?: any
+    mapping?: QuestMapping
     progressCount: number
     recentEntries: DetailedProgress[]
 }
@@ -27,7 +27,7 @@ type QuestListViewProps = {
     user?: User | null
     detailedProgress?: DetailedProgress[]
     aggregatedProgress?: AggregatedProgress[]
-    updateStatus: (status: any) => void
+    updateStatus: (status: QuestStatus) => void
 }
 
 function SpeciesListCard(props: {
@@ -223,7 +223,7 @@ export const QuestListView = ({
                                     ? 'Marked as found!'
                                     : 'Marked as not found'
                             )
-                        } catch (error) {
+                        } catch (_error) {
                             toast.error('Failed to update progress')
                         }
                     }}

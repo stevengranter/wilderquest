@@ -83,8 +83,14 @@ export default function EditQuest() {
                         ? parseFloat(quest.longitude)
                         : null,
                     isPrivate: !!quest.is_private,
-                    starts_at: quest.starts_at ? new Date(quest.starts_at).toISOString().substring(0, 16) : '',
-                    ends_at: quest.ends_at ? new Date(quest.ends_at).toISOString().substring(0, 16) : '',
+                    starts_at: quest.starts_at
+                        ? new Date(quest.starts_at)
+                              .toISOString()
+                              .substring(0, 16)
+                        : '',
+                    ends_at: quest.ends_at
+                        ? new Date(quest.ends_at).toISOString().substring(0, 16)
+                        : '',
                 })
                 if (quest.taxon_ids?.length) {
                     setInitialTaxonIds(quest.taxon_ids)
@@ -178,53 +184,55 @@ export default function EditQuest() {
     )
 
     const onSubmit = async (data: QuestFormValues) => {
-    setIsLoading(true)
-    const taxon_ids = taxa.map((t) => t.id)
-    const payload = {
-        name: data.questName,
-        location_name: data.locationName,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        is_private: data.isPrivate,
-        starts_at: data.starts_at || null,
-        ends_at: data.ends_at || null,
-        taxon_ids,
-    }
-    try {
-        await api.patch(`/quests/${questId}`, payload)
-
-        const numericQuestId = questId ? parseInt(questId, 10) : undefined
-
-        if (numericQuestId) {
-            // First, invalidate the main quest data.
-            // This ensures the cache has the updated taxon_ids.
-            await queryClient.invalidateQueries({ queryKey: ['quest', questId] })
-
-            // Now, invalidate the dependent queries.
-            await Promise.all([
-                queryClient.invalidateQueries({
-                    queryKey: ['taxa', numericQuestId],
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: ['progress', numericQuestId],
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: ['leaderboard', numericQuestId],
-                }),
-            ])
+        setIsLoading(true)
+        const taxon_ids = taxa.map((t) => t.id)
+        const payload = {
+            name: data.questName,
+            location_name: data.locationName,
+            latitude: data.latitude,
+            longitude: data.longitude,
+            is_private: data.isPrivate,
+            starts_at: data.starts_at || null,
+            ends_at: data.ends_at || null,
+            taxon_ids,
         }
+        try {
+            await api.patch(`/quests/${questId}`, payload)
 
-        toast.success('Quest Updated', {
-            description: 'Your quest has been successfully updated.',
-        })
-        navigate(`/quests/${questId}`)
-    } catch (err) {
-        console.error('Failed to update quest.', err)
-        toast.error('Failed to update quest.')
-    } finally {
-        setIsLoading(false)
+            const numericQuestId = questId ? parseInt(questId, 10) : undefined
+
+            if (numericQuestId) {
+                // First, invalidate the main quest data.
+                // This ensures the cache has the updated taxon_ids.
+                await queryClient.invalidateQueries({
+                    queryKey: ['quest', questId],
+                })
+
+                // Now, invalidate the dependent queries.
+                await Promise.all([
+                    queryClient.invalidateQueries({
+                        queryKey: ['taxa', numericQuestId],
+                    }),
+                    queryClient.invalidateQueries({
+                        queryKey: ['progress', numericQuestId],
+                    }),
+                    queryClient.invalidateQueries({
+                        queryKey: ['leaderboard', numericQuestId],
+                    }),
+                ])
+            }
+
+            toast.success('Quest Updated', {
+                description: 'Your quest has been successfully updated.',
+            })
+            navigate(`/quests/${questId}`)
+        } catch (err) {
+            console.error('Failed to update quest.', err)
+            toast.error('Failed to update quest.')
+        } finally {
+            setIsLoading(false)
+        }
     }
-}
 
     const handleSpeciesAdded = (species: SpeciesCountItem) => {
         console.log('Added species:', species.taxon.preferred_common_name)
@@ -244,60 +252,52 @@ export default function EditQuest() {
                 {/*    </CardHeader>*/}
                 {/*    <CardContent>*/}
                 <h1>Edit quest</h1>
-                        <FormProvider {...form}>
-                            <form
-                                onSubmit={form.handleSubmit(onSubmit)}
-                                className="space-y-8"
-                            >
-                                <QuestDetails />
+                <FormProvider {...form}>
+                    <form
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-8"
+                    >
+                        <QuestDetails />
 
-                                <div className="space-y-6">
-                                    <div className="text-center">
-                                        <h3 className="text-lg font-semibold mb-2">
-                                            Edit Quest Species
-                                        </h3>
-                                        {/*<p className="text-gray-600 text-sm">*/}
-                                        {/*    Swipe through available species*/}
-                                        {/*    to add new ones. Click existing*/}
-                                        {/*    thumbnails above to remove them.*/}
-                                        {/*</p>*/}
-                                        {/*{questSpeciesMap.size > 0 && (*/}
-                                        {/*    <p className="text-xs text-blue-600 mt-1">*/}
-                                        {/*        💡 Your current{' '}*/}
-                                        {/*        {questSpeciesMap.size}{' '}*/}
-                                        {/*        species are shown as*/}
-                                        {/*        thumbnails above*/}
-                                        {/*    </p>*/}
-                                        {/*)}*/}
-                                    </div>
+                        <div className="space-y-6">
+                            <div className="text-center">
+                                <h3 className="text-lg font-semibold mb-2">
+                                    Edit Quest Species
+                                </h3>
+                                {/*<p className="text-gray-600 text-sm">*/}
+                                {/*    Swipe through available species*/}
+                                {/*    to add new ones. Click existing*/}
+                                {/*    thumbnails above to remove them.*/}
+                                {/*</p>*/}
+                                {/*{questSpeciesMap.size > 0 && (*/}
+                                {/*    <p className="text-xs text-blue-600 mt-1">*/}
+                                {/*        💡 Your current{' '}*/}
+                                {/*        {questSpeciesMap.size}{' '}*/}
+                                {/*        species are shown as*/}
+                                {/*        thumbnails above*/}
+                                {/*    </p>*/}
+                                {/*)}*/}
+                            </div>
 
-                                    <SpeciesSwipeSelector
-                                        questSpecies={
-                                            questSpeciesMap as any
-                                        }
-                                        setQuestSpecies={
-                                            syncQuestSpeciesToTaxa as any
-                                        }
-                                        onSpeciesAdded={handleSpeciesAdded}
-                                        onSpeciesRejected={
-                                            handleSpeciesRejected
-                                        }
-                                        editMode={true}
-                                    />
-                                </div>
+                            <SpeciesSwipeSelector
+                                questSpecies={questSpeciesMap as any}
+                                setQuestSpecies={syncQuestSpeciesToTaxa as any}
+                                onSpeciesAdded={handleSpeciesAdded}
+                                onSpeciesRejected={handleSpeciesRejected}
+                                editMode={true}
+                            />
+                        </div>
 
-                                <div className="flex justify-between items-center pt-6 border-t">
-                                    <div className="text-sm text-gray-600">
-                                        {taxa.length} species selected
-                                    </div>
-                                    <Button type="submit" disabled={isLoading}>
-                                        {isLoading
-                                            ? 'Saving...'
-                                            : 'Save Changes'}
-                                    </Button>
-                                </div>
-                            </form>
-                        </FormProvider>
+                        <div className="flex justify-between items-center pt-6 border-t">
+                            <div className="text-sm text-gray-600">
+                                {taxa.length} species selected
+                            </div>
+                            <Button type="submit" disabled={isLoading}>
+                                {isLoading ? 'Saving...' : 'Save Changes'}
+                            </Button>
+                        </div>
+                    </form>
+                </FormProvider>
                 {/*    </CardContent>*/}
                 {/*</Card>*/}
             </div>
@@ -378,8 +378,8 @@ function QuestDetails() {
                             <div className="space-y-1 leading-none">
                                 <FormLabel>Private</FormLabel>
                                 <FormDescription>
-                                    If checked, this quest will not be visible to
-                                    other users.
+                                    If checked, this quest will not be visible
+                                    to other users.
                                 </FormDescription>
                             </div>
                         </FormItem>

@@ -37,7 +37,8 @@ interface ObservationDialogProps {
 }
 
 export function ObservationDialog(props: ObservationDialogProps) {
-    const { species, latitude, longitude, locationName, children, found } = props
+    const { species, latitude, longitude, locationName, children, found } =
+        props
     const prefetchTaxonPhoto = usePrefetchTaxonPhoto()
     const [open, setOpen] = useState(false)
 
@@ -113,7 +114,8 @@ export function ObservationDialog(props: ObservationDialogProps) {
                             </DialogTitle>
                             <DialogDescription>
                                 <VisuallyHidden>
-                                    Recent observations located near: {locationName}
+                                    Recent observations located near:{' '}
+                                    {locationName}
                                 </VisuallyHidden>
                             </DialogDescription>
                         </DialogHeader>
@@ -157,11 +159,11 @@ function lockScroll() {
 type ViewMode = 'grid' | 'list' | 'map'
 
 function ObservationList({
-                             taxonId,
-                             lat,
-                             lon,
-                             locationName,
-                         }: {
+    taxonId,
+    lat,
+    lon,
+    locationName,
+}: {
     taxonId: number
     lat: number
     lon: number
@@ -197,13 +199,17 @@ function ObservationList({
                         Recent Observations ({observations?.length || 0})
                     </h3>
                     <div className="flex flex-row items-center">
-                        <MdOutlineLocationOn className="mr-1" /> {locationName}{' '}
+                        <MdOutlineLocationOn className="mr-1" /> {
+                            locationName
+                        }{' '}
                     </div>
                 </div>
                 <ToggleGroup
                     type="single"
                     value={viewMode}
-                    onValueChange={(value: ViewMode) => value && setViewMode(value)}
+                    onValueChange={(value: ViewMode) =>
+                        value && setViewMode(value)
+                    }
                     className="border-0 rounded-lg"
                 >
                     <ToggleGroupItem value="grid" aria-label="Grid view">
@@ -250,10 +256,14 @@ function ObservationList({
                             ) : observations && observations.length > 0 ? (
                                 <>
                                     {viewMode === 'grid' && (
-                                        <ObservationGridView observations={observations} />
+                                        <ObservationGridView
+                                            observations={observations}
+                                        />
                                     )}
                                     {viewMode === 'list' && (
-                                        <ObservationListView observations={observations} />
+                                        <ObservationListView
+                                            observations={observations}
+                                        />
                                     )}
                                     {viewMode === 'map' && (
                                         <ObservationMapView
@@ -269,7 +279,8 @@ function ObservationList({
                                     transition={{ duration: 0.4, delay: 0.3 }}
                                     className="text-center py-8 text-muted-foreground"
                                 >
-                                    No observations found for this species in this area.
+                                    No observations found for this species in
+                                    this area.
                                 </motion.p>
                             )}
                         </motion.div>

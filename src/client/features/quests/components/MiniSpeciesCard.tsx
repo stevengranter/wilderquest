@@ -162,8 +162,7 @@ export function MiniSpeciesCard({
                         {/* Header */}
                         <CardHeader className="p-0 pb-1">
                             <h4 className="text-sm font-semibold text-gray-800 line-clamp-1">
-                                {taxon.preferred_common_name ||
-                                    taxon.name}
+                                {taxon.preferred_common_name || taxon.name}
                             </h4>
                             {taxon.preferred_common_name && (
                                 <p className="text-xs text-gray-500 italic line-clamp-1">

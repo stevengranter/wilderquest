@@ -20,9 +20,9 @@ interface SpeciesCountResult {
 }
 
 export function SpeciesSelector({
-                                    selectedTaxa,
-                                    onToggleTaxon,
-                                }: SpeciesSelectorProps) {
+    selectedTaxa,
+    onToggleTaxon,
+}: SpeciesSelectorProps) {
     const { control } = useFormContext()
     const lat = useWatch({ control, name: 'latitude' })
     const lon = useWatch({ control, name: 'longitude' })
@@ -43,7 +43,10 @@ export function SpeciesSelector({
             lon,
             page,
             perPage,
-            selectedTaxa.map((t) => t.id).sort().join(','),
+            selectedTaxa
+                .map((t) => t.id)
+                .sort()
+                .join(','),
         ],
         queryFn: () =>
             getSpeciesCountsByGeoLocation(lat, lon, 10, page, perPage),
@@ -109,7 +112,9 @@ export function SpeciesSelector({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start max-h-[70vh] overflow-y-auto">
                     {speciesCounts?.map((s) => {
-                        const isAdded = selectedTaxa.some((t) => t.id === s.taxon.id)
+                        const isAdded = selectedTaxa.some(
+                            (t) => t.id === s.taxon.id
+                        )
                         const buttonKey = `${s.taxon.id}-${isAdded ? 'added' : 'not-added'}`
 
                         return (
@@ -118,7 +123,10 @@ export function SpeciesSelector({
                                 className="flex flex-col gap-2 h-fit"
                                 ref={(el) => {
                                     if (el) {
-                                        speciesCardRefs.current.set(s.taxon.id, el)
+                                        speciesCardRefs.current.set(
+                                            s.taxon.id,
+                                            el
+                                        )
                                     }
                                 }}
                                 data-species-card
@@ -137,9 +145,14 @@ export function SpeciesSelector({
                                         e.preventDefault()
                                         if (!isAdded) {
                                             const cardElement =
-                                                speciesCardRefs.current.get(s.taxon.id)
+                                                speciesCardRefs.current.get(
+                                                    s.taxon.id
+                                                )
                                             if (cardElement) {
-                                                triggerAnimation(s.taxon, cardElement)
+                                                triggerAnimation(
+                                                    s.taxon,
+                                                    cardElement
+                                                )
                                             }
                                         }
                                         onToggleTaxon(s.taxon)
