@@ -2,7 +2,7 @@
 
 import { type INatTaxon } from '@shared/types/iNatTypes'
 import { ExternalLink } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
+import { motion } from 'motion/react'
 import React, { useRef } from 'react'
 import getKingdomIcon from '@/components/search/getKingdomIcon'
 
@@ -161,27 +161,27 @@ function SpeciesGridItem({
     }
 
     return (
-        <AnimatePresence mode="wait">
-            <motion.div
-                key={species.id}
-                layout
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                transition={{
-                    layout: {
-                        duration: 0.4,
-                        type: 'spring',
-                        damping: 20,
-                        stiffness: 200,
-                    },
-                    default: { duration: 0.3 },
-                }}
-                whileTap={{ scale: 0.98 }}
-                className={cn('w-full cursor-pointer', className)}
-                onClick={handleClick}
-                ref={cardRef}
-            >
+        // <AnimatePresence mode="wait">
+        //     <motion.div
+        //         key={species.id}
+        //         layout
+        //         initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        //         animate={{ opacity: 1, y: 0, scale: 1 }}
+        //         exit={{ opacity: 0, y: -20, scale: 0.95 }}
+        //         transition={{
+        //             layout: {
+        //                 duration: 0.4,
+        //                 type: 'spring',
+        //                 damping: 20,
+        //                 stiffness: 200,
+        //             },
+        //             default: { duration: 0.3 },
+        //         }}
+        //         whileTap={{ scale: 0.98 }}
+        //         className={cn('w-full cursor-pointer', className)}
+        //         onClick={handleClick}
+        //         ref={cardRef}
+        //     >
                 <Card
                     className={cn(
                         'aspect-2.5/3.5 overflow-hidden duration-250 transition-all shadow-0 py-0 gap-0 border-1 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
@@ -270,8 +270,8 @@ function SpeciesGridItem({
                     </CardFooter>
                     {actionArea}
                 </Card>
-            </motion.div>
-        </AnimatePresence>
+        //     </motion.div>
+        // </AnimatePresence>
     )
 }
 

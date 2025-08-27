@@ -5,10 +5,10 @@ import React, { useEffect } from 'react'
 import { toast } from 'sonner'
 import api from '@/api/api'
 
-import { Quest } from '../../server/repositories/QuestRepository'
 
 import { AggregatedProgress, DetailedProgress } from '@/features/quests/types'
 import { INatTaxon } from '@shared/types/iNatTypes'
+import { Quest } from '../../server/models/quests'
 
 type TaxonMapping = { id: number; quest_id: number; taxon_id: number }
 type ProgressData = {
@@ -22,9 +22,9 @@ type GuestProgressData = {
 }
 
 export const fetchQuests = async ({
-    pageParam = 1,
-    questId,
-}: {
+                                      pageParam = 1,
+                                      questId,
+                                  }: {
     pageParam?: number
     questId?: string | number
 }): Promise<{ quests: Quest[]; nextPage: number | undefined }> => {
@@ -108,10 +108,10 @@ const fetchLeaderboardByToken = async (token: string) => {
 }
 
 export const useQuest = ({
-    questId,
-    token,
-    initialData,
-}: {
+                             questId,
+                             token,
+                             initialData,
+                         }: {
     questId?: string | number
     token?: string
     initialData?: { quest?: Quest; taxa?: INatTaxon[] }
@@ -140,6 +140,7 @@ export const useQuest = ({
         questQuery.isFetching || sharedQuestQuery.isFetching
     const isQuestSuccess = questQuery.isSuccess || sharedQuestQuery.isSuccess
 
+    // Option 1: Use regular useQuery instead of useInfiniteQuery
     const taxaQuery = useQuery({
         queryKey: ['taxa', quest?.id],
         queryFn: () => fetchTaxa(quest!.taxon_ids || []),
@@ -228,8 +229,10 @@ export const useQuest = ({
                     'sharedQuest',
                     token,
                 ])
-                const taxaData: INatTaxon[] | undefined =
-                    queryClient.getQueryData(['taxa', questId || token])
+                const taxaData: INatTaxon[] | undefined = queryClient.getQueryData([
+                    'taxa',
+                    quest.id,
+                ])
 
                 const guestName =
                     data.payload.guestName ||
@@ -272,7 +275,7 @@ export const useQuest = ({
                             borderWidth:0,
                             boxShadow:"none",
                             background:'none',
-                        outline:"none"}
+                            outline:"none"}
                         // style: {
                         //     width: '100vw',
                         //     maxWidth: '90vw',
@@ -310,9 +313,9 @@ export const useQuest = ({
     const finalProgress = questId
         ? progressQuery.data
         : {
-              ...guestProgressQuery.data,
-              mappings: sharedQuestQuery.data?.taxa_mappings,
-          }
+            ...guestProgressQuery.data,
+            mappings: sharedQuestQuery.data?.taxa_mappings,
+        }
 
     const leaderboard = token
         ? guestLeaderboardQuery.data
@@ -331,12 +334,14 @@ export const useQuest = ({
             leaderboardQuery.isLoading ||
             guestLeaderboardQuery.isLoading,
         isTaxaLoading,
-        isTaxaFetchingNextPage: taxaQuery.isFetchingNextPage,
-        taxaHasNextPage: taxaQuery.hasNextPage,
-        fetchNextTaxaPage: taxaQuery.fetchNextPage,
+        isTaxaFetchingNextPage: taxaQuery.isFetching, // Updated since we're not using infinite query
+        taxaHasNextPage: false, // Updated since we're not using infinite query
+        fetchNextTaxaPage: () => {}, // Updated since we're not using infinite query
         isError:
             questQuery.isError ||
             sharedQuestQuery.isError ||
+            progressQuery.isError ||
+            guestProgressQuery.isError ||
             leaderboardQuery.isError ||
             guestLeaderboardQuery.isError ||
             isTaxaError,
