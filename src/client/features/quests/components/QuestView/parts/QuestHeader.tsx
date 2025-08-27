@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { paths } from '@/routes/paths'
 import { ClientQuest } from '@/features/quests/components/SpeciesCardWithObservations'
 import ShareQuest from '@/features/quests/components/ShareQuest'
-import { QuestTimestamps } from '@/features/quests/components/QuestTimestamps'
+import { QuestTimestamps } from '@/features/quests/components/QuestView/parts/QuestTimestamps'
 
 type QuestHeaderProps = {
     questData: ClientQuest

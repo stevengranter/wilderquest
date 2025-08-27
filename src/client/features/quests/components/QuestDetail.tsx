@@ -1,6 +1,6 @@
 import { useLoaderData, useParams } from 'react-router'
 import { useQuest } from '@/hooks/useQuest'
-import { QuestView } from './QuestView'
+import { QuestView } from './QuestView/QuestView'
 import { useAuth } from '@/hooks/useAuth'
 import { useEffect } from 'react'
 

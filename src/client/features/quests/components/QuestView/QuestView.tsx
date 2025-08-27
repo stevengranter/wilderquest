@@ -11,12 +11,12 @@ import {
     Share,
 } from '@/features/quests/types'
 import { ClientQuest } from '@/features/quests/components/SpeciesCardWithObservations'
-import { useTaxaWithProgress } from '../hooks/useTaxaWithProgress'
-import { QuestHeader } from './QuestHeader'
-import { QuestLeaderboard } from './QuestLeaderboard'
-import { TaxaPieChart } from './TaxaPieChart'
-import { QuestSpecies } from './QuestSpecies'
-import { QuestControls } from './QuestControls'
+import { useTaxaWithProgress } from '../../hooks/useTaxaWithProgress'
+import { QuestHeader } from './parts/QuestHeader'
+import { QuestLeaderboard } from './parts/QuestLeaderboard'
+import { TaxaPieChart } from './parts/TaxaPieChart'
+import { QuestSpecies } from './parts/QuestSpecies'
+import { QuestControls } from './parts/QuestControls'
 
 type QuestViewProps = {
     questData: ClientQuest | null | undefined

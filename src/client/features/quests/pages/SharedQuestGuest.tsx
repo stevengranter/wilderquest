@@ -1,6 +1,6 @@
 import { useParams } from 'react-router'
 import { useQuest } from '@/hooks/useQuest'
-import { QuestView } from '@/features/quests/components/QuestView'
+import { QuestView } from '@/features/quests/components/QuestView/QuestView'
 
 export default function SharedQuestGuest() {
     const { token } = useParams();
