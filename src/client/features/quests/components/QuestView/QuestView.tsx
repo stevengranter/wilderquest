@@ -44,6 +44,7 @@ export const QuestView = ({
     aggregatedProgress,
     detailedProgress,
     isLoading,
+    isTaxaLoading,
     isTaxaFetchingNextPage,
     taxaHasNextPage,
     fetchNextTaxaPage,
@@ -112,6 +113,7 @@ export const QuestView = ({
                 taxa={taxa}
                 mappings={mappings}
                 updateStatus={updateStatus}
+                isTaxaLoading={isTaxaLoading}
             />
 
             {isOwner && (

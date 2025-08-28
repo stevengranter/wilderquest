@@ -8,30 +8,30 @@ import { MainMenu } from '@/components/MainMenu'
 
 export function AppLayout() {
     return (
-<>
+        <>
+            {/*<ScrollToTop />*/}
             <SearchProvider>
                 <SelectionProvider>
                     <div className="min-h-screen flex flex-col m-4">
-
                         <MainMenu />
 
-                    {/*<UserToolbar />*/}
-                    <Outlet />
-                    {/*<SidebarProvider defaultOpen={true}>*/}
-                    {/*    <div className='flex flex-row'>*/}
-                    {/*        /!*<AiAssistant />*!/*/}
-                    {/*        <SidebarInset className='p-6'>*/}
-                    {/*            <SidebarTrigger className='mr-2' />*/}
-                    {/*            <Outlet />*/}
-                    {/*        </SidebarInset>*/}
-                    {/*    </div>*/}
-                    {/*</SidebarProvider>*/}
-                    {/*<SelectionDrawer />*/}
+                        {/*<UserToolbar />*/}
+                        <Outlet />
+                        {/*<SidebarProvider defaultOpen={true}>*/}
+                        {/*    <div className='flex flex-row'>*/}
+                        {/*        /!*<AiAssistant />*!/*/}
+                        {/*        <SidebarInset className='p-6'>*/}
+                        {/*            <SidebarTrigger className='mr-2' />*/}
+                        {/*            <Outlet />*/}
+                        {/*        </SidebarInset>*/}
+                        {/*    </div>*/}
+                        {/*</SidebarProvider>*/}
+                        {/*<SelectionDrawer />*/}
                     </div>
                 </SelectionProvider>
             </SearchProvider>
             <Toaster />
-</>
+        </>
     )
 }
 

@@ -7,7 +7,7 @@ const queryClient = new QueryClient({
         queries: {
             // Cache data for 30 minutes to reduce API calls
             staleTime: 30 * 60 * 1000, // 30 minutes
-            cacheTime: 60 * 60 * 1000, // 1 hour
+            gcTime: 60 * 60 * 1000, // 1 hour (formerly cacheTime)
             // Retry configuration for rate limiting
             retry: (failureCount, error: any) => {
                 // Don't retry on rate limit errors (429)

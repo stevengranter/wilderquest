@@ -9,7 +9,7 @@ import api from '@/api/api'
 import { toast } from 'sonner'
 import { ObservationDialog } from './ObservationDialog'
 import { cn } from '@/lib/utils'
-import { User } from '../../../../server/models/user'
+import { LoggedInUser } from '@shared/types/authTypes'
 import { JSX } from 'react'
 import { AvatarOverlay } from './AvatarOverlay'
 
@@ -25,7 +25,7 @@ type QuestListViewProps = {
     isOwner: boolean
     token?: string
     share?: Share
-    user?: User | null
+    user?: LoggedInUser | null
     detailedProgress?: DetailedProgress[]
     aggregatedProgress?: AggregatedProgress[]
     updateStatus: (status: QuestStatus) => void
@@ -216,29 +216,31 @@ export const QuestListView = ({
                         e.preventDefault()
                         try {
                             let progress
+                            if (!taxon.mapping) return
+
                             if (isOwner) {
                                 progress = detailedProgress?.find(
                                     (p) =>
                                         p.display_name === user?.username &&
-                                        p.mapping_id === taxon.mapping.id
+                                        p.mapping_id === taxon.mapping!.id
                                 )
                             } else if (token) {
                                 progress = detailedProgress?.find(
                                     (p) =>
                                         p.display_name === share?.guest_name &&
-                                        p.mapping_id === taxon.mapping.id
+                                        p.mapping_id === taxon.mapping!.id
                                 )
                             }
                             const next = !progress
 
                             if (isOwner) {
                                 await api.post(
-                                    `/quest-sharing/quests/${questData.id}/progress/${taxon.mapping.id}`,
+                                    `/quest-sharing/quests/${questData.id}/progress/${taxon.mapping!.id}`,
                                     { observed: next }
                                 )
                             } else if (token) {
                                 await api.post(
-                                    `/quest-sharing/shares/token/${token}/progress/${taxon.mapping.id}`,
+                                    `/quest-sharing/shares/token/${token}/progress/${taxon.mapping!.id}`,
                                     { observed: next }
                                 )
                             }
