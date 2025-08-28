@@ -20,7 +20,9 @@ interface SpeciesCardWithObservationsProps {
     found?: boolean
     actionArea?: ReactNode
     avatarOverlay?: {
-        displayName: string
+        displayName?: string
+        displayNames?: string[]
+        firstFinder?: string
     } | null
 }
 

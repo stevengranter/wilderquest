@@ -462,16 +462,35 @@ export const useSpeciesProgress = ({
 
     const getAvatarOverlay = useCallback(
         (recentEntries: DetailedProgress[], questMode: string) => {
-            if (
-                (questMode === 'competitive' || questMode === 'cooperative') &&
-                recentEntries.length > 0
-            ) {
-                const mostRecentEntry = recentEntries.sort(
-                    (a, b) =>
-                        new Date(b.observed_at).getTime() -
-                        new Date(a.observed_at).getTime()
-                )[0]
-                return { displayName: mostRecentEntry.display_name }
+            if (recentEntries.length > 0) {
+                if (questMode === 'competitive') {
+                    // For competitive mode, show only the most recent finder
+                    const mostRecentEntry = recentEntries.sort(
+                        (a, b) =>
+                            new Date(b.observed_at).getTime() -
+                            new Date(a.observed_at).getTime()
+                    )[0]
+                    return { displayName: mostRecentEntry.display_name }
+                } else if (questMode === 'cooperative') {
+                    // For cooperative mode, show all users who found it
+                    const uniqueDisplayNames = [
+                        ...new Set(
+                            recentEntries.map((entry) => entry.display_name)
+                        ),
+                    ]
+
+                    // Find the first finder (earliest observation)
+                    const firstFinderEntry = recentEntries.sort(
+                        (a, b) =>
+                            new Date(a.observed_at).getTime() -
+                            new Date(b.observed_at).getTime()
+                    )[0]
+
+                    return {
+                        displayNames: uniqueDisplayNames,
+                        firstFinder: firstFinderEntry.display_name,
+                    }
+                }
             }
             return null
         },

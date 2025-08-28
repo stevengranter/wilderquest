@@ -1,18 +1,92 @@
 import avatar from 'animal-avatar-generator'
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
+import { cn } from '@/lib/utils'
 
 interface AvatarOverlayProps {
-    displayName: string
+    displayName?: string
+    displayNames?: string[]
+    firstFinder?: string
     size?: number
     className: string
 }
 
-export function AvatarOverlay({ displayName, size = 32, className }: AvatarOverlayProps) {
-    const avatarSvg = avatar(displayName, { size })
+export function AvatarOverlay({
+    displayName,
+    displayNames,
+    firstFinder,
+    size = 32,
+    className,
+}: AvatarOverlayProps) {
+    // Support both single displayName (backward compatibility) and multiple displayNames
+    const names = displayNames || (displayName ? [displayName] : [])
+
+    if (names.length === 0) return null
+
+    // For multiple names, show up to 3 avatars in a horizontal line
+    if (names.length > 1) {
+        // Reorder names so first finder appears first (on top)
+        let orderedNames = [...names]
+        if (firstFinder && names.includes(firstFinder)) {
+            orderedNames = [
+                firstFinder,
+                ...names.filter((name) => name !== firstFinder),
+            ]
+        }
+
+        const displayCount = Math.min(orderedNames.length, 3)
+        const avatars = orderedNames
+            .slice(0, displayCount)
+            .map((name, index) => {
+                const avatarSvg = avatar(name, { size })
+                const isFirstFinder = firstFinder && name === firstFinder
+
+                return (
+                    <Avatar
+                        key={name}
+                        className={cn(
+                            className,
+                            'border-3 outline-0',
+                            isFirstFinder
+                                ? 'border-yellow-400 !border-solid'
+                                : 'border-white !border-solid',
+                            index > 0 && '-ml-2', // Overlap each avatar slightly
+                            `z-${10 - index}` // Higher z-index for avatars on the left
+                        )}
+                    >
+                        <AvatarImage
+                            src={`data:image/svg+xml;utf8,${encodeURIComponent(avatarSvg)}`}
+                        />
+                    </Avatar>
+                )
+            })
+
+        return (
+            <div className="flex items-center">
+                {avatars}
+                {names.length > 3 && (
+                    <div className="ml-1 bg-gray-800 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
+                        +{names.length - 3}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
+    // Single avatar (original behavior)
+    const avatarSvg = avatar(names[0], { size })
+    const isFirstFinder = firstFinder && names[0] === firstFinder
 
     return (
-        <Avatar className={className}>
-            <AvatarImage src={`data:image/svg+xml;utf8,${encodeURIComponent(avatarSvg)}`} />
+        <Avatar
+            className={cn(
+                className,
+                'border-2 outline-0',
+                isFirstFinder ? 'border-yellow-400' : 'border-white'
+            )}
+        >
+            <AvatarImage
+                src={`data:image/svg+xml;utf8,${encodeURIComponent(avatarSvg)}`}
+            />
         </Avatar>
     )
 }

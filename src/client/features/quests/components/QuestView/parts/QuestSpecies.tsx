@@ -122,6 +122,17 @@ export const QuestSpecies = ({
                 return null
             }
 
+            // Check if current user has already marked this species as found
+            const currentUserDisplayName = isOwner
+                ? user?.username
+                : share?.guest_name
+
+            const userHasFound = detailedProgress?.some(
+                (progress) =>
+                    progress.mapping_id === taxon.mapping?.id &&
+                    progress.display_name === currentUserDisplayName
+            )
+
             return (
                 <div className="p-2">
                     <Button
@@ -133,12 +144,20 @@ export const QuestSpecies = ({
                             handleProgressUpdateWrapper(taxon)
                         }}
                     >
-                        Found
+                        {userHasFound ? 'Mark as unfound' : 'Found'}
                     </Button>
                 </div>
             )
         },
-        [canInteract, questData.status, handleProgressUpdateWrapper]
+        [
+            canInteract,
+            questData.status,
+            handleProgressUpdateWrapper,
+            isOwner,
+            user?.username,
+            share?.guest_name,
+            detailedProgress,
+        ]
     )
 
     // Extract skeleton rendering

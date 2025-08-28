@@ -98,7 +98,7 @@ export const QuestView = () => {
                 }))} // Convert TaxonMapping to QuestMapping
                 updateStatus={updateStatus || (() => {})} // Provide fallback for undefined
                 isTaxaLoading={isTaxaLoading}
-                user={user}
+                user={user || undefined}
             />
 
             {canEdit && updateStatus && (

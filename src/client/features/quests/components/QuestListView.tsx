@@ -52,19 +52,36 @@ function SpeciesListCard(props: {
 
     // Determine avatar overlay for competitive/cooperative quests
     let avatarOverlay = null
-    if (
-        (props.questMode === 'competitive' ||
-            props.questMode === 'cooperative') &&
-        props.taxon.recentEntries.length > 0
-    ) {
-        // Get the most recent finder
-        const mostRecentEntry = props.taxon.recentEntries.sort(
-            (a, b) =>
-                new Date(b.observed_at).getTime() -
-                new Date(a.observed_at).getTime()
-        )[0]
-        avatarOverlay = {
-            displayName: mostRecentEntry.display_name,
+    if (props.taxon.recentEntries.length > 0) {
+        if (props.questMode === 'competitive') {
+            // For competitive mode, show only the most recent finder
+            const mostRecentEntry = props.taxon.recentEntries.sort(
+                (a, b) =>
+                    new Date(b.observed_at).getTime() -
+                    new Date(a.observed_at).getTime()
+            )[0]
+            avatarOverlay = {
+                displayName: mostRecentEntry.display_name,
+            }
+        } else if (props.questMode === 'cooperative') {
+            // For cooperative mode, show all users who found it
+            const uniqueDisplayNames = [
+                ...new Set(
+                    props.taxon.recentEntries.map((entry) => entry.display_name)
+                ),
+            ]
+
+            // Find the first finder (earliest observation)
+            const firstFinderEntry = props.taxon.recentEntries.sort(
+                (a, b) =>
+                    new Date(a.observed_at).getTime() -
+                    new Date(b.observed_at).getTime()
+            )[0]
+
+            avatarOverlay = {
+                displayNames: uniqueDisplayNames,
+                firstFinder: firstFinderEntry.display_name,
+            }
         }
     }
 
@@ -92,8 +109,10 @@ function SpeciesListCard(props: {
                     {avatarOverlay && (
                         <AvatarOverlay
                             displayName={avatarOverlay.displayName}
+                            displayNames={avatarOverlay.displayNames}
+                            firstFinder={avatarOverlay.firstFinder}
                             size={24}
-                            className="w-6 h-6"
+                            className="w-6 h-6 border-0"
                         />
                     )}
                 </div>

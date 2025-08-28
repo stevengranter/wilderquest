@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { LeaderboardEntry } from '@/features/quests/types'
+import { AvatarOverlay } from '../../AvatarOverlay'
 
 type QuestLeaderboardProps = {
     leaderboard: LeaderboardEntry[] | undefined
@@ -19,13 +20,22 @@ export const QuestLeaderboard = ({ leaderboard }: QuestLeaderboardProps) => {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="flex justify-between items-center p-2 bg-gray-100 rounded-md"
+                                    className="flex justify-between items-center p-3 bg-gray-100 rounded-md"
                                 >
-                                    <span className="font-medium">
-                                        {index + 1}.{' '}
-                                        {entry.display_name || 'Anonymous'}
-                                    </span>
-                                    <span className="text-sm">
+                                    <div className="flex items-center gap-3">
+                                        <AvatarOverlay
+                                            displayName={
+                                                entry.display_name ||
+                                                'Anonymous'
+                                            }
+                                            className="w-14 h-14 border-0"
+                                        />
+                                        <span className="font-medium">
+                                            {index + 1}.{' '}
+                                            {entry.display_name || 'Anonymous'}
+                                        </span>
+                                    </div>
+                                    <span className="text-sm text-gray-600">
                                         {entry.observation_count} taxa found
                                     </span>
                                 </motion.div>

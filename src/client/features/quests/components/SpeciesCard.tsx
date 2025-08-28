@@ -28,7 +28,9 @@ interface SpeciesCardProps {
     hasShadow?: boolean
     actionArea?: React.ReactNode
     avatarOverlay?: {
-        displayName: string
+        displayName?: string
+        displayNames?: string[]
+        firstFinder?: string
     } | null
 }
 
@@ -150,7 +152,9 @@ function SpeciesGridItem({
     hasShadow?: boolean
     actionArea?: React.ReactNode
     avatarOverlay?: {
-        displayName: string
+        displayName?: string
+        displayNames?: string[]
+        firstFinder?: string
     } | null
 }) {
     const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
@@ -281,10 +285,12 @@ function SpeciesGridItem({
                 {actionArea}
             </Card>
             {avatarOverlay && (
-                <div className="absolute bottom-2 right-8 z-40">
+                <div className="absolute bottom-4 right-8 z-40">
                     <AvatarOverlay
                         displayName={avatarOverlay.displayName}
-                        className="w-12 h-12 border-1 transform translate-x-1/2 translate-y-1/2"
+                        displayNames={avatarOverlay.displayNames}
+                        firstFinder={avatarOverlay.firstFinder}
+                        className="w-12 h-12 transform translate-x-1/2 translate-y-1/2"
                     />
                 </div>
             )}
