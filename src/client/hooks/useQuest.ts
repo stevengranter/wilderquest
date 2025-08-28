@@ -4,6 +4,7 @@ import { chunk } from 'lodash'
 import React, { useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import api from '@/api/api'
+import { useAuth } from '@/hooks/useAuth'
 
 import { AggregatedProgress, DetailedProgress, QuestMapping } from '@/features/quests/types'
 import { INatTaxon } from '@shared/types/iNatTypes'
@@ -398,12 +399,16 @@ export const useQuestDisplay = ({
     token?: string
     initialData?: { quest?: any; taxa?: INatTaxon[] }
 }): QuestDataResult & { isOwner: boolean; canEdit: boolean } => {
+    const { isAuthenticated, user } = useAuth()
     const questData: QuestDataResult = questId
         ? useQuestOwner({ questId, initialData })
         : useQuestGuest({ token: token! })
 
     // Common display logic can be added here
-    const isOwner = !!questId // Owner access when questId is provided
+    const isOwner =
+        !!questId &&
+        isAuthenticated &&
+        questData.questData?.user_id === user?.id // Owner access when questId is provided AND user is authenticated AND owns the quest
     const canEdit = isOwner && questData.questData?.status !== 'ended'
 
     return {
