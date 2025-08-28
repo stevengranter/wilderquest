@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import api from '@/api/api'
 import { INatTaxon } from '../../shared/types/iNatTypes'
 import { QuestWithTaxa } from '../../types/types'
@@ -7,208 +8,132 @@ interface QuestWithPhoto extends QuestWithTaxa {
     photoUrl?: string | null
 }
 
-/**
- * Hook to fetch quests with their photos efficiently using React Query
- */
-export function useQuestsWithPhotos(questsEnabled = true) {
-    // First, fetch the quests
-    const questsQuery = useQuery({
-        queryKey: ['publicQuests'],
-        queryFn: async (): Promise<QuestWithTaxa[]> => {
-            const response = await api.get('/quests')
-            return response.data
-        },
-        enabled: questsEnabled,
-        staleTime: 5 * 60 * 1000, // 5 minutes for quest data
-        cacheTime: 30 * 60 * 1000, // 30 minutes
-    })
-
-    // Then fetch photos for each quest
-    const questsWithPhotosQuery = useQuery({
-        queryKey: ['questsWithPhotos', questsQuery.data?.map((q) => q.id)],
-        queryFn: async (): Promise<QuestWithPhoto[]> => {
-            const quests = questsQuery.data || []
-            const questsWithPhotos: QuestWithPhoto[] = []
-
-            // Process quests in small batches to respect rate limits
-            const batchSize = 3
-            for (let i = 0; i < quests.length; i += batchSize) {
-                const batch = quests.slice(i, i + batchSize)
-
-                const batchPromises = batch.map(async (quest) => {
-                    const questWithPhoto: QuestWithPhoto = { ...quest }
-
-                    if (quest.taxon_ids && quest.taxon_ids.length > 0) {
+async function fetchAndAssignPhotos(
+    quests: QuestWithTaxa[],
+    queryClient: any,
+    queryKey: any,
+    setIsPhotosLoading: (isLoading: boolean) => void,
+) {
+    setIsPhotosLoading(true)
+    const batchSize = 3
+    for (let i = 0; i < quests.length; i += batchSize) {
+        const batch = quests.slice(i, i + batchSize)
+        const batchPromises = batch.map(async (quest) => {
+            if (quest.taxon_ids && quest.taxon_ids.length > 0) {
+                try {
+                    const selectedIds = quest.taxon_ids.slice(0, 3)
+                    for (const taxonId of selectedIds) {
                         try {
-                            // Try first 3 taxon IDs to find a photo
-                            const selectedIds = quest.taxon_ids.slice(0, 3)
-
-                            for (const taxonId of selectedIds) {
-                                try {
-                                    const response = await api.get(
-                                        `/iNatAPI/taxa/${taxonId}`
-                                    )
-                                    const taxa: INatTaxon[] =
-                                        response.data.results || []
-
-                                    if (taxa[0]?.default_photo?.medium_url) {
-                                        questWithPhoto.photoUrl =
-                                            taxa[0].default_photo.medium_url
-                                        break // Use first photo found
-                                    }
-                                } catch (error) {
-                                    console.warn(
-                                        `Failed to fetch taxon ${taxonId}:`,
-                                        error
-                                    )
-                                    // Continue to next taxon
+                            const response = await api.get(`/iNatAPI/taxa/${taxonId}`)
+                            const taxa: INatTaxon[] = response.data.results || []
+                            if (taxa[0]?.default_photo?.medium_url) {
+                                return {
+                                    ...quest,
+                                    photoUrl: taxa[0].default_photo.medium_url,
                                 }
                             }
                         } catch (error) {
-                            console.warn(
-                                `Failed to fetch photo for quest ${quest.id}:`,
-                                error
-                            )
-                            questWithPhoto.photoUrl = null
+                            console.warn(`Failed to fetch taxon ${taxonId}:`, error)
                         }
-                    } else {
-                        questWithPhoto.photoUrl = null
                     }
-
-                    return questWithPhoto
-                })
-
-                const batchResults = await Promise.all(batchPromises)
-                questsWithPhotos.push(...batchResults)
-
-                // Add delay between batches to respect rate limits
-                if (i + batchSize < quests.length) {
-                    await new Promise((resolve) => setTimeout(resolve, 500))
+                } catch (error) {
+                    console.warn(`Failed to fetch photo for quest ${quest.id}:`, error)
                 }
             }
+            return { ...quest, photoUrl: null }
+        })
 
-            return questsWithPhotos
+        const batchResults = await Promise.all(batchPromises)
+
+        queryClient.setQueryData(queryKey, (oldData: QuestWithTaxa[] | undefined) => {
+            if (!oldData) return []
+            return oldData.map((quest) => {
+                const updatedQuest = batchResults.find((q) => q.id === quest.id)
+                return updatedQuest || quest
+            })
+        })
+
+        if (i + batchSize < quests.length) {
+            await new Promise((resolve) => setTimeout(resolve, 500))
+        }
+    }
+    setIsPhotosLoading(false)
+}
+
+export function useQuestsWithPhotos(questsEnabled = true) {
+    const queryClient = useQueryClient()
+    const queryKey = ['publicQuests']
+    const [isPhotosLoading, setIsPhotosLoading] = useState(false)
+
+    const questsQuery = useQuery<QuestWithPhoto[]>({
+        queryKey,
+        queryFn: async () => {
+            const response = await api.get('/quests')
+            return response.data.map((quest: QuestWithTaxa) => ({
+                ...quest,
+                photoUrl: undefined,
+            }))
         },
-        enabled: !!questsQuery.data && questsQuery.data.length > 0,
-        staleTime: 30 * 60 * 1000, // 30 minutes
-        cacheTime: 60 * 60 * 1000, // 1 hour
-        retry: (failureCount, error: any) => {
-            if (error?.response?.status === 429) return false
-            return failureCount < 1
-        },
-        retryDelay: 2000,
+        enabled: questsEnabled,
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 30 * 60 * 1000,
     })
 
+    useEffect(() => {
+        if (questsQuery.data) {
+            fetchAndAssignPhotos(
+                questsQuery.data,
+                queryClient,
+                queryKey,
+                setIsPhotosLoading
+            )
+        }
+    }, [questsQuery.data, queryClient])
+
     return {
-        data: questsWithPhotosQuery.data || [],
-        isLoading: questsQuery.isLoading || questsWithPhotosQuery.isLoading,
-        isError: questsQuery.isError || questsWithPhotosQuery.isError,
-        error: questsQuery.error || questsWithPhotosQuery.error,
-        questsOnly: questsQuery.data || [],
-        photosLoading: questsWithPhotosQuery.isLoading,
+        data: questsQuery.data || [],
+        isLoading: questsQuery.isLoading,
+        isError: questsQuery.isError,
+        error: questsQuery.error,
+        isPhotosLoading,
     }
 }
 
-/**
- * Hook to fetch user quests with photos
- */
 export function useUserQuestsWithPhotos(userId: number | undefined) {
-    // First, fetch the user's quests
-    const questsQuery = useQuery({
-        queryKey: ['userQuests', userId],
-        queryFn: async (): Promise<QuestWithTaxa[]> => {
+    const queryClient = useQueryClient()
+    const queryKey = ['userQuests', userId]
+    const [isPhotosLoading, setIsPhotosLoading] = useState(false)
+
+    const questsQuery = useQuery<QuestWithPhoto[]>({
+        queryKey,
+        queryFn: async () => {
             const response = await api.get(`/quests/user/${userId}`)
-            return response.data
+            return response.data.map((quest: QuestWithTaxa) => ({
+                ...quest,
+                photoUrl: undefined,
+            }))
         },
         enabled: !!userId,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        cacheTime: 30 * 60 * 1000, // 30 minutes
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 30 * 60 * 1000,
     })
 
-    // Then fetch photos for each quest
-    const questsWithPhotosQuery = useQuery({
-        queryKey: [
-            'userQuestsWithPhotos',
-            userId,
-            questsQuery.data?.map((q) => q.id),
-        ],
-        queryFn: async (): Promise<QuestWithPhoto[]> => {
-            const quests = questsQuery.data || []
-            const questsWithPhotos: QuestWithPhoto[] = []
-
-            // Process quests in small batches
-            const batchSize = 3
-            for (let i = 0; i < quests.length; i += batchSize) {
-                const batch = quests.slice(i, i + batchSize)
-
-                const batchPromises = batch.map(async (quest) => {
-                    const questWithPhoto: QuestWithPhoto = { ...quest }
-
-                    if (quest.taxon_ids && quest.taxon_ids.length > 0) {
-                        try {
-                            const selectedIds = quest.taxon_ids.slice(0, 3)
-
-                            for (const taxonId of selectedIds) {
-                                try {
-                                    const response = await api.get(
-                                        `/iNatAPI/taxa/${taxonId}`
-                                    )
-                                    const taxa: INatTaxon[] =
-                                        response.data.results || []
-
-                                    if (taxa[0]?.default_photo?.medium_url) {
-                                        questWithPhoto.photoUrl =
-                                            taxa[0].default_photo.medium_url
-                                        break
-                                    }
-                                } catch (error) {
-                                    console.warn(
-                                        `Failed to fetch taxon ${taxonId}:`,
-                                        error
-                                    )
-                                }
-                            }
-                        } catch (error) {
-                            console.warn(
-                                `Failed to fetch photo for quest ${quest.id}:`,
-                                error
-                            )
-                            questWithPhoto.photoUrl = null
-                        }
-                    } else {
-                        questWithPhoto.photoUrl = null
-                    }
-
-                    return questWithPhoto
-                })
-
-                const batchResults = await Promise.all(batchPromises)
-                questsWithPhotos.push(...batchResults)
-
-                // Add delay between batches
-                if (i + batchSize < quests.length) {
-                    await new Promise((resolve) => setTimeout(resolve, 500))
-                }
-            }
-
-            return questsWithPhotos
-        },
-        enabled: !!questsQuery.data && questsQuery.data.length > 0,
-        staleTime: 30 * 60 * 1000, // 30 minutes
-        cacheTime: 60 * 60 * 1000, // 1 hour
-        retry: (failureCount, error: any) => {
-            if (error?.response?.status === 429) return false
-            return failureCount < 1
-        },
-        retryDelay: 2000,
-    })
+    useEffect(() => {
+        if (questsQuery.data) {
+            fetchAndAssignPhotos(
+                questsQuery.data,
+                queryClient,
+                queryKey,
+                setIsPhotosLoading
+            )
+        }
+    }, [questsQuery.data, queryClient, userId])
 
     return {
-        data: questsWithPhotosQuery.data || [],
-        isLoading: questsQuery.isLoading || questsWithPhotosQuery.isLoading,
-        isError: questsQuery.isError || questsWithPhotosQuery.isError,
-        error: questsQuery.error || questsWithPhotosQuery.error,
-        questsOnly: questsQuery.data || [],
-        photosLoading: questsWithPhotosQuery.isLoading,
+        data: questsQuery.data || [],
+        isLoading: questsQuery.isLoading,
+        isError: questsQuery.isError,
+        error: questsQuery.error,
+        isPhotosLoading,
     }
 }

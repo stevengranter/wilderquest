@@ -5,7 +5,6 @@ import React, { useEffect } from 'react'
 import { toast } from 'sonner'
 import api from '@/api/api'
 
-
 import { AggregatedProgress, DetailedProgress } from '@/features/quests/types'
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { Quest } from '../../server/models/quests'
@@ -22,14 +21,14 @@ type GuestProgressData = {
 }
 
 export const fetchQuests = async ({
-                                      pageParam = 1,
-                                      questId,
-                                  }: {
+    pageParam = 1,
+    questId,
+}: {
     pageParam?: number
     questId?: string | number
 }): Promise<{ quests: Quest[]; nextPage: number | undefined }> => {
     const { data } = await api.get(
-        `/quests/${questId}?page=${pageParam}&limit=10`
+        `/quests/${questId}?page=${pageParam}&limit=10`,
     )
     return {
         quests: data,
@@ -38,7 +37,7 @@ export const fetchQuests = async ({
 }
 
 export const fetchQuest = async (
-    questId?: string | number
+    questId?: string | number,
 ): Promise<Quest | null> => {
     const { data } = await api.get(`/quests/${questId}`)
     console.log(data)
@@ -58,17 +57,19 @@ export const fetchTaxa = async (taxonIds: number[]) => {
     const taxonIdChunks = chunk(taxonIds, 30)
     const taxaData = await Promise.all(
         taxonIdChunks.map(async (ids) => {
+            const fields =
+                'id,name,preferred_common_name,default_photo,iconic_taxon_name,rank,observations_count,wikipedia_url'
             const { data } = await api.get(
-                `/iNatAPI/taxa/${ids.join(',')}?fields=all`
+                `/iNatAPI/taxa/${ids.join(',')}?fields=${fields}`,
             )
             return data.results || []
-        })
+        }),
     )
     return taxaData.flatMap((data) => data)
 }
 
 const fetchMappingsAndProgress = async (
-    qid: string | number
+    qid: string | number,
 ): Promise<ProgressData> => {
     const [m, a, d] = await Promise.all([
         api.get(`/quest-sharing/quests/${qid}/mappings`),
@@ -83,7 +84,7 @@ const fetchMappingsAndProgress = async (
 }
 
 const fetchGuestProgress = async (
-    token: string
+    token: string,
 ): Promise<GuestProgressData> => {
     const [p, a] = await Promise.all([
         api.get(`/quest-sharing/shares/token/${token}/progress`),
@@ -94,7 +95,7 @@ const fetchGuestProgress = async (
 
 const fetchLeaderboard = async (questId: string | number) => {
     const { data } = await api.get(
-        `/quest-sharing/quests/${questId}/progress/leaderboard`
+        `/quest-sharing/quests/${questId}/progress/leaderboard`,
     )
     console.log('Leaderboard: ', data)
     return data
@@ -102,16 +103,16 @@ const fetchLeaderboard = async (questId: string | number) => {
 
 const fetchLeaderboardByToken = async (token: string) => {
     const { data } = await api.get(
-        `/quest-sharing/shares/token/${token}/progress/leaderboard`
+        `/quest-sharing/shares/token/${token}/progress/leaderboard`,
     )
     return data
 }
 
 export const useQuest = ({
-                             questId,
-                             token,
-                             initialData,
-                         }: {
+    questId,
+    token,
+    initialData,
+}: {
     questId?: string | number
     token?: string
     initialData?: { quest?: Quest; taxa?: INatTaxon[] }
@@ -244,13 +245,13 @@ export const useQuest = ({
                 if (!mappings) return
 
                 const mapping = mappings.find(
-                    (m: TaxonMapping) => m.id === data.payload.mappingId
+                    (m: TaxonMapping) => m.id === data.payload.mappingId,
                 )
 
                 if (!mapping) return
 
                 const species = taxaData?.find(
-                    (t: INatTaxon) => t.id === mapping.taxon_id
+                    (t: INatTaxon) => t.id === mapping.taxon_id,
                 )
                 const speciesName = species?.preferred_common_name
                     ? species.preferred_common_name
@@ -269,18 +270,19 @@ export const useQuest = ({
                     {
                         position: 'top-left',
                         style: {
-                            padding:0,
-                            margin:0,
-                            width:"90svw",
-                            borderWidth:0,
-                            boxShadow:"none",
-                            background:'none',
-                            outline:"none"}
+                            padding: 0,
+                            margin: 0,
+                            width: '90svw',
+                            borderWidth: 0,
+                            boxShadow: 'none',
+                            background: 'none',
+                            outline: 'none',
+                        },
                         // style: {
                         //     width: '100vw',
                         //     maxWidth: '90vw',
                         // },
-                    }
+                    },
                 )
 
                 // Invalidate queries to refetch data and update the UI
@@ -313,9 +315,9 @@ export const useQuest = ({
     const finalProgress = questId
         ? progressQuery.data
         : {
-            ...guestProgressQuery.data,
-            mappings: sharedQuestQuery.data?.taxa_mappings,
-        }
+              ...guestProgressQuery.data,
+              mappings: sharedQuestQuery.data?.taxa_mappings,
+          }
 
     const leaderboard = token
         ? guestLeaderboardQuery.data

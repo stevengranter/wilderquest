@@ -201,7 +201,8 @@ function SpeciesGridItem({
                     found ? 'bg-green-100' : 'bg-background',
                     hasShadow
                         ? hasShadowClasses['true']
-                        : hasShadowClasses['false']
+                        : hasShadowClasses['false'],
+                    className
                 )}
             >
                 <CardHeader className="gap-0 text-left justify-start pb-1 pt-3 relative text-foreground tracking-normal font-bold sm:text-md md:text-md lg:text-xl line-clamp-1 font-barlow">
@@ -219,8 +220,6 @@ function SpeciesGridItem({
                         )}
                     </div>
 
-
-
                     {src ? (
                         <div className="overflow-hidden w-full h-full aspect-square rounded-sm">
                             <img
@@ -236,11 +235,7 @@ function SpeciesGridItem({
                             />
                         </div>
                     ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                            <div className="text-gray-400 text-xs text-center px-2">
-                                No image
-                            </div>
-                        </div>
+                        <Skeleton className="w-full aspect-square rounded-sm" />
                     )}
 
                     <div className="space-y-1 text-right self-end mt-1 mb-2">

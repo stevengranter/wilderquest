@@ -104,7 +104,7 @@ export function ObservationDialog(props: ObservationDialogProps) {
                             className="relative -top-10 md:-left-15 -rotate-5"
                             found={found}
                             hoverEffect="none"
-                            hasShadow={false}
+                            hasShadow={true}
                         />
                         <DialogHeader className="-mt-4">
                             <DialogTitle>
