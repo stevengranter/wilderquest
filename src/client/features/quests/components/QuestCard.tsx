@@ -1,5 +1,6 @@
 import { motion } from 'motion/react'
 import { Link } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { QuestWithTaxa } from '../../../../types/types'
 import { paths } from '@/routes/paths'
@@ -9,9 +10,26 @@ import { twMerge } from 'tailwind-merge'
 import { MdLocationPin } from 'react-icons/md'
 import { IoMdCompass } from 'react-icons/io'
 import { QuestCardSkeleton } from './QuestCardSkeleton'
+import { FaRegImage } from 'react-icons/fa'
 
 const cn = (...classes: Array<string | undefined | null | false>) =>
     twMerge(clsx(classes))
+
+// Component for individual image skeletons in the collage
+function ImageSkeleton({ className }: { className?: string }) {
+    return (
+        <div
+            className={cn(
+                'relative h-auto overflow-hidden bg-gray-50 flex items-center justify-center transition-all duration-300 ease-in-out',
+                className
+            )}
+        >
+            <div className="animate-pulse text-gray-300 text-3xl transform transition-transform duration-700 ease-in-out">
+                <FaRegImage />
+            </div>
+        </div>
+    )
+}
 
 interface QuestCardProps {
     quest: QuestWithTaxa
@@ -20,6 +38,7 @@ interface QuestCardProps {
     animate?: boolean
     photos?: string[]
     isLoading?: boolean
+    observeQuest?: (questId: number, element: HTMLElement | null) => void
 }
 
 function QuestCardContent({
@@ -28,7 +47,15 @@ function QuestCardContent({
     hoverEffect,
     photos,
     isLoading,
+    observeQuest,
 }: QuestCardProps) {
+    const cardRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (observeQuest && cardRef.current) {
+            observeQuest(quest.id, cardRef.current)
+        }
+    }, [observeQuest, quest.id])
     const totalTaxaCount = quest.taxon_ids?.length || 0
     const remainingTaxaCount = totalTaxaCount - (photos?.length || 0)
     const gridSlotCount = Math.min(
@@ -74,6 +101,7 @@ function QuestCardContent({
 
     return (
         <motion.div
+            ref={cardRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -115,26 +143,31 @@ function QuestCardContent({
                                                 key={i}
                                                 className={cn(
                                                     'relative overflow-hidden',
-                                                    extraClass,
-                                                    !photoSrc && 'bg-gray-100'
+                                                    extraClass
                                                 )}
                                             >
-                                                <img
-                                                    src={
-                                                        photoSrc ||
-                                                        '/placeholder.jpg'
-                                                    }
-                                                    alt={`Quest wildlife ${
-                                                        i + 1
-                                                    }`}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                                {shouldShowOverlay && (
-                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-lg font-semibold">
-                                                        +{remainingTaxaCount}{' '}
-                                                        more
-                                                    </div>
+                                                {isLoading || !photoSrc ? (
+                                                    <ImageSkeleton
+                                                        className={extraClass}
+                                                    />
+                                                ) : (
+                                                    <img
+                                                        src={photoSrc}
+                                                        alt={`Quest wildlife ${
+                                                            i + 1
+                                                        }`}
+                                                        className="w-full h-full object-cover transition-opacity duration-300"
+                                                    />
                                                 )}
+                                                {shouldShowOverlay &&
+                                                    photoSrc &&
+                                                    !isLoading && (
+                                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-lg font-semibold">
+                                                            +
+                                                            {remainingTaxaCount}{' '}
+                                                            more
+                                                        </div>
+                                                    )}
                                             </div>
                                         )
                                     }
@@ -185,7 +218,14 @@ function QuestCardWithData(props: QuestCardProps) {
     const { questToPhotosMap, isLoading } = useQuestPhotoCollage([props.quest])
     const photos = questToPhotosMap.get(props.quest.id)
 
-    return <QuestCardContent {...props} photos={photos} isLoading={isLoading} />
+    return (
+        <QuestCardContent
+            {...props}
+            photos={photos}
+            isLoading={isLoading}
+            observeQuest={props.observeQuest}
+        />
+    )
 }
 
 export function QuestCard(props: QuestCardProps) {
@@ -194,7 +234,7 @@ export function QuestCard(props: QuestCardProps) {
     }
 
     if (props.photos !== undefined && props.isLoading !== undefined) {
-        return <QuestCardContent {...props} />
+        return <QuestCardContent {...props} observeQuest={props.observeQuest} />
     }
 
     return <QuestCardWithData {...props} />

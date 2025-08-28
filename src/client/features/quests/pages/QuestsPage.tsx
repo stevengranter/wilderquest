@@ -12,6 +12,7 @@ import { paths } from '@/routes/paths'
 import { QuestWithTaxa } from '../../../../types/types'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
+import { useDebounce } from '@/hooks/useDebounce'
 
 export function QuestsPage() {
     const { isAuthenticated, user } = useAuth()
@@ -21,6 +22,9 @@ export function QuestsPage() {
     const [page, setPage] = useState(1)
     const [hasMore, setHasMore] = useState(true)
     const [loading, setLoading] = useState(false)
+
+    // Debounce the isMyQuests state to prevent rapid API calls
+    const debouncedIsMyQuests = useDebounce(isMyQuests, 300)
 
     const observer = useRef<IntersectionObserver | null>(null)
 
@@ -49,11 +53,11 @@ export function QuestsPage() {
         setLoading(true)
         const fetchQuests = async () => {
             try {
-                const endpoint = isMyQuests
+                const endpoint = debouncedIsMyQuests
                     ? `/quests/user/${user?.id}?page=${page}&limit=10`
                     : `/quests?page=${page}&limit=10`
 
-                if (isMyQuests && (!isAuthenticated || !user)) {
+                if (debouncedIsMyQuests && (!isAuthenticated || !user)) {
                     toast.error('You are not logged in!')
                     setLoading(false)
                     return
@@ -79,10 +83,18 @@ export function QuestsPage() {
         }
 
         fetchQuests()
-    }, [isMyQuests, isAuthenticated, user, page])
+    }, [debouncedIsMyQuests, isAuthenticated, user, page])
 
     const { questToPhotosMap, isLoading: collagePhotosIsLoading } =
         useQuestPhotoCollage(quests)
+
+    // Simple observe function (no-op since we load all photos)
+    const observeQuest = useCallback(
+        (questId: number, element: HTMLElement | null) => {
+            // No-op - we load all photos
+        },
+        []
+    )
 
     return (
         <div className="container mx-auto px-4 py-6">
@@ -108,6 +120,7 @@ export function QuestsPage() {
                 questToPhotosMap={questToPhotosMap}
                 photosLoading={collagePhotosIsLoading}
                 loading={loading}
+                observeQuest={observeQuest}
             />
         </div>
     )
@@ -119,12 +132,14 @@ function QuestsList({
     questToPhotosMap,
     photosLoading,
     loading,
+    observeQuest,
 }: {
     quests: QuestWithTaxa[]
     lastQuestElementRef: (node: HTMLDivElement) => void
     questToPhotosMap: Map<number, string[]>
     photosLoading: boolean
     loading: boolean
+    observeQuest: (questId: number, element: HTMLElement | null) => void
 }) {
     if (loading && quests.length === 0) {
         return (
@@ -161,6 +176,7 @@ function QuestsList({
                                 (questToPhotosMap.get(quest.id) === undefined ||
                                     questPhotos.length === 0)
                             }
+                            observeQuest={observeQuest}
                         />
                     )
 

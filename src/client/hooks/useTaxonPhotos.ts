@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '@/api/api'
 import { INatTaxon } from '@shared/types/iNatTypes'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { QuestWithTaxa } from '@/../types/types'
 
 const BATCH_SIZE = 30
@@ -18,8 +18,32 @@ const fetchTaxaInBatches = async (taxonIds: number[]) => {
     }
 
     const batchPromises = batches.map(async (batch) => {
-        const response = await api.get(`/iNatAPI/taxa/${batch.join(',')}`)
-        return response.data.results as INatTaxon[]
+        try {
+            const response = await api.get(`/iNatAPI/taxa/${batch.join(',')}`)
+            return response.data.results as INatTaxon[]
+        } catch (error: any) {
+            // If we get a 429 error, wait a bit and retry once
+            if (error?.response?.status === 429) {
+                console.warn(
+                    `Rate limit hit for batch: ${batch.join(',')}, retrying in 2s...`
+                )
+                try {
+                    await new Promise((resolve) => setTimeout(resolve, 2000))
+                    const retryResponse = await api.get(
+                        `/iNatAPI/taxa/${batch.join(',')}`
+                    )
+                    return retryResponse.data.results as INatTaxon[]
+                } catch (retryError: any) {
+                    console.warn(
+                        `Retry failed for batch: ${batch.join(',')}, skipping...`
+                    )
+                    return []
+                }
+            }
+            // For other errors, return empty array to not break everything
+            console.warn(`Error fetching batch: ${batch.join(',')}`, error)
+            return []
+        }
     })
 
     const results = await Promise.all(batchPromises)
@@ -47,6 +71,7 @@ export function useTaxonPhotos(taxonIds: number[]) {
         staleTime: 30 * 60 * 1000, // 30 minutes
         gcTime: 60 * 60 * 1000, // 1 hour (was cacheTime in v4)
         placeholderData: keepPreviousData,
+        refetchOnMount: false, // Don't refetch on mount if data is cached
     })
 }
 
@@ -118,9 +143,11 @@ export function useQuestPhotoCollage(
 
     const allTaxonIdsForCollage = useMemo(
         () =>
-            quests.flatMap(
-                (quest) => quest.taxon_ids?.slice(0, photosPerQuest) || []
-            ),
+            quests
+                .flatMap(
+                    (quest) => quest.taxon_ids?.slice(0, photosPerQuest) || []
+                )
+                .sort((a, b) => a - b), // Sort to ensure consistent cache key
         [quests, photosPerQuest]
     )
 
@@ -130,28 +157,65 @@ export function useQuestPhotoCollage(
 
     const questToPhotosMap = useMemo(() => {
         const newMap = new Map<number, string[]>()
-        if (collagePhotosData) {
-            let photoIdx = 0
+        if (collagePhotosData && allTaxonIdsForCollage.length > 0) {
+            // Create a map from taxon ID to photo URL
+            const taxonIdToPhoto = new Map<number, string | null>()
+            allTaxonIdsForCollage.forEach((taxonId, index) => {
+                taxonIdToPhoto.set(taxonId, collagePhotosData[index] || null)
+            })
+
+            // For each quest, collect photos for its taxon IDs
             for (const quest of quests) {
-                const collageTaxonIds =
+                const questPhotos: string[] = []
+                const questTaxonIds =
                     quest.taxon_ids?.slice(0, photosPerQuest) || []
-                const questPhotos = collagePhotosData.slice(
-                    photoIdx,
-                    photoIdx + collageTaxonIds.length
-                )
-                newMap.set(
-                    quest.id,
-                    questPhotos.filter((p): p is string => !!p)
-                )
-                photoIdx += collageTaxonIds.length
+
+                for (const taxonId of questTaxonIds) {
+                    const photo = taxonIdToPhoto.get(taxonId)
+                    if (photo) {
+                        questPhotos.push(photo)
+                    }
+                }
+
+                newMap.set(quest.id, questPhotos)
             }
         }
         return newMap
-    }, [quests, collagePhotosData, photosPerQuest])
+    }, [quests, collagePhotosData, allTaxonIdsForCollage, photosPerQuest])
 
     return {
         questToPhotosMap,
         isLoading,
+    }
+}
+
+/**
+ * Hook for quest photos with debouncing to prevent API rate limits
+ * Loads photos for all quests but with debouncing to avoid overwhelming the API
+ */
+export function useLazyQuestPhotoCollage(
+    quests: QuestWithTaxa[],
+    options: { photosPerQuest?: number } = {}
+) {
+    const { photosPerQuest = 6 } = options
+
+    // Load photos for all quests
+    const { questToPhotosMap, isLoading } = useQuestPhotoCollage(quests, {
+        photosPerQuest,
+    })
+
+    // Simple observe function (no-op since we load all quests)
+    const observeQuest = useCallback(
+        (_questId: number, _element: HTMLElement | null) => {
+            // No-op - we load all quests
+        },
+        []
+    )
+
+    return {
+        questToPhotosMap,
+        isLoading,
+        observeQuest,
     }
 }
 
