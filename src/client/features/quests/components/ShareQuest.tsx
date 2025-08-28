@@ -12,6 +12,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog'
 import { useAuth } from '@/hooks/useAuth'
+import { useQueryClient } from '@tanstack/react-query'
 
 type QuestShare = {
     id: number
@@ -32,6 +33,7 @@ export function ShareQuest({
     ownerUserId: number | string
 }) {
     const { user } = useAuth()
+    const queryClient = useQueryClient()
     const isOwner = useMemo(() => {
         if (!user) return false
         return Number(ownerUserId) === Number(user.id)
@@ -76,6 +78,11 @@ export function ShareQuest({
             setShares((prev) => [res.data, ...prev])
             setGuestName('')
             setExpiresAt('')
+
+            // Invalidate leaderboard queries so they update immediately
+            queryClient.invalidateQueries({
+                queryKey: ['leaderboard', questId],
+            })
         } catch (e) {
             console.error('Failed to create share', e)
         } finally {
@@ -87,6 +94,11 @@ export function ShareQuest({
         try {
             await api.delete(`/quest-sharing/shares/${shareId}`)
             setShares((prev) => prev.filter((s) => s.id !== shareId))
+
+            // Invalidate leaderboard queries so they update immediately
+            queryClient.invalidateQueries({
+                queryKey: ['leaderboard', questId],
+            })
         } catch (e) {
             console.error('Failed to delete share', e)
         }

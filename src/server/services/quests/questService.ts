@@ -25,7 +25,9 @@ export function createQuestService(
             const questsWithTaxaAndPhotos = await Promise.all(
                 quests.map(async (quest) => {
                     const taxa = await getTaxaForQuestId(quest.id)
-                    const taxon_ids = taxa.map((t) => t.taxon_id)
+                    const taxon_ids = taxa
+                        .map((t) => t.taxon_id)
+                        .filter((id) => id && typeof id === 'number' && id > 0)
                     const photoUrl =
                         taxon_ids.length > 0
                             ? await iNatService.getTaxonPhoto(taxon_ids[0])
@@ -75,7 +77,9 @@ export function createQuestService(
         const questsWithTaxaAndPhotos = await Promise.all(
             quests.map(async (quest) => {
                 const taxa = await getTaxaForQuestId(quest.id)
-                const taxon_ids = taxa.map((t) => t.taxon_id)
+                const taxon_ids = taxa
+                    .map((t) => t.taxon_id)
+                    .filter((id) => id && typeof id === 'number' && id > 0)
                 const photoUrl =
                     taxon_ids.length > 0
                         ? await iNatService.getTaxonPhoto(taxon_ids[0])
@@ -156,9 +160,14 @@ export function createQuestService(
 
         const taxa = await getTaxaForQuestId(questId)
 
+        // Filter out invalid taxon IDs
+        const validTaxonIds = taxa
+            .map((t) => t.taxon_id)
+            .filter((id) => id && typeof id === 'number' && id > 0)
+
         return {
             ...quest,
-            taxon_ids: taxa.map((t) => t.taxon_id),
+            taxon_ids: validTaxonIds,
         }
     }
 

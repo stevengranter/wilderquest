@@ -53,7 +53,17 @@ export const fetchTaxa = async (taxonIds: number[]) => {
     if (!taxonIds || taxonIds.length === 0) {
         return []
     }
-    const taxonIdChunks = chunk(taxonIds, 30)
+
+    // Filter out invalid taxon IDs (null, undefined, empty strings, or non-positive numbers)
+    const validTaxonIds = taxonIds.filter(
+        (id) => id && typeof id === 'number' && id > 0
+    )
+
+    if (validTaxonIds.length === 0) {
+        return []
+    }
+
+    const taxonIdChunks = chunk(validTaxonIds, 30)
     const taxaData = await Promise.all(
         taxonIdChunks.map(async (ids) => {
             const fields =

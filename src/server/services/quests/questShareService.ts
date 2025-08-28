@@ -64,12 +64,17 @@ export function createQuestShareService(
         const taxaMappings = await questToTaxaRepo.findByQuestId(share.quest_id)
         const progress = await progressRepo.findByShareId(share.id)
 
+        // Filter out invalid taxon IDs
+        const validTaxonIds = taxaMappings
+            .map((t) => t.taxon_id)
+            .filter((id) => id && typeof id === 'number' && id > 0)
+
         return {
             share,
             quest: {
                 ...quest,
                 username: owner?.username,
-                taxon_ids: taxaMappings.map((t) => t.taxon_id),
+                taxon_ids: validTaxonIds,
             },
             taxa_mappings: taxaMappings, // contains id (mapping id) and taxon_id (iNat id)
             progress,

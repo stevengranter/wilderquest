@@ -5,7 +5,6 @@ import { Collection, CollectionsToTaxa, CreateCollectionSchema } from '../models
 type CreateCollectionInput = z.infer<typeof CreateCollectionSchema>
 type UpdateCollectionInput = Partial<CreateCollectionInput>
 
-
 export function createCollectionService(
     collectionRepo: CollectionRepository,
     userId: number | null
@@ -47,9 +46,7 @@ export function createCollectionService(
     async function findCollectionsByUserId(
         userId: number
     ): Promise<(Collection & { taxon_ids: number[] })[]> {
-        const raw = (await collectionRepo.findByUserId(
-            userId
-        )) as Collection[]
+        const raw = (await collectionRepo.findByUserId(userId)) as Collection[]
         return await enrichAllCollectionsWithTaxa(raw)
     }
 
@@ -133,7 +130,12 @@ export function createCollectionService(
         collection: Collection
     ): Promise<Collection & { taxon_ids: number[] }> {
         const taxa = await getTaxaByCollectionId(collection.id)
-        return { ...collection, taxon_ids: taxa.map((t) => t.taxon_id) }
+        return {
+            ...collection,
+            taxon_ids: taxa
+                .map((t) => t.taxon_id)
+                .filter((id) => id && typeof id === 'number' && id > 0),
+        }
     }
 
     async function enrichAllCollectionsWithTaxa(

@@ -158,14 +158,14 @@ export function createSharedQuestProgressRepository(
         questId: number
     ): Promise<LeaderboardEntry[]> {
         const [rows] = await dbPool.query(
-            `SELECT 
+            `SELECT
                     COALESCE(s.guest_name, u.username) AS display_name,
                     COUNT(*) AS observation_count
-                    FROM shared_quest_progress p
-                    INNER JOIN quest_shares s ON s.id = p.quest_share_id
+                    FROM quest_shares s
                     LEFT JOIN users u ON u.id = s.created_by_user_id
+                    LEFT JOIN shared_quest_progress p ON p.quest_share_id = s.id
                     WHERE s.quest_id = ?
-                    GROUP BY display_name
+                    GROUP BY s.id, display_name
                     ORDER BY observation_count DESC, display_name ASC;
                 `,
             [questId]

@@ -41,7 +41,7 @@ export function createQuestRepository(
         GROUP_CONCAT(qt.taxon_id) AS taxon_ids
       FROM ${tableName} q
       LEFT JOIN users u ON q.user_id = u.id
-      LEFT JOIN quests_to_taxa qt ON q.id = qt.quest_id
+      LEFT JOIN quests_to_taxa qt ON q.id = qt.quest_id AND qt.taxon_id IS NOT NULL
       WHERE q.id = ?
         AND (q.is_private = FALSE OR q.user_id = ?)
       GROUP BY q.id
@@ -73,7 +73,10 @@ export function createQuestRepository(
             longitude: row.longitude,
             mode: row.mode,
             taxon_ids: row.taxon_ids
-                ? row.taxon_ids.split(',').map(Number)
+                ? row.taxon_ids
+                      .split(',')
+                      .map(Number)
+                      .filter((id: number) => !isNaN(id) && id > 0)
                 : [],
         }
 
