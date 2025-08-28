@@ -1,25 +1,30 @@
 import { useCallback, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
-import { toast } from 'sonner'
-import api from '@/api/api'
 import { Button } from '@/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ClientQuest, SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { SpeciesCardSkeleton } from '@/features/quests/components/SpeciesCard'
 import { QuestListView } from '../../QuestListView'
 import { QuestMapView } from '../../QuestMapView'
+// Import QuestMapping type
 import { AggregatedProgress, DetailedProgress, QuestMapping, QuestStatus, Share } from '@/features/quests/types'
 import { INatTaxon } from '@shared/types/iNatTypes'
-import { useAuth } from '@/hooks/useAuth'
+import { LoggedInUser } from '@shared/types/authTypes'
+import { useSpeciesActions, useSpeciesProgress } from '@/hooks/useQuest'
+
+// Use QuestMapping instead of defining TaxonMapping
+type TaxonMapping = QuestMapping
+
+type TaxonWithProgress = INatTaxon & {
+    mapping: TaxonMapping | undefined
+    progressCount: number
+    recentEntries: DetailedProgress[]
+    isFound: boolean
+}
 
 type QuestSpeciesProps = {
-    taxaWithProgress: (INatTaxon & {
-        mapping: QuestMapping | undefined
-        progressCount: number
-        recentEntries: DetailedProgress[]
-        isFound: boolean
-    })[]
+    taxaWithProgress: TaxonWithProgress[]
     questData: ClientQuest
     isOwner: boolean
     token: string | undefined
@@ -30,9 +35,10 @@ type QuestSpeciesProps = {
     taxaHasNextPage: boolean
     fetchNextTaxaPage: () => void
     taxa: INatTaxon[] | undefined
-    mappings: QuestMapping[] | undefined
+    mappings: TaxonMapping[] | undefined
     updateStatus: (status: QuestStatus) => void
     isTaxaLoading: boolean
+    user?: LoggedInUser
 }
 
 export const QuestSpecies = ({
@@ -50,11 +56,28 @@ export const QuestSpecies = ({
     mappings,
     updateStatus,
     isTaxaLoading,
+    user,
 }: QuestSpeciesProps) => {
-    const { user } = useAuth()
     const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid')
 
+    // Use the hooks from useQuest
+    const { handleProgressUpdate, getAvatarOverlay } = useSpeciesProgress({
+        mappings,
+        detailedProgress,
+        aggregatedProgress,
+        taxa,
+    })
+
+    const { canInteract } = useSpeciesActions({
+        isOwner,
+        token,
+        questData,
+        user,
+        share,
+    })
+
     const observer = useRef<IntersectionObserver | null>(null)
+
     const lastTaxonElementRef = useCallback(
         (node: HTMLDivElement) => {
             if (isTaxaFetchingNextPage) return
@@ -68,6 +91,141 @@ export const QuestSpecies = ({
         },
         [isTaxaFetchingNextPage, taxaHasNextPage, fetchNextTaxaPage]
     )
+
+    // Create wrapper functions for the hook functions
+    const handleProgressUpdateWrapper = useCallback(
+        async (taxon: TaxonWithProgress) => {
+            if (!taxon.mapping) return
+            await handleProgressUpdate(
+                taxon.mapping,
+                isOwner,
+                user,
+                share,
+                questData,
+                token
+            )
+        },
+        [handleProgressUpdate, isOwner, user, share, questData, token]
+    )
+
+    const getAvatarOverlayWrapper = useCallback(
+        (taxon: TaxonWithProgress) => {
+            return getAvatarOverlay(taxon.recentEntries, questData.mode)
+        },
+        [getAvatarOverlay, questData.mode]
+    )
+
+    // Extract action button rendering
+    const renderActionButton = useCallback(
+        (taxon: TaxonWithProgress) => {
+            if (!canInteract(questData.status) || !taxon.mapping) {
+                return null
+            }
+
+            return (
+                <div className="p-2">
+                    <Button
+                        className="w-full shadow-0 border-1"
+                        size="sm"
+                        variant="neutral"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            handleProgressUpdateWrapper(taxon)
+                        }}
+                    >
+                        Found
+                    </Button>
+                </div>
+            )
+        },
+        [canInteract, questData.status, handleProgressUpdateWrapper]
+    )
+
+    // Extract skeleton rendering
+    const renderSkeletons = useCallback(
+        (keyPrefix: string, count: number = 6) => {
+            return Array.from({
+                length: Math.min(mappings?.length || count, count),
+            }).map((_, i) => (
+                <motion.div
+                    key={`skeleton-${keyPrefix}-${i}`}
+                    className="relative"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
+                    <SpeciesCardSkeleton />
+                </motion.div>
+            ))
+        },
+        [mappings?.length]
+    )
+
+    // Extract species card rendering
+    const renderSpeciesCard = useCallback(
+        (taxon: TaxonWithProgress, index?: number, isLast?: boolean) => {
+            return (
+                <motion.div
+                    key={taxon.id}
+                    ref={isLast ? lastTaxonElementRef : null}
+                    className="relative"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
+                    <SpeciesCardWithObservations
+                        species={taxon}
+                        questData={questData}
+                        found={taxon.progressCount > 0}
+                        avatarOverlay={getAvatarOverlayWrapper(taxon)}
+                        actionArea={renderActionButton(taxon)}
+                    />
+                </motion.div>
+            )
+        },
+        [
+            questData,
+            getAvatarOverlayWrapper,
+            renderActionButton,
+            lastTaxonElementRef,
+        ]
+    )
+
+    // Extract section rendering
+    const renderSpeciesSection = useCallback(
+        (
+            title: string,
+            taxa: TaxonWithProgress[],
+            keyPrefix: string,
+            enableInfiniteScroll = false
+        ) => {
+            return (
+                <div>
+                    <h3 className="text-lg font-semibold mb-3">
+                        {title} ({isTaxaLoading ? '...' : taxa.length})
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 lg:gap-6 auto-rows-fr">
+                        <AnimatePresence mode="popLayout">
+                            {isTaxaLoading
+                                ? renderSkeletons(keyPrefix)
+                                : taxa.map((taxon, index, arr) =>
+                                      renderSpeciesCard(
+                                          taxon,
+                                          index,
+                                          enableInfiniteScroll &&
+                                              index === arr.length - 1
+                                      )
+                                  )}
+                        </AnimatePresence>
+                    </div>
+                </div>
+            )
+        },
+        [isTaxaLoading, renderSkeletons, renderSpeciesCard]
+    )
+
+    const notFoundTaxa = taxaWithProgress.filter((t) => !t.isFound)
+    const foundTaxa = taxaWithProgress.filter((t) => t.isFound)
 
     return (
         <div className="mt-8">
@@ -99,327 +257,13 @@ export const QuestSpecies = ({
             {/* View Content */}
             {viewMode === 'grid' && (
                 <div className="space-y-8">
-                    {/* Not Found Section */}
-                    <div>
-                        <h3 className="text-lg font-semibold mb-3">
-                            Not Found (
-                            {isTaxaLoading
-                                ? '...'
-                                : taxaWithProgress.filter((t) => !t.isFound)
-                                      .length}
-                            )
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 lg:gap-6 auto-rows-fr">
-                            <AnimatePresence mode="popLayout">
-                                {isTaxaLoading
-                                    ? // Show skeleton cards while loading
-                                      Array.from({
-                                          length: Math.min(
-                                              mappings?.length || 6,
-                                              6
-                                          ),
-                                      }).map((_, i) => (
-                                          <motion.div
-                                              key={`skeleton-not-found-${i}`}
-                                              className="relative"
-                                              initial={{ opacity: 0 }}
-                                              animate={{ opacity: 1 }}
-                                              exit={{ opacity: 0 }}
-                                          >
-                                              <SpeciesCardSkeleton />
-                                          </motion.div>
-                                      ))
-                                    : taxaWithProgress
-                                          .filter((t) => !t.isFound)
-                                          .map((taxon, index, arr) => {
-                                              return (
-                                                  <motion.div
-                                                      key={taxon.id}
-                                                      ref={
-                                                          index ===
-                                                          arr.length - 1
-                                                              ? lastTaxonElementRef
-                                                              : null
-                                                      }
-                                                      className="relative"
-                                                      initial={{ opacity: 0 }}
-                                                      animate={{ opacity: 1 }}
-                                                      exit={{ opacity: 0 }}
-                                                  >
-                                                      <SpeciesCardWithObservations
-                                                          species={taxon}
-                                                          questData={questData}
-                                                          found={
-                                                              taxon.progressCount >
-                                                              0
-                                                          }
-                                                          avatarOverlay={null}
-                                                          actionArea={
-                                                              (isOwner ||
-                                                                  token) &&
-                                                              taxon.mapping && (
-                                                                  <div className="p-2">
-                                                                      <Button
-                                                                          className="w-full shadow-0 border-1"
-                                                                          size="sm"
-                                                                          variant="neutral"
-                                                                          disabled={
-                                                                              questData.status !==
-                                                                              'active'
-                                                                          }
-                                                                          onClick={async (
-                                                                              e
-                                                                          ) => {
-                                                                              e.stopPropagation()
-                                                                              if (
-                                                                                  !taxon.mapping
-                                                                              )
-                                                                                  return // ✅ safety
-                                                                              try {
-                                                                                  let progress
-                                                                                  if (
-                                                                                      isOwner
-                                                                                  ) {
-                                                                                      progress =
-                                                                                          detailedProgress?.find(
-                                                                                              (
-                                                                                                  p
-                                                                                              ) =>
-                                                                                                  p.display_name ===
-                                                                                                      user?.username &&
-                                                                                                  p.mapping_id ===
-                                                                                                      taxon.mapping!
-                                                                                                          .id
-                                                                                          )
-                                                                                  } else if (
-                                                                                      token
-                                                                                  ) {
-                                                                                      progress =
-                                                                                          detailedProgress?.find(
-                                                                                              (
-                                                                                                  p
-                                                                                              ) =>
-                                                                                                  p.display_name ===
-                                                                                                      share?.guest_name &&
-                                                                                                  p.mapping_id ===
-                                                                                                      taxon.mapping!
-                                                                                                          .id
-                                                                                          )
-                                                                                  }
-                                                                                  const next =
-                                                                                      !progress
-                                                                                  if (
-                                                                                      isOwner
-                                                                                  ) {
-                                                                                      await api.post(
-                                                                                          `/quest-sharing/quests/${questData.id}/progress/${taxon.mapping!.id}`,
-                                                                                          {
-                                                                                              observed:
-                                                                                                  next,
-                                                                                          }
-                                                                                      )
-                                                                                  } else if (
-                                                                                      token
-                                                                                  ) {
-                                                                                      await api.post(
-                                                                                          `/quest-sharing/shares/token/${token}/progress/${taxon.mapping!.id}`,
-                                                                                          {
-                                                                                              observed:
-                                                                                                  next,
-                                                                                          }
-                                                                                      )
-                                                                                  }
-                                                                                  console.log(
-                                                                                      'Progress updated'
-                                                                                  )
-                                                                              } catch (_e) {
-                                                                                  toast.error(
-                                                                                      'Action failed'
-                                                                                  )
-                                                                              }
-                                                                          }}
-                                                                      >
-                                                                          Found
-                                                                      </Button>
-                                                                  </div>
-                                                              )
-                                                          }
-                                                      />
-                                                  </motion.div>
-                                              )
-                                          })}
-                            </AnimatePresence>
-                        </div>
-                    </div>
-
-                    {/* Found Section */}
-                    <div>
-                        <h3 className="text-lg font-semibold mb-3">
-                            Found (
-                            {isTaxaLoading
-                                ? '...'
-                                : taxaWithProgress.filter((t) => t.isFound)
-                                      .length}
-                            )
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 lg:gap-6 auto-rows-fr">
-                            {isTaxaLoading
-                                ? // Show skeleton cards while loading
-                                  Array.from({
-                                      length: Math.min(
-                                          mappings?.length || 6,
-                                          6
-                                      ),
-                                  }).map((_, i) => (
-                                      <motion.div
-                                          key={`skeleton-found-${i}`}
-                                          className="relative"
-                                          initial={{ opacity: 0 }}
-                                          animate={{ opacity: 1 }}
-                                          exit={{ opacity: 0 }}
-                                      >
-                                          <SpeciesCardSkeleton />
-                                      </motion.div>
-                                  ))
-                                : taxaWithProgress
-                                      .filter((t) => t.isFound)
-                                      .map((taxon) => {
-                                          // Determine avatar overlay for competitive/cooperative quests
-                                          let avatarOverlay = null
-                                          if (
-                                              (questData.mode ===
-                                                  'competitive' ||
-                                                  questData.mode ===
-                                                      'cooperative') &&
-                                              taxon.recentEntries.length > 0
-                                          ) {
-                                              // Get the most recent finder
-                                              const mostRecentEntry =
-                                                  taxon.recentEntries.sort(
-                                                      (a, b) =>
-                                                          new Date(
-                                                              b.observed_at
-                                                          ).getTime() -
-                                                          new Date(
-                                                              a.observed_at
-                                                          ).getTime()
-                                                  )[0]
-                                              avatarOverlay = {
-                                                  displayName:
-                                                      mostRecentEntry.display_name,
-                                              }
-                                          }
-
-                                          return (
-                                              <div
-                                                  key={taxon.id}
-                                                  className="relative"
-                                              >
-                                                  <SpeciesCardWithObservations
-                                                      species={taxon}
-                                                      questData={questData}
-                                                      found={
-                                                          taxon.progressCount >
-                                                          0
-                                                      }
-                                                      avatarOverlay={
-                                                          avatarOverlay
-                                                      }
-                                                      actionArea={
-                                                          (isOwner || token) &&
-                                                          taxon.mapping && (
-                                                              <div className="p-2">
-                                                                  <Button
-                                                                      className="w-full shadow-0 border-1"
-                                                                      size="sm"
-                                                                      variant="neutral"
-                                                                      disabled={
-                                                                          questData.status !==
-                                                                          'active'
-                                                                      }
-                                                                      onClick={async (
-                                                                          e
-                                                                      ) => {
-                                                                          e.stopPropagation()
-                                                                          if (
-                                                                              !taxon.mapping
-                                                                          )
-                                                                              return
-                                                                          try {
-                                                                              let progress
-                                                                              if (
-                                                                                  isOwner
-                                                                              ) {
-                                                                                  progress =
-                                                                                      detailedProgress?.find(
-                                                                                          (
-                                                                                              p
-                                                                                          ) =>
-                                                                                              p.display_name ===
-                                                                                                  user?.username &&
-                                                                                              p.mapping_id ===
-                                                                                                  taxon.mapping!
-                                                                                                      .id
-                                                                                      )
-                                                                              } else if (
-                                                                                  token
-                                                                              ) {
-                                                                                  progress =
-                                                                                      detailedProgress?.find(
-                                                                                          (
-                                                                                              p
-                                                                                          ) =>
-                                                                                              p.display_name ===
-                                                                                                  share?.guest_name &&
-                                                                                              p.mapping_id ===
-                                                                                                  taxon.mapping!
-                                                                                                      .id
-                                                                                      )
-                                                                              }
-                                                                              const next =
-                                                                                  !progress
-                                                                              if (
-                                                                                  isOwner
-                                                                              ) {
-                                                                                  await api.post(
-                                                                                      `/quest-sharing/quests/${questData.id}/progress/${taxon.mapping!.id}`,
-                                                                                      {
-                                                                                          observed:
-                                                                                              next,
-                                                                                      }
-                                                                                  )
-                                                                              } else if (
-                                                                                  token
-                                                                              ) {
-                                                                                  await api.post(
-                                                                                      `/quest-sharing/shares/token/${token}/progress/${taxon.mapping!.id}`,
-                                                                                      {
-                                                                                          observed:
-                                                                                              next,
-                                                                                      }
-                                                                                  )
-                                                                              }
-                                                                              console.log(
-                                                                                  'Progress updated'
-                                                                              )
-                                                                          } catch (_e) {
-                                                                              toast.error(
-                                                                                  'Action failed'
-                                                                              )
-                                                                          }
-                                                                      }}
-                                                                  >
-                                                                      Found
-                                                                  </Button>
-                                                              </div>
-                                                          )
-                                                      }
-                                                  />
-                                              </div>
-                                          )
-                                      })}
-                        </div>
-                    </div>
+                    {renderSpeciesSection(
+                        'Not Found',
+                        notFoundTaxa,
+                        'not-found',
+                        true
+                    )}
+                    {renderSpeciesSection('Found', foundTaxa, 'found')}
                 </div>
             )}
 

@@ -1,7 +1,7 @@
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { ReactNode } from 'react'
 import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
-import { Quest as ServerQuest } from '../../../../server/repositories/QuestRepository'
+import { Quest as ServerQuest } from '../../../../server/models/quests'
 import { ObservationDialog } from './ObservationDialog'
 
 export type ClientQuest = Omit<ServerQuest, 'user_id'> & {

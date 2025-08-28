@@ -6,13 +6,19 @@ import { paths } from '@/routes/paths'
 import { ClientQuest } from '@/features/quests/components/SpeciesCardWithObservations'
 import ShareQuest from '@/features/quests/components/ShareQuest'
 import { QuestTimestamps } from '@/features/quests/components/QuestView/parts/QuestTimestamps'
+import { Share } from '@/features/quests/types'
 
 type QuestHeaderProps = {
     questData: ClientQuest
     isOwner: boolean
+    share?: Share
 }
 
-export const QuestHeader = ({ questData, isOwner }: QuestHeaderProps) => {
+export const QuestHeader = ({
+    questData,
+    isOwner,
+    share,
+}: QuestHeaderProps) => {
     return (
         <div>
             <div className="flex flex-row justify-between align-middle">
@@ -54,6 +60,11 @@ export const QuestHeader = ({ questData, isOwner }: QuestHeaderProps) => {
                             <Link to={`/users/${questData.username}`}>
                                 {questData.username}
                             </Link>
+                        </h4>
+                    )}
+                    {!isOwner && share?.guest_name && (
+                        <h4 className="text-primary font-medium">
+                            Participating as: {share.guest_name}
                         </h4>
                     )}
                 </div>

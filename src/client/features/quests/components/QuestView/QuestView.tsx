@@ -1,60 +1,37 @@
-import { INatTaxon } from '@shared/types/iNatTypes'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import {
-    AggregatedProgress,
-    DetailedProgress,
-    LeaderboardEntry,
-    QuestMapping,
-    QuestStatus as QuestStatusType,
-    Share,
-} from '@/features/quests/types'
-import { ClientQuest } from '@/features/quests/components/SpeciesCardWithObservations'
+import { useQuestContext } from '@/contexts/QuestContext'
 import { useTaxaWithProgress } from '../../hooks/useTaxaWithProgress'
 import { QuestHeader } from './parts/QuestHeader'
 import { QuestLeaderboard } from './parts/QuestLeaderboard'
 import { TaxaPieChart } from './parts/TaxaPieChart'
 import { QuestSpecies } from './parts/QuestSpecies'
 import { QuestControls } from './parts/QuestControls'
+import { useAuth } from '@/hooks/useAuth'
 
-type QuestViewProps = {
-    questData: ClientQuest | null | undefined
-    taxa: INatTaxon[] | undefined
-    mappings: QuestMapping[] | undefined
-    aggregatedProgress: AggregatedProgress[] | undefined
-    detailedProgress: DetailedProgress[] | undefined
-    isLoading: boolean
-    isTaxaLoading: boolean
-    isTaxaFetchingNextPage: boolean
-    taxaHasNextPage: boolean
-    fetchNextTaxaPage: () => void
-    isError: boolean
-    updateStatus: (status: QuestStatusType) => void
-    isOwner: boolean
-    token?: string
-    share?: Share
-    leaderboard?: LeaderboardEntry[]
-}
+export const QuestView = () => {
+    const { user } = useAuth()
+    const {
+        questData,
+        taxa,
+        mappings,
+        aggregatedProgress,
+        detailedProgress,
+        leaderboard,
+        share,
+        token,
+        isLoading,
+        isTaxaLoading,
+        isTaxaFetchingNextPage,
+        taxaHasNextPage,
+        fetchNextTaxaPage,
+        isError,
+        updateStatus,
+        isOwner,
+        canEdit,
+    } = useQuestContext()
 
-export const QuestView = ({
-    questData,
-    taxa,
-    mappings,
-    aggregatedProgress,
-    detailedProgress,
-    isLoading,
-    isTaxaLoading,
-    isTaxaFetchingNextPage,
-    taxaHasNextPage,
-    fetchNextTaxaPage,
-    isError,
-    updateStatus,
-    isOwner,
-    token,
-    share,
-    leaderboard,
-}: QuestViewProps) => {
     const taxaWithProgress = useTaxaWithProgress(
         taxa,
         mappings,
@@ -76,7 +53,11 @@ export const QuestView = ({
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <QuestHeader questData={questData} isOwner={isOwner} />
+            <QuestHeader
+                questData={questData}
+                isOwner={isOwner}
+                share={share}
+            />
 
             <div className="grid grid-cols-2 justify-between items-start">
                 <QuestLeaderboard leaderboard={leaderboard} />
@@ -111,12 +92,16 @@ export const QuestView = ({
                 taxaHasNextPage={taxaHasNextPage}
                 fetchNextTaxaPage={fetchNextTaxaPage}
                 taxa={taxa}
-                mappings={mappings}
-                updateStatus={updateStatus}
+                mappings={mappings?.map((m) => ({
+                    ...m,
+                    created_at: m.created_at || new Date().toISOString(),
+                }))} // Convert TaxonMapping to QuestMapping
+                updateStatus={updateStatus || (() => {})} // Provide fallback for undefined
                 isTaxaLoading={isTaxaLoading}
+                user={user}
             />
 
-            {isOwner && (
+            {canEdit && updateStatus && (
                 <div className="py-4">
                     <QuestControls
                         handleActive={() => updateStatus('active')}

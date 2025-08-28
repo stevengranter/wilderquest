@@ -125,6 +125,7 @@ export function createQuestShareService(
                 await progressRepo.addProgress(share.id, mappingId)
             } catch (_err) {
                 // ignore duplicates because of unique constraint
+                console.log('Duplicate progress entry, ignoring')
             }
             sendEvent(String(questId), {
                 type: 'SPECIES_FOUND',
