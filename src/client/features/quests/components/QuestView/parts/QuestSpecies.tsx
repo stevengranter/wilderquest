@@ -1,10 +1,10 @@
 import { useCallback, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ClientQuest, SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { SpeciesCardSkeleton } from '@/features/quests/components/SpeciesCard'
+import { FoundButton } from '@/features/quests/components/FoundButton'
 import { QuestListView } from '../../QuestListView'
 import { QuestMapView } from '../../QuestMapView'
 // Import QuestMapping type
@@ -118,45 +118,39 @@ export const QuestSpecies = ({
     // Extract action button rendering
     const renderActionButton = useCallback(
         (taxon: TaxonWithProgress) => {
-            if (!canInteract(questData.status) || !taxon.mapping) {
+            if (!taxon.mapping) {
                 return null
             }
 
-            // Check if current user has already marked this species as found
-            const currentUserDisplayName = isOwner
-                ? user?.username
-                : share?.guest_name
-
-            const userHasFound = detailedProgress?.some(
-                (progress) =>
-                    progress.mapping_id === taxon.mapping?.id &&
-                    progress.display_name === currentUserDisplayName
-            )
-
             return (
                 <div className="p-2">
-                    <Button
-                        className="w-full shadow-0 border-1"
-                        size="sm"
-                        variant="neutral"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            handleProgressUpdateWrapper(taxon)
+                    <FoundButton
+                        mapping={taxon.mapping}
+                        progressCount={taxon.progressCount}
+                        detailedProgress={detailedProgress}
+                        isOwner={isOwner}
+                        user={user}
+                        share={share}
+                        token={token}
+                        questStatus={questData.status}
+                        onClick={async () => {
+                            await handleProgressUpdateWrapper(taxon)
                         }}
-                    >
-                        {userHasFound ? 'Mark as unfound' : 'Found'}
-                    </Button>
+                        canInteract={canInteract}
+                        fullWidth={true}
+                    />
                 </div>
             )
         },
         [
-            canInteract,
+            detailedProgress,
+            isOwner,
+            user,
+            share,
+            token,
             questData.status,
             handleProgressUpdateWrapper,
-            isOwner,
-            user?.username,
-            share?.guest_name,
-            detailedProgress,
+            canInteract,
         ]
     )
 
@@ -295,8 +289,6 @@ export const QuestSpecies = ({
                     share={share}
                     user={user}
                     detailedProgress={detailedProgress}
-                    aggregatedProgress={aggregatedProgress}
-                    updateStatus={updateStatus}
                 />
             )}
 

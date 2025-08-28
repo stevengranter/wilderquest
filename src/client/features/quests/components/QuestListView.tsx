@@ -1,9 +1,9 @@
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Camera } from 'lucide-react'
 import { ClientQuest } from './SpeciesCardWithObservations'
-import { AggregatedProgress, DetailedProgress, QuestMapping, QuestStatus, Share } from '../types'
+import { FoundButton } from './FoundButton'
+import { DetailedProgress, QuestMapping, Share } from '../types'
 import { INatTaxon } from '@shared/types/iNatTypes'
 import api from '@/api/api'
 import { toast } from 'sonner'
@@ -27,8 +27,6 @@ type QuestListViewProps = {
     share?: Share
     user?: LoggedInUser | null
     detailedProgress?: DetailedProgress[]
-    aggregatedProgress?: AggregatedProgress[]
-    updateStatus: (status: QuestStatus) => void
 }
 
 function SpeciesListCard(props: {
@@ -43,6 +41,9 @@ function SpeciesListCard(props: {
     locationName?: string
     hoverEffect?: 'lift' | 'shadow' | 'none'
     questMode?: 'competitive' | 'cooperative'
+    detailedProgress?: DetailedProgress[]
+    user?: LoggedInUser | null
+    share?: Share
 }) {
     const hoverClasses = {
         lift: 'hover:shadow-shadow hover:-translate-y-2 duration-250',
@@ -153,20 +154,27 @@ function SpeciesListCard(props: {
 
                             {(props.owner || props.token) &&
                                 props.taxon.mapping && (
-                                    <Button
-                                        size="sm"
+                                    <FoundButton
+                                        mapping={props.taxon.mapping}
+                                        progressCount={
+                                            props.taxon.progressCount
+                                        }
+                                        detailedProgress={
+                                            props.detailedProgress
+                                        }
+                                        isOwner={props.owner}
+                                        user={props.user}
+                                        share={props.share}
+                                        token={props.token}
+                                        questStatus={props.status}
+                                        onClick={props.onClick}
                                         variant={
                                             props.taxon.progressCount > 0
                                                 ? 'neutral'
                                                 : 'default'
                                         }
-                                        disabled={props.status !== 'active'}
-                                        onClick={props.onClick}
-                                    >
-                                        {props.taxon.progressCount > 0
-                                            ? 'Found'
-                                            : 'Mark Found'}
-                                    </Button>
+                                        size="sm"
+                                    />
                                 )}
                         </div>
                     </div>
@@ -230,6 +238,9 @@ export const QuestListView = ({
                     locationName={questData.location_name}
                     hoverEffect="lift"
                     questMode={questData.mode}
+                    detailedProgress={detailedProgress}
+                    user={user}
+                    share={share}
                     onClick={async (e) => {
                         e.stopPropagation()
                         e.preventDefault()
