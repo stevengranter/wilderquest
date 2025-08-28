@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 
 interface TaxonData {
-    default_photo: {
+    default_photo?: {
         id: number
         license_code: string
         attribution: string
@@ -55,13 +55,19 @@ export function useSpeciesSwipe({
     const [currentIndex, setCurrentIndex] = useState(0)
     const [swipedSpecies, setSwipedSpecies] = useState<Set<number>>(new Set())
     const [actionHistory, setActionHistory] = useState<SwipeAction[]>([])
+    const [reorderedSpecies, setReorderedSpecies] = useState<
+        SpeciesCountItem[] | null
+    >(null)
 
     // Filter out species that have already been swiped or are already in the quest
-    const filteredSpecies = availableSpecies.filter(
+    const baseFilteredSpecies = availableSpecies.filter(
         (species) =>
             !swipedSpecies.has(species.taxon.id) &&
             !questSpecies.has(species.taxon.id)
     )
+
+    // Use reordered species if available, otherwise use base filtered species
+    const filteredSpecies = reorderedSpecies || baseFilteredSpecies
 
     const currentSpecies = filteredSpecies[currentIndex]
     const lastAction = actionHistory[actionHistory.length - 1] || null
@@ -83,6 +89,15 @@ export function useSpeciesSwipe({
 
             // Add to action history
             setActionHistory((prev) => [...prev, action])
+
+            // If we have reordered species, remove the swiped species from it
+            if (reorderedSpecies) {
+                setReorderedSpecies((prev) =>
+                    prev
+                        ? prev.filter((s) => s.taxon.id !== species.taxon.id)
+                        : null
+                )
+            }
 
             if (direction === 'right') {
                 // Swipe right = Add to quest
@@ -127,6 +142,17 @@ export function useSpeciesSwipe({
         // Remove from action history
         setActionHistory((prev) => prev.slice(0, -1))
 
+        // If we have reordered species, add the species back to the reordered list at the correct position
+        if (reorderedSpecies) {
+            setReorderedSpecies((prev) => {
+                if (!prev) return null
+                const newList = [...prev]
+                // Insert the species back at the position it was originally
+                newList.splice(currentIndex, 0, species)
+                return newList
+            })
+        }
+
         // Go back one step
         setCurrentIndex((prev) => Math.max(0, prev - 1))
     }, [lastAction, setQuestSpecies])
@@ -146,6 +172,7 @@ export function useSpeciesSwipe({
         setSwipedSpecies(new Set())
         setCurrentIndex(0)
         setActionHistory([])
+        setReorderedSpecies(null)
     }, [])
 
     const skipToNextSpecies = useCallback(() => {
@@ -160,6 +187,26 @@ export function useSpeciesSwipe({
         }
     }, [currentSpecies, handleSwipeComplete])
 
+    const jumpToSpecies = useCallback(
+        (targetSpecies: SpeciesCountItem) => {
+            const targetIndex = filteredSpecies.findIndex(
+                (s) => s.taxon.id === targetSpecies.taxon.id
+            )
+
+            if (targetIndex >= 0 && targetIndex < filteredSpecies.length) {
+                // Reorder the species list to put the target species first
+                // This ensures skipped species are still accessible later
+                const reordered = [
+                    ...filteredSpecies.slice(targetIndex), // Target species and all after it
+                    ...filteredSpecies.slice(0, targetIndex), // All species before target (skipped ones)
+                ]
+                setReorderedSpecies(reordered)
+                setCurrentIndex(0) // Target species is now at index 0
+            }
+        },
+        [filteredSpecies]
+    )
+
     const getSwipeStats = useCallback(() => {
         const totalSwiped = actionHistory.length
         const totalAdded = actionHistory.filter(
@@ -168,7 +215,7 @@ export function useSpeciesSwipe({
         const totalRejected = actionHistory.filter(
             (action) => action.type === 'reject'
         ).length
-        const totalRemaining = filteredSpecies.length - currentIndex
+        const totalRemaining = filteredSpecies.length
         const totalAlreadySelected = questSpecies.size
 
         return {
@@ -180,7 +227,7 @@ export function useSpeciesSwipe({
             totalAlreadySelected,
             progress,
         }
-    }, [actionHistory, filteredSpecies.length, currentIndex, progress])
+    }, [actionHistory, filteredSpecies.length, progress])
 
     return {
         // Current state
@@ -197,6 +244,7 @@ export function useSpeciesSwipe({
         resetSwipeSession,
         skipToNextSpecies,
         addCurrentSpecies,
+        jumpToSpecies,
 
         // Stats and utilities
         getSwipeStats,

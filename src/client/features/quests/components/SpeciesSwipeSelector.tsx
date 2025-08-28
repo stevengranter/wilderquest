@@ -1,8 +1,8 @@
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { motion, useMotionValue, useTransform } from 'motion/react'
-import { Heart, RotateCcw, TrendingUp, X } from 'lucide-react'
+import { Heart, RotateCcw, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -52,7 +52,148 @@ interface SpeciesSwipeSelectorProps {
     editMode?: boolean
 }
 
-const SWIPE_THRESHOLD = 50
+const SWIPE_THRESHOLD = 30
+
+interface SpeciesProgressThumbnailsProps {
+    species: SpeciesCountItem[]
+    currentIndex: number
+    maxThumbnails?: number
+    onThumbnailClick?: (species: SpeciesCountItem) => void
+}
+
+function SpeciesProgressThumbnails({
+    species,
+    currentIndex,
+    maxThumbnails = 6,
+    onThumbnailClick,
+}: SpeciesProgressThumbnailsProps) {
+    const [imageErrors, setImageErrors] = useState<Set<number>>(new Set())
+
+    // Get the upcoming species to show (including current)
+    const upcomingSpecies = species.slice(
+        currentIndex,
+        currentIndex + maxThumbnails
+    )
+
+    if (upcomingSpecies.length === 0) return null
+
+    const handleImageError = (speciesId: number) => {
+        setImageErrors((prev) => new Set([...prev, speciesId]))
+    }
+
+    return (
+        <div className="flex justify-center items-center space-x-1">
+            {upcomingSpecies.map((speciesItem, index) => {
+                const isCurrent = index === 0
+                const globalIndex = currentIndex + index
+                const taxon = speciesItem.taxon
+                const hasImageError = imageErrors.has(taxon.id)
+
+                return (
+                    <motion.div
+                        key={taxon.id}
+                        className={`relative group cursor-pointer ${
+                            onThumbnailClick ? 'hover:scale-110' : ''
+                        }`}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{
+                            opacity: isCurrent ? 1 : 0.6,
+                            scale: isCurrent ? 1 : 0.85,
+                        }}
+                        transition={{
+                            duration: 0.3,
+                            delay: index * 0.05,
+                        }}
+                        style={{
+                            zIndex: isCurrent ? 10 : 5 - index,
+                            marginLeft: index > 0 ? '-8px' : '0',
+                        }}
+                        onClick={() => onThumbnailClick?.(speciesItem)}
+                        whileHover={
+                            onThumbnailClick
+                                ? { scale: isCurrent ? 1.05 : 0.9 }
+                                : {}
+                        }
+                        whileTap={
+                            onThumbnailClick
+                                ? { scale: isCurrent ? 0.95 : 0.8 }
+                                : {}
+                        }
+                    >
+                        <div
+                            className={`relative rounded-full overflow-hidden border-2 transition-all duration-200 ${
+                                isCurrent
+                                    ? 'border-blue-500 shadow-lg'
+                                    : 'border-gray-300 shadow-sm group-hover:border-gray-400'
+                            }`}
+                            style={{
+                                width: isCurrent ? '40px' : '32px',
+                                height: isCurrent ? '40px' : '32px',
+                            }}
+                        >
+                            {taxon.default_photo?.square_url &&
+                            !hasImageError ? (
+                                <img
+                                    src={taxon.default_photo.square_url}
+                                    alt={
+                                        taxon.preferred_common_name ||
+                                        taxon.name
+                                    }
+                                    className="w-full h-full object-cover"
+                                    onError={() => handleImageError(taxon.id)}
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                    <span
+                                        className="text-gray-400"
+                                        style={{
+                                            fontSize: isCurrent
+                                                ? '16px'
+                                                : '12px',
+                                        }}
+                                    >
+                                        🐾
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Tooltip with species name */}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max max-w-xs bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100 z-30">
+                            {taxon.preferred_common_name || taxon.name}
+                            {onThumbnailClick && !isCurrent && (
+                                <div className="text-gray-300 text-xs mt-1">
+                                    Click to jump here
+                                </div>
+                            )}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-black" />
+                        </div>
+                    </motion.div>
+                )
+            })}
+
+            {/* Show remaining count if there are more */}
+            {species.length > currentIndex + maxThumbnails && (
+                <motion.div
+                    className="flex items-center justify-center rounded-full bg-gray-100 border-2 border-gray-300"
+                    style={{
+                        width: '32px',
+                        height: '32px',
+                        marginLeft: '-8px',
+                        zIndex: 1,
+                    }}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 0.6, scale: 0.85 }}
+                    transition={{ duration: 0.3, delay: maxThumbnails * 0.05 }}
+                >
+                    <span className="text-xs text-gray-500 font-medium">
+                        +{species.length - currentIndex - maxThumbnails}
+                    </span>
+                </motion.div>
+            )}
+        </div>
+    )
+}
 
 export function SpeciesSwipeSelector({
     questSpecies,
@@ -88,6 +229,9 @@ export function SpeciesSwipeSelector({
         resetSwipeSession,
         getSwipeStats,
         progress,
+        filteredSpecies,
+        currentIndex,
+        jumpToSpecies,
     } = useSpeciesSwipe({
         availableSpecies: (speciesCounts || []) as any,
         questSpecies: questSpecies as any,
@@ -166,16 +310,14 @@ export function SpeciesSwipeSelector({
                                 <TooltipTrigger asChild>
                                     <Button
                                         type="button"
-                                        variant="neutral"
-                                        size="lg"
-                                        className="rounded-full w-14 h-14 border-red-200 hover:border-red-300 hover:bg-red-50 mr-2"
+                                        className="rounded-full w-14 h-14 mr-4 bg-rose-500"
                                         onClick={(e) => {
                                             e.preventDefault()
                                             handleButtonAction('reject')
                                         }}
                                         disabled={!currentSpecies}
                                     >
-                                        <X className="w-6 h-6 text-red-500" />
+                                        <X className="w-6 h-6 text-background" />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -187,7 +329,7 @@ export function SpeciesSwipeSelector({
                         {/* Swipe Card */}
                         <div
                             ref={swipeAreaRef}
-                            className="relative flex h-[520px] w-[320px] items-center justify-center"
+                            className="relative flex  w-[320px] items-center justify-center"
                         >
                             <SwipeCard
                                 key={currentSpecies?.taxon.id}
@@ -207,9 +349,8 @@ export function SpeciesSwipeSelector({
                                 <TooltipTrigger asChild>
                                     <Button
                                         type="button"
-                                        variant="neutral"
-                                        size="lg"
-                                        className="rounded-full w-14 h-14 border-green-200 hover:border-green-300 hover:bg-green-50 ml-2"
+                                        variant="default"
+                                        className="rounded-full w-14 h-14 ml-4"
                                         onClick={(e) => {
                                             e.preventDefault()
                                             if (
@@ -225,7 +366,7 @@ export function SpeciesSwipeSelector({
                                         }}
                                         disabled={!currentSpecies}
                                     >
-                                        <Heart className="w-6 h-6 text-green-500" />
+                                        <Heart className="w-6 h-6 " />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -264,60 +405,48 @@ export function SpeciesSwipeSelector({
 
                 {/* Progress Indicator */}
                 <div className="mb-4 text-center space-y-3">
-                    {/* Progress bar */}
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
-                            style={{ width: `${progress}%` }}
-                        />
-                    </div>
-
-                    {/* Instructions */}
-                    {/*<div className="flex justify-center items-center gap-4 text-sm text-gray-600">*/}
-                    {/*    <div className="flex items-center gap-1">*/}
-                    {/*        <X className="w-4 h-4 text-red-500" />*/}
-                    {/*        <span>Skip</span>*/}
-                    {/*    </div>*/}
-                    {/*    <div className="flex items-center gap-1">*/}
-                    {/*        <Heart className="w-4 h-4 text-green-500" />*/}
-                    {/*        <span>Add</span>*/}
-                    {/*    </div>*/}
-                    {/*</div>*/}
+                    {/* Species Thumbnails Progress */}
+                    <SpeciesProgressThumbnails
+                        species={filteredSpecies}
+                        currentIndex={currentIndex}
+                        maxThumbnails={6}
+                        onThumbnailClick={jumpToSpecies}
+                    />
 
                     {/* Stats */}
-                    <div className="flex justify-center gap-2 text-xs">
-                        <Badge variant="neutral">
-                            {stats.totalRemaining} remaining
-                        </Badge>
-                        <Badge variant="neutral" className="text-green-600">
-                            {questSpecies.size} selected
-                        </Badge>
-                        {stats.totalAdded > 0 && (
-                            <Badge variant="neutral" className="text-blue-600">
-                                <TrendingUp className="w-3 h-3 mr-1" />
-                                {stats.totalAdded} added today
-                            </Badge>
-                        )}
-                    </div>
+                    {/*<div className="flex justify-center gap-2 text-xs">*/}
+                    {/*    <Badge variant="neutral">*/}
+                    {/*        {stats.totalRemaining} remaining*/}
+                    {/*    </Badge>*/}
+                    {/*    <Badge variant="neutral" className="text-green-600">*/}
+                    {/*        {questSpecies.size} selected*/}
+                    {/*    </Badge>*/}
+                    {/*    {stats.totalAdded > 0 && (*/}
+                    {/*        <Badge variant="neutral" className="text-blue-600">*/}
+                    {/*            <TrendingUp className="w-3 h-3 mr-1" />*/}
+                    {/*            {stats.totalAdded} added today*/}
+                    {/*        </Badge>*/}
+                    {/*    )}*/}
+                    {/*</div>*/}
                 </div>
 
-                {lastAction && (
-                    <motion.div
-                        className="mt-4 p-3 bg-gray-50 rounded-lg text-center"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <p className="text-sm text-gray-600">
-                            {lastAction.type === 'add'
-                                ? '✅ Added'
-                                : '❌ Skipped'}{' '}
-                            <strong>
-                                {lastAction.species.taxon.preferred_common_name}
-                            </strong>
-                        </p>
-                    </motion.div>
-                )}
+                {/*{lastAction && (*/}
+                {/*    <motion.div*/}
+                {/*        className="mt-4 p-3 bg-gray-50 rounded-lg text-center"*/}
+                {/*        initial={{ opacity: 0, y: 20 }}*/}
+                {/*        animate={{ opacity: 1, y: 0 }}*/}
+                {/*        transition={{ duration: 0.3 }}*/}
+                {/*    >*/}
+                {/*        <p className="text-sm text-gray-600">*/}
+                {/*            {lastAction.type === 'add'*/}
+                {/*                ? '✅ Added'*/}
+                {/*                : '❌ Skipped'}{' '}*/}
+                {/*            <strong>*/}
+                {/*                {lastAction.species.taxon.preferred_common_name}*/}
+                {/*            </strong>*/}
+                {/*        </p>*/}
+                {/*    </motion.div>*/}
+                {/*)}*/}
             </div>
             {/* Right Column - Current Quest Species */}
             <div className="flex flex-col lg:col-span-2 order-1 lg:order-2 overflow-y-auto lg:max-h-[70vh] max-h-[60vh]">
@@ -364,10 +493,10 @@ function SwipeCard({ species, onSwipeComplete, locationData }: SwipeCardProps) {
     const cardRef = useRef<HTMLDivElement>(null)
 
     // Visual feedback transforms
-    const skipOpacity = useTransform(x, [-150, -50, 0], [1, 0.6, 0])
-    const addOpacity = useTransform(x, [0, 50, 150], [0, 0.6, 1])
-    const skipScale = useTransform(x, [-150, -50, 0], [1.2, 0.8, 0.5])
-    const addScale = useTransform(x, [0, 50, 150], [0.5, 0.8, 1.2])
+    const skipOpacity = useTransform(x, [-90, -15, 0], [1, 0.6, 0])
+    const addOpacity = useTransform(x, [0, 15, 90], [0, 0.6, 1])
+    const skipScale = useTransform(x, [-90, -15, 0], [1.2, 0.8, 0.5])
+    const addScale = useTransform(x, [0, 15, 90], [0.5, 0.8, 1.2])
 
     const handleDragEnd = useCallback(
         (event: any, { offset, velocity }: any) => {
@@ -397,10 +526,33 @@ function SwipeCard({ species, onSwipeComplete, locationData }: SwipeCardProps) {
 
     const { taxon } = species
 
+    // Convert to INatTaxon format for SpeciesCardWithObservations
+    const inatTaxon = {
+        ...taxon,
+        iconic_taxon_name: taxon.iconic_taxon_name || null,
+        observations_count: taxon.observations_count || 0,
+        wikipedia_url: taxon.wikipedia_url || null,
+        rank_level: 10,
+        iconic_taxon_id: null,
+        ancestor_ids: [],
+        is_active: true,
+        flag_counts: { resolved: 0, unresolved: 0 },
+        atlas_id: null,
+        complete_species_count: null,
+        parent_id: null,
+        name_autocomplete: taxon.name,
+        matched_term: taxon.name,
+        ancestry: '',
+        extinct: false,
+        taxon_changes_count: 0,
+        taxon_schemes_count: 0,
+        current_synonymous_taxon_ids: null,
+    } as any
+
     return (
         <motion.div
             ref={cardRef}
-            className="h-[480px] w-full max-w-[320px] cursor-grab active:cursor-grabbing"
+            className="h-auto w-full max-w-[320px] cursor-grab active:cursor-grabbing"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.1}
@@ -452,12 +604,39 @@ function SwipeCard({ species, onSwipeComplete, locationData }: SwipeCardProps) {
                     </div>
                 </motion.div>
 
+                {/* Full Card Overlays */}
+                {/* Skip Overlay */}
+                <motion.div
+                    className="pointer-events-none absolute z-10 rounded-xl bg-red-500/20"
+                    style={{
+                        opacity: skipOpacity,
+                        top: '0px',
+                        bottom: '0px',
+                        left: '0px',
+                        right: '0px',
+                    }}
+                />
+
+                {/* Add Overlay */}
+                <motion.div
+                    className="pointer-events-none absolute z-10 rounded-xl bg-green-500/20"
+                    style={{
+                        opacity: addOpacity,
+                        top: '0px',
+                        bottom: '0px',
+                        left: '0px',
+                        right: '0px',
+                    }}
+                />
+
+
+
                 <SpeciesCardWithObservations
-                    species={taxon}
+                    species={inatTaxon}
                     locationData={locationData}
                 >
                     <SpeciesCard
-                        species={taxon}
+                        species={inatTaxon}
                         hoverEffect="none"
                         isSelectable={false}
                         className="h-full w-full"
