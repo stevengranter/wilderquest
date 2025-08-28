@@ -101,7 +101,26 @@ export function createQuestShareService(
             throw new Error('Mapping does not belong to this quest')
         }
 
+        // Get quest to check mode
+        const quest = await questRepo.findById(questId!)
+        if (!quest) throw new Error('Quest not found')
+
         if (observed) {
+            // In competitive mode, check if species is already found by someone else
+            if (quest.mode === 'competitive') {
+                const existingProgress =
+                    await progressRepo.getAggregatedProgress(questId!)
+                const speciesAlreadyFound = existingProgress.find(
+                    (p) => p.mapping_id === mappingId && p.count > 0
+                )
+
+                if (speciesAlreadyFound) {
+                    throw new Error(
+                        'This species has already been found by another participant in competitive mode'
+                    )
+                }
+            }
+
             try {
                 await progressRepo.addProgress(share.id, mappingId)
             } catch (_err) {
@@ -161,6 +180,11 @@ export function createQuestShareService(
         // Ensure ownership
         await assertQuestOwnership(questId, userId)
         const user = await userRepo.findUser({ id: userId })
+
+        // Get quest to check mode
+        const quest = await questRepo.findById(questId)
+        if (!quest) throw new Error('Quest not found')
+
         // Find or create an owner share for this quest (guest_name null)
         const possibleShares = (await questShareRepo.findMany({
             quest_id: questId,
@@ -180,6 +204,21 @@ export function createQuestShareService(
         if (!share) throw new Error('Unable to resolve owner share')
 
         if (observed) {
+            // In competitive mode, check if species is already found by someone else
+            if (quest.mode === 'competitive') {
+                const existingProgress =
+                    await progressRepo.getAggregatedProgress(questId)
+                const speciesAlreadyFound = existingProgress.find(
+                    (p) => p.mapping_id === mappingId && p.count > 0
+                )
+
+                if (speciesAlreadyFound) {
+                    throw new Error(
+                        'This species has already been found by another participant in competitive mode'
+                    )
+                }
+            }
+
             try {
                 await progressRepo.addProgress(share.id, mappingId)
                 sendEvent(String(questId), {

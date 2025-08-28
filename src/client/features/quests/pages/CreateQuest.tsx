@@ -7,6 +7,7 @@ import api from '@/api/api'
 import { Button } from '@/components/ui/button'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { useAuth } from '@/hooks/useAuth'
@@ -61,6 +62,7 @@ export function CreateQuest() {
             latitude: null,
             longitude: null,
             isPrivate: false,
+            mode: 'competitive' as const,
             starts_at: '',
             ends_at: '',
         },
@@ -68,30 +70,52 @@ export function CreateQuest() {
 
     const onSubmit = useCallback(
         async (values: z.infer<typeof formSchema>) => {
-            const taxonIds = Array.from(questSpecies.keys())
-            const { questName, locationName, latitude, longitude, starts_at, ends_at } = values
-            const payload = {
-                name: questName,
-                location_name: locationName,
-                latitude: latitude,
-                longitude: longitude,
-                taxon_ids: taxonIds,
-                starts_at: starts_at ? new Date(starts_at).toISOString() : null,
-                ends_at: ends_at ? new Date(ends_at).toISOString() : null,
+            console.log('Form submitted with values:', values)
+            console.log('Form errors:', form.formState.errors)
+            try {
+                const taxonIds = Array.from(questSpecies.keys())
+                const {
+                    questName,
+                    locationName,
+                    latitude,
+                    longitude,
+                    mode,
+                    starts_at,
+                    ends_at,
+                } = values
+                const payload = {
+                    name: questName,
+                    location_name: locationName,
+                    latitude: latitude,
+                    longitude: longitude,
+                    mode: mode,
+                    taxon_ids: taxonIds,
+                    starts_at: starts_at
+                        ? new Date(starts_at).toISOString()
+                        : null,
+                    ends_at: ends_at ? new Date(ends_at).toISOString() : null,
+                }
+
+                console.log('Submitting quest with:', payload)
+
+                const newQuest = await api.post('/quests', payload)
+
+                console.log('API Response:', newQuest)
+                if (!newQuest.data.id) {
+                    console.error('Failed to create quest - no ID in response')
+                    alert('Failed to create quest. Please try again.')
+                    return
+                }
+
+                console.log('Created quest:', newQuest.data)
+
+                navigate(`/quests/${newQuest.data.id}`)
+            } catch (error) {
+                console.error('Error creating quest:', error)
+                alert(
+                    `Failed to create quest: ${error instanceof Error ? error.message : 'Unknown error'}`
+                )
             }
-
-            console.log('Submitting quest with:', payload)
-
-            const newQuest = await api.post('/quests', payload)
-
-            console.log(await newQuest)
-            if (!newQuest.data.id) {
-                console.error('Failed to create quest')
-            }
-
-            console.log('Created quest:', newQuest.data)
-
-            navigate(`/quests/${newQuest.data.id}`)
         },
         [questSpecies, navigate]
     )
@@ -107,7 +131,9 @@ export function CreateQuest() {
                 <h2 className="text-xl">Step {step}</h2>
                 <FormProvider {...form}>
                     <form
-                        onSubmit={form.handleSubmit(onSubmit)}
+                        onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                            console.log('Form validation failed:', errors)
+                        })}
                         className="space-y-8"
                     >
                         {step === 1 && <Step1_QuestDetails setStep={setStep} />}
@@ -169,6 +195,7 @@ function Step1_QuestDetails({ setStep }: { setStep: (step: number) => void }) {
             'locationName',
             'latitude',
             'longitude',
+            'mode',
             'starts_at',
             'ends_at',
         ])
@@ -178,9 +205,10 @@ function Step1_QuestDetails({ setStep }: { setStep: (step: number) => void }) {
     }
 
     return (
-        <> <div>When and where?</div>
+        <>
+            {' '}
+            <div>When and where?</div>
             <div className="flex flex-row  gap-4 h-96">
-
                 {/* Form fields - Left column */}
                 <div className="w-1/2 flex flex-col gap-4 p-4">
                     <FormField
@@ -190,7 +218,10 @@ function Step1_QuestDetails({ setStep }: { setStep: (step: number) => void }) {
                             <FormItem>
                                 <FormLabel>Quest Name</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="My Awesome Quest" {...field} />
+                                    <Input
+                                        placeholder="My Awesome Quest"
+                                        {...field}
+                                    />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -202,6 +233,37 @@ function Step1_QuestDetails({ setStep }: { setStep: (step: number) => void }) {
                         control={control}
                         watch={watch}
                         setValue={setValue}
+                    />
+
+                    <FormField
+                        control={control}
+                        name="mode"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Quest Mode</FormLabel>
+                                <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                >
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select quest mode" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="cooperative">
+                                            Cooperative - Multiple participants
+                                            can find the same species
+                                        </SelectItem>
+                                        <SelectItem value="competitive">
+                                            Competitive - First to find a
+                                            species claims it
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
                     />
 
                     {/* Hidden form fields for latitude and longitude */}
@@ -251,7 +313,10 @@ function Step1_QuestDetails({ setStep }: { setStep: (step: number) => void }) {
                                 <FormItem className="flex-1">
                                     <FormLabel>Start Date</FormLabel>
                                     <FormControl>
-                                        <Input type="datetime-local" {...field} />
+                                        <Input
+                                            type="datetime-local"
+                                            {...field}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -264,7 +329,10 @@ function Step1_QuestDetails({ setStep }: { setStep: (step: number) => void }) {
                                 <FormItem className="flex-1">
                                     <FormLabel>End Date</FormLabel>
                                     <FormControl>
-                                        <Input type="datetime-local" {...field} />
+                                        <Input
+                                            type="datetime-local"
+                                            {...field}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -275,10 +343,12 @@ function Step1_QuestDetails({ setStep }: { setStep: (step: number) => void }) {
 
                 {/* Map view - Right column */}
                 <div className="w-1/2 h-96">
-                    <QuestMapView options={mapOptions} className="w-full h-full" />
+                    <QuestMapView
+                        options={mapOptions}
+                        className="w-full h-full"
+                    />
                 </div>
             </div>
-
             <Button type="button" onClick={handleNext} className="w-full mt-4">
                 Next
             </Button>

@@ -101,12 +101,18 @@ export function createQuestService(
         userId: number
     ): Promise<QuestWithTaxa> {
         try {
-            const { taxon_ids = [], starts_at, ends_at, ...restQuestData } = questData
+            const {
+                taxon_ids = [],
+                starts_at,
+                ends_at,
+                ...restQuestData
+            } = questData
 
             const questTableData = {
                 ...restQuestData,
                 starts_at: starts_at ? new Date(starts_at) : null,
-                ends_at: ends_at ? new Date(ends_at) :null,
+                ends_at: ends_at ? new Date(ends_at) : null,
+                mode: restQuestData.mode || 'cooperative', // Default to cooperative if not specified
             }
 
             const questId = await questsRepo.create({
@@ -182,8 +188,13 @@ export function createQuestService(
             throw new Error('Access denied')
         }
 
-        const { taxon_ids, description: _description, starts_at, ends_at, ...restQuestData } =
-            updatedData
+        const {
+            taxon_ids,
+            description: _description,
+            starts_at,
+            ends_at,
+            ...restQuestData
+        } = updatedData
 
         const questTableData = {
             ...restQuestData,

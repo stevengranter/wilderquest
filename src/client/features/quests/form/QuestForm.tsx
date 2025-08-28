@@ -1,15 +1,10 @@
 import React, { useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { z } from 'zod'
-import {
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from '@/components/ui/form'
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { QuestMode } from '../types'
 
 const formSchema = z.object({
     questName: z.string().min(2, {
@@ -20,6 +15,7 @@ const formSchema = z.object({
     }),
     latitude: z.number(), // Remove .optional() if required
     longitude: z.number(), // Remove .optional() if required
+    mode: z.enum(['competitive', 'cooperative']),
 })
 
 export default function QuestForm() {
@@ -33,7 +29,10 @@ export default function QuestForm() {
     //     defaultValues: { questName: '' },
     // })
     const form = useForm<z.infer<typeof formSchema>>({
-        defaultValues: { questName: '' },
+        defaultValues: {
+            questName: '',
+            mode: 'competitive' as QuestMode,
+        },
     })
     const renderStep = () => {
         switch (step) {
@@ -55,6 +54,41 @@ export default function QuestForm() {
                                     </FormControl>
                                     <FormDescription>
                                         This is the display name for your quest.
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="mode"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Quest Mode</FormLabel>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select quest mode" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="cooperative">
+                                                Cooperative - Multiple
+                                                participants can find the same
+                                                species
+                                            </SelectItem>
+                                            <SelectItem value="competitive">
+                                                Competitive - First to find a
+                                                species claims it
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormDescription>
+                                        Choose how participants can find species
+                                        in this quest.
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>

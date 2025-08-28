@@ -5,6 +5,7 @@ import { Quest } from '../models/quests.js'
 export type QuestWithTaxa = Quest & {
     taxon_ids: number[]
     photoUrl?: string | null
+    username?: string
 }
 
 export type QuestRepository = ReturnType<typeof createQuestRepository>
@@ -70,6 +71,7 @@ export function createQuestRepository(
             location_name: row.location_name,
             latitude: row.latitude,
             longitude: row.longitude,
+            mode: row.mode,
             taxon_ids: row.taxon_ids
                 ? row.taxon_ids.split(',').map(Number)
                 : [],

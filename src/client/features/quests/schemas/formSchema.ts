@@ -10,10 +10,15 @@ export const formSchema = z.object({
     latitude: z.number().nullable(),
     longitude: z.number().nullable(),
     isPrivate: z.boolean(),
-    starts_at: z.string().refine((val) => val.length === 0 || !isNaN(Date.parse(val)), {
-        message: "Start date must be a valid date and time.",
-    }),
-    ends_at: z.string().refine((val) => val.length === 0 || !isNaN(Date.parse(val)), {
-        message: "End date must be a valid date and time.",
-    }),
+    mode: z.enum(['competitive', 'cooperative']),
+    starts_at: z
+        .string()
+        .refine((val) => val.length === 0 || !isNaN(Date.parse(val)), {
+            message: 'Start date must be a valid date and time.',
+        }),
+    ends_at: z
+        .string()
+        .refine((val) => val.length === 0 || !isNaN(Date.parse(val)), {
+            message: 'End date must be a valid date and time.',
+        }),
 })

@@ -92,6 +92,7 @@ export function LocationInput({
                         <Input
                             placeholder="Search location..."
                             {...field}
+                            value={(field.value as string) || ''}
                             onBlur={handleBlur}
                             onChange={(e) => {
                                 field.onChange(e)

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { useAuth } from '@/hooks/useAuth'
@@ -83,6 +84,7 @@ export default function EditQuest() {
                         ? parseFloat(quest.longitude)
                         : null,
                     isPrivate: !!quest.is_private,
+                    mode: quest.mode || 'cooperative',
                     starts_at: quest.starts_at
                         ? new Date(quest.starts_at)
                               .toISOString()
@@ -192,6 +194,7 @@ export default function EditQuest() {
             latitude: data.latitude,
             longitude: data.longitude,
             is_private: data.isPrivate,
+            mode: data.mode,
             starts_at: data.starts_at || null,
             ends_at: data.ends_at || null,
             taxon_ids,
@@ -382,6 +385,36 @@ function QuestDetails() {
                                     to other users.
                                 </FormDescription>
                             </div>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={control}
+                    name="mode"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Quest Mode</FormLabel>
+                            <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                            >
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select quest mode" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="cooperative">
+                                        Cooperative - Multiple participants can
+                                        find the same species
+                                    </SelectItem>
+                                    <SelectItem value="competitive">
+                                        Competitive - First to find a species
+                                        claims it
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
                         </FormItem>
                     )}
                 />

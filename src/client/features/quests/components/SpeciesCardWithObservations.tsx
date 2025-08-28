@@ -19,13 +19,23 @@ interface SpeciesCardWithObservationsProps {
     children?: ReactNode
     found?: boolean
     actionArea?: ReactNode
+    avatarOverlay?: {
+        displayName: string
+    } | null
 }
 
 export function SpeciesCardWithObservations(
     props: SpeciesCardWithObservationsProps
 ) {
-    const { species, questData, locationData, children, found, actionArea } =
-        props
+    const {
+        species,
+        questData,
+        locationData,
+        children,
+        found,
+        actionArea,
+        avatarOverlay,
+    } = props
     const displayData = questData || locationData
 
     const card = children || (
@@ -34,6 +44,7 @@ export function SpeciesCardWithObservations(
             className="h-full"
             found={found}
             actionArea={actionArea}
+            avatarOverlay={avatarOverlay}
         />
     )
 

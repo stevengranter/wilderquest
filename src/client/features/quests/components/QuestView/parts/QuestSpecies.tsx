@@ -126,6 +126,7 @@ export const QuestSpecies = ({
                                                     found={
                                                         taxon.progressCount > 0
                                                     }
+                                                    avatarOverlay={null}
                                                     actionArea={
                                                         (isOwner || token) &&
                                                         taxon.mapping && (
@@ -232,104 +233,134 @@ export const QuestSpecies = ({
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 lg:gap-6 auto-rows-fr">
                             {taxaWithProgress
                                 .filter((t) => t.isFound)
-                                .map((taxon) => (
-                                    <div key={taxon.id} className="relative">
-                                        <SpeciesCardWithObservations
-                                            species={taxon}
-                                            questData={questData}
-                                            found={taxon.progressCount > 0}
-                                            actionArea={
-                                                (isOwner || token) &&
-                                                taxon.mapping && (
-                                                    <div className="p-2">
-                                                        <Button
-                                                            className="w-full shadow-0 border-1"
-                                                            size="sm"
-                                                            variant="neutral"
-                                                            disabled={
-                                                                questData.status !==
-                                                                'active'
-                                                            }
-                                                            onClick={async (
-                                                                e
-                                                            ) => {
-                                                                e.stopPropagation()
-                                                                if (
-                                                                    !taxon.mapping
-                                                                )
-                                                                    return
-                                                                try {
-                                                                    let progress
-                                                                    if (
-                                                                        isOwner
-                                                                    ) {
-                                                                        progress =
-                                                                            detailedProgress?.find(
-                                                                                (
-                                                                                    p
-                                                                                ) =>
-                                                                                    p.display_name ===
-                                                                                        user?.username &&
-                                                                                    p.mapping_id ===
-                                                                                        taxon.mapping!
-                                                                                            .id
-                                                                            )
-                                                                    } else if (
-                                                                        token
-                                                                    ) {
-                                                                        progress =
-                                                                            detailedProgress?.find(
-                                                                                (
-                                                                                    p
-                                                                                ) =>
-                                                                                    p.display_name ===
-                                                                                        share?.guest_name &&
-                                                                                    p.mapping_id ===
-                                                                                        taxon.mapping!
-                                                                                            .id
-                                                                            )
-                                                                    }
-                                                                    const next =
-                                                                        !progress
-                                                                    if (
-                                                                        isOwner
-                                                                    ) {
-                                                                        await api.post(
-                                                                            `/quest-sharing/quests/${questData.id}/progress/${taxon.mapping!.id}`,
-                                                                            {
-                                                                                observed:
-                                                                                    next,
-                                                                            }
-                                                                        )
-                                                                    } else if (
-                                                                        token
-                                                                    ) {
-                                                                        await api.post(
-                                                                            `/quest-sharing/shares/token/${token}/progress/${taxon.mapping!.id}`,
-                                                                            {
-                                                                                observed:
-                                                                                    next,
-                                                                            }
-                                                                        )
-                                                                    }
-                                                                    console.log(
-                                                                        'Progress updated'
-                                                                    )
-                                                                } catch (_e) {
-                                                                    toast.error(
-                                                                        'Action failed'
-                                                                    )
+                                .map((taxon) => {
+                                    // Determine avatar overlay for competitive/cooperative quests
+                                    let avatarOverlay = null
+                                    if (
+                                        (questData.mode === 'competitive' ||
+                                            questData.mode === 'cooperative') &&
+                                        taxon.recentEntries.length > 0
+                                    ) {
+                                        // Get the most recent finder
+                                        const mostRecentEntry =
+                                            taxon.recentEntries.sort(
+                                                (a, b) =>
+                                                    new Date(
+                                                        b.observed_at
+                                                    ).getTime() -
+                                                    new Date(
+                                                        a.observed_at
+                                                    ).getTime()
+                                            )[0]
+                                        avatarOverlay = {
+                                            displayName:
+                                                mostRecentEntry.display_name,
+                                        }
+                                    }
+
+                                    return (
+                                        <div
+                                            key={taxon.id}
+                                            className="relative"
+                                        >
+                                            <SpeciesCardWithObservations
+                                                species={taxon}
+                                                questData={questData}
+                                                found={taxon.progressCount > 0}
+                                                avatarOverlay={avatarOverlay}
+                                                actionArea={
+                                                    (isOwner || token) &&
+                                                    taxon.mapping && (
+                                                        <div className="p-2">
+                                                            <Button
+                                                                className="w-full shadow-0 border-1"
+                                                                size="sm"
+                                                                variant="neutral"
+                                                                disabled={
+                                                                    questData.status !==
+                                                                    'active'
                                                                 }
-                                                            }}
-                                                        >
-                                                            Found
-                                                        </Button>
-                                                    </div>
-                                                )
-                                            }
-                                        />
-                                    </div>
-                                ))}
+                                                                onClick={async (
+                                                                    e
+                                                                ) => {
+                                                                    e.stopPropagation()
+                                                                    if (
+                                                                        !taxon.mapping
+                                                                    )
+                                                                        return
+                                                                    try {
+                                                                        let progress
+                                                                        if (
+                                                                            isOwner
+                                                                        ) {
+                                                                            progress =
+                                                                                detailedProgress?.find(
+                                                                                    (
+                                                                                        p
+                                                                                    ) =>
+                                                                                        p.display_name ===
+                                                                                            user?.username &&
+                                                                                        p.mapping_id ===
+                                                                                            taxon.mapping!
+                                                                                                .id
+                                                                                )
+                                                                        } else if (
+                                                                            token
+                                                                        ) {
+                                                                            progress =
+                                                                                detailedProgress?.find(
+                                                                                    (
+                                                                                        p
+                                                                                    ) =>
+                                                                                        p.display_name ===
+                                                                                            share?.guest_name &&
+                                                                                        p.mapping_id ===
+                                                                                            taxon.mapping!
+                                                                                                .id
+                                                                                )
+                                                                        }
+                                                                        const next =
+                                                                            !progress
+                                                                        if (
+                                                                            isOwner
+                                                                        ) {
+                                                                            await api.post(
+                                                                                `/quest-sharing/quests/${questData.id}/progress/${taxon.mapping!.id}`,
+                                                                                {
+                                                                                    observed:
+                                                                                        next,
+                                                                                }
+                                                                            )
+                                                                        } else if (
+                                                                            token
+                                                                        ) {
+                                                                            await api.post(
+                                                                                `/quest-sharing/shares/token/${token}/progress/${taxon.mapping!.id}`,
+                                                                                {
+                                                                                    observed:
+                                                                                        next,
+                                                                                }
+                                                                            )
+                                                                        }
+                                                                        console.log(
+                                                                            'Progress updated'
+                                                                        )
+                                                                    } catch (_e) {
+                                                                        toast.error(
+                                                                            'Action failed'
+                                                                        )
+                                                                    }
+                                                                }}
+                                                            >
+                                                                Found
+                                                            </Button>
+                                                        </div>
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    )
+                                })}
                         </div>
                     </div>
                 </div>

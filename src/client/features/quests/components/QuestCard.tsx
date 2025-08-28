@@ -148,9 +148,22 @@ function QuestCardContent({
                     <CardContent className="px-4 py-2 m-0 space-y-1 relative">
                         <IoMdCompass className="z-5 absolute -top-2 -right-12 -translate-x-1/2 text-orange-200 opacity-20 w-28 h-28 pointer-events-none" />
 
-                        <h3 className="text-lg font-semibold text-green-900 line-clamp-1 z-10 relative">
-                            {quest.name}
-                        </h3>
+                        <div className="flex items-center gap-2 z-10 relative">
+                            <h3 className="text-lg font-semibold text-green-900 line-clamp-1">
+                                {quest.name}
+                            </h3>
+                            <span
+                                className={`text-xs px-2 py-1 rounded-full ${
+                                    quest.mode === 'competitive'
+                                        ? 'bg-red-100 text-red-800'
+                                        : 'bg-blue-100 text-blue-800'
+                                }`}
+                            >
+                                {quest.mode === 'competitive'
+                                    ? 'Competitive'
+                                    : 'Cooperative'}
+                            </span>
+                        </div>
 
                         <div className="text-xs">{formattedDate}</div>
                     </CardContent>

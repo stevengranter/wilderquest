@@ -11,6 +11,7 @@ import { ObservationDialog } from './ObservationDialog'
 import { cn } from '@/lib/utils'
 import { User } from '../../../../server/models/user'
 import { JSX } from 'react'
+import { AvatarOverlay } from './AvatarOverlay'
 
 type TaxaWithProgress = INatTaxon & {
     mapping?: QuestMapping
@@ -41,11 +42,30 @@ function SpeciesListCard(props: {
     longitude?: number
     locationName?: string
     hoverEffect?: 'lift' | 'shadow' | 'none'
+    questMode?: 'competitive' | 'cooperative'
 }) {
     const hoverClasses = {
         lift: 'hover:shadow-shadow hover:-translate-y-2 duration-250',
         shadow: 'hover:shadow-shadow',
         none: '',
+    }
+
+    // Determine avatar overlay for competitive/cooperative quests
+    let avatarOverlay = null
+    if (
+        (props.questMode === 'competitive' ||
+            props.questMode === 'cooperative') &&
+        props.taxon.recentEntries.length > 0
+    ) {
+        // Get the most recent finder
+        const mostRecentEntry = props.taxon.recentEntries.sort(
+            (a, b) =>
+                new Date(b.observed_at).getTime() -
+                new Date(a.observed_at).getTime()
+        )[0]
+        avatarOverlay = {
+            displayName: mostRecentEntry.display_name,
+        }
     }
 
     const cardContent = (
@@ -57,7 +77,7 @@ function SpeciesListCard(props: {
         >
             <div className="flex items-start gap-4">
                 {/* Taxon Image */}
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 relative">
                     {props.taxon.default_photo ? (
                         <img
                             src={props.taxon.default_photo.medium_url}
@@ -68,6 +88,13 @@ function SpeciesListCard(props: {
                         <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
                             <Camera className="h-8 w-8 text-gray-400" />
                         </div>
+                    )}
+                    {avatarOverlay && (
+                        <AvatarOverlay
+                            displayName={avatarOverlay.displayName}
+                            size={24}
+                            className="w-6 h-6"
+                        />
                     )}
                 </div>
 
@@ -91,10 +118,7 @@ function SpeciesListCard(props: {
                                         observations
                                     </span>
                                 </div>
-                                <Badge
-                                    variant="neutral"
-                                    className="capitalize"
-                                >
+                                <Badge variant="neutral" className="capitalize">
                                     {props.taxon.rank}
                                 </Badge>
                             </div>
@@ -186,6 +210,7 @@ export const QuestListView = ({
                     longitude={questData.longitude}
                     locationName={questData.location_name}
                     hoverEffect="lift"
+                    questMode={questData.mode}
                     onClick={async (e) => {
                         e.stopPropagation()
                         e.preventDefault()

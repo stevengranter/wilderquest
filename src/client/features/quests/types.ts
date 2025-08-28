@@ -1,7 +1,8 @@
-import { Quest } from '@/../../types/types'
+import { Quest } from '../../../server/models/quests'
 import { INatTaxon } from '@shared/types/iNatTypes'
 
 export type QuestStatus = 'pending' | 'active' | 'paused' | 'ended'
+export type QuestMode = 'competitive' | 'cooperative'
 
 export type ClientQuest = Quest & {
     username: string

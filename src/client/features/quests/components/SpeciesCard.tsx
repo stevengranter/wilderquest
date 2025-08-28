@@ -13,6 +13,7 @@ import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 import { cn } from '@/lib/utils'
 import { useProgressiveImage } from '@/hooks/useProgressiveImage'
 import { BiWorld } from 'react-icons/bi'
+import { AvatarOverlay } from './AvatarOverlay'
 
 interface SpeciesCardProps {
     species: INatTaxon
@@ -26,6 +27,9 @@ interface SpeciesCardProps {
     hoverEffect?: 'lift' | 'shadow' | 'none'
     hasShadow?: boolean
     actionArea?: React.ReactNode
+    avatarOverlay?: {
+        displayName: string
+    } | null
 }
 
 export function SpeciesCard({
@@ -39,6 +43,7 @@ export function SpeciesCard({
     hoverEffect,
     hasShadow = false,
     actionArea,
+    avatarOverlay,
 }: SpeciesCardProps) {
     const {
         isSelectionMode,
@@ -90,6 +95,7 @@ export function SpeciesCard({
             hoverEffect={hoverEffect}
             hasShadow={hasShadow}
             actionArea={actionArea}
+            avatarOverlay={avatarOverlay}
         />
     )
 }
@@ -129,6 +135,7 @@ function SpeciesGridItem({
     hoverEffect,
     hasShadow = false,
     actionArea,
+    avatarOverlay,
 }: {
     species: INatTaxon
     className?: string
@@ -142,6 +149,9 @@ function SpeciesGridItem({
     hoverEffect?: 'lift' | 'shadow' | 'none'
     hasShadow?: boolean
     actionArea?: React.ReactNode
+    avatarOverlay?: {
+        displayName: string
+    } | null
 }) {
     const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
     const { src, isBlurred } = useProgressiveImage(
@@ -182,94 +192,108 @@ function SpeciesGridItem({
         //         onClick={handleClick}
         //         ref={cardRef}
         //     >
-        <Card
-            className={cn(
-                'aspect-2.5/3.5 overflow-hidden duration-250 transition-all shadow-0 py-0 gap-0 border-1 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
-                isSelected && 'ring-2 ring-blue-500 shadow-blue-200/50',
-                hoverClasses[hoverEffect || 'lift'],
-                found ? 'bg-green-100' : 'bg-background',
-                hasShadow ? hasShadowClasses['true'] : hasShadowClasses['false']
-            )}
-        >
-            <CardHeader className="gap-0 text-left justify-start pb-1 pt-3 relative text-foreground tracking-normal font-bold sm:text-md md:text-md lg:text-xl line-clamp-1 font-barlow">
-                {species.preferred_common_name && (
-                    <h3>{species.preferred_common_name}</h3>
+        <div className="relative">
+            <Card
+                className={cn(
+                    'aspect-2.5/3.5 overflow-hidden duration-250 transition-all shadow-0 py-0 gap-0 border-1 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
+                    isSelected && 'ring-2 ring-blue-500 shadow-blue-200/50',
+                    hoverClasses[hoverEffect || 'lift'],
+                    found ? 'bg-green-100' : 'bg-background',
+                    hasShadow
+                        ? hasShadowClasses['true']
+                        : hasShadowClasses['false']
                 )}
-            </CardHeader>
-
-            <CardContent className="relative px-0 mx-6">
-                <div className="absolute -top-3 -right-3">
-                    {species.iconic_taxon_name && (
-                        <div className="bg-yellow-300 rounded-full text-bg-main-foreground p-2 rotate-15 border-2">
-                            <KingdomIcon size={20} />
-                        </div>
-                    )}
-                </div>
-
-                {src ? (
-                    <div className="overflow-hidden w-full h-full aspect-square rounded-sm">
-                        <img
-                            src={src}
-                            alt={species.name}
-                            className={cn(
-                                'w-full h-full object-cover border-2 border-white outline-black outline-2',
-                                found && 'bg-teal-300',
-                                isBlurred &&
-                                    'filter blur-sm scale-110 transition-all duration-500'
-                            )}
-                            draggable={false}
-                        />
-                    </div>
-                ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                        <div className="text-gray-400 text-xs text-center px-2">
-                            No image
-                        </div>
-                    </div>
-                )}
-
-                <div className="space-y-1 text-right self-end mt-1 mb-2">
+            >
+                <CardHeader className="gap-0 text-left justify-start pb-1 pt-3 relative text-foreground tracking-normal font-bold sm:text-md md:text-md lg:text-xl line-clamp-1 font-barlow">
                     {species.preferred_common_name && (
-                        <p className="text-[11px] text-foreground italic leading-tight line-clamp-1">
-                            {species.name}
-                        </p>
+                        <h3>{species.preferred_common_name}</h3>
                     )}
-                </div>
-            </CardContent>
+                </CardHeader>
 
-            <CardFooter className="flex flex-row justify-start items-center py-2 pb-4">
-                <Badge>
-                    <BiWorld size={15} />
-                    {(
-                        geoObservationsCount ?? species.observations_count
-                    )?.toLocaleString()}
-                </Badge>
-
-                {rarity && (
-                    <Badge
-                        className={cn(
-                            'text-xs font-semibold border-0',
-                            rarity === 'common'
-                                ? 'bg-green-100 text-green-800'
-                                : rarity === 'uncommon'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-red-100 text-red-800'
+                <CardContent className="relative px-0 mx-6">
+                    <div className="absolute -top-3 -right-3">
+                        {species.iconic_taxon_name && (
+                            <div className="bg-yellow-300 rounded-full text-bg-main-foreground p-2 rotate-15 border-2">
+                                <KingdomIcon size={20} />
+                            </div>
                         )}
-                    >
-                        {rarity.toUpperCase()}
-                    </Badge>
-                )}
-
-                {isSelected && (
-                    <div className="absolute bottom-1 left-1 right-1">
-                        <div className="bg-blue-500 text-white text-[10px] font-medium px-2 py-0.5 rounded text-center">
-                            ✓ Selected
-                        </div>
                     </div>
-                )}
-            </CardFooter>
-            {actionArea}
-        </Card>
+
+
+
+                    {src ? (
+                        <div className="overflow-hidden w-full h-full aspect-square rounded-sm">
+                            <img
+                                src={src}
+                                alt={species.name}
+                                className={cn(
+                                    'w-full h-full object-cover border-2 border-white outline-black outline-2',
+                                    found && 'bg-teal-300',
+                                    isBlurred &&
+                                        'filter blur-sm scale-110 transition-all duration-500'
+                                )}
+                                draggable={false}
+                            />
+                        </div>
+                    ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                            <div className="text-gray-400 text-xs text-center px-2">
+                                No image
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="space-y-1 text-right self-end mt-1 mb-2">
+                        {species.preferred_common_name && (
+                            <p className="text-[11px] text-foreground italic leading-tight line-clamp-1">
+                                {species.name}
+                            </p>
+                        )}
+                    </div>
+                </CardContent>
+
+                <CardFooter className="flex flex-row justify-start items-center py-2 pb-4">
+                    <Badge>
+                        <BiWorld size={15} />
+                        {(
+                            geoObservationsCount ?? species.observations_count
+                        )?.toLocaleString()}
+                    </Badge>
+
+                    {rarity && (
+                        <Badge
+                            className={cn(
+                                'text-xs font-semibold border-0',
+                                rarity === 'common'
+                                    ? 'bg-green-100 text-green-800'
+                                    : rarity === 'uncommon'
+                                      ? 'bg-yellow-100 text-yellow-800'
+                                      : 'bg-red-100 text-red-800'
+                            )}
+                        >
+                            {rarity.toUpperCase()}
+                        </Badge>
+                    )}
+
+                    {isSelected && (
+                        <div className="absolute bottom-1 left-1 right-1">
+                            <div className="bg-blue-500 text-white text-[10px] font-medium px-2 py-0.5 rounded text-center">
+                                ✓ Selected
+                            </div>
+                        </div>
+                    )}
+                </CardFooter>
+                {actionArea}
+            </Card>
+            {avatarOverlay && (
+                <div className="absolute bottom-2 right-8 z-40">
+                    <AvatarOverlay
+                        displayName={avatarOverlay.displayName}
+                        className="w-12 h-12 border-1 transform translate-x-1/2 translate-y-1/2"
+                    />
+                </div>
+            )}
+        </div>
         //     </motion.div>
         // </AnimatePresence>
     )
