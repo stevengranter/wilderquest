@@ -3,6 +3,7 @@ import type { QuestShareRepository, SharedQuestProgressRepository } from '../../
 import { sendEvent } from './questEventsService.js'
 import { QuestShare } from '../../models/quest_shares.js'
 import { UserRepository } from '../../repositories/UserRepository.js'
+import { AppError } from '../../middlewares/errorHandler.js'
 
 export type QuestShareService = ReturnType<typeof createQuestShareService>
 
@@ -15,8 +16,8 @@ export function createQuestShareService(
 ) {
     async function assertQuestOwnership(questId: number, userId: number) {
         const quest = await questRepo.findById(questId)
-        if (!quest) throw new Error('Quest not found')
-        if (quest.user_id !== userId) throw new Error('Access denied')
+        if (!quest) throw new AppError('Quest not found', 404)
+        if (quest.user_id !== userId) throw new AppError('Access denied', 403)
         return quest
     }
 
@@ -33,7 +34,7 @@ export function createQuestShareService(
             expires_at: data.expires_at ? new Date(data.expires_at) : null,
         })
         const share = await questShareRepo.findById(shareId)
-        if (!share) throw new Error('Failed to create share')
+        if (!share) throw new AppError('Failed to create share', 500)
         return share
     }
 
@@ -44,20 +45,20 @@ export function createQuestShareService(
 
     async function deleteShare(shareId: number, userId: number) {
         const share = await questShareRepo.findById(shareId)
-        if (!share) throw new Error('Share not found')
+        if (!share) throw new AppError('Share not found', 404)
         // Only the creator (quest owner) can delete
         if (share.created_by_user_id !== userId)
-            throw new Error('Access denied')
+            throw new AppError('Access denied', 403)
         await questShareRepo.deleteShare(shareId)
         return { success: true }
     }
 
     async function getShareDetailsByToken(token: string) {
         const share = await questShareRepo.findActiveByToken(token)
-        if (!share) throw new Error('Share not found or expired')
+        if (!share) throw new AppError('Share not found or expired', 404)
 
         const quest = await questRepo.findById(share.quest_id)
-        if (!quest) throw new Error('Quest not found')
+        if (!quest) throw new AppError('Quest not found', 404)
 
         const owner = await userRepo.findUser({ id: quest.user_id })
 
@@ -67,7 +68,7 @@ export function createQuestShareService(
         // Filter out invalid taxon IDs
         const validTaxonIds = taxaMappings
             .map((t) => t.taxon_id)
-            .filter((id) => id && typeof id === 'number' && id > 0)
+            .filter((id) => id && true && id > 0)
 
         return {
             share,
@@ -83,7 +84,7 @@ export function createQuestShareService(
 
     async function getProgressByToken(token: string) {
         const share = await questShareRepo.findActiveByToken(token)
-        if (!share) throw new Error('Share not found or expired')
+        if (!share) throw new AppError('Share not found or expired', 404)
         return progressRepo.findByShareId(share.id)
     }
 
@@ -93,7 +94,7 @@ export function createQuestShareService(
         observed: boolean
     ) {
         const share = await questShareRepo.findActiveByToken(token)
-        if (!share) throw new Error('Share not found or expired')
+        if (!share) throw new AppError('Share not found or expired', 404)
         const guestName = share.guest_name ?? null
         const questId = share.quest_id ?? null
 
@@ -101,14 +102,14 @@ export function createQuestShareService(
         const mapping = (await questToTaxaRepo.findOne({
             id: mappingId,
         })) as QuestToTaxa
-        if (!mapping) throw new Error('Invalid taxon mapping')
+        if (!mapping) throw new AppError('Invalid taxon mapping', 400)
         if (mapping.quest_id !== share.quest_id) {
-            throw new Error('Mapping does not belong to this quest')
+            throw new AppError('Mapping does not belong to this quest', 400)
         }
 
         // Get quest to check mode
         const quest = await questRepo.findById(questId!)
-        if (!quest) throw new Error('Quest not found')
+        if (!quest) throw new AppError('Quest not found', 404)
 
         if (observed) {
             // In competitive mode, check if species is already found by someone else
@@ -120,8 +121,9 @@ export function createQuestShareService(
                 )
 
                 if (speciesAlreadyFound) {
-                    throw new Error(
-                        'This species has already been found by another participant in competitive mode'
+                    throw new AppError(
+                        'This species has already been found by another participant in competitive mode',
+                        409
                     )
                 }
             }
@@ -155,7 +157,8 @@ export function createQuestShareService(
             questId,
             viewerUserId
         )
-        if (!accessible) throw new Error('Quest not found or access denied')
+        if (!accessible)
+            throw new AppError('Quest not found or access denied', 404)
         return progressRepo.getAggregatedProgress(questId)
     }
 
@@ -167,13 +170,14 @@ export function createQuestShareService(
             questId,
             viewerUserId
         )
-        if (!accessible) throw new Error('Quest not found or access denied')
+        if (!accessible)
+            throw new AppError('Quest not found or access denied', 404)
         return questToTaxaRepo.findByQuestId(questId)
     }
 
     async function getAggregatedProgressByToken(token: string) {
         const share = await questShareRepo.findActiveByToken(token)
-        if (!share) throw new Error('Share not found or expired')
+        if (!share) throw new AppError('Share not found or expired', 404)
         return progressRepo.getAggregatedProgress(share.quest_id)
     }
 
@@ -189,7 +193,7 @@ export function createQuestShareService(
 
         // Get quest to check mode
         const quest = await questRepo.findById(questId)
-        if (!quest) throw new Error('Quest not found')
+        if (!quest) throw new AppError('Quest not found', 404)
 
         // Find or create an owner share for this quest (guest_name null)
         const possibleShares = (await questShareRepo.findMany({
@@ -207,7 +211,7 @@ export function createQuestShareService(
             share = await questShareRepo.findById(shareId)
         }
 
-        if (!share) throw new Error('Unable to resolve owner share')
+        if (!share) throw new AppError('Unable to resolve owner share', 500)
 
         if (observed) {
             // In competitive mode, check if species is already found by someone else
@@ -219,8 +223,9 @@ export function createQuestShareService(
                 )
 
                 if (speciesAlreadyFound) {
-                    throw new Error(
-                        'This species has already been found by another participant in competitive mode'
+                    throw new AppError(
+                        'This species has already been found by another participant in competitive mode',
+                        409
                     )
                 }
             }
@@ -253,7 +258,8 @@ export function createQuestShareService(
             questId,
             viewerUserId
         )
-        if (!accessible) throw new Error('Quest not found or access denied')
+        if (!accessible)
+            throw new AppError('Quest not found or access denied', 404)
         return progressRepo.getDetailedProgress(questId)
     }
 
@@ -265,13 +271,14 @@ export function createQuestShareService(
             questId,
             viewerUserId
         )
-        if (!accessible) throw new Error('Quest not found or access denied')
+        if (!accessible)
+            throw new AppError('Quest not found or access denied', 404)
         return progressRepo.getLeaderboardProgress(questId)
     }
 
     async function getLeaderboardForQuestByToken(token: string) {
         const share = await questShareRepo.findActiveByToken(token)
-        if (!share) throw new Error('Share not found or expired')
+        if (!share) throw new AppError('Share not found or expired', 404)
         return progressRepo.getLeaderboardProgress(share.quest_id)
     }
 

@@ -18,7 +18,7 @@ interface HttpError extends Error {
     errno?: number;
 }
 
-const errorHandler: ErrorRequestHandler = (err: HttpError, req: Request, res: Response, next: NextFunction) => {
+const errorHandler: ErrorRequestHandler = (err: HttpError | AppError | ZodError, req: Request, res: Response, next: NextFunction) => {
     const errorMessage = `${req.method} ${req.url} - ${err.name}: ${err.message} - Origin: ${req.headers.origin ?? 'N/A'}`;
     logger.error(`${errorMessage}\n${err.stack}`);
 
