@@ -1,9 +1,9 @@
-import axios from 'axios'
+import api from '@/api/api'
 
 export default async function fetchWikipediaContent(title: string) {
     try {
-        const {data} = await axios.get(
-            `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`
+        const { data } = await api.get(
+            `/wikipedia/page/summary/${encodeURIComponent(title)}`
         )
         return {
             extract: data.extract,

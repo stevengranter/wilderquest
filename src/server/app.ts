@@ -13,7 +13,7 @@ import requestLogger from './middlewares/requestLogger.js'
 import { CollectionRepository } from './repositories/CollectionRepository.js'
 import { QuestRepository, QuestToTaxaRepository } from './repositories/QuestRepository.js'
 import type { QuestShareRepository, SharedQuestProgressRepository } from './repositories/QuestShareRepository.js'
-import { mapTilesProxyRouter } from './routes/api/proxies.routes.js'
+import { mapTilesProxyRouter, wikipediaProxyRouter } from './routes/api/proxies.routes.js'
 import { serviceRouter } from './routes/api/services.routes.js'
 import { createAuthRouter } from './routes/authRouter.js'
 import { createCollectionRouter } from './routes/collectionRouter.js'
@@ -44,7 +44,7 @@ export function buildApp({
     // initialize express
     const app = express()
     app.use(express.json())
-    app.use(requestLogger);
+    app.use(requestLogger)
 
     // initialize main router
     const apiRouter = express.Router()
@@ -91,6 +91,7 @@ export function buildApp({
         iNatController
     )
     apiRouter.use('/tiles', mapTilesProxyRouter)
+    apiRouter.use('/wikipedia', wikipediaProxyRouter)
 
     apiRouter.use('/service', serviceRouter)
 

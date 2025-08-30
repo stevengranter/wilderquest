@@ -4,6 +4,7 @@ import chalk from 'chalk'
 import { Request, Response } from 'express'
 import { cacheService } from '../services/cache/cacheService.js'
 import { globalINaturalistRateLimiter } from '../utils/rateLimiterGlobal.js'
+import { getWithRetry } from '../utils/retryWithBackoff.js'
 import logger from '../config/logger.js'
 import { titleCase } from '../utils/titleCase.js'
 import { INatObservation, INatTaxon } from '@shared/types/iNatTypes.js'
@@ -142,7 +143,7 @@ export const iNaturalistAPIController = async (req: Request, res: Response) => {
                 )
 
                 const partialResponse =
-                    await axios.get<ProcessableData>(partialUrl)
+                    await getWithRetry<ProcessableData>(partialUrl)
                 if (partialResponse.status !== 200) {
                     throw new AppError(
                         'Failed to fetch data from iNaturalist',
@@ -191,7 +192,7 @@ export const iNaturalistAPIController = async (req: Request, res: Response) => {
                 }
             } else {
                 // No cache hits - proceed with normal flow
-                const jsonResponse = await axios.get<ProcessableData>(url)
+                const jsonResponse = await getWithRetry<ProcessableData>(url)
                 if (jsonResponse.status !== 200) {
                     throw new AppError(
                         'Failed to fetch data from iNaturalist',
@@ -202,7 +203,7 @@ export const iNaturalistAPIController = async (req: Request, res: Response) => {
             }
         } else {
             // Single taxon request - use normal flow
-            const jsonResponse = await axios.get<ProcessableData>(url)
+            const jsonResponse = await getWithRetry<ProcessableData>(url)
             if (jsonResponse.status !== 200) {
                 throw new AppError(
                     'Failed to fetch data from iNaturalist',
@@ -213,7 +214,7 @@ export const iNaturalistAPIController = async (req: Request, res: Response) => {
         }
     } else {
         // Non-taxa request - use normal flow
-        const jsonResponse = await axios.get<ProcessableData>(url)
+        const jsonResponse = await getWithRetry<ProcessableData>(url)
         if (jsonResponse.status !== 200) {
             throw new AppError(
                 'Failed to fetch data from iNaturalist',
