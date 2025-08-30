@@ -1,14 +1,6 @@
-import type { RequestHandler } from 'express'
 import { Router } from 'express'
 import { optionalAuthMiddleware } from '../middlewares/verifyJWT.js'
-
-interface AuthController {
-    register: RequestHandler
-    login: RequestHandler
-    logout: RequestHandler
-    handleRefreshToken: RequestHandler
-    testAuth: RequestHandler
-}
+import { type AuthController } from '../controllers/authController.js'
 
 export function createAuthRouter(controller: AuthController) {
     const router = Router()

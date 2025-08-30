@@ -1,48 +1,68 @@
 import { type ErrorRequestHandler, type NextFunction, type Request, type Response } from 'express'
+import { ZodError } from 'zod'
 import logger from '../config/logger.js'
 
-// Define a general error interface that includes the custom statusCode property
+// Optional custom error class
+export class AppError extends Error {
+    statusCode: number;
+    constructor(message: string, statusCode = 500) {
+        super(message);
+        this.statusCode = statusCode;
+        Object.setPrototypeOf(this, AppError.prototype);
+    }
+}
+
 interface HttpError extends Error {
-    statusCode?: number
+    statusCode?: number;
+    code?: string; // for mysql2 error codes
+    errno?: number;
 }
 
 const errorHandler: ErrorRequestHandler = (err: HttpError, req: Request, res: Response, next: NextFunction) => {
-    // Construct a detailed error message
-    const errorMessage = `${req.method} ${req.url} - ${err.name}: ${err.message} - Origin: ${req.headers.origin ?? 'N/A'}`
+    const errorMessage = `${req.method} ${req.url} - ${err.name}: ${err.message} - Origin: ${req.headers.origin ?? 'N/A'}`;
+    logger.error(`${errorMessage}\n${err.stack}`);
 
-    // Log the error using Winston. This will also include the stack trace.
-    // In development, this logs to the console.
-    // In production, it logs to `logs/error.log` and `logs/combined.log`.
-    logger.error(`${errorMessage}\n${err.stack}`)
+    let status: number;
+    let message: string;
 
-    // Determine the HTTP status code
-    // Prioritize a custom status code set on the error object (e.g., from validation)
-    // Then check if a status code was already set by a previous middleware (e.g., res.status(401))
-    // Otherwise, default to 500 for internal server errors
-    const status = err.statusCode || res.statusCode || 500
-
-    // IMPORTANT: Check if headers have already been sent.
-    // If they have, we must *not* try to send another response.
-    // Instead, we just let Express's default error handler (or the next middleware) handle it.
-    if (res.headersSent) {
-        return next(err) // Pass the error along to Express's default error handler
+    if (err instanceof ZodError) {
+        // Validation errors → 400
+        status = 400;
+        message = err.errors.map(e => `${e.path.join('.')} - ${e.message}`).join('; ');
+    } else if (err instanceof AppError) {
+        // Custom AppError → use statusCode
+        status = err.statusCode;
+        message = err.message;
+    } else if (err.code) {
+        // mysql2 errors
+        switch (err.code) {
+            case 'ER_DUP_ENTRY':
+                status = 409; // Conflict
+                message = 'Duplicate entry';
+                break;
+            case 'ER_NO_REFERENCED_ROW_2':
+            case 'ER_ROW_IS_REFERENCED_2':
+                status = 400; // Bad Request for foreign key issues
+                message = 'Invalid reference';
+                break;
+            default:
+                status = 500;
+                message = err.message;
+        }
+    } else {
+        // Fallback
+        status = err.statusCode || res.statusCode || 500;
+        message = err.message || 'Internal Server Error';
     }
 
-    // Set the status code on the response
-    res.status(status)
+    if (res.headersSent) {
+        return next(err);
+    }
 
-    // Send the JSON error response
-    res.json({
-        message: err.message,
-        // Optionally, include a stack trace in development for debugging
-        // You should typically *not* send stack traces to clients in production
+    res.status(status).json({
+        message,
         ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-    })
-
-    // REMOVE next() here
-    // Do NOT call next() after sending a response in an error handling middleware.
-    // Calling next() here would try to move to the next middleware (if any),
-    // but the response has already been sent, leading to the "Cannot set headers" error.
-    // The response cycle for this request should end here.
+    });
 };
-export default errorHandler
+
+export default errorHandler;
