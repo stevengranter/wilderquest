@@ -3,16 +3,25 @@
     "private": true,
     "version": "0.0.1",
     "type": "module",
-    "scripts": {
-        "lint-server": "npx biome lint --write src/server",
-        "lint-client": "npx biome lint --write src/client",
+  "scripts": {
+    "lint-server": "npx biome lint --write src/server",
+    "lint-client": "npx biome lint --write src/client",
     "lint": "pnpm run lint-server && pnpm run lint-client",
-        "dev": "NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts",
-        "start:preview": "NODE_ENV=production tsx src/server/server.ts",
-        "start": "NODE_ENV=production node dist/server/server.js",
-        "build": "NODE_ENV=production rm -rf dist && vite build && tsc -p src/server/tsconfig.json && tsc-alias -p src/server/tsconfig.json"
-    },
-    "dependencies": {
+
+    "dev": "NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts",
+    "start:preview": "NODE_ENV=production tsx src/server/server.ts",
+    "start": "NODE_ENV=production node dist/server/server.js",
+    "build": "NODE_ENV=production rm -rf dist && vite build && tsc -p src/server/tsconfig.json && tsc-alias -p src/server/tsconfig.json",
+
+    "dev:bg": "nohup pnpm dev > dev.log 2>&1 & echo $! > .dev.pid",
+    "stop:dev": "kill $(cat .dev.pid 2>/dev/null || echo '') 2>/dev/null || true && rm -f .dev.pid",
+
+    "start:bg": "nohup pnpm start > start.log 2>&1 & echo $! > .start.pid",
+    "stop:start": "kill $(cat .start.pid 2>/dev/null || echo '') 2>/dev/null || true && rm -f .start.pid",
+
+    "stop:all": "pnpm stop:dev && pnpm stop:start"
+  },
+  "dependencies": {
         "@ai-sdk/google": "^1.2.22",
         "@ai-sdk/react": "^1.2.12",
         "@blocknote/core": "^0.26.0",
