@@ -4,137 +4,85 @@ import jwt from 'jsonwebtoken'
 import env from '../config/app.config.js'
 import { User } from '../models/user.js'
 import { UserRepository } from '../repositories/UserRepository.js'
+import { AppError } from '../middlewares/errorHandler.js'
 
-// Constants
-const ACCESS_TOKEN_EXPIRES_IN = '60s'
-const REFRESH_TOKEN_EXPIRES_IN = '1d'
+const ACCESS_TOKEN_EXPIRES_IN = '60s';
+const REFRESH_TOKEN_EXPIRES_IN = '1d';
 
-// Error classes
-export class UserExistsError extends Error {
-    constructor(msg: string) {
-        super(msg)
-        this.name = 'UserExistsError'
-    }
-}
-export class UserNotFoundError extends Error {
-    constructor(msg: string) {
-        super(msg)
-        this.name = 'UserNotFoundError'
-    }
-}
-export class UserCreationError extends Error {
-    constructor(msg: string) {
-        super(msg)
-        this.name = 'UserCreationError'
-    }
-}
-export class UserRetrievalError extends Error {
-    constructor(msg: string) {
-        super(msg)
-        this.name = 'UserRetrievalError'
-    }
-}
-export class UserPasswordError extends Error {
-    constructor(msg: string) {
-        super(msg)
-        this.name = 'UserPasswordError'
-    }
-}
-export class AuthenticationError extends Error {
-    constructor(msg: string) {
-        super(msg)
-        this.name = 'AuthenticationError'
-    }
-}
-export class TokenError extends Error {
-    constructor(msg: string) {
-        super(msg)
-        this.name = 'TokenError'
-    }
-}
-
-// Types
 interface AuthenticatedUserResponse {
-    success: boolean
+    success: boolean;
     user: {
-        id: number
-        username: string
-        email: string | undefined
-        role: number
-        cuid: string
-    }
-    accessToken: string
-    refreshToken: string
+        id: number;
+        username: string;
+        email: string | undefined;
+        role: number;
+        cuid: string;
+    };
+    accessToken: string;
+    refreshToken: string;
 }
-export type AuthService = ReturnType<typeof createAuthService>
+
+export type AuthService = ReturnType<typeof createAuthService>;
 
 export function createAuthService(userRepo: UserRepository) {
     if (!env.ACCESS_TOKEN_SECRET || !env.REFRESH_TOKEN_SECRET) {
-        console.error('Missing ACCESS_TOKEN_SECRET or REFRESH_TOKEN_SECRET')
+        console.error('Missing ACCESS_TOKEN_SECRET or REFRESH_TOKEN_SECRET');
     }
 
     async function register(username: string, email: string, password: string) {
         const [emailExists, usernameExists] = await Promise.all([
             userRepo.findRowByColumnAndValue('email', email),
             userRepo.findRowByColumnAndValue('username', username),
-        ])
+        ]);
 
-        if (emailExists.length > 0 || usernameExists.length > 0) {
-            throw new UserExistsError('Username and/or email already exists')
+        if (emailExists.length || usernameExists.length) {
+            throw new AppError('Username and/or email already exists', 400);
         }
 
-        const hashedPassword = hashSync(password, genSaltSync(10))
-        const userCuid = createId()
-        const newUser = {
+        const hashedPassword = hashSync(password, genSaltSync(10));
+        const userCuid = createId();
+
+        const userId = await userRepo.create({
             username,
             email,
             password: hashedPassword,
             user_cuid: userCuid,
             role_id: 1,
-        }
+        });
 
-        const userId = await userRepo.create(newUser)
-        if (!userId) throw new UserCreationError('Failed to create user')
+        if (!userId) throw new AppError('Failed to create user', 500);
 
-        const createdUser = await userRepo.findOne({ id: userId })
-        if (!createdUser) throw new UserRetrievalError('User not retrievable')
+        const createdUser = await userRepo.findOne({ id: userId });
+        if (!createdUser) throw new AppError('User not retrievable', 500);
 
         return {
             username: createdUser.username,
             email: createdUser.email,
             user_cuid: createdUser.user_cuid,
             role_id: createdUser.role_id,
-        }
+        };
     }
 
-    async function login(
-        username: string,
-        password: string
-    ): Promise<AuthenticatedUserResponse> {
-        const users = (await userRepo.findRowByColumnAndValue(
-            'username',
-            username
-        )) as User[]
-        if (users.length === 0) throw new UserNotFoundError('User not found')
+    async function login(username: string, password: string): Promise<AuthenticatedUserResponse> {
+        const users = (await userRepo.findRowByColumnAndValue('username', username)) as User[];
+        if (!users.length) throw new AppError('User not found', 404);
 
-        const user = users[0]
-        if (!compareSync(password, user.password)) {
-            throw new UserPasswordError('Password is incorrect')
-        }
+        const user = users[0];
+        if (!compareSync(password, user.password)) throw new AppError('Password is incorrect', 401);
 
         const accessToken = jwt.sign(
             { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
             env.ACCESS_TOKEN_SECRET!,
             { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
-        )
+        );
 
         const refreshToken = jwt.sign(
             { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
             env.REFRESH_TOKEN_SECRET!,
             { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
-        )
+        );
 
-        await userRepo.update(user.id, { refresh_token: refreshToken })
+        await userRepo.update(user.id, { refresh_token: refreshToken });
 
         return {
             success: true,
@@ -147,72 +95,49 @@ export function createAuthService(userRepo: UserRepository) {
             },
             accessToken,
             refreshToken,
-        }
+        };
     }
 
-    async function registerAndLogin(
-        username: string,
-        email: string,
-        password: string
-    ): Promise<AuthenticatedUserResponse> {
-        await register(username, email, password)
-        const result = await login(username, password)
-        if (!result)
-            throw new AuthenticationError(
-                'User registered but not authenticated'
-            )
-        return result
+    async function registerAndLogin(username: string, email: string, password: string) {
+        await register(username, email, password);
+        return login(username, password);
     }
 
-    async function logout(userId: number): Promise<void> {
-        try {
-            await userRepo.update(userId, { refresh_token: '' })
-        } catch (err) {
-            console.error(`Logout error for user ${userId}:`, err)
-            throw new Error('Logout failed due to internal error.')
-        }
+    async function logout(userId: number) {
+        await userRepo.update(userId, { refresh_token: '' });
     }
 
-    async function refreshAccessToken(
-        userCuid: string,
-        refreshToken: string
-    ): Promise<{ accessToken: string; refreshToken: string }> {
-        if (!userCuid || !refreshToken)
-            throw new TokenError('Missing user CUID or refresh token')
+    async function refreshAccessToken(userCuid: string, refreshToken: string) {
+        if (!userCuid || !refreshToken) throw new AppError('Missing user CUID or refresh token', 400);
 
-        const users = (await userRepo.findRowByColumnAndValue(
-            'user_cuid',
-            userCuid
-        )) as User[]
-        if (users.length === 0) throw new UserNotFoundError('User not found')
+        const users = (await userRepo.findRowByColumnAndValue('user_cuid', userCuid)) as User[];
+        if (!users.length) throw new AppError('User not found', 404);
 
-        const user = users[0]
-        if (user.refresh_token !== refreshToken) {
-            throw new TokenError('Refresh token does not match stored token.')
-        }
+        const user = users[0];
+        if (user.refresh_token !== refreshToken) throw new AppError('Refresh token does not match', 401);
 
         try {
-            jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET!)
+            jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET!);
         } catch {
-            await userRepo.update(user.id, { refresh_token: '' })
-            throw new TokenError('Refresh token is invalid or expired.')
+            await userRepo.update(user.id, { refresh_token: '' });
+            throw new AppError('Refresh token is invalid or expired', 401);
         }
 
         const newAccessToken = jwt.sign(
             { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
             env.ACCESS_TOKEN_SECRET!,
             { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
-        )
+        );
 
         const newRefreshToken = jwt.sign(
             { id: user.id, cuid: user.user_cuid, role_id: user.role_id },
             env.REFRESH_TOKEN_SECRET!,
             { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
-        )
+        );
 
-        await userRepo.update(user.id, { refresh_token: newRefreshToken })
+        await userRepo.update(user.id, { refresh_token: newRefreshToken });
 
-        return { accessToken: newAccessToken, refreshToken: newRefreshToken }
+        return { accessToken: newAccessToken, refreshToken: newRefreshToken };
     }
 
     return {
@@ -221,5 +146,5 @@ export function createAuthService(userRepo: UserRepository) {
         registerAndLogin,
         logout,
         refreshAccessToken,
-    }
+    };
 }
