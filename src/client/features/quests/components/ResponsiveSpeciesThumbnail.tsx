@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { SpeciesCardWithObservations } from './SpeciesCardWithObservations'
 import { useAnimationTarget } from './SpeciesAnimationProvider'
 import { cn } from '@/lib/utils'
+import { INatTaxon } from '@shared/types/iNatTypes'
 
 interface TaxonData {
     id: number
@@ -18,7 +19,7 @@ interface TaxonData {
         attribution: string
         url: string
         original_dimensions: { height: number; width: number }
-        flags: any[]
+        flags: unknown[]
         attribution_name: string | null
         square_url: string
         medium_url: string
@@ -91,7 +92,7 @@ export function ResponsiveSpeciesThumbnail({
         min_species_ancestry: null,
         min_species_taxon_id: null,
         complete_rank: taxon.rank || 'species',
-    } as any
+    } as unknown as INatTaxon
 
     const handleRemove = (e: React.MouseEvent) => {
         e.stopPropagation()

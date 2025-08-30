@@ -5,7 +5,12 @@ import { motion, useMotionValue, useTransform } from 'motion/react'
 import { Heart, RotateCcw, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useSpeciesSwipe } from '@/features/quests/hooks/useSpeciesSwipe'
 import {
     ResponsiveSpeciesGrid,
@@ -15,6 +20,7 @@ import { SpeciesCardWithObservations } from '@/features/quests/components/Specie
 import { useSpeciesAddTrigger } from './SpeciesAnimationProvider'
 import api from '@/api/api'
 import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
+import { INatTaxon } from '@shared/types/iNatTypes'
 
 interface TaxonData {
     id: number
@@ -27,7 +33,7 @@ interface TaxonData {
         attribution: string
         url: string
         original_dimensions: { height: number; width: number }
-        flags: any[]
+        flags: unknown[]
         attribution_name: string | null
         square_url: string
         medium_url: string
@@ -85,7 +91,7 @@ function SpeciesProgressThumbnails({
         <div className="flex justify-center items-center space-x-1">
             {upcomingSpecies.map((speciesItem, index) => {
                 const isCurrent = index === 0
-                const globalIndex = currentIndex + index
+                const _globalIndex = currentIndex + index
                 const taxon = speciesItem.taxon
                 const hasImageError = imageErrors.has(taxon.id)
 
@@ -228,14 +234,13 @@ export function SpeciesSwipeSelector({
         handleButtonAction,
         resetSwipeSession,
         getSwipeStats,
-        progress,
         filteredSpecies,
         currentIndex,
         jumpToSpecies,
     } = useSpeciesSwipe({
-        availableSpecies: (speciesCounts || []) as any,
-        questSpecies: questSpecies as any,
-        setQuestSpecies: setQuestSpecies as any,
+        availableSpecies: speciesCounts || [],
+        questSpecies: questSpecies,
+        setQuestSpecies: setQuestSpecies,
         onSpeciesAdded,
         onSpeciesRejected,
     })
@@ -334,7 +339,7 @@ export function SpeciesSwipeSelector({
                             <SwipeCard
                                 key={currentSpecies?.taxon.id}
                                 species={currentSpecies}
-                                onSwipeComplete={handleSwipeComplete as any}
+                                onSwipeComplete={handleSwipeComplete}
                                 locationData={{
                                     latitude: lat,
                                     longitude: lon,
@@ -499,7 +504,16 @@ function SwipeCard({ species, onSwipeComplete, locationData }: SwipeCardProps) {
     const addScale = useTransform(x, [0, 15, 90], [0.5, 0.8, 1.2])
 
     const handleDragEnd = useCallback(
-        (event: any, { offset, velocity }: any) => {
+        (
+            event: MouseEvent | TouchEvent | PointerEvent,
+            {
+                offset,
+                velocity,
+            }: {
+                offset: { x: number; y: number }
+                velocity: { x: number; y: number }
+            }
+        ) => {
             document.body.style.userSelect = ''
 
             if (!species) return
@@ -547,7 +561,7 @@ function SwipeCard({ species, onSwipeComplete, locationData }: SwipeCardProps) {
         taxon_changes_count: 0,
         taxon_schemes_count: 0,
         current_synonymous_taxon_ids: null,
-    } as any
+    } as unknown as INatTaxon
 
     return (
         <motion.div
@@ -628,8 +642,6 @@ function SwipeCard({ species, onSwipeComplete, locationData }: SwipeCardProps) {
                         right: '0px',
                     }}
                 />
-
-
 
                 <SpeciesCardWithObservations
                     species={inatTaxon}

@@ -1,14 +1,26 @@
 import QuestEventToast from '@/components/ui/QuestEventToast'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+    useMutation,
+    useQuery,
+    useQueryClient,
+    QueryClient,
+} from '@tanstack/react-query'
 import { chunk } from 'lodash'
 import React, { useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import api from '@/api/api'
 import { useAuth } from '@/hooks/useAuth'
 
-import { AggregatedProgress, DetailedProgress, QuestMapping } from '@/features/quests/types'
+import {
+    AggregatedProgress,
+    DetailedProgress,
+    LeaderboardEntry,
+    QuestMapping,
+    Share,
+} from '@/features/quests/types'
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { Quest } from '../../server/models/quests'
+import { QuestWithTaxa } from '../../types/types'
 
 type ProgressData = {
     mappings: QuestMapping[]
@@ -124,7 +136,7 @@ export const useQuestOwner = ({
     initialData,
 }: {
     questId: string | number
-    initialData?: { quest?: any; taxa?: INatTaxon[] } // Using any for now to handle QuestWithTaxa
+    initialData?: { quest?: Quest | null; taxa?: INatTaxon[] }
 }) => {
     const queryClient = useQueryClient()
 
@@ -140,9 +152,10 @@ export const useQuestOwner = ({
 
     const taxaQuery = useQuery({
         queryKey: ['taxa', quest?.id],
-        queryFn: () => fetchTaxa((quest as any)?.taxon_ids || []),
+        queryFn: () => fetchTaxa((quest as QuestWithTaxa)?.taxon_ids || []),
         initialData: initialData?.taxa,
-        enabled: isQuestSuccess && !!(quest as any)?.taxon_ids?.length,
+        enabled:
+            isQuestSuccess && !!(quest as QuestWithTaxa)?.taxon_ids?.length,
         staleTime: 1000 * 60 * 5, // 5 minutes
     })
 
@@ -207,7 +220,9 @@ export const useQuestOwner = ({
         isTaxaLoading: questQuery.isLoading || taxaQuery.isLoading,
         isTaxaFetchingNextPage: taxaQuery.isFetching,
         taxaHasNextPage: false,
-        fetchNextTaxaPage: () => {},
+        fetchNextTaxaPage: () => {
+            // Placeholder for future pagination - taxa are loaded in single request
+        },
         isError:
             questQuery.isError ||
             progressQuery.isError ||
@@ -232,8 +247,9 @@ export const useQuestGuest = ({ token }: { token: string }) => {
 
     const taxaQuery = useQuery({
         queryKey: ['taxa', quest?.id],
-        queryFn: () => fetchTaxa((quest as any)?.taxon_ids || []),
-        enabled: isQuestSuccess && !!(quest as any)?.taxon_ids?.length,
+        queryFn: () => fetchTaxa((quest as QuestWithTaxa)?.taxon_ids || []),
+        enabled:
+            isQuestSuccess && !!(quest as QuestWithTaxa)?.taxon_ids?.length,
         staleTime: 1000 * 60 * 5, // 5 minutes
     })
 
@@ -291,7 +307,9 @@ export const useQuestGuest = ({ token }: { token: string }) => {
         isTaxaLoading: sharedQuestQuery.isLoading || taxaQuery.isLoading,
         isTaxaFetchingNextPage: taxaQuery.isFetching,
         taxaHasNextPage: false,
-        fetchNextTaxaPage: () => {},
+        fetchNextTaxaPage: () => {
+            // Placeholder for future pagination - taxa are loaded in single request
+        },
         isError:
             sharedQuestQuery.isError ||
             guestProgressQuery.isError ||
@@ -303,9 +321,16 @@ export const useQuestGuest = ({ token }: { token: string }) => {
 
 // Helper function for handling species events
 const handleSpeciesEvent = (
-    data: any,
+    data: {
+        type: string
+        payload: {
+            guestName?: string
+            owner?: boolean
+            mappingId: number
+        }
+    },
     questId: number,
-    queryClient: any,
+    queryClient: QueryClient,
     token?: string
 ) => {
     const progressData: ProgressData | undefined = queryClient.getQueryData([
@@ -373,13 +398,13 @@ const handleSpeciesEvent = (
 
 // Common interface for quest data
 interface QuestDataResult {
-    questData: any
+    questData: Quest | null
     taxa: INatTaxon[]
     mappings?: QuestMapping[]
     aggregatedProgress?: AggregatedProgress[]
     detailedProgress?: DetailedProgress[]
-    leaderboard?: any
-    share?: any
+    leaderboard?: LeaderboardEntry[]
+    share?: Share
     isLoading: boolean
     isTaxaLoading: boolean
     isTaxaFetchingNextPage: boolean
@@ -397,7 +422,7 @@ export const useQuestDisplay = ({
 }: {
     questId?: string | number
     token?: string
-    initialData?: { quest?: any; taxa?: INatTaxon[] }
+    initialData?: { quest?: Quest; taxa?: INatTaxon[] }
 }): QuestDataResult & { isOwner: boolean; canEdit: boolean } => {
     const { isAuthenticated, user } = useAuth()
     const questData: QuestDataResult = questId
@@ -436,9 +461,9 @@ export const useSpeciesProgress = ({
         async (
             mapping: QuestMapping,
             isOwner: boolean,
-            user?: any,
-            share?: any,
-            questData?: any,
+            user?: { id: number; name?: string; username?: string },
+            share?: Share,
+            questData?: Quest,
             token?: string
         ) => {
             if (!mapping) return
@@ -454,9 +479,10 @@ export const useSpeciesProgress = ({
                 )
 
                 const observed = !progress
-                const endpoint = isOwner
-                    ? `/quest-sharing/quests/${questData.id}/progress/${mapping.id}`
-                    : `/quest-sharing/shares/token/${token}/progress/${mapping.id}`
+                const endpoint =
+                    isOwner && questData
+                        ? `/quest-sharing/quests/${questData.id}/progress/${mapping.id}`
+                        : `/quest-sharing/shares/token/${token}/progress/${mapping.id}`
 
                 await api.post(endpoint, { observed })
                 console.log('Progress updated')
@@ -468,7 +494,7 @@ export const useSpeciesProgress = ({
                 queryClient.invalidateQueries({
                     queryKey: ['guestProgress', token],
                 })
-            } catch (error) {
+            } catch (_error) {
                 toast.error('Action failed')
             }
         },
@@ -528,9 +554,9 @@ export const useSpeciesActions = ({
 }: {
     isOwner: boolean
     token?: string
-    questData?: any
-    user?: any
-    share?: any
+    questData?: Quest
+    user?: { id: number; name?: string; username?: string }
+    share?: Share
 }) => {
     const canInteract = useCallback(
         (questStatus?: string) => {

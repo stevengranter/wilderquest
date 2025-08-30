@@ -1,4 +1,8 @@
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+    keepPreviousData,
+    useQuery,
+    useQueryClient,
+} from '@tanstack/react-query'
 import api from '@/api/api'
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { useCallback, useMemo } from 'react'
@@ -21,9 +25,17 @@ const fetchTaxaInBatches = async (taxonIds: number[]) => {
         try {
             const response = await api.get(`/iNatAPI/taxa/${batch.join(',')}`)
             return response.data.results as INatTaxon[]
-        } catch (error: any) {
+        } catch (error: unknown) {
             // If we get a 429 error, wait a bit and retry once
-            if (error?.response?.status === 429) {
+            if (
+                error &&
+                typeof error === 'object' &&
+                'response' in error &&
+                error.response &&
+                typeof error.response === 'object' &&
+                'status' in error.response &&
+                error.response.status === 429
+            ) {
                 console.warn(
                     `Rate limit hit for batch: ${batch.join(',')}, retrying in 2s...`
                 )
@@ -33,7 +45,7 @@ const fetchTaxaInBatches = async (taxonIds: number[]) => {
                         `/iNatAPI/taxa/${batch.join(',')}`
                     )
                     return retryResponse.data.results as INatTaxon[]
-                } catch (retryError: any) {
+                } catch (_retryError: unknown) {
                     console.warn(
                         `Retry failed for batch: ${batch.join(',')}, skipping...`
                     )

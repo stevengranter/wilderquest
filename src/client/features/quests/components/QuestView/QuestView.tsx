@@ -96,7 +96,7 @@ export const QuestView = () => {
                     ...m,
                     created_at: m.created_at || new Date().toISOString(),
                 }))} // Convert TaxonMapping to QuestMapping
-                updateStatus={updateStatus || (() => {})} // Provide fallback for undefined
+                updateStatus={updateStatus} // updateStatus is optional in the component
                 isTaxaLoading={isTaxaLoading}
                 user={user || undefined}
             />

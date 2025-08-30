@@ -2,11 +2,18 @@ import React, { createContext, ReactNode, useContext } from 'react'
 import { useQuestDisplay } from '@/hooks/useQuest'
 import { INatTaxon } from '@shared/types/iNatTypes'
 // Import QuestMapping type
-import { AggregatedProgress, DetailedProgress, LeaderboardEntry, QuestMapping, Share } from '@/features/quests/types'
+import {
+    AggregatedProgress,
+    DetailedProgress,
+    LeaderboardEntry,
+    QuestMapping,
+    Share,
+} from '@/features/quests/types'
+import { Quest } from '../../server/models/quests'
 
 interface QuestContextType {
     // Quest data
-    questData: any
+    questData: Quest | null
     taxa: INatTaxon[]
     mappings?: QuestMapping[]
     aggregatedProgress?: AggregatedProgress[]
@@ -36,7 +43,7 @@ const QuestContext = createContext<QuestContextType | undefined>(undefined)
 interface QuestProviderProps {
     questId?: string | number
     token?: string
-    initialData?: { quest?: any; taxa?: INatTaxon[] }
+    initialData?: { quest?: Quest; taxa?: INatTaxon[] }
     children: ReactNode
 }
 
@@ -67,7 +74,7 @@ export const QuestProvider: React.FC<QuestProviderProps> = ({
         isError: questData.isError,
 
         // Actions
-        updateStatus: questData.updateStatus || (() => {}),
+        updateStatus: questData.updateStatus,
         fetchNextTaxaPage: questData.fetchNextTaxaPage,
 
         // Permissions

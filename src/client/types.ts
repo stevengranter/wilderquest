@@ -40,14 +40,14 @@ type iNatTaxaResult = {
     preferred_common_name: string
 }
 
-interface INatTaxaResponse {
+interface _INatTaxaResponse {
     results: iNatTaxaResult[]
     per_page: number
     page: number
     total_results: number
 }
 
-interface SuggestionItem {
+interface _SuggestionItem {
     value: string
     name: string
     common_name: string

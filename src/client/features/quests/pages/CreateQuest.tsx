@@ -1,21 +1,41 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import React, { useCallback, useMemo, useState } from 'react'
-import { FormProvider, useForm, useFormContext, useWatch } from 'react-hook-form'
+import {
+    FormProvider,
+    useForm,
+    useFormContext,
+    useWatch,
+} from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { z } from 'zod'
 import api from '@/api/api'
 import { Button } from '@/components/ui/button'
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import {
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { useAuth } from '@/hooks/useAuth'
-import { SpeciesCountItem, SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeSelector'
+import {
+    SpeciesCountItem,
+    SpeciesSwipeSelector,
+} from '@/features/quests/components/SpeciesSwipeSelector'
 import { SpeciesAnimationProvider } from '@/features/quests/components/SpeciesAnimationProvider'
 import { formSchema } from '@/features/quests/schemas/formSchema'
 
-interface TaxonData {
+interface _TaxonData {
     default_photo: DefaultPhoto
     id: number
     name: string

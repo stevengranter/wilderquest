@@ -9,15 +9,25 @@ const queryClient = new QueryClient({
             staleTime: 30 * 60 * 1000, // 30 minutes
             gcTime: 60 * 60 * 1000, // 1 hour (formerly cacheTime)
             // Retry configuration for rate limiting
-            retry: (failureCount, error: any) => {
+            retry: (failureCount, error: unknown) => {
                 // Don't retry on rate limit errors (429)
-                if (error?.response?.status === 429) return false
-                // Don't retry on client errors (4xx)
                 if (
-                    error?.response?.status >= 400 &&
-                    error?.response?.status < 500
-                )
-                    return false
+                    error &&
+                    typeof error === 'object' &&
+                    'response' in error &&
+                    error.response &&
+                    typeof error.response === 'object' &&
+                    'status' in error.response &&
+                    typeof error.response.status === 'number'
+                ) {
+                    if (error.response.status === 429) return false
+                    // Don't retry on client errors (4xx)
+                    if (
+                        error.response.status >= 400 &&
+                        error.response.status < 500
+                    )
+                        return false
+                }
                 // Retry up to 2 times for other errors
                 return failureCount < 2
             },

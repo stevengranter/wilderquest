@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router'
 import { Input } from '@/components/ui/input'
 import { INatTaxon } from '@/shared/types/iNatTypes'
 
-function TaxaSearch() {
+function _TaxaSearch() {
     const { register } = useForm()
     return <Input {...register('TaxaSearch')} />
 }

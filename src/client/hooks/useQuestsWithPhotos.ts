@@ -1,4 +1,9 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+    useQuery,
+    useQueryClient,
+    QueryClient,
+    QueryKey,
+} from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import api from '@/api/api'
 import { INatTaxon } from '../../shared/types/iNatTypes'
@@ -10,9 +15,9 @@ interface QuestWithPhoto extends QuestWithTaxa {
 
 async function fetchAndAssignPhotos(
     quests: QuestWithTaxa[],
-    queryClient: any,
-    queryKey: any,
-    setIsPhotosLoading: (isLoading: boolean) => void,
+    queryClient: QueryClient,
+    queryKey: QueryKey,
+    setIsPhotosLoading: (isLoading: boolean) => void
 ) {
     setIsPhotosLoading(true)
     const batchSize = 3
@@ -24,8 +29,11 @@ async function fetchAndAssignPhotos(
                     const selectedIds = quest.taxon_ids.slice(0, 3)
                     for (const taxonId of selectedIds) {
                         try {
-                            const response = await api.get(`/iNatAPI/taxa/${taxonId}`)
-                            const taxa: INatTaxon[] = response.data.results || []
+                            const response = await api.get(
+                                `/iNatAPI/taxa/${taxonId}`
+                            )
+                            const taxa: INatTaxon[] =
+                                response.data.results || []
                             if (taxa[0]?.default_photo?.medium_url) {
                                 return {
                                     ...quest,
@@ -33,11 +41,17 @@ async function fetchAndAssignPhotos(
                                 }
                             }
                         } catch (error) {
-                            console.warn(`Failed to fetch taxon ${taxonId}:`, error)
+                            console.warn(
+                                `Failed to fetch taxon ${taxonId}:`,
+                                error
+                            )
                         }
                     }
                 } catch (error) {
-                    console.warn(`Failed to fetch photo for quest ${quest.id}:`, error)
+                    console.warn(
+                        `Failed to fetch photo for quest ${quest.id}:`,
+                        error
+                    )
                 }
             }
             return { ...quest, photoUrl: null }
@@ -45,13 +59,18 @@ async function fetchAndAssignPhotos(
 
         const batchResults = await Promise.all(batchPromises)
 
-        queryClient.setQueryData(queryKey, (oldData: QuestWithTaxa[] | undefined) => {
-            if (!oldData) return []
-            return oldData.map((quest) => {
-                const updatedQuest = batchResults.find((q) => q.id === quest.id)
-                return updatedQuest || quest
-            })
-        })
+        queryClient.setQueryData(
+            queryKey,
+            (oldData: QuestWithTaxa[] | undefined) => {
+                if (!oldData) return []
+                return oldData.map((quest) => {
+                    const updatedQuest = batchResults.find(
+                        (q) => q.id === quest.id
+                    )
+                    return updatedQuest || quest
+                })
+            }
+        )
 
         if (i + batchSize < quests.length) {
             await new Promise((resolve) => setTimeout(resolve, 500))

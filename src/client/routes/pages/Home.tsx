@@ -11,13 +11,13 @@ import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 import { paths } from '@/routes/paths'
 import { QuestWithTaxa } from '../../../server/repositories/QuestRepository'
 
-function StatsCard({
+function _StatsCard({
     icon: Icon,
     label,
     value,
     description,
 }: {
-    icon: any
+    icon: React.ComponentType<{ className?: string }>
     label: string
     value: string
     description: string
@@ -43,10 +43,10 @@ function StatsCard({
 }
 
 export function Home() {
-    const { isAuthenticated, user } = useAuth()
+    const { isAuthenticated, user: _user } = useAuth()
     const [recentQuests, setRecentQuests] = useState<QuestWithTaxa[]>([])
     const [isLoading, setIsLoading] = useState(true)
-    const [stats, setStats] = useState({
+    const [_stats, setStats] = useState({
         totalQuests: 0,
         activeQuests: 0,
         totalSpecies: 0,
@@ -113,7 +113,10 @@ export function Home() {
                 </div>
 
                 <Link to={paths.quests()} viewTransition>
-                    <Button size="lg" className="w-70 h-18 text-2xl cursor-pointer">
+                    <Button
+                        size="lg"
+                        className="w-70 h-18 text-2xl cursor-pointer"
+                    >
                         <Compass />
                         Explore Quests
                     </Button>
@@ -144,7 +147,7 @@ export function Home() {
                         className="grid gap-4 auto-rows-fr"
                         style={{
                             gridTemplateColumns:
-                                'repeat(auto-fit, minmax(280px, 1fr))'
+                                'repeat(auto-fit, minmax(280px, 1fr))',
                         }}
                     >
                         {Array.from({ length: 6 }).map((_, i) => (
@@ -156,7 +159,7 @@ export function Home() {
                         className="grid gap-4 auto-rows-fr"
                         style={{
                             gridTemplateColumns:
-                                'repeat(auto-fit, minmax(280px, 1fr))'
+                                'repeat(auto-fit, minmax(280px, 1fr))',
                         }}
                     >
                         {recentQuests.map((quest) => {
@@ -170,7 +173,8 @@ export function Home() {
                                     animate={false}
                                     photos={questPhotos}
                                     isLoading={
-                                        photosLoading && questPhotos.length === 0
+                                        photosLoading &&
+                                        questPhotos.length === 0
                                     }
                                 />
                             )
@@ -188,7 +192,9 @@ export function Home() {
                             Be the first to create a nature quest!
                         </p>
                         <Button asChild>
-                            <Link to={paths.newQuest()}>Create First Quest</Link>
+                            <Link to={paths.newQuest()}>
+                                Create First Quest
+                            </Link>
                         </Button>
                     </div>
                 )}
@@ -202,8 +208,8 @@ export function Home() {
                             Ready to Start Your Nature Adventure?
                         </h2>
                         <p className="text-xl mb-8 text-emerald-50">
-                            Join other nature enthusiasts documenting biodiversity
-                            around the world.
+                            Join other nature enthusiasts documenting
+                            biodiversity around the world.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <Button

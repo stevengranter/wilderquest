@@ -2,16 +2,34 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { chunk } from 'lodash'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { FormProvider, useForm, useFormContext, useWatch } from 'react-hook-form'
+import {
+    FormProvider,
+    useForm,
+    useFormContext,
+    useWatch,
+} from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import api from '@/api/api'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import {
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { useAuth } from '@/hooks/useAuth'
@@ -35,7 +53,7 @@ interface SpeciesCountItem {
             attribution: string
             url: string
             original_dimensions: { height: number; width: number }
-            flags: any[]
+            flags: unknown[]
             attribution_name: string | null
             square_url: string
             medium_url: string
@@ -50,7 +68,7 @@ export default function EditQuest() {
     const queryClient = useQueryClient()
     // const { user } = useAuth()
     const [taxa, setTaxa] = useState<INatTaxon[]>([])
-    const [initialTaxonIds, setInitialTaxonIds] = useState<number[]>([])
+    const [_initialTaxonIds, setInitialTaxonIds] = useState<number[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [questSpeciesMap, setQuestSpeciesMap] = useState<
         Map<number, SpeciesCountItem>
@@ -145,7 +163,7 @@ export default function EditQuest() {
     }, [taxa])
 
     // Convert questSpeciesMap back to taxa when it changes
-    const syncQuestSpeciesToTaxa = useCallback(
+    const _syncQuestSpeciesToTaxa = useCallback(
         (
             updateFn: (
                 prev: Map<number, SpeciesCountItem>
@@ -159,7 +177,7 @@ export default function EditQuest() {
                     id: item.taxon.id,
                     name: item.taxon.name,
                     preferred_common_name: item.taxon.preferred_common_name,
-                    rank: (item.taxon.rank as any) || 'species',
+                    rank: (item.taxon.rank as INatTaxon['rank']) || 'species',
                     rank_level: 10,
                     iconic_taxon_id: 0,
                     ancestor_ids: [],
@@ -283,8 +301,8 @@ export default function EditQuest() {
                             </div>
 
                             <SpeciesSwipeSelector
-                                questSpecies={questSpeciesMap as any}
-                                setQuestSpecies={syncQuestSpeciesToTaxa as any}
+                                questSpecies={questSpeciesMap}
+                                setQuestSpecies={setQuestSpeciesMap}
                                 onSpeciesAdded={handleSpeciesAdded}
                                 onSpeciesRejected={handleSpeciesRejected}
                                 editMode={true}

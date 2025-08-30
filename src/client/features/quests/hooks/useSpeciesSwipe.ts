@@ -10,7 +10,7 @@ interface TaxonData {
             height: number
             width: number
         }
-        flags: any[]
+        flags: unknown[]
         attribution_name: string | null
         square_url: string
         medium_url: string

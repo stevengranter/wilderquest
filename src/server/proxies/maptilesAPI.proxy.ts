@@ -19,7 +19,36 @@ const mapTilesProxy = async (
 
     console.log(`Proxying tile request to: ${tileProviderUrl}`)
 
-    await globalThunderForestRateLimiter.consume('global')
+    try {
+        await globalThunderForestRateLimiter.consume('global')
+    } catch (_error) {
+        // Rate limit exceeded - set Retry-After header
+        const status = await globalThunderForestRateLimiter.get('global')
+        const msBeforeNext = status?.msBeforeNext ?? 2592000000 // Default to 30 days
+        const retryAfterSeconds = Math.ceil(msBeforeNext / 1000)
+
+        console.warn(
+            `Global ThunderForest rate limit exceeded. Retry after: ${retryAfterSeconds}s`
+        )
+
+        return res
+            .status(429)
+            .set({
+                'Retry-After': retryAfterSeconds.toString(),
+                'X-RateLimit-Reset': new Date(
+                    Date.now() + msBeforeNext
+                ).toISOString(),
+                'X-RateLimit-Limit': '150000',
+                'X-RateLimit-Remaining': '0',
+            })
+            .json({
+                error: 'Too Many Requests',
+                message:
+                    'Global map tiles API rate limit exceeded. Please try again later.',
+                retryAfter: retryAfterSeconds,
+            })
+    }
+
     const status = await globalThunderForestRateLimiter.get('global')
     console.log(
         chalk.green(`Used: ${150_000 - (status?.remainingPoints ?? 0)}`) +

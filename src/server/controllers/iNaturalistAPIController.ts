@@ -79,7 +79,36 @@ export const iNaturalistAPIController = async (req: Request, res: Response) => {
 
     logger.info('Proxying to:', url)
 
-    await globalINaturalistRateLimiter.consume('global')
+    try {
+        await globalINaturalistRateLimiter.consume('global')
+    } catch (_error) {
+        // Rate limit exceeded - set Retry-After header
+        const status = await globalINaturalistRateLimiter.get('global')
+        const msBeforeNext = status?.msBeforeNext ?? 86400000 // Default to 24 hours
+        const retryAfterSeconds = Math.ceil(msBeforeNext / 1000)
+
+        logger.warn(
+            `Global iNaturalist rate limit exceeded. Retry after: ${retryAfterSeconds}s`
+        )
+
+        return res
+            .status(429)
+            .set({
+                'Retry-After': retryAfterSeconds.toString(),
+                'X-RateLimit-Reset': new Date(
+                    Date.now() + msBeforeNext
+                ).toISOString(),
+                'X-RateLimit-Limit': '10000',
+                'X-RateLimit-Remaining': '0',
+            })
+            .json({
+                error: 'Too Many Requests',
+                message:
+                    'Global iNaturalist API rate limit exceeded. Please try again later.',
+                retryAfter: retryAfterSeconds,
+            })
+    }
+
     const status = await globalINaturalistRateLimiter.get('global')
     logger.info(
         chalk.green(`Used: ${10_000 - (status?.remainingPoints ?? 0)}`) +

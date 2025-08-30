@@ -1,38 +1,33 @@
 import rateLimit from 'express-rate-limit'
-
-// Limits per service:
-
-// ** iNaturalist **
-// (from https://api.inaturalist.org/v1/docs/)
-// Please note that we throttle API usage to a max of
-// * 100 requests per minute, though we ask that you,
-// * try to keep it to 60 requests per minute or lower, and to keep
-// * under 10,000 requests per day.
-// If we notice usage that has serious impact on our performance
-// we may institute blocks without notification.
-
-// ** Pexels **
-// (from https://www.pexels.com/api/documentation/)
-//
-// Do not abuse the API. By default, the API is rate-limited to
-// * 200 requests per hour and
-// * 20,000 requests per month.
-// You may contact us to request a higher limit, but please include examples,
-// or be prepared to give a demo, that clearly shows your use of the
-// API with attribution. If you meet our API terms, you can get
-// unlimited requests for free.
-//
-// Abuse of the Pexels API, including but not limited to attempting to work
-// around the rate limit, will lead to termination of your API access.
-//
-// ** LocationIQ **
-// (from https://locationiq.com/docs)
-// How many concurrent requests you can send will depend on the per-second
-// limit associated with your account.
-// If on the free plan, this limit is 2/second.
+import type { Request, Response } from 'express'
 
 const DEFAULT_WINDOW_MS = 60 * 1000 // 1 minute
 const DEFAULT_MAX = 60 // limit each IP to 60 requests per windowMs
+
+// DDoS protection: Very aggressive limits for suspicious patterns
+export const ddosProtectionLimiter = rateLimit({
+    windowMs: 10 * 1000, // 10 seconds
+    max: 20, // 20 requests per 10 seconds
+    message: {
+        error: 'Too Many Requests',
+        message: 'Request rate too high. Please slow down.',
+        retryAfter: 10,
+    },
+    handler: (req: Request, res: Response) => {
+        res.set('Retry-After', '10')
+        res.status(429).json({
+            error: 'Too Many Requests',
+            message: 'Request rate too high. Please slow down.',
+            retryAfter: 10,
+        })
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    // Skip successful requests from rate limiting
+    skipSuccessfulRequests: true,
+    // Skip failed requests from rate limiting
+    skipFailedRequests: false,
+})
 
 export const rateLimiter = (
     windowMs: number = DEFAULT_WINDOW_MS,
@@ -41,4 +36,18 @@ export const rateLimiter = (
     rateLimit({
         windowMs,
         max,
+        // Set Retry-After header when rate limited
+        handler: (req: Request, res: Response) => {
+            const resetTime = new Date(Date.now() + windowMs)
+            res.set('Retry-After', Math.ceil(windowMs / 1000).toString())
+            res.set('X-RateLimit-Reset', resetTime.toISOString())
+            res.status(429).json({
+                error: 'Too Many Requests',
+                message: `Rate limit exceeded. Try again in ${Math.ceil(windowMs / 1000)} seconds.`,
+                retryAfter: Math.ceil(windowMs / 1000),
+            })
+        },
+        // Include rate limit headers in all responses
+        standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+        legacyHeaders: false, // Disable the `X-RateLimit-*` headers
     })
