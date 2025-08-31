@@ -5,21 +5,20 @@ const api = axios.create({
     baseURL: '/api',
 })
 
-// Helper function to clean token from potential quotes
-const cleanToken = (token: string | null): string | null => {
-    if (!token) return null
-    // Remove surrounding quotes if they exist
-    return token.replace(/^"(.*)"$/, '$1')
+// Token getter function that can be configured
+let getAccessToken: (() => string | null) | null = null
+
+export const configureApiTokens = (tokenGetter: () => string | null) => {
+    getAccessToken = tokenGetter
 }
 
 // Request interceptor
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('accessToken')
-    const cleanedToken = cleanToken(token)
+    const token = getAccessToken ? getAccessToken() : null
 
     // Add token if it exists and the URL is not a public quest-sharing URL
-    if (cleanedToken && !config.url?.includes('/quest-sharing/')) {
-        config.headers.Authorization = `Bearer ${cleanedToken}`
+    if (token && !config.url?.includes('/quest-sharing/')) {
+        config.headers.Authorization = `Bearer ${token}`
     }
     return config
 })
@@ -47,15 +46,16 @@ api.interceptors.response.use(
                 await authApi.refreshAccessToken()
 
                 // Update the Authorization header with the new token
-                const newToken = localStorage.getItem('accessToken')
-                const cleanedNewToken = cleanToken(newToken)
-                originalRequest.headers.Authorization = `Bearer ${cleanedNewToken}`
+                const newToken = getAccessToken ? getAccessToken() : null
+                originalRequest.headers.Authorization = newToken
+                    ? `Bearer ${newToken}`
+                    : ''
 
                 console.log(
                     'Token refresh successful, retrying with new token:',
                     {
-                        newToken: cleanedNewToken
-                            ? cleanedNewToken.substring(0, 10) + '...'
+                        newToken: newToken
+                            ? newToken.substring(0, 10) + '...'
                             : 'none',
                     }
                 )

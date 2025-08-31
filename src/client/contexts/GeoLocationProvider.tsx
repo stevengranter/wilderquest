@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from 'react'
-import { useLocalStorage } from '@uidotdev/usehooks'
+import { useSimpleLocalStorage } from '../hooks/useSimpleLocalStorage'
 
 // Extracted interface with required fields
 export interface GeoLocationData {
@@ -41,10 +41,11 @@ interface GeoLocationProviderProps {
 export default function GeoLocationProvider({
     children,
 }: GeoLocationProviderProps) {
-    const [geoLocation, setGeoLocation] = useLocalStorage<GeoLocationData>(
-        'geoLocation',
-        DEFAULT_GEO_LOCATION
-    )
+    const [geoLocation, setGeoLocation] =
+        useSimpleLocalStorage<GeoLocationData>(
+            'geoLocation',
+            DEFAULT_GEO_LOCATION
+        )
 
     return (
         <GeoLocationContext.Provider value={{ geoLocation, setGeoLocation }}>

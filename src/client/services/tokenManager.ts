@@ -1,16 +1,19 @@
-import { useLocalStorage } from '@uidotdev/usehooks'
 import { LoggedInUser } from '../../shared/types/authTypes'
+import { useSimpleLocalStorage } from '../hooks/useSimpleLocalStorage'
 
 export default function useTokenManager() {
-    const [accessToken, saveAccessToken] = useLocalStorage<string>(
+    const [accessToken, saveAccessToken] = useSimpleLocalStorage<string>(
         'accessToken',
         ''
     )
-    const [refreshToken, saveRefreshToken] = useLocalStorage<string>(
+    const [refreshToken, saveRefreshToken] = useSimpleLocalStorage<string>(
         'refreshToken',
         ''
     )
-    const [user, saveUser] = useLocalStorage<LoggedInUser | null>('user', null)
+    const [user, saveUser] = useSimpleLocalStorage<LoggedInUser | null>(
+        'user',
+        null
+    )
 
     const clearAll = () => {
         saveAccessToken('')

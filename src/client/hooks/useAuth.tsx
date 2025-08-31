@@ -2,6 +2,7 @@ import { jwtDecode } from 'jwt-decode'
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { authApi, configureAuthApi, TokenCallbacks } from '@/services/authApi.js'
+import { configureApiTokens } from '@/api/api.js'
 import useTokenManager from '@/services/tokenManager.js'
 import type { LoggedInUser, LoginResponseData, RegisterResponseData } from '@shared/types/authTypes'
 import { LoginRequestBody, RegisterRequestBody } from '../../types/types.js'
@@ -59,7 +60,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             clearAll,
         }
         configureAuthApi(tokenCallbacks)
-    }, [user, accessToken, refreshToken])
+        configureApiTokens(() => accessToken || null)
+    }, [
+        user,
+        accessToken,
+        refreshToken,
+        saveAccessToken,
+        saveRefreshToken,
+        saveUser,
+        clearAll,
+    ])
 
     const isTokenExpiringSoon = useCallback((token: string | null): boolean => {
         if (!token) return true
