@@ -16,6 +16,9 @@
         "start:bg": "nohup pnpm start > start.log 2>&1 & echo $! > .start.pid",
         "stop:start": "kill $(cat .start.pid 2>/dev/null || echo '') 2>/dev/null || true && rm -f .start.pid",
         "stop:all": "pnpm stop:dev && pnpm stop:start",
+        "status": "echo '=== Server Status ===' && (test -f .dev.pid && echo 'Dev server: RUNNING (PID:' $(cat .dev.pid) ')' || echo 'Dev server: STOPPED') && (test -f .start.pid && echo 'Prod server: RUNNING (PID:' $(cat .start.pid) ')' || echo 'Prod server: STOPPED') && echo 'Background processes:' && ps aux | grep -E '(node.*server|nodemon)' | grep -v grep | wc -l",
+        "clean": "echo '=== Force Cleanup ===' && pkill -f 'node.*server.js' && pkill -f 'nodemon' && pkill -f 'tsx.*server.ts' && rm -f .dev.pid .start.pid && echo 'Cleanup complete'",
+        "check-processes": "echo '=== Process Check ===' && echo 'Node server processes:' && ps aux | grep -E '(node.*server|nodemon|tsx.*server)' | grep -v grep | wc -l && echo 'Total background processes:' && ps aux | grep -E '(node|jest|pnpm)' | grep -v grep | wc -l",
 
         "test": "jest",
         "test:watch": "jest --watch",
