@@ -120,5 +120,6 @@
             "@shared/*": ["../shared/*"]
         }
     },
-    "include": ["./**/*.ts", "./**/*.tsx", "../shared/**/*.ts"]
+    "include": ["./**/*.ts", "./**/*.tsx", "../shared/**/*.ts"],
+    "exclude": ["./**/__tests__/**/*", "./**/*.test.ts", "./**/*.spec.ts"]
 }

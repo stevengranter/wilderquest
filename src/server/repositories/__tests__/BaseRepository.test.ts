@@ -24,13 +24,13 @@ jest.mock('mysql2/promise', () => ({
 }))
 
 describe('BaseRepository', () => {
-    let repository: ReturnType<typeof createBaseRepository>
+    let repository: ReturnType<typeof createBaseRepository<TestEntity>>
 
     beforeEach(() => {
         resetMocks()
         repository = createBaseRepository<TestEntity>(
             'test_table',
-            { execute: mockExecute } as any,
+            { execute: mockExecute } as any as Pool,
             validTestColumns
         )
     })
@@ -263,7 +263,7 @@ describe('BaseRepository', () => {
             const mockRow = { id: 1, name: 'Test Entity' }
             mockSuccessfulQuery([mockRow])
 
-            const result = await repository.findOne({ id: 1 }, ['id', 'name'])
+            const result = await repository.findOne({ id: 1 }, validTestColumns.slice(0, 2))
 
             expect(result).toEqual(mockRow)
             expect(mockExecute).toHaveBeenCalledWith(
@@ -329,7 +329,7 @@ describe('BaseRepository', () => {
 
             const result = await repository.findMany(
                 {},
-                { orderByColumn: 'name', order: 'desc' }
+                { orderByColumn: 'name' as keyof TestEntity, order: 'desc' }
             )
 
             expect(result).toEqual(mockRows)
@@ -525,7 +525,7 @@ describe('BaseRepository', () => {
             const mockRows = [{ id: 1, name: 'Test' }]
             mockSuccessfulQuery(mockRows)
 
-            const result = await repository.find()
+            const result = await repository.findMany({})
 
             expect(result).toEqual(mockRows)
             expect(mockExecute).toHaveBeenCalledWith(
@@ -538,9 +538,9 @@ describe('BaseRepository', () => {
             const mockRows = [{ id: 1, name: 'Test' }]
             mockSuccessfulQuery(mockRows)
 
-            const result = await repository.find(
+            const result = await repository.findMany(
                 { name: 'Test' },
-                { limit: 10, orderByColumn: 'name', order: 'asc' }
+                { limit: 10, orderByColumn: 'name' as keyof TestEntity, order: 'asc' }
             )
 
             expect(result).toEqual(mockRows)

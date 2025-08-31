@@ -1,13 +1,16 @@
 import { retryWithBackoff } from '../retryWithBackoff.js'
+import axios from 'axios'
 
 // Mock axios to avoid network calls
 jest.mock('axios', () => ({
+    default: jest.fn(),
     get: jest.fn(),
     post: jest.fn(),
     isAxiosError: jest.fn(),
 }))
 
-const axios = require('axios')
+// Cast axios to mocked type
+const mockedAxios = axios as jest.Mocked<typeof axios>
 
 describe('retryWithBackoff', () => {
     beforeEach(() => {
@@ -16,12 +19,12 @@ describe('retryWithBackoff', () => {
 
     it('should return successful response on first attempt', async () => {
         const mockResponse = { data: 'success', status: 200 }
-        axios.get.mockResolvedValue(mockResponse)
+        mockedAxios.get.mockResolvedValue(mockResponse)
 
-        const result = await retryWithBackoff(() => axios.get('/api/test'))
+        const result = await retryWithBackoff(() => mockedAxios.get('/api/test'))
 
         expect(result).toEqual(mockResponse)
-        expect(axios.get).toHaveBeenCalledTimes(1)
+        expect(mockedAxios.get).toHaveBeenCalledTimes(1)
     })
 
     it('should retry on 429 error up to maxRetries', async () => {
@@ -32,30 +35,30 @@ describe('retryWithBackoff', () => {
             response: { status: 429 },
         }
 
-        axios.isAxiosError.mockReturnValue(true)
+        mockedAxios.isAxiosError.mockReturnValue(true)
 
-        axios.get
+        mockedAxios.get
             .mockRejectedValueOnce(mockAxiosError) // First attempt fails with 429
             .mockRejectedValueOnce(mockAxiosError) // Second attempt fails with 429
             .mockResolvedValueOnce(successResponse) // Third attempt succeeds
 
         const result = await retryWithBackoff(
-            () => axios.get('/api/test'),
+            () => mockedAxios.get('/api/test'),
             { maxRetries: 3, baseDelay: 10 } // Short delay for tests
         )
 
         expect(result).toEqual(successResponse)
-        expect(axios.get).toHaveBeenCalledTimes(3)
+        expect(mockedAxios.get).toHaveBeenCalledTimes(3)
     })
 
     it('should not retry on non-429 errors', async () => {
-        axios.isAxiosError.mockReturnValue(false)
-        axios.get.mockRejectedValue(new Error('Network error'))
+        mockedAxios.isAxiosError.mockReturnValue(false)
+        mockedAxios.get.mockRejectedValue(new Error('Network error'))
 
         await expect(
-            retryWithBackoff(() => axios.get('/api/test'))
+            retryWithBackoff(() => mockedAxios.get('/api/test'))
         ).rejects.toThrow('Network error')
-        expect(axios.get).toHaveBeenCalledTimes(1)
+        expect(mockedAxios.get).toHaveBeenCalledTimes(1)
     })
 
     it('should respect maxRetries limit', async () => {
@@ -67,34 +70,34 @@ describe('retryWithBackoff', () => {
             toJSON: () => ({}),
         }
 
-        axios.isAxiosError.mockReturnValue(true)
-        axios.get.mockRejectedValue(mockAxiosError)
+        mockedAxios.isAxiosError.mockReturnValue(true)
+        mockedAxios.get.mockRejectedValue(mockAxiosError)
 
         let errorThrown = false
 
         try {
-            await retryWithBackoff(() => axios.get('/api/test'), {
+            await retryWithBackoff(() => mockedAxios.get('/api/test'), {
                 maxRetries: 2,
                 baseDelay: 10,
             })
-        } catch (error) {
+        } catch (_error) {
             errorThrown = true
         }
 
         expect(errorThrown).toBe(true)
-        expect(axios.get).toHaveBeenCalledTimes(3) // initial + 2 retries
+        expect(mockedAxios.get).toHaveBeenCalledTimes(3) // initial + 2 retries
     })
 
     it('should handle successful responses without retries', async () => {
         const mockResponse = { data: { users: [] }, status: 200 }
-        axios.post.mockResolvedValue(mockResponse)
+        mockedAxios.post.mockResolvedValue(mockResponse)
 
         const result = await retryWithBackoff(() =>
-            axios.post('/api/users', { name: 'test' })
+            mockedAxios.post('/api/users', { name: 'test' })
         )
 
         expect(result).toEqual(mockResponse)
-        expect(axios.post).toHaveBeenCalledTimes(1)
-        expect(axios.post).toHaveBeenCalledWith('/api/users', { name: 'test' })
+        expect(mockedAxios.post).toHaveBeenCalledTimes(1)
+        expect(mockedAxios.post).toHaveBeenCalledWith('/api/users', { name: 'test' })
     })
 })

@@ -468,7 +468,7 @@ describe('QuestService', () => {
                 description: 'Only updating description',
             }
 
-            const result = await questService.updateQuest(
+            const _result = await questService.updateQuest(
                 existingQuestId,
                 partialUpdate,
                 ownerId
@@ -719,7 +719,7 @@ describe('QuestService', () => {
         })
 
         it('should use first taxon ID for photo fetching', async () => {
-            const result = await questService.getAllPublicQuests()
+            const _result = await questService.getAllPublicQuests()
 
             // Should fetch photo for first taxon of each quest
             expect(mockINatService.getTaxonPhoto).toHaveBeenCalledWith(123) // First taxon of quest 1
@@ -741,7 +741,7 @@ describe('QuestService', () => {
 
     describe('getUserQuests', () => {
         const targetUserId = 42
-        const viewerId = 99
+        const _viewerId = 99
         const differentViewerId = 100
 
         const mockUserQuests = [
