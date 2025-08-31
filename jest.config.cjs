@@ -3,18 +3,13 @@ module.exports = {
     preset: 'ts-jest/presets/default-esm',
     testEnvironment: 'node',
     extensionsToTreatAsEsm: ['.ts'],
-    globals: {
-        'ts-jest': {
-            useESM: true,
-            tsconfig: {
-                module: 'ESNext',
-                target: 'ES2020',
-                moduleResolution: 'NodeNext',
-                esModuleInterop: true,
-                allowSyntheticDefaultImports: true,
-            },
-        },
-    },
+
+    // Improved output formatting
+    verbose: true,
+    silent: false,
+    notify: false,
+
+    // Better test discovery
     roots: ['<rootDir>/src'],
     testMatch: [
         '**/__tests__/**/*.test.ts',
@@ -22,12 +17,30 @@ module.exports = {
         '**/?(*.)+(spec|test).ts',
         '**/?(*.)+(spec|test).js',
     ],
+
+    // Transform configuration with ts-jest options
     transform: {
-        '^.+\\.ts$': ['ts-jest', { useESM: true }],
+        '^.+\\.ts$': [
+            'ts-jest',
+            {
+                useESM: true,
+                tsconfig: {
+                    module: 'ESNext',
+                    target: 'ES2020',
+                    moduleResolution: 'NodeNext',
+                    esModuleInterop: true,
+                    allowSyntheticDefaultImports: true,
+                },
+            },
+        ],
     },
+
+    // Module mapping
     moduleNameMapper: {
         '^(\\.{1,2}/.*)\\.js$': '$1',
     },
+
+    // Coverage configuration
     collectCoverageFrom: [
         'src/**/*.{ts,tsx}',
         '!src/**/*.d.ts',
@@ -37,8 +50,13 @@ module.exports = {
     ],
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov', 'html'],
+
+    // Test configuration
     testTimeout: 10000,
     moduleFileExtensions: ['ts', 'js', 'json', 'mjs'],
     testPathIgnorePatterns: ['/node_modules/', '/dist/', '/build/'],
     setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
+
+    // Output formatting - cleaner and more informative
+    reporters: ['default'],
 }

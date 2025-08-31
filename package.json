@@ -20,8 +20,8 @@
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
-        "test:server": "jest --testPathPattern=src/server",
-        "test:client": "jest --testPathPattern=src/client"
+        "test:server": "jest --testPathPatterns=src/server",
+        "test:client": "jest --testPathPatterns=src/client"
     },
     "dependencies": {
         "@ai-sdk/google": "^1.2.22",
