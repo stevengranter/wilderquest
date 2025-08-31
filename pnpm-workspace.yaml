@@ -1,7 +1,9 @@
 onlyBuiltDependencies:
+  - '@firebase/util'
   - '@swc/core'
   - '@tailwindcss/oxide'
   - bufferutil
   - esbuild
   - msw
   - protobufjs
+  - unrs-resolver
