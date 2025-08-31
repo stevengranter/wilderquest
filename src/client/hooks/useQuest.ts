@@ -1,23 +1,12 @@
 import QuestEventToast from '@/components/ui/QuestEventToast'
-import {
-    useMutation,
-    useQuery,
-    useQueryClient,
-    QueryClient,
-} from '@tanstack/react-query'
+import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { chunk } from 'lodash'
 import React, { useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import api from '@/api/api'
 import { useAuth } from '@/hooks/useAuth'
 
-import {
-    AggregatedProgress,
-    DetailedProgress,
-    LeaderboardEntry,
-    QuestMapping,
-    Share,
-} from '@/features/quests/types'
+import { AggregatedProgress, DetailedProgress, LeaderboardEntry, QuestMapping, Share } from '@/features/quests/types'
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { Quest } from '../../server/models/quests'
 import { QuestWithTaxa } from '../../types/types'

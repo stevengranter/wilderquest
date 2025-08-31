@@ -133,6 +133,7 @@ export const QuestSpecies = ({
                         share={share}
                         token={token}
                         questStatus={questData.status}
+                        questMode={questData.mode}
                         onClick={async () => {
                             await handleProgressUpdateWrapper(taxon)
                         }}

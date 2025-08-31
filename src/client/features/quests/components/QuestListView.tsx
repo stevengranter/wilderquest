@@ -167,6 +167,7 @@ function SpeciesListCard(props: {
                                         share={props.share}
                                         token={props.token}
                                         questStatus={props.status}
+                                        questMode={props.questMode}
                                         onClick={props.onClick}
                                         variant={
                                             props.taxon.progressCount > 0
@@ -280,11 +281,25 @@ export const QuestListView = ({
                                     ? 'Marked as found!'
                                     : 'Marked as not found'
                             )
-                        } catch (_error) {
-                            toast.error('Failed to update progress')
+                        } catch (error: unknown) {
+                            // Handle specific competitive mode conflict
+                            const axiosError = error as {
+                                response?: {
+                                    status?: number
+                                    data?: { message?: string }
+                                }
+                            }
+                            if (axiosError?.response?.status === 409) {
+                                toast.error(
+                                    axiosError?.response?.data?.message ||
+                                        'This species has already been found by another participant in competitive mode'
+                                )
+                            } else {
+                                toast.error('Failed to update progress')
+                            }
                         }
                     }}
-                    callbackfn={(entry) => (
+                    callbackfn={(entry: DetailedProgress) => (
                         <div
                             key={entry.progress_id}
                             className="text-xs text-gray-600"
