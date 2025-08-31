@@ -60,6 +60,7 @@ export async function retryWithBackoff<T>(
                     logger.error(
                         `Max retries (${maxRetries}) exceeded for 429 error. Giving up.`
                     )
+                    throw error
                 }
             }
 
