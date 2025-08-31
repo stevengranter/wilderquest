@@ -30,7 +30,7 @@ dist-ssr
 .idea
 .gemini
 .serena
-.coverage
+coverage
 .DS_Store
 *.suo
 *.ntvs*
