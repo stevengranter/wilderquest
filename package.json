@@ -19,7 +19,6 @@
         "status": "echo '=== Server Status ===' && (test -f .dev.pid && echo 'Dev server: RUNNING (PID:' $(cat .dev.pid) ')' || echo 'Dev server: STOPPED') && (test -f .start.pid && echo 'Prod server: RUNNING (PID:' $(cat .start.pid) ')' || echo 'Prod server: STOPPED') && echo 'Background processes:' && ps aux | grep -E '(node.*server|nodemon)' | grep -v grep | wc -l",
         "clean": "echo '=== Force Cleanup ===' && pkill -f 'node.*server.js' && pkill -f 'nodemon' && pkill -f 'tsx.*server.ts' && rm -f .dev.pid .start.pid && echo 'Cleanup complete'",
         "check-processes": "echo '=== Process Check ===' && echo 'Node server processes:' && ps aux | grep -E '(node.*server|nodemon|tsx.*server)' | grep -v grep | wc -l && echo 'Total background processes:' && ps aux | grep -E '(node|jest|pnpm)' | grep -v grep | wc -l",
-
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
@@ -129,6 +128,7 @@
         "three-stdlib": "^2.36.0",
         "tsc-alias": "^1.8.16",
         "tsx": "^4.20.4",
+        "typescript": "^5.9.2",
         "uuid": "^11.1.0",
         "vaul": "^1.1.2",
         "vite-express": "^0.21.1",
@@ -166,9 +166,14 @@
         "supertest": "^7.1.4",
         "ts-jest": "^29.4.1",
         "tw-animate-css": "^1.3.7",
-        "typescript": "~5.7.3",
         "umzug": "^3.8.2",
         "vite": "^6.3.5"
     },
-    "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b"
+    "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b",
+    "pnpm": {
+        "hoistPattern": [
+            "@types/*",
+            "typescript"
+        ]
+    }
 }

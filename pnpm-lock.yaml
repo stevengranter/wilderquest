@@ -314,6 +314,9 @@ importers:
       tsx:
         specifier: ^4.20.4
         version: 4.20.5
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -416,13 +419,10 @@ importers:
         version: 7.1.4
       ts-jest:
         specifier: ^29.4.1
-        version: 29.4.1(@babel/core@7.28.3)(@jest/transform@30.1.1)(@jest/types@30.0.5)(babel-jest@30.1.1(@babel/core@7.28.3))(jest-util@30.0.5)(jest@30.1.1(@types/node@22.18.0))(typescript@5.7.3)
+        version: 29.4.1(@babel/core@7.28.3)(@jest/transform@30.1.1)(@jest/types@30.0.5)(babel-jest@30.1.1(@babel/core@7.28.3))(jest-util@30.0.5)(jest@30.1.1(@types/node@22.18.0))(typescript@5.9.2)
       tw-animate-css:
         specifier: ^1.3.7
         version: 1.3.7
-      typescript:
-        specifier: ~5.7.3
-        version: 5.7.3
       umzug:
         specifier: ^3.8.2
         version: 3.8.2(@types/node@22.18.0)
@@ -7011,8 +7011,8 @@ packages:
     resolution: {integrity: sha512-OZs6gsjF4vMp32qrCbiVSkrFmXtG/AZhY3t0iAMrMBiAZyV9oALtXO8hsrHbMXF9x6L3grlFuwW2oAz7cav+Gw==}
     engines: {node: '>= 0.6'}
 
-  typescript@5.7.3:
-    resolution: {integrity: sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==}
+  typescript@5.9.2:
+    resolution: {integrity: sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -8325,10 +8325,10 @@ snapshots:
       bufferutil: 4.0.9
       eventsource: 2.0.2
       fetch-event-stream: 0.1.5
-      msw: 2.11.1(@types/node@22.18.0)(typescript@5.7.3)
+      msw: 2.11.1(@types/node@22.18.0)(typescript@5.9.2)
       semiver: 1.1.0
       textlinestream: 1.1.1
-      typescript: 5.7.3
+      typescript: 5.9.2
       ws: 8.18.3(bufferutil@4.0.9)
     transitivePeerDependencies:
       - '@types/node'
@@ -14020,7 +14020,7 @@ snapshots:
 
   ms@2.1.3: {}
 
-  msw@2.11.1(@types/node@22.18.0)(typescript@5.7.3):
+  msw@2.11.1(@types/node@22.18.0)(typescript@5.9.2):
     dependencies:
       '@bundled-es-modules/cookie': 2.0.1
       '@bundled-es-modules/statuses': 1.0.1
@@ -14041,7 +14041,7 @@ snapshots:
       type-fest: 4.41.0
       yargs: 17.7.2
     optionalDependencies:
-      typescript: 5.7.3
+      typescript: 5.9.2
     transitivePeerDependencies:
       - '@types/node'
 
@@ -15450,7 +15450,7 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-jest@29.4.1(@babel/core@7.28.3)(@jest/transform@30.1.1)(@jest/types@30.0.5)(babel-jest@30.1.1(@babel/core@7.28.3))(jest-util@30.0.5)(jest@30.1.1(@types/node@22.18.0))(typescript@5.7.3):
+  ts-jest@29.4.1(@babel/core@7.28.3)(@jest/transform@30.1.1)(@jest/types@30.0.5)(babel-jest@30.1.1(@babel/core@7.28.3))(jest-util@30.0.5)(jest@30.1.1(@types/node@22.18.0))(typescript@5.9.2):
     dependencies:
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
@@ -15461,7 +15461,7 @@ snapshots:
       make-error: 1.3.6
       semver: 7.7.2
       type-fest: 4.41.0
-      typescript: 5.7.3
+      typescript: 5.9.2
       yargs-parser: 21.1.1
     optionalDependencies:
       '@babel/core': 7.28.3
@@ -15516,7 +15516,7 @@ snapshots:
       media-typer: 1.1.0
       mime-types: 3.0.1
 
-  typescript@5.7.3: {}
+  typescript@5.9.2: {}
 
   uc.micro@2.1.0: {}
 
