@@ -7,12 +7,12 @@ export function createUserService(userRepository: UserRepository) {
     async function getUserProfileById(
         id: number
     ): Promise<Partial<SafeUserDTO> | null> {
-        return userRepository.findUser({ id })
+        return userRepository.findUserForDisplay({ id })
     }
     async function getUserProfileByUsername(
         username: string
     ): Promise<Partial<SafeUserDTO> | null> {
-        return userRepository.findUser({ username })
+        return userRepository.findUserForDisplay({ username })
     }
 
     return { getUserProfileById, getUserProfileByUsername }

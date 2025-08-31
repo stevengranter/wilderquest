@@ -60,7 +60,7 @@ export function createQuestShareService(
         const quest = await questRepo.findById(share.quest_id)
         if (!quest) throw new AppError('Quest not found', 404)
 
-        const owner = await userRepo.findUser({ id: quest.user_id })
+        const owner = await userRepo.findUserForDisplay({ id: quest.user_id })
 
         const taxaMappings = await questToTaxaRepo.findByQuestId(share.quest_id)
         const progress = await progressRepo.findByShareId(share.id)
@@ -189,7 +189,7 @@ export function createQuestShareService(
     ) {
         // Ensure ownership
         await assertQuestOwnership(questId, userId)
-        const user = await userRepo.findUser({ id: userId })
+        const user = await userRepo.findUserForDisplay({ id: userId })
 
         // Get quest to check mode
         const quest = await questRepo.findById(questId)
