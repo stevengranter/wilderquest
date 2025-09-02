@@ -19,14 +19,14 @@ export type AggregatedProgress = {
     mapping_id: number
     count: number
     last_observed_at: string
-    last_display_name: string
+    last_display_name: string | 'Guest'
 }
 
 export type DetailedProgress = {
     progress_id: number
     mapping_id: number
     observed_at: string
-    display_name: string
+    display_name: string | 'Guest'
 }
 
 export type Share = {
@@ -34,7 +34,7 @@ export type Share = {
 }
 
 export type LeaderboardEntry = {
-    display_name: string
+    display_name: string | 'Guest'
     observation_count: number
 }
 

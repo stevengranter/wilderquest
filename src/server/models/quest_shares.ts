@@ -6,9 +6,10 @@ export const QuestShareSchema = z.object({
     quest_id: z.number().int(),
     created_by_user_id: z.number().int(),
     guest_name: z.string().nullable().optional(), // string | null | undefined
-    expires_at: z.date().nullable().optional(),   // Date | null | undefined
+    expires_at: z.date().nullable().optional(), // Date | null | undefined
+    is_primary: z.boolean().optional(), // boolean | undefined
     created_at: z.date(),
     updated_at: z.date(),
-});
+})
 
 export interface QuestShare extends z.infer<typeof QuestShareSchema> {}

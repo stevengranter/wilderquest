@@ -110,26 +110,36 @@ export function createSharedQuestProgressRepository(
     ): Promise<AggregatedProgress[]> {
         const [rows] = await dbPool.query(
             `SELECT
-                 p.taxon_id AS mapping_id,
-                 COUNT(*) AS count,
-                 p_last.observed_at AS last_observed_at,
-                 COALESCE(s_last.guest_name, u.username) AS last_display_name
-             FROM shared_quest_progress p
-             INNER JOIN quest_shares s ON s.id = p.quest_share_id
-             LEFT JOIN shared_quest_progress p_last
-               ON p_last.taxon_id = p.taxon_id
-             LEFT JOIN quest_shares s_last ON s_last.id = p_last.quest_share_id
-             LEFT JOIN users u ON u.id = s_last.created_by_user_id
-             WHERE s.quest_id = ?
-               AND s_last.quest_id = s.quest_id
-               AND p_last.observed_at = (
-                   SELECT MAX(p3.observed_at)
-                   FROM shared_quest_progress p3
-                   INNER JOIN quest_shares s3 ON s3.id = p3.quest_share_id
-                   WHERE p3.taxon_id = p.taxon_id AND s3.quest_id = s.quest_id
-               )
-             GROUP BY p.taxon_id, p_last.observed_at, COALESCE(s_last.guest_name, u.username)`,
-            [questId]
+                   p.taxon_id AS mapping_id,
+                   COUNT(*) AS count,
+                   p_last.observed_at AS last_observed_at,
+                    CASE
+                      WHEN s_last.guest_name IS NOT NULL THEN s_last.guest_name
+                      WHEN s_last.is_primary = TRUE THEN u.username
+                      ELSE 'Guest'
+                    END AS last_display_name
+               FROM shared_quest_progress p
+               INNER JOIN quest_shares s ON s.id = p.quest_share_id
+                LEFT JOIN (
+                    SELECT p3.taxon_id, p3.quest_share_id, p3.observed_at
+                    FROM shared_quest_progress p3
+                    INNER JOIN quest_shares s3 ON s3.id = p3.quest_share_id
+                    WHERE s3.quest_id = ?
+                    AND p3.observed_at = (
+                        SELECT MAX(p4.observed_at)
+                        FROM shared_quest_progress p4
+                        INNER JOIN quest_shares s4 ON s4.id = p4.quest_share_id
+                        WHERE p4.taxon_id = p3.taxon_id AND s4.quest_id = s3.quest_id
+                    )
+                    ORDER BY p3.id ASC
+                    LIMIT 1
+                ) p_last ON p_last.taxon_id = p.taxon_id
+                LEFT JOIN quest_shares s_last ON s_last.id = p_last.quest_share_id
+               LEFT JOIN users u ON u.id = s_last.created_by_user_id
+               INNER JOIN quests q ON q.id = s.quest_id
+                WHERE s.quest_id = ?
+                GROUP BY p.taxon_id, p_last.observed_at, s_last.guest_name, s_last.created_by_user_id, u.username, q.user_id, s_last.id`,
+            [questId, questId]
         )
         return rows as AggregatedProgress[]
     }
@@ -139,16 +149,21 @@ export function createSharedQuestProgressRepository(
     ): Promise<DetailedProgress[]> {
         const [rows] = await dbPool.query(
             `SELECT
-                p.id AS progress_id,
-                p.taxon_id AS mapping_id,
-                p.observed_at,
-                s.id AS quest_share_id,
-                COALESCE(s.guest_name, u.username) AS display_name
-             FROM shared_quest_progress p
-             INNER JOIN quest_shares s ON s.id = p.quest_share_id
-             LEFT JOIN users u ON u.id = s.created_by_user_id
-             WHERE s.quest_id = ?
-             ORDER BY p.observed_at DESC`,
+                  p.id AS progress_id,
+                  p.taxon_id AS mapping_id,
+                  p.observed_at,
+                  s.id AS quest_share_id,
+                   CASE
+                     WHEN s.guest_name IS NOT NULL THEN s.guest_name
+                     WHEN s.is_primary = TRUE THEN u.username
+                     ELSE 'Guest'
+                   END AS display_name
+               FROM shared_quest_progress p
+               INNER JOIN quest_shares s ON s.id = p.quest_share_id
+               LEFT JOIN users u ON u.id = s.created_by_user_id
+               INNER JOIN quests q ON q.id = s.quest_id
+               WHERE s.quest_id = ?
+               ORDER BY p.observed_at DESC`,
             [questId]
         )
         return rows as DetailedProgress[]
@@ -159,15 +174,20 @@ export function createSharedQuestProgressRepository(
     ): Promise<LeaderboardEntry[]> {
         const [rows] = await dbPool.query(
             `SELECT
-                    COALESCE(s.guest_name, u.username) AS display_name,
-                    COUNT(*) AS observation_count
-                    FROM quest_shares s
-                    LEFT JOIN users u ON u.id = s.created_by_user_id
-                    LEFT JOIN shared_quest_progress p ON p.quest_share_id = s.id
-                    WHERE s.quest_id = ?
-                    GROUP BY s.id, display_name
-                    ORDER BY observation_count DESC, display_name ASC;
-                `,
+                       CASE
+                         WHEN s.guest_name IS NOT NULL THEN s.guest_name
+                         WHEN s.is_primary = TRUE THEN u.username
+                         ELSE 'Guest'
+                       END AS display_name,
+                      COUNT(*) AS observation_count
+                      FROM quest_shares s
+                      LEFT JOIN users u ON u.id = s.created_by_user_id
+                      LEFT JOIN shared_quest_progress p ON p.quest_share_id = s.id
+                      INNER JOIN quests q ON q.id = s.quest_id
+                      WHERE s.quest_id = ?
+                      GROUP BY s.id, s.guest_name, s.created_by_user_id, u.username, q.user_id
+                       ORDER BY observation_count DESC, display_name ASC;
+                   `,
             [questId]
         )
         return rows as LeaderboardEntry[]

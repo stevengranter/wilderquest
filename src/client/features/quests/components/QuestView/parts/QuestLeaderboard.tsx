@@ -25,14 +25,13 @@ export const QuestLeaderboard = ({ leaderboard }: QuestLeaderboardProps) => {
                                     <div className="flex items-center gap-3">
                                         <AvatarOverlay
                                             displayName={
-                                                entry.display_name ||
-                                                'Anonymous'
+                                                entry.display_name || 'Guest'
                                             }
                                             className="w-14 h-14 border-0"
                                         />
                                         <span className="font-medium">
                                             {index + 1}.{' '}
-                                            {entry.display_name || 'Anonymous'}
+                                            {entry.display_name || 'Guest'}
                                         </span>
                                     </div>
                                     <span className="text-sm text-gray-600">

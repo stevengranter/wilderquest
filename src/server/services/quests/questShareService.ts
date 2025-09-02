@@ -1,5 +1,12 @@
-import { QuestRepository, QuestToTaxa, QuestToTaxaRepository } from '../../repositories/QuestRepository.js'
-import type { QuestShareRepository, SharedQuestProgressRepository } from '../../repositories/QuestShareRepository.js'
+import {
+    QuestRepository,
+    QuestToTaxa,
+    QuestToTaxaRepository,
+} from '../../repositories/QuestRepository.js'
+import type {
+    QuestShareRepository,
+    SharedQuestProgressRepository,
+} from '../../repositories/QuestShareRepository.js'
 import { sendEvent } from './questEventsService.js'
 import { QuestShare } from '../../models/quest_shares.js'
 import { UserRepository } from '../../repositories/UserRepository.js'
@@ -27,11 +34,26 @@ export function createQuestShareService(
         data: { guest_name?: string | null; expires_at?: string | Date | null }
     ) {
         await assertQuestOwnership(questId, userId)
+
+        // Check if this should be the primary share
+        const existingShares = await questShareRepo.findByQuestId(questId)
+        const ownerShares = existingShares.filter(
+            (s) => s.created_by_user_id === userId
+        )
+        const hasPrimaryShare = ownerShares.some((s) => s.is_primary)
+
+        // A share is primary if:
+        // 1. No primary share exists yet for this quest+owner
+        // 2. The new share is created by the owner
+        // 3. The guest_name is null (or not provided)
+        const isPrimary = !hasPrimaryShare && !data.guest_name
+
         const shareId = await questShareRepo.createShare({
             quest_id: questId,
             created_by_user_id: userId,
             guest_name: data.guest_name ?? null,
             expires_at: data.expires_at ? new Date(data.expires_at) : null,
+            is_primary: isPrimary,
         })
         const share = await questShareRepo.findById(shareId)
         if (!share) throw new AppError('Failed to create share', 500)
@@ -195,18 +217,21 @@ export function createQuestShareService(
         const quest = await questRepo.findById(questId)
         if (!quest) throw new AppError('Quest not found', 404)
 
-        // Find or create an owner share for this quest (guest_name null)
-        const possibleShares = (await questShareRepo.findMany({
-            quest_id: questId,
-            created_by_user_id: userId,
-        })) as QuestShare[]
-        let share = possibleShares.find((s) => !s.guest_name) || null
+        // Find or create the primary owner share for this quest
+        const existingShares = await questShareRepo.findByQuestId(questId)
+        let share =
+            existingShares.find(
+                (s) => s.is_primary && s.created_by_user_id === userId
+            ) || null
+
         if (!share) {
+            // Create primary share if it doesn't exist
             const shareId = await questShareRepo.createShare({
                 quest_id: questId,
                 created_by_user_id: userId,
                 guest_name: null,
                 expires_at: null,
+                is_primary: true,
             })
             share = await questShareRepo.findById(shareId)
         }

@@ -21,6 +21,7 @@ type QuestShare = {
     created_by_user_id: number
     guest_name?: string | null
     expires_at?: string | null
+    is_primary?: boolean
     created_at: string
     updated_at: string
 }
@@ -161,56 +162,60 @@ export function ShareQuest({
                         </div>
                     ) : (
                         <ul className="space-y-3">
-                            {shares.map((s) => (
-                                <li
-                                    key={s.id}
-                                    className="border rounded-base p-3 flex flex-col gap-2"
-                                >
-                                    <div className="text-sm break-all">
-                                        <span className="font-medium">
-                                            Link:
-                                        </span>{' '}
-                                        <a
-                                            href={buildShareLink(s.token)}
-                                            className="underline"
-                                        >
-                                            {buildShareLink(s.token)}
-                                        </a>
-                                    </div>
-                                    {s.guest_name ? (
-                                        <div className="text-sm">
-                                            Guest: {s.guest_name}
+                            {shares
+                                .filter((s) => !s.is_primary)
+                                .map((s) => (
+                                    <li
+                                        key={s.id}
+                                        className="border rounded-base p-3 flex flex-col gap-2"
+                                    >
+                                        <div className="text-sm break-all">
+                                            <span className="font-medium">
+                                                Link:
+                                            </span>{' '}
+                                            <a
+                                                href={buildShareLink(s.token)}
+                                                className="underline"
+                                            >
+                                                {buildShareLink(s.token)}
+                                            </a>
                                         </div>
-                                    ) : null}
-                                    {s.expires_at ? (
-                                        <div className="text-xs text-muted-foreground">
-                                            Expires:{' '}
-                                            {new Date(
-                                                s.expires_at
-                                            ).toLocaleString()}
+                                        {s.guest_name ? (
+                                            <div className="text-sm">
+                                                Guest: {s.guest_name}
+                                            </div>
+                                        ) : null}
+                                        {s.expires_at ? (
+                                            <div className="text-xs text-muted-foreground">
+                                                Expires:{' '}
+                                                {new Date(
+                                                    s.expires_at
+                                                ).toLocaleString()}
+                                            </div>
+                                        ) : null}
+                                        <div className="flex gap-2">
+                                            <Button
+                                                size="sm"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(
+                                                        buildShareLink(s.token)
+                                                    )
+                                                }}
+                                            >
+                                                Copy link
+                                            </Button>
+                                            <Button
+                                                variant="neutral"
+                                                size="sm"
+                                                onClick={() =>
+                                                    deleteShare(s.id)
+                                                }
+                                            >
+                                                Delete
+                                            </Button>
                                         </div>
-                                    ) : null}
-                                    <div className="flex gap-2">
-                                        <Button
-                                            size="sm"
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(
-                                                    buildShareLink(s.token)
-                                                )
-                                            }}
-                                        >
-                                            Copy link
-                                        </Button>
-                                        <Button
-                                            variant="neutral"
-                                            size="sm"
-                                            onClick={() => deleteShare(s.id)}
-                                        >
-                                            Delete
-                                        </Button>
-                                    </div>
-                                </li>
-                            ))}
+                                    </li>
+                                ))}
                         </ul>
                     )}
                 </div>
