@@ -87,7 +87,6 @@
         "express-rate-limit": "^8.0.1",
         "express-slow-down": "^3.0.0",
         "genkit": "^1.16.1",
-        "image-blob-reduce": "^4.1.0",
         "input-otp": "^1.4.2",
         "ioredis": "^5.7.0",
         "jsonwebtoken": "^9.0.2",
