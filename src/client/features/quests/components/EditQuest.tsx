@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { chunk } from 'lodash'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { AxiosError } from 'axios'
 import { FormProvider, useForm, useFormContext, useWatch } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
@@ -274,31 +275,53 @@ export default function EditQuest() {
                 description: 'Your quest has been successfully updated.',
             })
             navigate(`/quests/${questId}`)
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Failed to update quest.', err)
 
+            // Type guard for axios error
+            const isAxiosError = (error: unknown): error is AxiosError => {
+                return (
+                    error !== null &&
+                    typeof error === 'object' &&
+                    'response' in error
+                )
+            }
+
             // Provide more specific error messages
-            if (err?.response?.status === 401) {
+            if (
+                isAxiosError(err) &&
+                err.response &&
+                err.response.status === 401
+            ) {
                 toast.error('Session expired. Please log in again.', {
                     description:
                         'Your session has expired. You will be redirected to login.',
                 })
                 // Redirect will be handled by API interceptor
-            } else if (err?.response?.status === 403) {
+            } else if (
+                isAxiosError(err) &&
+                err.response &&
+                err.response.status === 403
+            ) {
                 toast.error('Permission denied', {
                     description:
                         'You do not have permission to edit this quest.',
                 })
-            } else if (err?.response?.status >= 500) {
+            } else if (
+                isAxiosError(err) &&
+                err.response &&
+                err.response.status >= 500
+            ) {
                 toast.error('Server error', {
                     description:
                         'Please try again later. If the problem persists, contact support.',
                 })
             } else {
+                const errorMessage = isAxiosError(err)
+                    ? err.message
+                    : 'An unexpected error occurred. Please try again.'
                 toast.error('Failed to update quest', {
-                    description:
-                        err?.message ||
-                        'An unexpected error occurred. Please try again.',
+                    description: errorMessage,
                 })
             }
         } finally {
