@@ -1,25 +1,38 @@
 import axios from 'axios'
-import { authApi } from '@/services/authApi'
 
 const api = axios.create({
     baseURL: '/api',
 })
 
-// Token getter function that can be configured
-let getAccessToken: (() => string | null) | null = null
+// Token getter function that can be configured with useAuth context
+let getValidToken: (() => Promise<string | null>) | null = null
 
-export const configureApiTokens = (tokenGetter: () => string | null) => {
-    getAccessToken = tokenGetter
+export const configureApiTokens = (
+    tokenGetter: () => Promise<string | null>
+) => {
+    getValidToken = tokenGetter
 }
 
 // Request interceptor
-api.interceptors.request.use((config) => {
-    const token = getAccessToken ? getAccessToken() : null
-
-    // Add token if it exists and the URL is not a public quest-sharing URL
-    if (token && !config.url?.includes('/quest-sharing/')) {
-        config.headers.Authorization = `Bearer ${token}`
+api.interceptors.request.use(async (config) => {
+    // Skip token for public quest-sharing URLs
+    if (config.url?.includes('/quest-sharing/')) {
+        return config
     }
+
+    // Get a valid token (will refresh if needed)
+    if (getValidToken) {
+        try {
+            const token = await getValidToken()
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`
+            }
+        } catch (error) {
+            console.warn('Failed to get valid token for request:', error)
+            // Continue without token - the request might be public
+        }
+    }
+
     return config
 })
 
@@ -43,29 +56,38 @@ api.interceptors.response.use(
 
             try {
                 console.log('Attempting token refresh...')
-                await authApi.refreshAccessToken()
 
-                // Update the Authorization header with the new token
-                const newToken = getAccessToken ? getAccessToken() : null
-                originalRequest.headers.Authorization = newToken
-                    ? `Bearer ${newToken}`
-                    : ''
+                // Get a fresh token (this will handle refresh automatically)
+                if (getValidToken) {
+                    const newToken = await getValidToken()
 
-                console.log(
-                    'Token refresh successful, retrying with new token:',
-                    {
-                        newToken: newToken
-                            ? newToken.substring(0, 10) + '...'
-                            : 'none',
+                    if (newToken) {
+                        originalRequest.headers.Authorization = `Bearer ${newToken}`
+
+                        console.log(
+                            'Token refresh successful, retrying with new token:',
+                            {
+                                newToken: newToken.substring(0, 10) + '...',
+                            }
+                        )
+
+                        // Retry the original request with the new token
+                        return api(originalRequest)
                     }
-                )
+                }
 
-                // Retry the original request with the new token
-                return api(originalRequest)
+                // If we get here, token refresh failed
+                throw new Error('Token refresh failed')
             } catch (refreshError) {
                 console.error('Token refresh failed:', refreshError)
-                // Redirect to login only if refresh actually failed
-                window.location.href = '/login'
+                // Show user-friendly error message
+                console.log(
+                    '🔄 Token refresh failed - redirecting to login for re-authentication'
+                )
+                // Add a small delay to show the error state briefly
+                setTimeout(() => {
+                    window.location.href = '/login?reason=session_expired'
+                }, 1000)
                 return Promise.reject(refreshError)
             }
         }

@@ -1,39 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { chunk } from 'lodash'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-    FormProvider,
-    useForm,
-    useFormContext,
-    useWatch,
-} from 'react-hook-form'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { FormProvider, useForm, useFormContext, useWatch } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import api from '@/api/api'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from '@/components/ui/form'
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
-import { useAuth } from '@/hooks/useAuth'
-import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeSelector'
 import { SpeciesAnimationProvider } from '@/features/quests/components/SpeciesAnimationProvider'
 import { formSchema } from '@/features/quests/schemas/formSchema'
@@ -73,6 +53,9 @@ export default function EditQuest() {
     const [questSpeciesMap, setQuestSpeciesMap] = useState<
         Map<number, SpeciesCountItem>
     >(new Map())
+    const prevQuestSpeciesMapRef = useRef<Map<number, SpeciesCountItem> | null>(
+        null
+    )
 
     const form = useForm<QuestFormValues>({
         resolver: zodResolver(formSchema),
@@ -163,6 +146,34 @@ export default function EditQuest() {
     }, [taxa])
 
     // Convert questSpeciesMap back to taxa when it changes
+    const syncQuestSpeciesToTaxa = useCallback(() => {
+        const newTaxa = Array.from(questSpeciesMap.values()).map((item) => ({
+            id: item.taxon.id,
+            name: item.taxon.name,
+            preferred_common_name: item.taxon.preferred_common_name,
+            rank: (item.taxon.rank as INatTaxon['rank']) || 'species',
+            rank_level: 10,
+            iconic_taxon_id: 0,
+            ancestor_ids: [],
+            is_active: true,
+            parent_id: 0,
+            ancestry: '',
+            extinct: false,
+            default_photo: item.taxon.default_photo,
+            taxon_changes_count: 0,
+            taxon_schemes_count: 0,
+            observations_count: item.count,
+            flag_counts: { resolved: 0, unresolved: 0 },
+            current_synonymous_taxon_ids: null,
+            atlas_id: 0,
+            complete_species_count: null,
+            wikipedia_url: '',
+            matched_term: '',
+            iconic_taxon_name: '',
+        }))
+        setTaxa(newTaxa as INatTaxon[])
+    }, [questSpeciesMap])
+
     const _syncQuestSpeciesToTaxa = useCallback(
         (
             updateFn: (
@@ -203,6 +214,24 @@ export default function EditQuest() {
         [questSpeciesMap]
     )
 
+    // Sync questSpeciesMap back to taxa when questSpeciesMap changes
+    useEffect(() => {
+        // Only sync if the map has actually changed to prevent infinite loops
+        const prevMap = prevQuestSpeciesMapRef.current
+        const hasChanged =
+            !prevMap ||
+            prevMap.size !== questSpeciesMap.size ||
+            Array.from(questSpeciesMap.entries()).some(([id, item]) => {
+                const prevItem = prevMap.get(id)
+                return !prevItem || prevItem.taxon.id !== item.taxon.id
+            })
+
+        if (hasChanged) {
+            syncQuestSpeciesToTaxa()
+            prevQuestSpeciesMapRef.current = new Map(questSpeciesMap)
+        }
+    }, [questSpeciesMap, syncQuestSpeciesToTaxa])
+
     const onSubmit = async (data: QuestFormValues) => {
         setIsLoading(true)
         const taxon_ids = taxa.map((t) => t.id)
@@ -218,38 +247,60 @@ export default function EditQuest() {
             taxon_ids,
         }
         try {
-            await api.patch(`/quests/${questId}`, payload)
+            const response = await api.patch(`/quests/${questId}`, payload)
+
+            console.log(response)
 
             const numericQuestId = questId ? parseInt(questId, 10) : undefined
 
             if (numericQuestId) {
-                // First, invalidate the main quest data.
-                // This ensures the cache has the updated taxon_ids.
-                await queryClient.invalidateQueries({
-                    queryKey: ['quest', questId],
-                })
+                // Update the quest cache with the new data including taxon_ids
+                const updatedQuest = { ...response.data, taxon_ids }
+                queryClient.setQueryData(['quest', questId], updatedQuest)
 
-                // Now, invalidate the dependent queries.
-                await Promise.all([
-                    queryClient.invalidateQueries({
-                        queryKey: ['taxa', numericQuestId],
-                    }),
-                    queryClient.invalidateQueries({
-                        queryKey: ['progress', numericQuestId],
-                    }),
-                    queryClient.invalidateQueries({
-                        queryKey: ['leaderboard', numericQuestId],
-                    }),
-                ])
+                // Remove the dependent query caches to ensure fresh data
+                queryClient.removeQueries({
+                    queryKey: ['taxa', numericQuestId],
+                })
+                queryClient.removeQueries({
+                    queryKey: ['progress', numericQuestId],
+                })
+                queryClient.removeQueries({
+                    queryKey: ['leaderboard', numericQuestId],
+                })
             }
 
             toast.success('Quest Updated', {
                 description: 'Your quest has been successfully updated.',
             })
             navigate(`/quests/${questId}`)
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to update quest.', err)
-            toast.error('Failed to update quest.')
+
+            // Provide more specific error messages
+            if (err?.response?.status === 401) {
+                toast.error('Session expired. Please log in again.', {
+                    description:
+                        'Your session has expired. You will be redirected to login.',
+                })
+                // Redirect will be handled by API interceptor
+            } else if (err?.response?.status === 403) {
+                toast.error('Permission denied', {
+                    description:
+                        'You do not have permission to edit this quest.',
+                })
+            } else if (err?.response?.status >= 500) {
+                toast.error('Server error', {
+                    description:
+                        'Please try again later. If the problem persists, contact support.',
+                })
+            } else {
+                toast.error('Failed to update quest', {
+                    description:
+                        err?.message ||
+                        'An unexpected error occurred. Please try again.',
+                })
+            }
         } finally {
             setIsLoading(false)
         }

@@ -1,8 +1,7 @@
-import useAuth from '@/hooks/useAuth'
-import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function LoginStatus() {
-    const {isLoggedIn} = useAuth()
+    const { isAuthenticated } = useAuth()
 
-    return isLoggedIn ? 'Logged in' : 'Logged out'
+    return isAuthenticated ? 'Logged in' : 'Logged out'
 }
