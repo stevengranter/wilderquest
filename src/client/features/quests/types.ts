@@ -36,6 +36,9 @@ export type Share = {
 export type LeaderboardEntry = {
     display_name: string | 'Guest'
     observation_count: number
+    has_accessed_page?: boolean
+    last_progress_at?: Date | null
+    invited_at?: Date
 }
 
 export type SpeciesCardWithObservationsProps = {

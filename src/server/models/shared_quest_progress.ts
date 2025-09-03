@@ -26,4 +26,7 @@ export type DetailedProgress = {
 export type LeaderboardEntry = {
     display_name: string | null
     observation_count: number
+    has_accessed_page?: boolean
+    last_progress_at?: Date | null
+    invited_at?: Date
 }

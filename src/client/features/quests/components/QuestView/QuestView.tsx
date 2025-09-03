@@ -60,7 +60,10 @@ export const QuestView = () => {
             />
 
             <div className="grid grid-cols-2 justify-between items-start">
-                <QuestLeaderboard leaderboard={leaderboard} />
+                <QuestLeaderboard
+                    leaderboard={leaderboard}
+                    questStatus={questData?.status}
+                />
 
                 <div className="flex justify-center items-center">
                     {mappings && mappings.length > 0 && (

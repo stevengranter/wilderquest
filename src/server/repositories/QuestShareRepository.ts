@@ -174,20 +174,23 @@ export function createSharedQuestProgressRepository(
     ): Promise<LeaderboardEntry[]> {
         const [rows] = await dbPool.query(
             `SELECT
-                       CASE
-                         WHEN s.guest_name IS NOT NULL THEN s.guest_name
-                         WHEN s.is_primary = TRUE THEN u.username
-                         ELSE 'Guest'
-                       END AS display_name,
-                      COUNT(*) AS observation_count
-                      FROM quest_shares s
-                      LEFT JOIN users u ON u.id = s.created_by_user_id
-                      LEFT JOIN shared_quest_progress p ON p.quest_share_id = s.id
-                      INNER JOIN quests q ON q.id = s.quest_id
-                      WHERE s.quest_id = ?
-                      GROUP BY s.id, s.guest_name, s.created_by_user_id, u.username, q.user_id
-                       ORDER BY observation_count DESC, display_name ASC;
-                   `,
+                        CASE
+                          WHEN s.guest_name IS NOT NULL THEN s.guest_name
+                          WHEN s.is_primary = TRUE THEN u.username
+                          ELSE 'Guest'
+                        END AS display_name,
+                       COUNT(p.id) AS observation_count,
+                       s.first_accessed_at IS NOT NULL AS has_accessed_page,
+                       MAX(p.observed_at) AS last_progress_at,
+                       s.created_at AS invited_at
+                       FROM quest_shares s
+                       LEFT JOIN users u ON u.id = s.created_by_user_id
+                       LEFT JOIN shared_quest_progress p ON p.quest_share_id = s.id
+                       INNER JOIN quests q ON q.id = s.quest_id
+                       WHERE s.quest_id = ?
+                       GROUP BY s.id, s.guest_name, s.created_by_user_id, u.username, s.first_accessed_at, s.created_at, q.user_id
+                        ORDER BY observation_count DESC, display_name ASC;
+                    `,
             [questId]
         )
         return rows as LeaderboardEntry[]
@@ -211,9 +214,32 @@ export function createSharedQuestProgressRepository(
     ): Promise<boolean> {
         const [result] = await dbPool.execute<ResultSetHeader>(
             `DELETE p FROM shared_quest_progress p
-             INNER JOIN quest_shares s ON s.id = p.quest_share_id
-             WHERE s.quest_id = ? AND p.taxon_id = ?`,
+              INNER JOIN quest_shares s ON s.id = p.quest_share_id
+              WHERE s.quest_id = ? AND p.taxon_id = ?`,
             [questId, mappingId]
+        )
+        return result.affectedRows > 0
+    }
+
+    async function updateShare(
+        shareId: number,
+        updates: Partial<
+            Pick<QuestShare, 'first_accessed_at' | 'last_accessed_at'>
+        >
+    ): Promise<boolean> {
+        const updateFields = Object.keys(updates).filter(
+            (key) => updates[key as keyof typeof updates] !== undefined
+        )
+        if (updateFields.length === 0) return false
+
+        const setClause = updateFields.map((field) => `${field} = ?`).join(', ')
+        const values = updateFields.map(
+            (field) => updates[field as keyof typeof updates]
+        )
+
+        const [result] = await dbPool.execute<ResultSetHeader>(
+            `UPDATE quest_shares SET ${setClause} WHERE id = ?`,
+            [...values, shareId]
         )
         return result.affectedRows > 0
     }
@@ -228,6 +254,7 @@ export function createSharedQuestProgressRepository(
         getLeaderboardProgress,
         deleteProgressEntry,
         clearMappingProgress,
+        updateShare,
     }
 }
 

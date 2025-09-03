@@ -327,6 +327,26 @@ export function createQuestShareService(
         return { success: true }
     }
 
+    async function trackPageAccess(token: string) {
+        const share = await questShareRepo.findByToken(token)
+        if (!share) throw new AppError('Share not found', 404)
+
+        const now = new Date()
+        if (!share.first_accessed_at) {
+            // First time accessing
+            await questShareRepo.update(share.id, {
+                first_accessed_at: now,
+                last_accessed_at: now,
+            })
+        } else {
+            // Update last accessed time
+            await questShareRepo.update(share.id, {
+                last_accessed_at: now,
+            })
+        }
+        return { success: true }
+    }
+
     return {
         createShare,
         listSharesForQuest,
@@ -343,5 +363,6 @@ export function createQuestShareService(
         clearMappingProgress,
         getLeaderboardForQuest,
         getLeaderboardForQuestByToken,
+        trackPageAccess,
     }
 }

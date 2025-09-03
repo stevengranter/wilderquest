@@ -8,6 +8,8 @@ export const QuestShareSchema = z.object({
     guest_name: z.string().nullable().optional(), // string | null | undefined
     expires_at: z.date().nullable().optional(), // Date | null | undefined
     is_primary: z.boolean().optional(), // boolean | undefined
+    first_accessed_at: z.date().nullable().optional(), // Date | null | undefined
+    last_accessed_at: z.date().nullable().optional(), // Date | null | undefined
     created_at: z.date(),
     updated_at: z.date(),
 })

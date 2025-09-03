@@ -51,6 +51,7 @@ export function createQuestShareRouter(controller: QuestShareController) {
         optionalAuthMiddleware,
         controller.setObserved
     )
+    router.post('/shares/token/:token/accessed', controller.trackPageAccess)
 
     // Aggregated progress, leaderboard, and mappings for a quest (public for public quests, or owner if private)
     router.get(
