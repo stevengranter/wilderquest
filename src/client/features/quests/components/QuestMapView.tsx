@@ -69,50 +69,7 @@ type QuestMapProps = {
 }
 
 // Helper functions that will be used with dynamically loaded components
-function createMapUpdater(useMap: () => LeafletMap) {
-    return function MapUpdater({
-        center,
-        zoom,
-    }: {
-        center?: [number, number]
-        zoom?: number
-    }) {
-        const map = useMap()
-
-        useEffect(() => {
-            if (center) {
-                map.setView([center[0], center[1]], zoom || 3)
-            } else {
-                // Fit the world, but respect minZoom (so you don’t zoom out to 0)
-                map.fitWorld({ maxZoom: 2 })
-            }
-        }, [center, zoom, map])
-
-        return null
-    }
-}
-
-function createMapSyncHandler(
-    // biome-ignore lint/suspicious/noExplicitAny: Leaflet event handlers require any for event parameter type
-    useMapEvents: (events: Record<string, (e: any) => void>) => void
-) {
-    return function MapSyncHandler({
-        onBoundsChange,
-    }: {
-        onBoundsChange: (bounds: LatLngBounds) => void
-    }) {
-        useMapEvents({
-            moveend(e: LeafletEvent) {
-                onBoundsChange(e.target.getBounds())
-            },
-
-            zoomend(e: LeafletEvent) {
-                onBoundsChange(e.target.getBounds())
-            },
-        })
-        return null
-    }
-}
+// (Removed createMapUpdater and createMapSyncHandler - now defined inline)
 
 // Create custom marker icon with thumbnail
 function createMarkerIcon(
@@ -458,6 +415,74 @@ function QuestMapViewInner({
             .filter(Boolean)
     }, [observations, L])
 
+    const { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } =
+        components || {}
+
+    // Memoize the MapUpdater component - always call useMemo to maintain hook order
+    const MapUpdater = useMemo(() => {
+        if (!components || !useMap) return () => null
+
+        return function MapUpdaterComponent({
+            center,
+            zoom,
+        }: {
+            center?: [number, number]
+            zoom?: number
+        }) {
+            const map = useMap()
+
+            useEffect(() => {
+                if (center) {
+                    map.setView([center[0], center[1]], zoom || 3)
+                } else {
+                    map.fitWorld({ maxZoom: 2 })
+                }
+            }, [center, zoom, map])
+
+            return null
+        }
+    }, [components, useMap])
+
+    // Memoize the MapSyncHandler component - always call useMemo to maintain hook order
+    const MapSyncHandler = useMemo(() => {
+        if (!components || !useMapEvents) return () => null
+
+        return function MapSyncHandlerComponent({
+            onBoundsChange,
+            currentBounds,
+        }: {
+            onBoundsChange: (bounds: LatLngBounds) => void
+            currentBounds: LatLngBounds | null
+        }) {
+            const events = useMemo(
+                () => ({
+                    moveend(e: LeafletEvent) {
+                        const newBounds = e.target.getBounds()
+                        if (
+                            !currentBounds ||
+                            !newBounds.equals(currentBounds)
+                        ) {
+                            onBoundsChange(newBounds)
+                        }
+                    },
+                    zoomend(e: LeafletEvent) {
+                        const newBounds = e.target.getBounds()
+                        if (
+                            !currentBounds ||
+                            !newBounds.equals(currentBounds)
+                        ) {
+                            onBoundsChange(newBounds)
+                        }
+                    },
+                }),
+                [onBoundsChange, currentBounds]
+            )
+
+            useMapEvents(events)
+            return null
+        }
+    }, [components, useMapEvents])
+
     if (!components) {
         return (
             <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
@@ -468,11 +493,6 @@ function QuestMapViewInner({
             </div>
         )
     }
-
-    const { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } =
-        components
-    const MapUpdater = createMapUpdater(useMap)
-    const MapSyncHandler = createMapSyncHandler(useMapEvents)
 
     return (
         <div className="relative w-full h-full min-h-[400px] z-0">
@@ -495,7 +515,10 @@ function QuestMapViewInner({
                 />
 
                 {/* Sync bounds with map */}
-                <MapSyncHandler onBoundsChange={setBounds} />
+                <MapSyncHandler
+                    onBoundsChange={setBounds}
+                    currentBounds={bounds}
+                />
                 <MapUpdater center={center} zoom={zoom} />
 
                 {/* Quest location marker */}

@@ -273,7 +273,7 @@ function Step1_QuestDetails({ setStep }: { setStep: (step: number) => void }) {
                                 <FormLabel>Quest Mode</FormLabel>
                                 <Select
                                     onValueChange={field.onChange}
-                                    defaultValue={field.value}
+                                    value={field.value}
                                 >
                                     <FormControl>
                                         <SelectTrigger>
