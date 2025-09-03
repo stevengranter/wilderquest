@@ -8,7 +8,9 @@ import { QuestLeaderboard } from './parts/QuestLeaderboard'
 import { TaxaPieChart } from './parts/TaxaPieChart'
 import { QuestSpecies } from './parts/QuestSpecies'
 import { QuestControls } from './parts/QuestControls'
+import { QuestSummaryModal } from '../QuestSummaryModal'
 import { useAuth } from '@/hooks/useAuth'
+import { useState, useEffect } from 'react'
 
 export const QuestView = () => {
     const { user } = useAuth()
@@ -38,6 +40,22 @@ export const QuestView = () => {
         aggregatedProgress,
         detailedProgress
     )
+
+    // State for quest summary modal
+    const [showSummaryModal, setShowSummaryModal] = useState(false)
+    const [prevQuestStatus, setPrevQuestStatus] = useState<string | undefined>()
+
+    // Show summary modal when quest ends (only for quest owner)
+    useEffect(() => {
+        if (
+            questData?.status === 'ended' &&
+            prevQuestStatus !== 'ended' &&
+            isOwner
+        ) {
+            setShowSummaryModal(true)
+        }
+        setPrevQuestStatus(questData?.status)
+    }, [questData?.status, prevQuestStatus, isOwner])
 
     if (isLoading) {
         return <LoadingSkeleton />
@@ -114,6 +132,16 @@ export const QuestView = () => {
                     />
                 </div>
             )}
+
+            {/* Quest Summary Modal */}
+            <QuestSummaryModal
+                isOpen={showSummaryModal}
+                onClose={() => setShowSummaryModal(false)}
+                questData={questData}
+                leaderboard={leaderboard || []}
+                taxaWithProgress={taxaWithProgress}
+                totalParticipants={leaderboard?.length || 0}
+            />
         </div>
     )
 }
