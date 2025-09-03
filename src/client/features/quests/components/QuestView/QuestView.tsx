@@ -77,7 +77,7 @@ export const QuestView = () => {
                 share={share}
             />
 
-            <div className="grid grid-cols-2 gap-8 items-center">
+            <div className="grid grid-cols-2 gap-8 items-start">
                 <QuestLeaderboard
                     leaderboard={leaderboard}
                     questStatus={questData?.status}
@@ -86,7 +86,7 @@ export const QuestView = () => {
                     questName={questData?.name}
                 />
 
-                <div className="flex justify-center items-center min-h-[300px]">
+                <div className="flex justify-center items-start min-h-[300px] pt-4">
                     {mappings && mappings.length > 0 && (
                         <div className="w-64 h-64">
                             {(() => {

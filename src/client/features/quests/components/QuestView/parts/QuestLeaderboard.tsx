@@ -1,5 +1,10 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { FaPlus, FaTrash, FaShareFromSquare } from 'react-icons/fa6'
+import {
+    FaPlus,
+    FaTrash,
+    FaShareFromSquare,
+    FaChevronDown,
+} from 'react-icons/fa6'
 import { LeaderboardEntry } from '@/features/quests/types'
 import { AvatarOverlay } from '../../AvatarOverlay'
 import { Button } from '@/components/ui/button'
@@ -16,6 +21,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
+
+type QuestShare = {
+    id: number
+    guest_name: string | null
+    token: string
+    expires_at?: string
+}
 
 type QuestLeaderboardProps = {
     leaderboard: LeaderboardEntry[] | undefined
@@ -84,6 +96,7 @@ export const QuestLeaderboard = ({
     const [participantToDelete, setParticipantToDelete] =
         useState<LeaderboardEntry | null>(null)
     const [deleting, setDeleting] = useState(false)
+    const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
     const queryClient = useQueryClient()
 
     const createShare = async () => {
@@ -117,6 +130,10 @@ export const QuestLeaderboard = ({
         setShowDeleteDialog(true)
     }
 
+    const toggleEntryExpansion = (entryKey: string) => {
+        setExpandedEntry(expandedEntry === entryKey ? null : entryKey)
+    }
+
     const confirmDeleteParticipant = async () => {
         if (!participantToDelete || !questId) return
 
@@ -128,7 +145,7 @@ export const QuestLeaderboard = ({
             )
             const shares = response.data || []
             const matchingShare = shares.find(
-                (s: any) =>
+                (s: QuestShare) =>
                     s.guest_name === participantToDelete.display_name ||
                     (s.guest_name === null &&
                         participantToDelete.display_name === 'Guest')
@@ -163,7 +180,7 @@ export const QuestLeaderboard = ({
 
             // Find the share that matches this entry
             const matchingShare = shares.find(
-                (s: any) =>
+                (s: QuestShare) =>
                     s.guest_name === entry.display_name ||
                     (s.guest_name === null && entry.display_name === 'Guest')
             )
@@ -179,7 +196,7 @@ export const QuestLeaderboard = ({
     }
 
     return (
-        <div className="mt-8 mb-6">
+        <div>
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Quest Explorers</h2>
                 {questId && ownerUserId && (
@@ -262,10 +279,12 @@ export const QuestLeaderboard = ({
                                 )
                                 const badgeStyles = getBadgeStyles(badgeType)
 
+                                const entryKey = `${entry.display_name}-${entry.invited_at}`
+                                const isExpanded = expandedEntry === entryKey
+
                                 return (
                                     <motion.div
-                                        key={`${entry.display_name}-${entry.invited_at}`}
-                                        layout
+                                        key={entryKey}
                                         initial={{
                                             opacity: 0,
                                             y: 20,
@@ -288,60 +307,59 @@ export const QuestLeaderboard = ({
                                             scale: 0.95,
                                             transition: { duration: 0.2 },
                                         }}
-                                        layoutId={`leaderboard-${entry.display_name}-${entry.invited_at}`}
-                                        className={`flex justify-between items-center p-3 rounded-md border transition-all duration-300 hover:shadow-md ${
+                                        className={`flex flex-col gap-3 p-3 rounded-xl border-1 border-slate-400 cursor-pointer hover:shadow-sm transition-all duration-300 ease-out ${
                                             entry.observation_count > 0
-                                                ? 'bg-green-50 border-green-200 shadow-sm'
-                                                : 'bg-gray-50 border-gray-200'
+                                                ? 'bg-green-100'
+                                                : 'bg-background'
                                         }`}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            if (questId && ownerUserId) {
+                                                toggleEntryExpansion(entryKey)
+                                            }
+                                        }}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <motion.div
-                                                className="flex items-center justify-center w-8 h-8 rounded-full bg-white border-2 border-gray-300 shadow-sm"
-                                                layout
-                                            >
-                                                <motion.span
-                                                    className="text-sm font-bold text-gray-700"
-                                                    key={index + 1}
-                                                    initial={{
-                                                        scale: 1.2,
-                                                        color: '#10b981',
-                                                    }}
-                                                    animate={{
-                                                        scale: 1,
-                                                        color: '#374151',
-                                                    }}
-                                                    transition={{
-                                                        duration: 0.3,
-                                                    }}
-                                                >
-                                                    {index + 1}
-                                                </motion.span>
-                                            </motion.div>
-                                            <AvatarOverlay
-                                                displayName={
-                                                    entry.display_name ||
-                                                    'Guest'
-                                                }
-                                                className="w-14 h-14 border-0"
-                                            />
-                                            <div className="flex flex-col">
-                                                <motion.span
-                                                    className="font-medium"
-                                                    layout="position"
-                                                >
-                                                    {entry.display_name ||
-                                                        'Guest'}
-                                                </motion.span>
-                                                <motion.span
-                                                    className={`text-xs px-2 py-0.5 rounded-full w-fit ${badgeStyles}`}
-                                                    layout="position"
-                                                >
-                                                    {badgeType}
-                                                </motion.span>
+                                        {/* First row: Participant info and progress */}
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex items-center gap-3">
+                                                <motion.div className="flex items-center justify-center w-8 h-8 rounded-full bg-white border-2 border-gray-300 shadow-sm">
+                                                    <motion.span
+                                                        className="text-sm font-bold text-gray-700"
+                                                        key={index + 1}
+                                                        initial={{
+                                                            scale: 1.2,
+                                                            color: '#10b981',
+                                                        }}
+                                                        animate={{
+                                                            scale: 1,
+                                                            color: '#374151',
+                                                        }}
+                                                        transition={{
+                                                            duration: 0.3,
+                                                        }}
+                                                    >
+                                                        {index + 1}
+                                                    </motion.span>
+                                                </motion.div>
+                                                <AvatarOverlay
+                                                    displayName={
+                                                        entry.display_name ||
+                                                        'Guest'
+                                                    }
+                                                    className="w-14 h-14 border-0"
+                                                />
+                                                <div className="flex flex-col">
+                                                    <motion.span className="font-medium">
+                                                        {entry.display_name ||
+                                                            'Guest'}
+                                                    </motion.span>
+                                                    <motion.span
+                                                        className={`text-xs px-2 py-0.5 rounded-full w-fit ${badgeStyles}`}
+                                                    >
+                                                        {badgeType}
+                                                    </motion.span>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="flex items-center gap-3">
                                             <div className="text-right">
                                                 <span
                                                     className={`text-sm font-medium ${
@@ -364,52 +382,74 @@ export const QuestLeaderboard = ({
                                                         </div>
                                                     )}
                                             </div>
-
-                                            {/* Action buttons */}
-                                            <div className="flex gap-1">
-                                                <Button
-                                                    size="sm"
-                                                    variant="noShadow"
-                                                    onClick={async () => {
-                                                        const shareUrl =
-                                                            await buildShareLink(
-                                                                entry
-                                                            )
-                                                        const shareTitle = `Join my quest: ${questName || 'Quest'}`
-                                                        const shareText = `Join my quest to discover species! ${shareUrl}`
-
-                                                        if (navigator.share) {
-                                                            navigator.share({
-                                                                title: shareTitle,
-                                                                text: shareText,
-                                                                url: shareUrl,
-                                                            })
-                                                        } else {
-                                                            navigator.clipboard.writeText(
-                                                                shareUrl
-                                                            )
-                                                        }
-                                                    }}
-                                                >
-                                                    <FaShareFromSquare className="h-3 w-3" />
-                                                </Button>
-
-                                                {/* Show delete button for all participants (quest owner can remove anyone) */}
-                                                {questId && ownerUserId && (
-                                                    <Button
-                                                        size="sm"
-                                                        variant="neutral"
-                                                        onClick={() =>
-                                                            handleDeleteClick(
-                                                                entry
-                                                            )
-                                                        }
-                                                    >
-                                                        <FaTrash className="h-3 w-3" />
-                                                    </Button>
-                                                )}
-                                            </div>
+                                            {questId && ownerUserId && (
+                                                <div className="flex items-center justify-center w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors">
+                                                    <FaChevronDown className="h-3 w-3" />
+                                                </div>
+                                            )}
                                         </div>
+
+                                        {/* Footer row: Action buttons */}
+                                        {questId && ownerUserId && (
+                                            <div
+                                                className={`overflow-hidden transition-all duration-300 ease-out border-t border-gray-200 ${
+                                                    isExpanded
+                                                        ? 'max-h-20 opacity-100 pt-2'
+                                                        : 'max-h-0 opacity-0 pt-0'
+                                                }`}
+                                            >
+                                                <div className="flex justify-end">
+                                                    <div className="flex gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="noShadow"
+                                                            className="h-7 px-2 text-xs text-green-700 shadow-none border-0 bg-transparent hover:bg-gray-100"
+                                                            onClick={async () => {
+                                                                const shareUrl =
+                                                                    await buildShareLink(
+                                                                        entry
+                                                                    )
+                                                                const shareTitle = `Join my quest: ${questName || 'Quest'}`
+                                                                const shareText = `Join my quest to discover species! ${shareUrl}`
+
+                                                                if (
+                                                                    navigator.share
+                                                                ) {
+                                                                    navigator.share(
+                                                                        {
+                                                                            title: shareTitle,
+                                                                            text: shareText,
+                                                                            url: shareUrl,
+                                                                        }
+                                                                    )
+                                                                } else {
+                                                                    navigator.clipboard.writeText(
+                                                                        shareUrl
+                                                                    )
+                                                                }
+                                                            }}
+                                                        >
+                                                            <FaShareFromSquare className="h-3 w-3 mr-1" />
+                                                            Share
+                                                        </Button>
+
+                                                        <Button
+                                                            size="sm"
+                                                            variant="noShadow"
+                                                            className="h-7 px-2 text-xs text-green-700 shadow-none border-0 bg-transparent hover:bg-gray-100"
+                                                            onClick={() =>
+                                                                handleDeleteClick(
+                                                                    entry
+                                                                )
+                                                            }
+                                                        >
+                                                            <FaTrash className="h-3 w-3 mr-1" />
+                                                            Remove
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </motion.div>
                                 )
                             }
@@ -425,55 +465,65 @@ export const QuestLeaderboard = ({
             )}
 
             {/* Delete Confirmation Dialog */}
-            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Remove Participant</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to remove{' '}
-                            <strong>{participantToDelete?.display_name}</strong>{' '}
-                            from this quest?
-                        </DialogDescription>
-                    </DialogHeader>
+            <>
+                <Dialog
+                    open={showDeleteDialog}
+                    onOpenChange={setShowDeleteDialog}
+                >
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Remove Participant</DialogTitle>
+                            <DialogDescription>
+                                Are you sure you want to remove{' '}
+                                <strong>
+                                    {participantToDelete?.display_name}
+                                </strong>{' '}
+                                from this quest?
+                            </DialogDescription>
+                        </DialogHeader>
 
-                    <div className="space-y-3">
-                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
-                            <p className="text-sm text-amber-800">
-                                <strong>Warning:</strong> This action will
-                                permanently delete:
-                            </p>
-                            <ul className="mt-2 text-sm text-amber-700 list-disc list-inside space-y-1">
-                                <li>All of their progress and observations</li>
-                                <li>Their access to this quest</li>
-                                <li>
-                                    Any leaderboard rankings they've achieved
-                                </li>
-                            </ul>
-                            <p className="mt-2 text-sm text-amber-800 font-medium">
-                                This action cannot be undone.
-                            </p>
+                        <div className="space-y-3">
+                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+                                <p className="text-sm text-amber-800">
+                                    <strong>Warning:</strong> This action will
+                                    permanently delete:
+                                </p>
+                                <ul className="mt-2 text-sm text-amber-700 list-disc list-inside space-y-1">
+                                    <li>
+                                        All of their progress and observations
+                                    </li>
+                                    <li>Their access to this quest</li>
+                                    <li>
+                                        Any leaderboard rankings they've
+                                        achieved
+                                    </li>
+                                </ul>
+                                <p className="mt-2 text-sm text-amber-800 font-medium">
+                                    This action cannot be undone.
+                                </p>
+                            </div>
                         </div>
-                    </div>
 
-                    <DialogFooter>
-                        <Button
-                            variant="neutral"
-                            onClick={() => setShowDeleteDialog(false)}
-                            disabled={deleting}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="default"
-                            onClick={confirmDeleteParticipant}
-                            disabled={deleting}
-                            className="bg-red-600 hover:bg-red-700 text-white"
-                        >
-                            {deleting ? 'Removing…' : 'Remove Participant'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        <DialogFooter>
+                            <Button
+                                variant="neutral"
+                                onClick={() => setShowDeleteDialog(false)}
+                                disabled={deleting}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="default"
+                                onClick={confirmDeleteParticipant}
+                                disabled={deleting}
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                            >
+                                {deleting ? 'Removing…' : 'Remove Participant'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </>
         </div>
     )
 }
