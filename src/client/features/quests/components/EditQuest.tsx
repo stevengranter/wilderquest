@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { INatTaxon } from '@shared/types/iNatTypes'
-import { chunk } from 'lodash'
+import chunk from 'lodash/chunk'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AxiosError } from 'axios'
 import {

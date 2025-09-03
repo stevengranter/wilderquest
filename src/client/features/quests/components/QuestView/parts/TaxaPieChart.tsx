@@ -1,4 +1,4 @@
-import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
+import { PieChart } from 'react-minimal-pie-chart'
 
 export const TaxaPieChart = ({
     found,
@@ -8,35 +8,23 @@ export const TaxaPieChart = ({
     total: number
 }) => {
     const data = [
-        { name: 'Found', value: found },
-        { name: 'Not Found', value: total - found },
+        { title: 'Found', value: found, color: '#4ade80' },
+        { title: 'Not Found', value: total - found, color: '#f1f5f9' },
     ]
-    const COLORS = ['#4ade80', '#f1f5f9'] // green-400, gray-200
     const isComplete = found === total
 
     return (
         <div className="w-full h-full relative">
-            <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                    <Pie
-                        data={data}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius="60%"
-                        outerRadius="80%"
-                        fill="#8884d8"
-                        paddingAngle={isComplete ? 0 : 5}
-                        dataKey="value"
-                    >
-                        {data.map((entry, index) => (
-                            <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[index % COLORS.length]}
-                            />
-                        ))}
-                    </Pie>
-                </PieChart>
-            </ResponsiveContainer>
+            <PieChart
+                data={data}
+                lineWidth={20} // Creates donut effect (20% of radius)
+                paddingAngle={isComplete ? 0 : 5}
+                startAngle={-90} // Start from top
+                animate={true}
+                animationDuration={500}
+                labelStyle={{ fontSize: '0px' }} // Hide default labels
+                style={{ width: '100%', height: '100%' }}
+            />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
                 <div className="text-5xl font-bold">{found}</div>
                 <div className="text-xl text-muted-foreground">of {total}</div>

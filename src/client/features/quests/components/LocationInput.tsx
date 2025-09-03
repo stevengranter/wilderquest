@@ -1,9 +1,20 @@
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Control, Controller, UseFormSetValue, UseFormWatch } from 'react-hook-form'
+import {
+    Control,
+    Controller,
+    UseFormSetValue,
+    UseFormWatch,
+} from 'react-hook-form'
 import { z } from 'zod'
 import { getCitySuggestions } from '@/components/location/locationUtils'
-import { FormControl, FormDescription, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import {
+    FormControl,
+    FormDescription,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 
 import { formSchema } from '@/features/quests/schemas/formSchema'
