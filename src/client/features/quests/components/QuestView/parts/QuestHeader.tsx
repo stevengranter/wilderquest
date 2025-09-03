@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { paths } from '@/routes/paths'
 import { ClientQuest } from '@/features/quests/components/SpeciesCardWithObservations'
-import ShareQuest from '@/features/quests/components/ShareQuest'
 import { QuestTimestamps } from '@/features/quests/components/QuestView/parts/QuestTimestamps'
 import { Share } from '@/features/quests/types'
 
@@ -76,10 +75,6 @@ export const QuestHeader = ({
                                 Edit Quest
                             </Link>
                         </Button>
-                        <ShareQuest
-                            questId={Number(questData.id)}
-                            ownerUserId={Number(questData.user_id)}
-                        />
                     </div>
                 )}
             </div>

@@ -1,3 +1,4 @@
+import compression from 'compression'
 import cors from 'cors'
 import express from 'express'
 import corsConfig from './config/cors.config.js'
@@ -11,9 +12,18 @@ import { rateLimiter } from './middlewares/rateLimiter.js'
 import { rateSlowDown } from './middlewares/rateSlowDown.js'
 import requestLogger from './middlewares/requestLogger.js'
 import { CollectionRepository } from './repositories/CollectionRepository.js'
-import { QuestRepository, QuestToTaxaRepository } from './repositories/QuestRepository.js'
-import type { QuestShareRepository, SharedQuestProgressRepository } from './repositories/QuestShareRepository.js'
-import { mapTilesProxyRouter, wikipediaProxyRouter } from './routes/api/proxies.routes.js'
+import {
+    QuestRepository,
+    QuestToTaxaRepository,
+} from './repositories/QuestRepository.js'
+import type {
+    QuestShareRepository,
+    SharedQuestProgressRepository,
+} from './repositories/QuestShareRepository.js'
+import {
+    mapTilesProxyRouter,
+    wikipediaProxyRouter,
+} from './routes/api/proxies.routes.js'
 import { serviceRouter } from './routes/api/services.routes.js'
 import { createAuthRouter } from './routes/authRouter.js'
 import { createCollectionRouter } from './routes/collectionRouter.js'
@@ -43,6 +53,23 @@ export function buildApp({
 }) {
     // initialize express
     const app = express()
+
+    // Enable gzip compression for all responses
+    app.use(
+        compression({
+            level: 6, // Good balance between compression and speed
+            threshold: 1024, // Only compress responses larger than 1KB
+            filter: (req, res) => {
+                // Don't compress responses with this request header
+                if (req.headers['x-no-compression']) {
+                    return false
+                }
+                // Use compression filter function
+                return compression.filter(req, res)
+            },
+        })
+    )
+
     app.use(express.json())
     app.use(requestLogger)
 

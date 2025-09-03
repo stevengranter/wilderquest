@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { FaShareFromSquare } from 'react-icons/fa6'
 import api from '@/api/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,9 +30,11 @@ type QuestShare = {
 export function ShareQuest({
     questId,
     ownerUserId,
+    questName,
 }: {
     questId: number | string
     ownerUserId: number | string
+    questName?: string
 }) {
     const { user } = useAuth()
     const queryClient = useQueryClient()
@@ -115,10 +118,10 @@ export function ShareQuest({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button size="sm">Share Quest</Button>
+                <Button size="sm">Add explorer</Button>
             </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
+            <DialogContent className="max-h-[80vh] flex flex-col">
+                <DialogHeader className="flex-shrink-0">
                     <DialogTitle>Share this quest</DialogTitle>
                     <DialogDescription>
                         Create a share link to let someone mark species as
@@ -126,98 +129,138 @@ export function ShareQuest({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="guestName">Guest name (optional)</Label>
-                        <Input
-                            id="guestName"
-                            placeholder="e.g. Alex"
-                            value={guestName}
-                            onChange={(e) => setGuestName(e.target.value)}
-                        />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="expiresAt">Expires at (optional)</Label>
-                        <Input
-                            id="expiresAt"
-                            type="datetime-local"
-                            value={expiresAt}
-                            onChange={(e) => setExpiresAt(e.target.value)}
-                        />
-                    </div>
-                    <div className="flex justify-end">
-                        <Button onClick={createShare} disabled={creating}>
-                            {creating ? 'Creating…' : 'Create share link'}
-                        </Button>
-                    </div>
-                </div>
-
-                <div className="mt-4">
-                    <h3 className="font-medium mb-2">Existing share links</h3>
-                    {loading ? (
-                        <div>Loading…</div>
-                    ) : shares.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">
-                            No shares yet.
+                <div className="flex-1 overflow-y-auto space-y-4">
+                    <div className="space-y-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="guestName">
+                                Guest name (optional)
+                            </Label>
+                            <Input
+                                id="guestName"
+                                placeholder="e.g. Alex"
+                                value={guestName}
+                                onChange={(e) => setGuestName(e.target.value)}
+                            />
                         </div>
-                    ) : (
-                        <ul className="space-y-3">
-                            {shares
-                                .filter((s) => !s.is_primary)
-                                .map((s) => (
-                                    <li
-                                        key={s.id}
-                                        className="border rounded-base p-3 flex flex-col gap-2"
-                                    >
-                                        <div className="text-sm break-all">
-                                            <span className="font-medium">
-                                                Link:
-                                            </span>{' '}
-                                            <a
-                                                href={buildShareLink(s.token)}
-                                                className="underline"
-                                            >
-                                                {buildShareLink(s.token)}
-                                            </a>
-                                        </div>
-                                        {s.guest_name ? (
-                                            <div className="text-sm">
-                                                Guest: {s.guest_name}
+                        <div className="grid gap-2">
+                            <Label htmlFor="expiresAt">
+                                Expires at (optional)
+                            </Label>
+                            <Input
+                                id="expiresAt"
+                                type="datetime-local"
+                                value={expiresAt}
+                                onChange={(e) => setExpiresAt(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex justify-end">
+                            <Button onClick={createShare} disabled={creating}>
+                                {creating ? 'Creating…' : 'Create share link'}
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="mt-4">
+                        <h3 className="font-medium mb-2">
+                            Existing share links
+                        </h3>
+                        {loading ? (
+                            <div>Loading…</div>
+                        ) : shares.length === 0 ? (
+                            <div className="text-sm text-muted-foreground">
+                                No shares yet.
+                            </div>
+                        ) : (
+                            <ul className="space-y-3">
+                                {shares
+                                    .filter((s) => !s.is_primary)
+                                    .map((s) => (
+                                        <li
+                                            key={s.id}
+                                            className="border rounded-base p-3 flex flex-col gap-2"
+                                        >
+                                            <div className="text-sm break-all">
+                                                <span className="font-medium">
+                                                    Link:
+                                                </span>{' '}
+                                                <a
+                                                    href={buildShareLink(
+                                                        s.token
+                                                    )}
+                                                    className="underline"
+                                                >
+                                                    {buildShareLink(s.token)}
+                                                </a>
                                             </div>
-                                        ) : null}
-                                        {s.expires_at ? (
-                                            <div className="text-xs text-muted-foreground">
-                                                Expires:{' '}
-                                                {new Date(
-                                                    s.expires_at
-                                                ).toLocaleString()}
+                                            {s.guest_name ? (
+                                                <div className="text-sm">
+                                                    Guest: {s.guest_name}
+                                                </div>
+                                            ) : null}
+                                            {s.expires_at ? (
+                                                <div className="text-xs text-muted-foreground">
+                                                    Expires:{' '}
+                                                    {new Date(
+                                                        s.expires_at
+                                                    ).toLocaleString()}
+                                                </div>
+                                            ) : null}
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(
+                                                            buildShareLink(
+                                                                s.token
+                                                            )
+                                                        )
+                                                    }}
+                                                >
+                                                    Copy link
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="noShadow"
+                                                    onClick={() => {
+                                                        const shareUrl =
+                                                            buildShareLink(
+                                                                s.token
+                                                            )
+                                                        const shareTitle = `Join my quest: ${questName || 'Quest'}`
+                                                        const shareText = `Join my quest to discover species! ${shareUrl}`
+
+                                                        if (navigator.share) {
+                                                            navigator.share({
+                                                                title: shareTitle,
+                                                                text: shareText,
+                                                                url: shareUrl,
+                                                            })
+                                                        } else {
+                                                            // Fallback to clipboard copy
+                                                            navigator.clipboard.writeText(
+                                                                shareUrl
+                                                            )
+                                                        }
+                                                    }}
+                                                >
+                                                    <FaShareFromSquare className="h-4 w-4 mr-2" />
+                                                    Share
+                                                </Button>
+                                                <Button
+                                                    variant="neutral"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        deleteShare(s.id)
+                                                    }
+                                                >
+                                                    Delete
+                                                </Button>
                                             </div>
-                                        ) : null}
-                                        <div className="flex gap-2">
-                                            <Button
-                                                size="sm"
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(
-                                                        buildShareLink(s.token)
-                                                    )
-                                                }}
-                                            >
-                                                Copy link
-                                            </Button>
-                                            <Button
-                                                variant="neutral"
-                                                size="sm"
-                                                onClick={() =>
-                                                    deleteShare(s.id)
-                                                }
-                                            >
-                                                Delete
-                                            </Button>
-                                        </div>
-                                    </li>
-                                ))}
-                        </ul>
-                    )}
+                                        </li>
+                                    ))}
+                            </ul>
+                        )}
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>

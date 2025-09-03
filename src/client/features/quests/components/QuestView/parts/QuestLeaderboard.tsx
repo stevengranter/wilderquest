@@ -1,10 +1,28 @@
 import { AnimatePresence, motion } from 'motion/react'
+import { FaPlus, FaTrash, FaShareFromSquare } from 'react-icons/fa6'
 import { LeaderboardEntry } from '@/features/quests/types'
 import { AvatarOverlay } from '../../AvatarOverlay'
+import { Button } from '@/components/ui/button'
+import { useState } from 'react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import api from '@/api/api'
+import { useQueryClient } from '@tanstack/react-query'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
 
 type QuestLeaderboardProps = {
     leaderboard: LeaderboardEntry[] | undefined
     questStatus?: 'pending' | 'active' | 'paused' | 'ended'
+    questId?: number | string
+    ownerUserId?: number | string
+    questName?: string
 }
 
 const getParticipantBadge = (entry: LeaderboardEntry, questStatus?: string) => {
@@ -31,7 +49,7 @@ const getParticipantBadge = (entry: LeaderboardEntry, questStatus?: string) => {
     }
 
     // Has progress but not recent
-    return 'Participant'
+    return 'Explorer'
 }
 
 const getBadgeStyles = (badgeType: string) => {
@@ -44,7 +62,7 @@ const getBadgeStyles = (badgeType: string) => {
             return 'bg-green-100 text-green-600'
         case 'Recent':
             return 'bg-yellow-100 text-yellow-600'
-        case 'Participant':
+        case 'Explorer':
             return 'bg-purple-100 text-purple-600'
         default:
             return 'bg-gray-100 text-gray-600'
@@ -54,10 +72,177 @@ const getBadgeStyles = (badgeType: string) => {
 export const QuestLeaderboard = ({
     leaderboard,
     questStatus,
+    questId,
+    ownerUserId,
+    questName,
 }: QuestLeaderboardProps) => {
+    const [showAddForm, setShowAddForm] = useState(false)
+    const [guestName, setGuestName] = useState('')
+    const [expiresAt, setExpiresAt] = useState('')
+    const [creating, setCreating] = useState(false)
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+    const [participantToDelete, setParticipantToDelete] =
+        useState<LeaderboardEntry | null>(null)
+    const [deleting, setDeleting] = useState(false)
+    const queryClient = useQueryClient()
+
+    const createShare = async () => {
+        if (!questId) return
+
+        setCreating(true)
+        try {
+            const payload: { guest_name?: string; expires_at?: string } = {}
+            if (guestName) payload.guest_name = guestName
+            if (expiresAt)
+                payload.expires_at = new Date(expiresAt).toISOString()
+
+            await api.post(`/quest-sharing/quests/${questId}/shares`, payload)
+            setGuestName('')
+            setExpiresAt('')
+            setShowAddForm(false)
+
+            // Invalidate leaderboard queries so they update immediately
+            queryClient.invalidateQueries({
+                queryKey: ['leaderboard', questId],
+            })
+        } catch (e) {
+            console.error('Failed to create share', e)
+        } finally {
+            setCreating(false)
+        }
+    }
+
+    const handleDeleteClick = (entry: LeaderboardEntry) => {
+        setParticipantToDelete(entry)
+        setShowDeleteDialog(true)
+    }
+
+    const confirmDeleteParticipant = async () => {
+        if (!participantToDelete || !questId) return
+
+        setDeleting(true)
+        try {
+            // Get all shares for this quest
+            const response = await api.get(
+                `/quest-sharing/quests/${questId}/shares`
+            )
+            const shares = response.data || []
+            const matchingShare = shares.find(
+                (s: any) =>
+                    s.guest_name === participantToDelete.display_name ||
+                    (s.guest_name === null &&
+                        participantToDelete.display_name === 'Guest')
+            )
+
+            if (matchingShare) {
+                // Delete the share - database CASCADE will handle deleting all related progress
+                await api.delete(`/quest-sharing/shares/${matchingShare.id}`)
+
+                queryClient.invalidateQueries({
+                    queryKey: ['leaderboard', questId],
+                })
+            }
+        } catch (e) {
+            console.error('Failed to remove participant', e)
+        } finally {
+            setDeleting(false)
+            setShowDeleteDialog(false)
+            setParticipantToDelete(null)
+        }
+    }
+
+    const buildShareLink = async (entry: LeaderboardEntry) => {
+        if (!questId) return `${window.location.origin}/share/placeholder-token`
+
+        try {
+            // Get all shares for this quest
+            const response = await api.get(
+                `/quest-sharing/quests/${questId}/shares`
+            )
+            const shares = response.data || []
+
+            // Find the share that matches this entry
+            const matchingShare = shares.find(
+                (s: any) =>
+                    s.guest_name === entry.display_name ||
+                    (s.guest_name === null && entry.display_name === 'Guest')
+            )
+
+            if (matchingShare) {
+                return `${window.location.origin}/share/${matchingShare.token}`
+            }
+        } catch (e) {
+            console.error('Failed to get share link', e)
+        }
+
+        return `${window.location.origin}/share/placeholder-token`
+    }
+
     return (
         <div className="mt-8 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Leaderboard</h2>
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Quest Explorers</h2>
+                {questId && ownerUserId && (
+                    <Button
+                        size="sm"
+                        onClick={() => setShowAddForm(!showAddForm)}
+                        variant="default"
+                    >
+                        <FaPlus className="h-4 w-4 mr-2" />
+                        Add Explorer
+                    </Button>
+                )}
+            </div>
+
+            {showAddForm && (
+                <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md"
+                >
+                    <div className="grid gap-3">
+                        <div className="grid gap-2">
+                            <Label htmlFor="guestName">
+                                Explorer name (optional)
+                            </Label>
+                            <Input
+                                id="guestName"
+                                placeholder="e.g. Alex"
+                                value={guestName}
+                                onChange={(e) => setGuestName(e.target.value)}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="expiresAt">
+                                Expires at (optional)
+                            </Label>
+                            <Input
+                                id="expiresAt"
+                                type="datetime-local"
+                                value={expiresAt}
+                                onChange={(e) => setExpiresAt(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={createShare}
+                                disabled={creating}
+                                size="sm"
+                            >
+                                {creating ? 'Creating…' : 'Create invitation'}
+                            </Button>
+                            <Button
+                                variant="neutral"
+                                size="sm"
+                                onClick={() => setShowAddForm(false)}
+                            >
+                                Cancel
+                            </Button>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
 
             {questStatus === 'pending' && (
                 <div className="text-sm text-amber-600 mb-3 bg-amber-50 p-3 rounded-md border border-amber-200">
@@ -156,26 +341,74 @@ export const QuestLeaderboard = ({
                                                 </motion.span>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <span
-                                                className={`text-sm font-medium ${
-                                                    entry.observation_count > 0
-                                                        ? 'text-green-700'
-                                                        : 'text-gray-500'
-                                                }`}
-                                            >
-                                                {entry.observation_count} taxa
-                                                found
-                                            </span>
-                                            {entry.observation_count > 0 &&
-                                                entry.last_progress_at && (
-                                                    <div className="text-xs text-green-600 mt-0.5">
-                                                        Last active:{' '}
-                                                        {new Date(
-                                                            entry.last_progress_at
-                                                        ).toLocaleDateString()}
-                                                    </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-right">
+                                                <span
+                                                    className={`text-sm font-medium ${
+                                                        entry.observation_count >
+                                                        0
+                                                            ? 'text-green-700'
+                                                            : 'text-gray-500'
+                                                    }`}
+                                                >
+                                                    {entry.observation_count}{' '}
+                                                    taxa found
+                                                </span>
+                                                {entry.observation_count > 0 &&
+                                                    entry.last_progress_at && (
+                                                        <div className="text-xs text-green-600 mt-0.5">
+                                                            Last active:{' '}
+                                                            {new Date(
+                                                                entry.last_progress_at
+                                                            ).toLocaleDateString()}
+                                                        </div>
+                                                    )}
+                                            </div>
+
+                                            {/* Action buttons */}
+                                            <div className="flex gap-1">
+                                                <Button
+                                                    size="sm"
+                                                    variant="noShadow"
+                                                    onClick={async () => {
+                                                        const shareUrl =
+                                                            await buildShareLink(
+                                                                entry
+                                                            )
+                                                        const shareTitle = `Join my quest: ${questName || 'Quest'}`
+                                                        const shareText = `Join my quest to discover species! ${shareUrl}`
+
+                                                        if (navigator.share) {
+                                                            navigator.share({
+                                                                title: shareTitle,
+                                                                text: shareText,
+                                                                url: shareUrl,
+                                                            })
+                                                        } else {
+                                                            navigator.clipboard.writeText(
+                                                                shareUrl
+                                                            )
+                                                        }
+                                                    }}
+                                                >
+                                                    <FaShareFromSquare className="h-3 w-3" />
+                                                </Button>
+
+                                                {/* Show delete button for all participants (quest owner can remove anyone) */}
+                                                {questId && ownerUserId && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="neutral"
+                                                        onClick={() =>
+                                                            handleDeleteClick(
+                                                                entry
+                                                            )
+                                                        }
+                                                    >
+                                                        <FaTrash className="h-3 w-3" />
+                                                    </Button>
                                                 )}
+                                            </div>
                                         </div>
                                     </motion.div>
                                 )
@@ -190,6 +423,57 @@ export const QuestLeaderboard = ({
                         : 'No participants have joined this quest yet.'}
                 </div>
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Remove Participant</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to remove{' '}
+                            <strong>{participantToDelete?.display_name}</strong>{' '}
+                            from this quest?
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-3">
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+                            <p className="text-sm text-amber-800">
+                                <strong>Warning:</strong> This action will
+                                permanently delete:
+                            </p>
+                            <ul className="mt-2 text-sm text-amber-700 list-disc list-inside space-y-1">
+                                <li>All of their progress and observations</li>
+                                <li>Their access to this quest</li>
+                                <li>
+                                    Any leaderboard rankings they've achieved
+                                </li>
+                            </ul>
+                            <p className="mt-2 text-sm text-amber-800 font-medium">
+                                This action cannot be undone.
+                            </p>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            variant="neutral"
+                            onClick={() => setShowDeleteDialog(false)}
+                            disabled={deleting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="default"
+                            onClick={confirmDeleteParticipant}
+                            disabled={deleting}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            {deleting ? 'Removing…' : 'Remove Participant'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
