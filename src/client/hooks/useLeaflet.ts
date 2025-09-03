@@ -39,6 +39,6 @@ export function useLeaflet(options: LeafletLoadOptions = {}) {
         isLoading,
         error,
         isLoaded,
-        L: isLoaded && typeof window !== 'undefined' ? (window as any).L : null,
+        L: isLoaded && typeof window !== 'undefined' ? window.L : null,
     }
 }

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { INatObservation, INatTaxon } from '@shared/types/iNatTypes'
+import type { Map as LeafletMap, LatLngBounds, LeafletEvent } from 'leaflet'
 import { ClientQuest } from './SpeciesCardWithObservations'
 import { QuestMapping } from '../types'
 import api from '@/api/api'
@@ -53,7 +54,7 @@ type QuestMapOptions = {
 
 type QuestMapProps = {
     options?: QuestMapOptions
-    markerData?: any[]
+    markerData?: INatObservation[]
     style?: React.CSSProperties
     className?: string
     questData?: ClientQuest
@@ -68,7 +69,7 @@ type QuestMapProps = {
 }
 
 // Helper functions that will be used with dynamically loaded components
-function createMapUpdater(useMap: any) {
+function createMapUpdater(useMap: () => LeafletMap) {
     return function MapUpdater({
         center,
         zoom,
@@ -91,17 +92,21 @@ function createMapUpdater(useMap: any) {
     }
 }
 
-function createMapSyncHandler(useMapEvents: any) {
+function createMapSyncHandler(
+    // biome-ignore lint/suspicious/noExplicitAny: Leaflet event handlers require any for event parameter type
+    useMapEvents: (events: Record<string, (e: any) => void>) => void
+) {
     return function MapSyncHandler({
         onBoundsChange,
     }: {
-        onBoundsChange: (bounds: any) => void
+        onBoundsChange: (bounds: LatLngBounds) => void
     }) {
         useMapEvents({
-            moveend(e: any) {
+            moveend(e: LeafletEvent) {
                 onBoundsChange(e.target.getBounds())
             },
-            zoomend(e: any) {
+
+            zoomend(e: LeafletEvent) {
                 onBoundsChange(e.target.getBounds())
             },
         })
@@ -110,7 +115,11 @@ function createMapSyncHandler(useMapEvents: any) {
 }
 
 // Create custom marker icon with thumbnail
-function createMarkerIcon(L: any, photoUrl: string, speciesName: string) {
+function createMarkerIcon(
+    L: typeof import('leaflet'),
+    photoUrl: string,
+    speciesName: string
+) {
     const iconSize = [40, 40] as [number, number]
     const iconAnchor = [20, 40] as [number, number]
 
@@ -183,7 +192,11 @@ function createMarkerIcon(L: any, photoUrl: string, speciesName: string) {
 }
 
 // Create fallback marker icon for species without photos
-function createFallbackMarkerIcon(L: any, speciesName: string, rank: string) {
+function createFallbackMarkerIcon(
+    L: typeof import('leaflet'),
+    speciesName: string,
+    rank: string
+) {
     const iconSize = [40, 40] as [number, number]
     const iconAnchor = [20, 40] as [number, number]
 
@@ -315,13 +328,16 @@ function QuestMapViewInner({
     taxa,
     mappings,
     questLocation,
-}: QuestMapProps & { L: any }) {
+}: QuestMapProps & { L: typeof import('leaflet') }) {
     // Dynamically import react-leaflet components after Leaflet is loaded
-    const [components, setComponents] = useState<any>(null)
+    // biome-ignore lint/suspicious/noExplicitAny: Dynamic import of react-leaflet components requires any for type safety
+    const [components, setComponents] = useState<Record<string, any> | null>(
+        null
+    )
 
     useEffect(() => {
         // Wait for Leaflet to be available globally before importing react-leaflet
-        if (typeof window !== 'undefined' && (window as any).L) {
+        if (typeof window !== 'undefined' && window.L) {
             import('react-leaflet').then((module) => {
                 setComponents(module)
             })
@@ -330,7 +346,7 @@ function QuestMapViewInner({
 
     const [observations, setObservations] = useState<INatObservation[]>([])
     const [isLoading, setIsLoading] = useState(false)
-    const [bounds, setBounds] = useState<any>(null)
+    const [bounds, setBounds] = useState<LatLngBounds | null>(null)
 
     // Remove [0,0] default here
     const initialCenter: [number, number] | undefined = useMemo(() => {

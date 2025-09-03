@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useProgressiveImage } from '@/hooks/useProgressiveImage'
 import { useLeaflet } from '@/hooks/useLeaflet'
 import { cn } from '@/lib/utils'
+import type { LatLngBounds } from 'leaflet'
 
 interface ObservationPhoto {
     id: number
@@ -416,14 +417,17 @@ function ObservationMapViewInner({
 }: {
     observations: Observation[]
     center: [number, number]
-    L: any
+    L: typeof import('leaflet')
 }) {
     // Dynamically import react-leaflet components after Leaflet is loaded
-    const [components, setComponents] = useState<any>(null)
+    // biome-ignore lint/suspicious/noExplicitAny: Dynamic import of react-leaflet components requires any for type safety
+    const [components, setComponents] = useState<Record<string, any> | null>(
+        null
+    )
 
     React.useEffect(() => {
         // Wait for Leaflet to be available globally before importing react-leaflet
-        if (typeof window !== 'undefined' && (window as any).L) {
+        if (typeof window !== 'undefined' && window.L) {
             import('react-leaflet').then((module) => {
                 setComponents(module)
             })

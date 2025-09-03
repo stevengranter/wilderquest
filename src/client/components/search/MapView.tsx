@@ -1,8 +1,10 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
+import type { ComponentType } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { useLeaflet } from '@/hooks/useLeaflet'
 import getKingdomIcon from '@/components/search/getKingdomIcon'
+import type { LatLngBounds, LeafletEvent } from 'leaflet'
 import {
     INatObservation,
     INatObservationsResponse,
@@ -13,7 +15,7 @@ type MapViewProps = {
     localQuery: string
 }
 
-function createKingdomIcon(L: any, kingdom: string) {
+function createKingdomIcon(L: typeof import('leaflet'), kingdom: string) {
     const iconJSX = getKingdomIcon(kingdom) // React component like <FaLeaf />
     const svgString = renderToStaticMarkup(iconJSX)
 
@@ -34,7 +36,7 @@ function createKingdomIcon(L: any, kingdom: string) {
 export default function MapView({ taxonId, localQuery }: MapViewProps) {
     const { isLoading, error, isLoaded, L } = useLeaflet()
     const [geoData, setGeoData] = useState<INatObservation[]>([])
-    const [bounds, setBounds] = useState<any>(null)
+    const [bounds, setBounds] = useState<LatLngBounds | null>(null)
 
     // Fetch when bounds change
     useEffect(() => {
@@ -110,17 +112,20 @@ function MapViewInner({
     localQuery,
     onBoundsChange,
 }: {
-    L: any
+    L: typeof import('leaflet')
     geoData: INatObservation[]
     localQuery: string
-    onBoundsChange: (bounds: any) => void
+    onBoundsChange: (bounds: LatLngBounds) => void
 }) {
     // Dynamically import react-leaflet components after Leaflet is loaded
-    const [components, setComponents] = useState<any>(null)
+    // biome-ignore lint/suspicious/noExplicitAny: Dynamic import of react-leaflet components requires any for type safety
+    const [components, setComponents] = useState<Record<string, any> | null>(
+        null
+    )
 
     useEffect(() => {
         // Wait for Leaflet to be available globally before importing react-leaflet
-        if (typeof window !== 'undefined' && (window as any).L) {
+        if (typeof window !== 'undefined' && window.L) {
             import('react-leaflet').then((module) => {
                 setComponents(module)
             })
@@ -142,10 +147,11 @@ function MapViewInner({
 
     function MapSyncHandler() {
         useMapEvents({
-            moveend(e: any) {
+            moveend(e: LeafletEvent) {
                 onBoundsChange(e.target.getBounds())
             },
-            zoomend(e: any) {
+
+            zoomend(e: LeafletEvent) {
                 onBoundsChange(e.target.getBounds())
             },
         })

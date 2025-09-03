@@ -1,6 +1,7 @@
 // src/components/search/ObservationMap.tsx
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useLeaflet } from '@/hooks/useLeaflet'
+import type { LatLngBounds, Map as LeafletMap } from 'leaflet'
 
 // Define a type for observation results for better type safety
 interface ObservationResult {
@@ -64,14 +65,17 @@ function ObservationMapInner({
     L,
 }: {
     observations: ObservationResult[]
-    L: any
+    L: typeof import('leaflet')
 }) {
     // Dynamically import react-leaflet components after Leaflet is loaded
-    const [components, setComponents] = useState<any>(null)
+    // biome-ignore lint/suspicious/noExplicitAny: Dynamic import of react-leaflet components requires any for type safety
+    const [components, setComponents] = useState<Record<string, any> | null>(
+        null
+    )
 
     useEffect(() => {
         // Wait for Leaflet to be available globally before importing react-leaflet
-        if (typeof window !== 'undefined' && (window as any).L) {
+        if (typeof window !== 'undefined' && window.L) {
             import('react-leaflet').then((module) => {
                 setComponents(module)
             })
@@ -92,7 +96,7 @@ function ObservationMapInner({
     }, [observations])
 
     // Create a ref for the map instance to adjust bounds later
-    const mapRef = useRef<any>(null)
+    const mapRef = useRef<LeafletMap | null>(null)
 
     // Effect to fit bounds when observations change
     useEffect(() => {

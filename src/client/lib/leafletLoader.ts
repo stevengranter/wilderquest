@@ -67,7 +67,7 @@ export function loadLeaflet(options: LeafletLoadOptions = {}): Promise<void> {
         const loadJS = (): Promise<void> => {
             return new Promise((resolveJS, rejectJS) => {
                 // Check if JS is already loaded
-                if (typeof window !== 'undefined' && (window as any).L) {
+                if (typeof window !== 'undefined' && window.L) {
                     resolveJS()
                     return
                 }
@@ -93,7 +93,7 @@ export function loadLeaflet(options: LeafletLoadOptions = {}): Promise<void> {
                 leafletLoaded = true
                 // Expose Leaflet globally for react-leaflet compatibility
                 if (typeof window !== 'undefined') {
-                    ;(window as any).L = (window as any).L
+                    // L is already global
                 }
                 resolve()
             })
@@ -115,7 +115,7 @@ export function loadLeaflet(options: LeafletLoadOptions = {}): Promise<void> {
  * @returns true if Leaflet is loaded and available
  */
 export function isLeafletLoaded(): boolean {
-    return leafletLoaded && typeof window !== 'undefined' && !!(window as any).L
+    return leafletLoaded && typeof window !== 'undefined' && !!window.L
 }
 
 /**

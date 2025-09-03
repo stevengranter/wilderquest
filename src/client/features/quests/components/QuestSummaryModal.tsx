@@ -19,13 +19,23 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { LeaderboardEntry } from '@/features/quests/types'
 import { AvatarOverlay } from './AvatarOverlay'
+import { Quest } from '../../../../types/types'
+import { INatTaxon } from '../../../../shared/types/iNatTypes'
+import { QuestMapping, DetailedProgress } from '../types'
+
+type TaxonWithProgress = INatTaxon & {
+    mapping?: QuestMapping
+    progressCount: number
+    recentEntries: DetailedProgress[]
+    isFound: boolean
+}
 
 interface QuestSummaryModalProps {
     isOpen: boolean
     onClose: () => void
-    questData: any
+    questData: Quest
     leaderboard: LeaderboardEntry[]
-    taxaWithProgress: any[]
+    taxaWithProgress: TaxonWithProgress[]
     totalParticipants: number
 }
 
@@ -485,8 +495,8 @@ function StatCard({
 
 // Helper function to calculate quest duration
 function calculateQuestDuration(
-    startDate?: string | Date,
-    endDate?: string | Date
+    startDate?: string | Date | null,
+    endDate?: string | Date | null
 ): string {
     if (!startDate || !endDate) return 'Unknown'
 
