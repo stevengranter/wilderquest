@@ -1,4 +1,4 @@
-import { type Pool } from 'mysql2/promise'
+import { type Pool, type RowDataPacket } from 'mysql2/promise'
 import { type SafeUserDTO, type User } from '../models/_index.js'
 import { createBaseRepository } from './BaseRepository.js'
 
@@ -47,10 +47,78 @@ export function createUserRepository(
         return base.find(conditions, options)
     }
 
+    // Get user stats: total quests participated, active quests, taxa found
+    async function getUserStats(userId: number): Promise<{
+        totalQuestsParticipated: number
+        activeQuests: number
+        taxaFound: number
+    }> {
+        const db = base.getDb()
+
+        // Count owned quests
+        const [ownedQuestsResult] = await db.execute<RowDataPacket[]>(
+            'SELECT COUNT(*) as count FROM quests WHERE user_id = ?',
+            [userId]
+        )
+        const ownedQuestsCount = (ownedQuestsResult as { count: number }[])[0]
+            .count
+
+        // Count shared quests (where user is a participant via quest_shares)
+        const [sharedQuestsResult] = await db.execute<RowDataPacket[]>(
+            'SELECT COUNT(DISTINCT qs.quest_id) as count FROM quest_shares qs WHERE qs.created_by_user_id = ?',
+            [userId]
+        )
+        const sharedQuestsCount = (sharedQuestsResult as { count: number }[])[0]
+            .count
+
+        // Count active quests (owned + shared that are active)
+        const [activeQuestsResult] = await db.execute<RowDataPacket[]>(
+            `SELECT COUNT(DISTINCT q.id) as count
+             FROM quests q
+             LEFT JOIN quest_shares qs ON q.id = qs.quest_id
+             WHERE (q.user_id = ? OR qs.created_by_user_id = ?)
+             AND q.status = 'active'`,
+            [userId, userId]
+        )
+        const activeQuestsCount = (activeQuestsResult as { count: number }[])[0]
+            .count
+
+        // Count unique taxa from collections
+        const [collectionsTaxaResult] = await db.execute<RowDataPacket[]>(
+            `SELECT COUNT(DISTINCT ct.taxon_id) as count
+             FROM collections_to_taxa ct
+             JOIN collections c ON ct.collection_id = c.id
+             WHERE c.user_id = ?`,
+            [userId]
+        )
+        const collectionsTaxaCount = (
+            collectionsTaxaResult as { count: number }[]
+        )[0].count
+
+        // Count unique taxa from quest progress
+        const [questProgressTaxaResult] = await db.execute<RowDataPacket[]>(
+            `SELECT COUNT(DISTINCT sqp.taxon_id) as count
+             FROM shared_quest_progress sqp
+             JOIN quest_shares qs ON sqp.quest_share_id = qs.id
+             WHERE qs.created_by_user_id = ?`,
+            [userId]
+        )
+        const questProgressTaxaCount = (
+            questProgressTaxaResult as { count: number }[]
+        )[0].count
+
+        return {
+            totalQuestsParticipated: ownedQuestsCount + sharedQuestsCount,
+            activeQuests: activeQuestsCount,
+            taxaFound: collectionsTaxaCount + questProgressTaxaCount,
+        }
+    }
+
     return {
         ...base,
         create,
         findUserForDisplay,
         findUsersForAdmin,
+        getUserStats,
     }
 }

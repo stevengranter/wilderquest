@@ -10,6 +10,8 @@ import { QuestWithTaxa } from '../../../types/types'
 import { QuestCard } from '@/features/quests/components/QuestCard'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 import { QuestCardSkeleton } from '@/features/quests/components/QuestCardSkeleton'
+import { UserStats } from '@/components/UserStats'
+import { useUserStats } from '@/hooks/useUserStats'
 
 function UserQuests({
     userId,
@@ -93,6 +95,18 @@ function UserQuests({
     )
 }
 
+// function offsetAvatarSvg(svg: string, x: number, y: number): string {
+//     // Extract the SVG contents inside the <svg>...</svg>
+//     const svgContentMatch = svg.match(/<svg[^>]*>([\s\S]*?)<\/svg>/)
+//     if (!svgContentMatch) return svg
+
+//     const innerContent = svgContentMatch[1]
+//     const wrappedContent = `<g transform="translate(${x}, ${y})">${innerContent}</g>`
+
+//     // Replace original inner content with transformed group
+//     return svg.replace(innerContent, wrappedContent)
+// }
+
 const UserProfile = () => {
     const { username } = useParams<{ username: string }>()
     const { user: authUser } = useAuth()
@@ -106,6 +120,8 @@ const UserProfile = () => {
         enabled: !!username,
     })
 
+    const { data: userStats, isLoading: statsLoading } = useUserStats(username)
+
     if (isLoading) {
         return <div>Loading...</div>
     }
@@ -114,30 +130,34 @@ const UserProfile = () => {
         return <div>User not found</div>
     }
 
-    const avatarSvg = avatar(user.username, { size: 100 })
-    const offsetSvg = avatarSvg.replace(
-        '<svg',
-        '<svg transform="translate(15, 12) scale(1.7)"'
-    )
+    const avatarSvg = avatar(user.username, {
+        size: 120,
+        padding: 200,
+    })
+    // const offsetSvg = offsetAvatarSvg(avatarSvg, 25, 15)
     const isOwnProfile = authUser?.username === user.username
 
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="mb-8">
-                <div className="flex items-center gap-6">
+                <div className="flex items-start gap-6">
                     <div className="flex-shrink-0">
                         <ReactSVG
                             src={`data:image/svg+xml;utf8,${encodeURIComponent(
-                                offsetSvg
+                                avatarSvg
                             )}`}
-                            className="w-20 h-20 rounded-full overflow-hidden border-2 border-border"
+                            className="w-24 h-24 rounded-full overflow-hidden border-2 border-border"
                         />
                     </div>
                     <div className="flex-1">
                         <h1 className="text-3xl font-bold mb-2">
                             {user.username}'s Profile
                         </h1>
-                        <p className="text-muted-foreground text-lg">
+                        <UserStats
+                            stats={userStats || null}
+                            isLoading={statsLoading}
+                        />
+                        <p className="text-muted-foreground text-lg mt-2">
                             Exploring the wild, one quest at a time.
                         </p>
                     </div>

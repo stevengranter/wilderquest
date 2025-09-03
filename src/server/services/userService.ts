@@ -15,5 +15,19 @@ export function createUserService(userRepository: UserRepository) {
         return userRepository.findUserForDisplay({ username })
     }
 
-    return { getUserProfileById, getUserProfileByUsername }
+    async function getUserStats(username: string): Promise<{
+        totalQuestsParticipated: number
+        activeQuests: number
+        taxaFound: number
+    } | null> {
+        // First get the user to get their ID
+        const user = await userRepository.findUserForDisplay({ username })
+        if (!user || !user.id) {
+            return null
+        }
+
+        return userRepository.getUserStats(user.id)
+    }
+
+    return { getUserProfileById, getUserProfileByUsername, getUserStats }
 }

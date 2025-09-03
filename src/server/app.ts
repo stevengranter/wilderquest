@@ -8,22 +8,14 @@ import { createINaturalistAPIController } from './controllers/iNaturalistAPICont
 import { createQuestController } from './controllers/questController.js'
 import { createQuestShareController } from './controllers/questShareController.js'
 import { createUserController } from './controllers/userController.js'
+import { createUserService } from './services/userService.js'
 import { rateLimiter } from './middlewares/rateLimiter.js'
 import { rateSlowDown } from './middlewares/rateSlowDown.js'
 import requestLogger from './middlewares/requestLogger.js'
 import { CollectionRepository } from './repositories/CollectionRepository.js'
-import {
-    QuestRepository,
-    QuestToTaxaRepository,
-} from './repositories/QuestRepository.js'
-import type {
-    QuestShareRepository,
-    SharedQuestProgressRepository,
-} from './repositories/QuestShareRepository.js'
-import {
-    mapTilesProxyRouter,
-    wikipediaProxyRouter,
-} from './routes/api/proxies.routes.js'
+import { QuestRepository, QuestToTaxaRepository } from './repositories/QuestRepository.js'
+import type { QuestShareRepository, SharedQuestProgressRepository } from './repositories/QuestShareRepository.js'
+import { mapTilesProxyRouter, wikipediaProxyRouter } from './routes/api/proxies.routes.js'
 import { serviceRouter } from './routes/api/services.routes.js'
 import { createAuthRouter } from './routes/authRouter.js'
 import { createCollectionRouter } from './routes/collectionRouter.js'
@@ -76,7 +68,8 @@ export function buildApp({
     // initialize main router
     const apiRouter = express.Router()
 
-    const userController = createUserController(userRepository)
+    const userService = createUserService(userRepository)
+    const userController = createUserController(userService)
     const userRouter = createUserRouter(userController)
     apiRouter.use('/users', userRouter)
 
