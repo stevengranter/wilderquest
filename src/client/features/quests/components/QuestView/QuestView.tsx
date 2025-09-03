@@ -84,6 +84,7 @@ export const QuestView = () => {
                     questId={questData?.id}
                     ownerUserId={questData?.user_id}
                     questName={questData?.name}
+                    isOwner={isOwner}
                 />
 
                 <div className="flex justify-center items-start min-h-[300px] pt-4">

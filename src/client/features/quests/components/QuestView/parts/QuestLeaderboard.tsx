@@ -35,6 +35,7 @@ type QuestLeaderboardProps = {
     questId?: number | string
     ownerUserId?: number | string
     questName?: string
+    isOwner?: boolean
 }
 
 const getParticipantBadge = (entry: LeaderboardEntry, questStatus?: string) => {
@@ -87,6 +88,7 @@ export const QuestLeaderboard = ({
     questId,
     ownerUserId,
     questName,
+    isOwner,
 }: QuestLeaderboardProps) => {
     const [showAddForm, setShowAddForm] = useState(false)
     const [guestName, setGuestName] = useState('')
@@ -199,7 +201,7 @@ export const QuestLeaderboard = ({
         <div>
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Quest Explorers</h2>
-                {questId && ownerUserId && (
+                {questId && isOwner && (
                     <Button
                         size="sm"
                         onClick={() => setShowAddForm(!showAddForm)}
@@ -307,14 +309,18 @@ export const QuestLeaderboard = ({
                                             scale: 0.95,
                                             transition: { duration: 0.2 },
                                         }}
-                                        className={`flex flex-col gap-3 p-3 rounded-xl border-1 border-slate-400 cursor-pointer hover:shadow-sm transition-all duration-300 ease-out ${
+                                        className={`flex flex-col gap-3 p-3 rounded-xl border-1 border-slate-400 transition-all duration-300 ease-out ${
+                                            isOwner
+                                                ? 'cursor-pointer hover:shadow-sm'
+                                                : ''
+                                        } ${
                                             entry.observation_count > 0
                                                 ? 'bg-green-100'
                                                 : 'bg-background'
                                         }`}
                                         onClick={(e) => {
                                             e.stopPropagation()
-                                            if (questId && ownerUserId) {
+                                            if (questId && isOwner) {
                                                 toggleEntryExpansion(entryKey)
                                             }
                                         }}
@@ -382,7 +388,7 @@ export const QuestLeaderboard = ({
                                                         </div>
                                                     )}
                                             </div>
-                                            {questId && ownerUserId && (
+                                            {questId && isOwner && (
                                                 <div className="flex items-center justify-center w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors">
                                                     <FaChevronDown className="h-3 w-3" />
                                                 </div>
@@ -390,7 +396,7 @@ export const QuestLeaderboard = ({
                                         </div>
 
                                         {/* Footer row: Action buttons */}
-                                        {questId && ownerUserId && (
+                                        {questId && isOwner && (
                                             <div
                                                 className={`overflow-hidden transition-all duration-300 ease-out border-t border-gray-200 ${
                                                     isExpanded
