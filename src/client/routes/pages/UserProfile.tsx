@@ -11,140 +11,154 @@ import { QuestCard } from '@/features/quests/components/QuestCard'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 import { QuestCardSkeleton } from '@/features/quests/components/QuestCardSkeleton'
 
-function UserQuests({ userId, isOwnProfile }: { userId: string, isOwnProfile: boolean }) {
-  const {
-    data: quests = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['userQuests', userId, { isOwnProfile }],
-    queryFn: () =>
-      api.get(`/quests/user/${userId}`).then((res) => res.data as QuestWithTaxa[]),
-    enabled: !!userId,
-  });
+function UserQuests({
+    userId,
+    isOwnProfile,
+}: {
+    userId: string
+    isOwnProfile: boolean
+}) {
+    const {
+        data: quests = [],
+        isLoading,
+        error,
+    } = useQuery({
+        queryKey: ['userQuests', userId, { isOwnProfile }],
+        queryFn: () =>
+            api
+                .get(`/quests/user/${userId}`)
+                .then((res) => res.data as QuestWithTaxa[]),
+        enabled: !!userId,
+    })
 
-  const { questToPhotosMap, isLoading: photosLoading } = useQuestPhotoCollage(quests);
+    const { questToPhotosMap, isLoading: photosLoading } =
+        useQuestPhotoCollage(quests)
 
-  if (isLoading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3].map((i) => (
-          <QuestCardSkeleton key={i} />
-        ))}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-500">Failed to load quests</p>
-      </div>
-    );
-  }
-
-  if (!quests || quests.length === 0) {
-    return (
-      <Card className="text-center py-8">
-        <CardContent>
-          <h3 className="text-lg font-semibold mb-2">
-            No Quests Yet
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            {isOwnProfile
-              ? "You haven't created any quests yet. Get started by creating one!"
-              : "This user hasn't created any public quests yet."}
-          </p>
-          {isOwnProfile && (
-            <Button asChild>
-              <Link to="/quests/new">Create Your First Quest</Link>
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {quests.map((quest: QuestWithTaxa) => {
-        const questPhotos = questToPhotosMap.get(quest.id) || [];
+    if (isLoading) {
         return (
-        <QuestCard 
-        key={quest.id} 
-        quest={quest} 
-        photos={questPhotos} 
-        isLoading={photosLoading && questPhotos.length === 0}
-        />
-      )})}
-    </div>
-  );
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                    <QuestCardSkeleton key={i} />
+                ))}
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="text-center py-8">
+                <p className="text-red-500">Failed to load quests</p>
+            </div>
+        )
+    }
+
+    if (!quests || quests.length === 0) {
+        return (
+            <Card className="text-center py-8">
+                <CardContent>
+                    <h3 className="text-lg font-semibold mb-2">
+                        No Quests Yet
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                        {isOwnProfile
+                            ? "You haven't created any quests yet. Get started by creating one!"
+                            : "This user hasn't created any public quests yet."}
+                    </p>
+                    {isOwnProfile && (
+                        <Button asChild>
+                            <Link to="/quests/new">
+                                Create Your First Quest
+                            </Link>
+                        </Button>
+                    )}
+                </CardContent>
+            </Card>
+        )
+    }
+
+    return (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {quests.map((quest: QuestWithTaxa) => {
+                const questPhotos = questToPhotosMap.get(quest.id) || []
+                return (
+                    <QuestCard
+                        key={quest.id}
+                        quest={quest}
+                        photos={questPhotos}
+                        isLoading={photosLoading && questPhotos.length === 0}
+                    />
+                )
+            })}
+        </div>
+    )
 }
 
 const UserProfile = () => {
-  const { username } = useParams<{ username: string }>();
-  const { user: authUser } = useAuth();
-  const {
-    data: user,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['user', username],
-    queryFn: () => api.get(`/users/${username}`).then((res) => res.data),
-    enabled: !!username,
-  });
+    const { username } = useParams<{ username: string }>()
+    const { user: authUser } = useAuth()
+    const {
+        data: user,
+        isLoading,
+        error,
+    } = useQuery({
+        queryKey: ['user', username],
+        queryFn: () => api.get(`/users/${username}`).then((res) => res.data),
+        enabled: !!username,
+    })
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+    if (isLoading) {
+        return <div>Loading...</div>
+    }
 
-  if (error || !user) {
-    return <div>User not found</div>;
-  }
+    if (error || !user) {
+        return <div>User not found</div>
+    }
 
-  const avatarSvg = avatar(user.username, { size: 100 });
-  const isOwnProfile = authUser?.username === user.username;
+    const avatarSvg = avatar(user.username, { size: 100 })
+    const offsetSvg = avatarSvg.replace(
+        '<svg',
+        '<svg transform="translate(15, 12) scale(1.7)"'
+    )
+    const isOwnProfile = authUser?.username === user.username
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-
-            <div className="flex items-center gap-6">
-              <div className="flex-shrink-0">
-                <ReactSVG
-                  src={`data:image/svg+xml;utf8,${encodeURIComponent(
-                    avatarSvg
-                  )}`}
-                  className="w-20 h-20 rounded-full overflow-hidden border-2 border-border"
-                />
-              </div>
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold mb-2">
-                  {user.username}'s Profile
-                </h1>
-                <p className="text-muted-foreground text-lg">
-                  Exploring the wild, one quest at a time.
-                </p>
-              </div>
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <div className="mb-8">
+                <div className="flex items-center gap-6">
+                    <div className="flex-shrink-0">
+                        <ReactSVG
+                            src={`data:image/svg+xml;utf8,${encodeURIComponent(
+                                offsetSvg
+                            )}`}
+                            className="w-20 h-20 rounded-full overflow-hidden border-2 border-border"
+                        />
+                    </div>
+                    <div className="flex-1">
+                        <h1 className="text-3xl font-bold mb-2">
+                            {user.username}'s Profile
+                        </h1>
+                        <p className="text-muted-foreground text-lg">
+                            Exploring the wild, one quest at a time.
+                        </p>
+                    </div>
+                </div>
             </div>
 
-      </div>
-
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">
-            Quests by {user.username}
-          </h2>
-          {isOwnProfile && (
-            <Button asChild>
-              <Link to="/quests/new">Create Quest</Link>
-            </Button>
-          )}
+            <div className="mb-8">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold">
+                        Quests by {user.username}
+                    </h2>
+                    {isOwnProfile && (
+                        <Button asChild>
+                            <Link to="/quests/new">Create Quest</Link>
+                        </Button>
+                    )}
+                </div>
+                <UserQuests userId={user.id} isOwnProfile={isOwnProfile} />
+            </div>
         </div>
-        <UserQuests userId={user.id} isOwnProfile={isOwnProfile} />
-      </div>
-    </div>
-  );
-};
+    )
+}
 
-export default UserProfile;
+export default UserProfile

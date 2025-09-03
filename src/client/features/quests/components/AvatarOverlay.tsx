@@ -38,6 +38,10 @@ export function AvatarOverlay({
             .slice(0, displayCount)
             .map((name, index) => {
                 const avatarSvg = avatar(name, { size })
+                const offsetSvg = avatarSvg.replace(
+                    '<svg',
+                    '<svg transform="translate(15, 12) scale(1.7)"'
+                )
                 const isFirstFinder = firstFinder && name === firstFinder
 
                 return (
@@ -54,7 +58,10 @@ export function AvatarOverlay({
                         )}
                     >
                         <AvatarImage
-                            src={`data:image/svg+xml;utf8,${encodeURIComponent(avatarSvg)}`}
+                            src={`data:image/svg+xml;utf8,${encodeURIComponent(offsetSvg)}`}
+                            style={{
+                                filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.3))',
+                            }}
                         />
                     </Avatar>
                 )
@@ -74,6 +81,10 @@ export function AvatarOverlay({
 
     // Single avatar (original behavior)
     const avatarSvg = avatar(names[0], { size })
+    const offsetSvg = avatarSvg.replace(
+        '<svg',
+        '<svg transform="translate(15, 12) scale(1.7)"'
+    )
     const isFirstFinder = firstFinder && names[0] === firstFinder
 
     return (
@@ -85,7 +96,7 @@ export function AvatarOverlay({
             )}
         >
             <AvatarImage
-                src={`data:image/svg+xml;utf8,${encodeURIComponent(avatarSvg)}`}
+                src={`data:image/svg+xml;utf8,${encodeURIComponent(offsetSvg)}`}
             />
         </Avatar>
     )

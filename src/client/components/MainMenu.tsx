@@ -14,16 +14,22 @@ import { Button } from '@/components/ui/button'
 import { paths } from '@/routes/paths'
 
 export function MainMenu() {
-    const { isAuthenticated, user, logout } = useAuth();
-    const navigate = useNavigate();
-    const location = useLocation();
+    const { isAuthenticated, user, logout } = useAuth()
+    const navigate = useNavigate()
+    const location = useLocation()
 
-    const userAvatar = user ? avatar(user.username, { size: 40 }) : null;
+    const userAvatar = user ? avatar(user.username, { size: 40 }) : null
+    const offsetSvg = userAvatar
+        ? userAvatar.replace(
+              '<svg',
+              '<svg transform="translate(8, 8) scale(1.3)"'
+          )
+        : null
 
     const handleLogout = async () => {
-        await logout();
-        navigate('/'); // Redirect to home after logout
-    };
+        await logout()
+        navigate('/') // Redirect to home after logout
+    }
 
     // Right-side menu (login/avatar)
     const renderUserMenu = () => (
@@ -33,7 +39,7 @@ export function MainMenu() {
                     <MenubarTrigger className="cursor-pointer">
                         <div className="flex items-center gap-2">
                             <ReactSVG
-                                src={`data:image/svg+xml;utf8,${encodeURIComponent(userAvatar)}`}
+                                src={`data:image/svg+xml;utf8,${encodeURIComponent(offsetSvg || userAvatar)}`}
                                 className="w-6 h-6 rounded-full overflow-hidden border-2 border-border"
                             />
                             <span>{user.username}</span>
@@ -41,10 +47,14 @@ export function MainMenu() {
                     </MenubarTrigger>
                     <MenubarContent>
                         <MenubarItem asChild>
-                            <Link to={paths.userProfile(user.username)}>Profile</Link>
+                            <Link to={paths.userProfile(user.username)}>
+                                Profile
+                            </Link>
                         </MenubarItem>
                         <MenubarSeparator />
-                        <MenubarItem onSelect={handleLogout}>Logout</MenubarItem>
+                        <MenubarItem onSelect={handleLogout}>
+                            Logout
+                        </MenubarItem>
                     </MenubarContent>
                 </>
             ) : (
@@ -55,29 +65,32 @@ export function MainMenu() {
                 </MenubarTrigger>
             )}
         </MenubarMenu>
-    );
+    )
 
-    const isHome = location.pathname === '/';
-    const isLogin = location.pathname === '/login';
+    const isHome = location.pathname === '/'
+    const isLogin = location.pathname === '/login'
 
-    return !isLogin && (
-        <Menubar
-            className={`flex w-full items-center border-0 mb-2 ${
-                isHome ? 'justify-end bg-transparent' : 'justify-between bg-transparent'
-            }`}
-        >
-            {/* Left section (title) → show only if NOT home */}
-            {!isHome && (
-                <div>
-                    <Link to="/">
-                        <h1 className="mx-4">wilderQuest</h1>
-                    </Link>
-                </div>
-            )}
+    return (
+        !isLogin && (
+            <Menubar
+                className={`flex w-full items-center border-0 mb-2 ${
+                    isHome
+                        ? 'justify-end bg-transparent'
+                        : 'justify-between bg-transparent'
+                }`}
+            >
+                {/* Left section (title) → show only if NOT home */}
+                {!isHome && (
+                    <div>
+                        <Link to="/">
+                            <h1 className="mx-4">wilderQuest</h1>
+                        </Link>
+                    </div>
+                )}
 
-            {/* Right section (login/avatar) → hide on /login */}
-            {!isLogin && <div>{renderUserMenu()}</div>}
-
-        </Menubar>
-    );
+                {/* Right section (login/avatar) → hide on /login */}
+                {!isLogin && <div>{renderUserMenu()}</div>}
+            </Menubar>
+        )
+    )
 }
