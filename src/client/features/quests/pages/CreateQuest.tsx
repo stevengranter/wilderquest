@@ -209,6 +209,16 @@ function Step1_QuestDetails({ setStep }: { setStep: (step: number) => void }) {
     const center = lat && lon ? ([lat, lon] as [number, number]) : undefined
     const mapOptions = useMemo(() => ({ center, zoom: 13 }), [center])
 
+    const questLocation =
+        lat && lon
+            ? {
+                  latitude: lat,
+                  longitude: lon,
+                  name: 'New Quest',
+                  locationName: watch('locationName') || undefined,
+              }
+            : undefined
+
     const handleNext = async () => {
         const isValid = await trigger([
             'questName',
@@ -366,6 +376,7 @@ function Step1_QuestDetails({ setStep }: { setStep: (step: number) => void }) {
                     <QuestMapView
                         options={mapOptions}
                         className="w-full h-full"
+                        questLocation={questLocation}
                     />
                 </div>
             </div>

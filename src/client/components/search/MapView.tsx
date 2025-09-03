@@ -1,14 +1,7 @@
 import axios from 'axios'
-import L, { LatLngBounds } from 'leaflet'
 import { useEffect, useState } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import {
-    MapContainer,
-    Marker,
-    Popup,
-    TileLayer,
-    useMapEvents,
-} from 'react-leaflet'
+import { useLeaflet } from '@/hooks/useLeaflet'
 import getKingdomIcon from '@/components/search/getKingdomIcon'
 import {
     INatObservation,
@@ -20,7 +13,7 @@ type MapViewProps = {
     localQuery: string
 }
 
-function createKingdomIcon(kingdom: string) {
+function createKingdomIcon(L: any, kingdom: string) {
     const iconJSX = getKingdomIcon(kingdom) // React component like <FaLeaf />
     const svgString = renderToStaticMarkup(iconJSX)
 
@@ -38,25 +31,10 @@ function createKingdomIcon(kingdom: string) {
     })
 }
 
-function MapSyncHandler({
-                            onBoundsChange,
-                        }: {
-    onBoundsChange: (bounds: LatLngBounds) => void
-}) {
-    useMapEvents({
-        moveend(e) {
-            onBoundsChange(e.target.getBounds())
-        },
-        zoomend(e) {
-            onBoundsChange(e.target.getBounds())
-        },
-    })
-    return null
-}
-
 export default function MapView({ taxonId, localQuery }: MapViewProps) {
+    const { isLoading, error, isLoaded, L } = useLeaflet()
     const [geoData, setGeoData] = useState<INatObservation[]>([])
-    const [bounds, setBounds] = useState<LatLngBounds | null>(null)
+    const [bounds, setBounds] = useState<any>(null)
 
     // Fetch when bounds change
     useEffect(() => {
@@ -65,8 +43,6 @@ export default function MapView({ taxonId, localQuery }: MapViewProps) {
         const fetchObservations = async () => {
             const sw = bounds.getSouthWest()
             const ne = bounds.getNorthEast()
-
-            // const _bbox = `${sw.lng},${sw.lat},${ne.lng},${ne.lat}`
 
             const url = `/api/iNatAPI/observations?nelat=${ne.lat}&nelng=${ne.lng}&swlat=${sw.lat}&swlng=${sw.lng}&geo=true&photos=true&verifiable=true&per_page=100&${localQuery ? `q=${localQuery}` : ''}&${taxonId ? `taxon_id=${taxonId}` : ''}`
 
@@ -82,9 +58,99 @@ export default function MapView({ taxonId, localQuery }: MapViewProps) {
         fetchObservations()
     }, [bounds, taxonId, localQuery])
 
+    if (error) {
+        return (
+            <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
+                <div className="text-center">
+                    <p className="text-red-600 mb-2">Failed to load map</p>
+                    <p className="text-sm text-gray-600">
+                        Please try refreshing the page
+                    </p>
+                </div>
+            </div>
+        )
+    }
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">Loading map...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (!isLoaded || !L) {
+        return (
+            <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
+                <div className="text-center">
+                    <p className="text-gray-600">Map not available</p>
+                </div>
+            </div>
+        )
+    }
+
+    // Dynamically import and render the map components
+    return (
+        <MapViewInner
+            L={L}
+            geoData={geoData}
+            localQuery={localQuery}
+            onBoundsChange={setBounds}
+        />
+    )
+}
+
+// Separate component that uses react-leaflet components
+function MapViewInner({
+    L,
+    geoData,
+    localQuery,
+    onBoundsChange,
+}: {
+    L: any
+    geoData: INatObservation[]
+    localQuery: string
+    onBoundsChange: (bounds: any) => void
+}) {
+    // Dynamically import react-leaflet components
+    const [components, setComponents] = useState<any>(null)
+
+    useEffect(() => {
+        import('react-leaflet').then((module) => {
+            setComponents(module)
+        })
+    }, [])
+
+    if (!components) {
+        return (
+            <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">Initializing map...</p>
+                </div>
+            </div>
+        )
+    }
+
+    const { MapContainer, Marker, Popup, TileLayer, useMapEvents } = components
+
+    function MapSyncHandler() {
+        useMapEvents({
+            moveend(e: any) {
+                onBoundsChange(e.target.getBounds())
+            },
+            zoomend(e: any) {
+                onBoundsChange(e.target.getBounds())
+            },
+        })
+        return null
+    }
+
     return (
         <MapContainer
-            // TODO: Set these coords from user-specified location
             center={[49.192791, -57.40712]}
             zoom={13}
             scrollWheelZoom={true}
@@ -93,23 +159,18 @@ export default function MapView({ taxonId, localQuery }: MapViewProps) {
             <TileLayer
                 attribution='Maps &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, Data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="/api/tiles/{z}/{x}/{y}.png"
-                // zIndex={1}
             />
 
-            {/* Sync bounds with map */}
-            <MapSyncHandler onBoundsChange={setBounds} />
+            <MapSyncHandler />
 
-            {/* Markers */}
             {geoData.map((result) => {
                 const photo = result?.photos?.[0]?.url
                 if (!result.geojson || !photo) return null
 
-                // const icon = createMarkerIcon(
-                //     photo,
-                //     result.taxon?.iconic_taxon_name || result.taxon?.name
-                // )
-
-                const icon = createKingdomIcon(result.taxon?.iconic_taxon_name)
+                const icon = createKingdomIcon(
+                    L,
+                    result.taxon?.iconic_taxon_name || 'unknown'
+                )
 
                 return (
                     <Marker
@@ -136,7 +197,6 @@ export default function MapView({ taxonId, localQuery }: MapViewProps) {
                 )
             })}
 
-            {/* Optional overlay */}
             <TileLayer
                 url={`/api/iNatAPI/heatmap/{z}/{x}/{y}.png?q=${localQuery}`}
                 opacity={0.6}

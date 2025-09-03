@@ -3,16 +3,34 @@ import { INatTaxon } from '@shared/types/iNatTypes'
 import { chunk } from 'lodash'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AxiosError } from 'axios'
-import { FormProvider, useForm, useFormContext, useWatch } from 'react-hook-form'
+import {
+    FormProvider,
+    useForm,
+    useFormContext,
+    useWatch,
+} from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import api from '@/api/api'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import {
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeSelector'
@@ -408,6 +426,16 @@ function QuestDetails() {
     const center = lat && lon ? ([lat, lon] as [number, number]) : undefined
     const mapOptions = useMemo(() => ({ center, zoom: 13 }), [center])
 
+    const questLocation =
+        lat && lon
+            ? {
+                  latitude: lat,
+                  longitude: lon,
+                  name: watch('questName') || 'Quest Location',
+                  locationName: watch('locationName') || undefined,
+              }
+            : undefined
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
@@ -512,7 +540,11 @@ function QuestDetails() {
                 />
             </div>
             <div className="h-96 w-full md:h-full">
-                <QuestMapView options={mapOptions} className="w-full h-full" />
+                <QuestMapView
+                    options={mapOptions}
+                    className="w-full h-full"
+                    questLocation={questLocation}
+                />
             </div>
         </div>
     )

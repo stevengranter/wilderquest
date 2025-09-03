@@ -1,18 +1,6 @@
 // src/components/search/ObservationMap.tsx
-import React, { useEffect, useMemo, useRef } from 'react'
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css' // Import Leaflet's CSS
-import L from 'leaflet' // Import Leaflet library itself
-
-// Fix default marker icon issues with Webpack/Vite
-// This is a common workaround for Leaflet's default marker icon paths.
-delete (L.Icon.Default.prototype as L.Icon.Default & { _getIconUrl?: unknown })
-    ._getIconUrl
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'leaflet/images/marker-icon-2x.png',
-    iconUrl: 'leaflet/images/marker-icon.png',
-    shadowUrl: 'leaflet/images/marker-shadow.png',
-})
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useLeaflet } from '@/hooks/useLeaflet'
 
 // Define a type for observation results for better type safety
 interface ObservationResult {
@@ -22,6 +10,7 @@ interface ObservationResult {
     latitude?: number
     longitude?: number
     photos?: { url: string }[]
+    observed_on?: string
     // Add other properties as needed
 }
 
@@ -30,6 +19,62 @@ interface ObservationMapProps {
 }
 
 const ObservationMap: React.FC<ObservationMapProps> = ({ observations }) => {
+    const { isLoading, error, isLoaded, L } = useLeaflet()
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+                <div className="text-center">
+                    <p className="text-red-600 mb-2">Failed to load map</p>
+                    <p className="text-sm text-gray-600">
+                        Please try refreshing the page
+                    </p>
+                </div>
+            </div>
+        )
+    }
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">Loading map...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (!isLoaded || !L) {
+        return (
+            <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+                <div className="text-center">
+                    <p className="text-gray-600">Map not available</p>
+                </div>
+            </div>
+        )
+    }
+
+    return <ObservationMapInner observations={observations} L={L} />
+}
+
+// Separate component that uses react-leaflet components
+function ObservationMapInner({
+    observations,
+    L,
+}: {
+    observations: ObservationResult[]
+    L: any
+}) {
+    // Dynamically import react-leaflet components
+    const [components, setComponents] = useState<any>(null)
+
+    useEffect(() => {
+        import('react-leaflet').then((module) => {
+            setComponents(module)
+        })
+    }, [])
+
     // Calculate initial map center based on observations or a default
     const initialCenter: [number, number] = useMemo(() => {
         if (
@@ -44,7 +89,7 @@ const ObservationMap: React.FC<ObservationMapProps> = ({ observations }) => {
     }, [observations])
 
     // Create a ref for the map instance to adjust bounds later
-    const mapRef = useRef<L.Map>(null)
+    const mapRef = useRef<any>(null)
 
     // Effect to fit bounds when observations change
     useEffect(() => {
@@ -62,7 +107,20 @@ const ObservationMap: React.FC<ObservationMapProps> = ({ observations }) => {
                 mapRef.current.fitBounds(bounds, { padding: [50, 50] }) // Add padding
             }
         }
-    }, [observations])
+    }, [observations, L])
+
+    if (!components) {
+        return (
+            <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">Initializing map...</p>
+                </div>
+            </div>
+        )
+    }
+
+    const { MapContainer, Marker, Popup, TileLayer } = components
 
     return (
         <MapContainer

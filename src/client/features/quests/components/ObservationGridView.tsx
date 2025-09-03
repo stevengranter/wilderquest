@@ -1,11 +1,11 @@
+import React, { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Card } from '@/components/ui/card'
-import { useState } from 'react'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import { useProgressiveImage } from '@/hooks/useProgressiveImage'
+import { useLeaflet } from '@/hooks/useLeaflet'
 import { cn } from '@/lib/utils'
 
 interface ObservationPhoto {
@@ -348,10 +348,107 @@ export function ObservationMapView({
     observations: Observation[]
     center: [number, number]
 }) {
+    const { isLoading, error, isLoaded, L } = useLeaflet()
+
+    if (error) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4 }}
+                className="w-full h-96 rounded-lg overflow-hidden border flex items-center justify-center bg-gray-100"
+            >
+                <div className="text-center">
+                    <p className="text-red-600 mb-2">Failed to load map</p>
+                    <p className="text-sm text-gray-600">
+                        Please try refreshing the page
+                    </p>
+                </div>
+            </motion.div>
+        )
+    }
+
+    if (isLoading) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4 }}
+                className="w-full h-96 rounded-lg overflow-hidden border flex items-center justify-center bg-gray-100"
+            >
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">Loading map...</p>
+                </div>
+            </motion.div>
+        )
+    }
+
+    if (!isLoaded || !L) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4 }}
+                className="w-full h-96 rounded-lg overflow-hidden border flex items-center justify-center bg-gray-100"
+            >
+                <div className="text-center">
+                    <p className="text-gray-600">Map not available</p>
+                </div>
+            </motion.div>
+        )
+    }
+
+    return (
+        <ObservationMapViewInner
+            observations={observations}
+            center={center}
+            L={L}
+        />
+    )
+}
+
+// Separate component that uses react-leaflet components
+function ObservationMapViewInner({
+    observations,
+    center,
+    L,
+}: {
+    observations: Observation[]
+    center: [number, number]
+    L: any
+}) {
+    // Dynamically import react-leaflet components
+    const [components, setComponents] = useState<any>(null)
+
+    React.useEffect(() => {
+        import('react-leaflet').then((module) => {
+            setComponents(module)
+        })
+    }, [])
+
     // Filter observations that have coordinates
     const observationsWithCoords = observations.filter(
         (obs) => obs.geojson?.coordinates || obs.location
     )
+
+    if (!components) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4 }}
+                className="w-full h-96 rounded-lg overflow-hidden border flex items-center justify-center bg-gray-100"
+            >
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">Initializing map...</p>
+                </div>
+            </motion.div>
+        )
+    }
+
+    const { MapContainer, Marker, Popup, TileLayer } = components
 
     return (
         <motion.div
