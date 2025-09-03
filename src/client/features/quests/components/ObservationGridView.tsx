@@ -418,13 +418,16 @@ function ObservationMapViewInner({
     center: [number, number]
     L: any
 }) {
-    // Dynamically import react-leaflet components
+    // Dynamically import react-leaflet components after Leaflet is loaded
     const [components, setComponents] = useState<any>(null)
 
     React.useEffect(() => {
-        import('react-leaflet').then((module) => {
-            setComponents(module)
-        })
+        // Wait for Leaflet to be available globally before importing react-leaflet
+        if (typeof window !== 'undefined' && (window as any).L) {
+            import('react-leaflet').then((module) => {
+                setComponents(module)
+            })
+        }
     }, [])
 
     // Filter observations that have coordinates

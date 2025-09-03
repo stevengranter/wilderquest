@@ -115,13 +115,16 @@ function MapViewInner({
     localQuery: string
     onBoundsChange: (bounds: any) => void
 }) {
-    // Dynamically import react-leaflet components
+    // Dynamically import react-leaflet components after Leaflet is loaded
     const [components, setComponents] = useState<any>(null)
 
     useEffect(() => {
-        import('react-leaflet').then((module) => {
-            setComponents(module)
-        })
+        // Wait for Leaflet to be available globally before importing react-leaflet
+        if (typeof window !== 'undefined' && (window as any).L) {
+            import('react-leaflet').then((module) => {
+                setComponents(module)
+            })
+        }
     }, [])
 
     if (!components) {

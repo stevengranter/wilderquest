@@ -91,7 +91,15 @@ export function loadLeaflet(options: LeafletLoadOptions = {}): Promise<void> {
             .then(() => loadJS())
             .then(() => {
                 leafletLoaded = true
+                // Expose Leaflet globally for react-leaflet compatibility
+                if (typeof window !== 'undefined') {
+                    ;(window as any).L = (window as any).L
+                }
                 resolve()
+            })
+            .catch((error) => {
+                leafletLoadingPromise = null // Reset on error to allow retry
+                reject(error)
             })
             .catch((error) => {
                 leafletLoadingPromise = null // Reset on error to allow retry
