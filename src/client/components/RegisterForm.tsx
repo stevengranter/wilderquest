@@ -18,7 +18,6 @@ import { useNavigate } from 'react-router'
 import { useAuth } from '@/hooks/useAuth.js'
 import { RegisterFormSchema } from '@/components/RegisterForm.schema.js'
 import { createNameId } from 'mnemonic-id'
-import { faker } from '@faker-js/faker/locale/ar'
 
 type Inputs = {
     email: string
@@ -50,7 +49,7 @@ const RegisterForm = React.forwardRef(() => {
     }, [])
 
     const fakeEmailAddress = useMemo(() => {
-        return animalNameId.toLowerCase() + '@' + faker.internet.domainName()
+        return animalNameId.toLowerCase() + '@example.com'
     }, [animalNameId])
 
     return (
