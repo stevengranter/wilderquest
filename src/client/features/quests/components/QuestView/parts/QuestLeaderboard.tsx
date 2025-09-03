@@ -1,10 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import {
-    FaPlus,
-    FaTrash,
-    FaShareFromSquare,
-    FaChevronDown,
-} from 'react-icons/fa6'
+import { FaChevronDown, FaLink, FaPlus, FaShareFromSquare, FaTrash } from 'react-icons/fa6'
 import { LeaderboardEntry } from '@/features/quests/types'
 import { AvatarOverlay } from '../../AvatarOverlay'
 import { Button } from '@/components/ui/button'
@@ -13,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import api from '@/api/api'
 import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import {
     Dialog,
     DialogContent,
@@ -410,21 +406,48 @@ export const QuestLeaderboard = ({
                                                             size="sm"
                                                             variant="noShadow"
                                                             className="h-7 px-2 text-xs text-green-700 shadow-none border-0 bg-transparent hover:bg-gray-100"
-                                                            onClick={async () => {
+                                                            onClick={async (
+                                                                e
+                                                            ) => {
+                                                                e.stopPropagation()
                                                                 const shareUrl =
                                                                     await buildShareLink(
                                                                         entry
                                                                     )
-                                                                const shareTitle = `Join my quest: ${questName || 'Quest'}`
-                                                                const shareText = `Join my quest to discover species! ${shareUrl}`
+                                                                navigator.clipboard.writeText(
+                                                                    shareUrl
+                                                                )
+                                                                toast.success('Link Copied!', {
+                                                                    description: `The share link for ${
+                                                                        entry.display_name ||
+                                                                        'Guest'
+                                                                    } has been copied to your clipboard.`,
+                                                                })
+                                                            }}
+                                                        >
+                                                            <FaLink className="h-3 w-3 mr-1" />
+                                                            Copy Link
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="noShadow"
+                                                            className="h-7 px-2 text-xs text-green-700 shadow-none border-0 bg-transparent hover:bg-gray-100"
+                                                            onClick={async (
+                                                                e
+                                                            ) => {
+                                                                e.stopPropagation()
+                                                                const shareUrl =
+                                                                    await buildShareLink(
+                                                                        entry
+                                                                    )
 
                                                                 if (
                                                                     navigator.share
                                                                 ) {
                                                                     navigator.share(
                                                                         {
-                                                                            title: shareTitle,
-                                                                            text: shareText,
+                                                                            title: `Join my quest: ${questName || 'Quest'}`,
+                                                                            text: `Join my quest to discover species!`,
                                                                             url: shareUrl,
                                                                         }
                                                                     )
@@ -432,6 +455,12 @@ export const QuestLeaderboard = ({
                                                                     navigator.clipboard.writeText(
                                                                         shareUrl
                                                                     )
+                                                                    toast.success('Link Copied!', {
+                                                                        description: `The share link for ${
+                                                                            entry.display_name ||
+                                                                            'Guest'
+                                                                        } has been copied to your clipboard.`,
+                                                                    })
                                                                 }
                                                             }}
                                                         >
@@ -443,11 +472,12 @@ export const QuestLeaderboard = ({
                                                             size="sm"
                                                             variant="noShadow"
                                                             className="h-7 px-2 text-xs text-green-700 shadow-none border-0 bg-transparent hover:bg-gray-100"
-                                                            onClick={() =>
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
                                                                 handleDeleteClick(
                                                                     entry
                                                                 )
-                                                            }
+                                                            }}
                                                         >
                                                             <FaTrash className="h-3 w-3 mr-1" />
                                                             Remove
