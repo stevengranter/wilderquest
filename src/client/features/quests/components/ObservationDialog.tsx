@@ -29,8 +29,8 @@ import { usePrefetchTaxonPhoto } from '@/hooks/useTaxonPhotos'
 
 interface ObservationDialogProps {
     species: INatTaxon
-    latitude: number
-    longitude: number
+    latitude?: number
+    longitude?: number
     locationName?: string
     children: ReactNode
     found?: boolean
@@ -42,20 +42,29 @@ export function ObservationDialog(props: ObservationDialogProps) {
     const prefetchTaxonPhoto = usePrefetchTaxonPhoto()
     const [open, setOpen] = useState(false)
 
+    console.log(
+        `ObservationDialog: Initialized for species ${species.id} (${species.name})`,
+        {
+            hasCoordinates: !!(latitude && longitude),
+            coordinates:
+                latitude && longitude ? `${latitude}, ${longitude}` : 'none',
+            locationName,
+            found,
+        }
+    )
+
     // preserve scroll when dialog opens/closes
     useEffect(() => {
-        let unlock: (() => void) | undefined
         if (open) {
-            unlock = lockScroll()
-        } else {
-            unlock?.()
+            console.log(
+                `ObservationDialog: Opened for species ${species.id} (${species.name})`
+            )
+            const unlock = lockScroll()
+            return unlock
         }
-        return () => unlock?.()
-    }, [open])
+    }, [open, species.id, species.name])
 
-    if (!latitude || !longitude) {
-        return <>{children}</>
-    }
+    // Always render the dialog, but pass location info if available
 
     return (
         <Dialog open={open} onOpenChange={setOpen} modal={false}>
@@ -124,14 +133,12 @@ export function ObservationDialog(props: ObservationDialogProps) {
 
                 {/* Right Column: Observations */}
                 <div className="flex-1 overflow-hidden -ml-10">
-                    {latitude && longitude && (
-                        <ObservationList
-                            taxonId={species.id}
-                            lat={latitude}
-                            lon={longitude}
-                            locationName={locationName}
-                        />
-                    )}
+                    <ObservationList
+                        taxonId={species.id}
+                        lat={latitude}
+                        lon={longitude}
+                        locationName={locationName}
+                    />
                 </div>
             </DialogContent>
         </Dialog>
@@ -165,24 +172,65 @@ function ObservationList({
     locationName,
 }: {
     taxonId: number
-    lat: number
-    lon: number
+    lat?: number
+    lon?: number
     locationName?: string
 }) {
     const [viewMode, setViewMode] = useState<ViewMode>('grid')
+    const [searchRadius, setSearchRadius] = useState<number>(10) // Default 10km radius
+    const [showGlobal, setShowGlobal] = useState<boolean>(false)
 
     // Ensure coords are numbers and round for stable caching
-    const roundedLat = Math.round(Number(lat) * 10000) / 10000
-    const roundedLon = Math.round(Number(lon) * 10000) / 10000
+    const hasValidCoords =
+        lat !== undefined &&
+        lon !== undefined &&
+        !isNaN(Number(lat)) &&
+        !isNaN(Number(lon))
+    const roundedLat = hasValidCoords
+        ? Math.round(Number(lat) * 10000) / 10000
+        : undefined
+    const roundedLon = hasValidCoords
+        ? Math.round(Number(lon) * 10000) / 10000
+        : undefined
 
     const {
         data: observations,
         isLoading,
         isError,
+        error,
     } = useQuery<Observation[], Error>({
-        queryKey: ['observations', taxonId, roundedLat, roundedLon],
-        queryFn: () => getObservationsFromINat(taxonId, roundedLat, roundedLon),
-        enabled: !!taxonId && !isNaN(roundedLat) && !isNaN(roundedLon),
+        queryKey: [
+            'observations',
+            taxonId,
+            roundedLat,
+            roundedLon,
+            searchRadius,
+            showGlobal,
+        ],
+        queryFn: () =>
+            getObservationsFromINat(
+                taxonId,
+                roundedLat,
+                roundedLon,
+                searchRadius,
+                showGlobal
+            ),
+        enabled: !!taxonId,
+        retry: (failureCount, error) => {
+            // Don't retry on 4xx errors (client errors)
+            if (
+                error &&
+                'status' in error &&
+                typeof error.status === 'number' &&
+                error.status >= 400 &&
+                error.status < 500
+            ) {
+                return false
+            }
+            // Retry up to 2 times for other errors
+            return failureCount < 2
+        },
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     })
 
     return (
@@ -197,11 +245,26 @@ function ObservationList({
                 <div className="flex flex-col">
                     <h3 className="text-lg font-semibold">
                         Recent Observations ({observations?.length || 0})
+                        {showGlobal && (
+                            <span className="text-xs text-green-600 ml-2">
+                                (Global)
+                            </span>
+                        )}
+                        {searchRadius > 10 && !showGlobal && (
+                            <span className="text-xs text-blue-600 ml-2">
+                                (Expanded)
+                            </span>
+                        )}
                     </h3>
                     <div className="flex flex-row items-center">
-                        <MdOutlineLocationOn className="mr-1" /> {
-                            locationName
-                        }{' '}
+                        <MdOutlineLocationOn className="mr-1" />
+                        {showGlobal
+                            ? 'Global observations'
+                            : locationName
+                              ? `${locationName}${hasValidCoords ? ` (${searchRadius}km radius)` : ''}`
+                              : hasValidCoords
+                                ? `${searchRadius}km radius`
+                                : 'Global observations'}
                     </div>
                 </div>
                 <ToggleGroup
@@ -252,7 +315,7 @@ function ObservationList({
                             className="absolute inset-0 overflow-y-auto pt-6 pb-6"
                         >
                             {isError ? (
-                                <ObservationErrorState />
+                                <ObservationErrorState error={error} />
                             ) : observations && observations.length > 0 ? (
                                 <>
                                     {viewMode === 'grid' && (
@@ -265,23 +328,74 @@ function ObservationList({
                                             observations={observations}
                                         />
                                     )}
-                                    {viewMode === 'map' && (
-                                        <ObservationMapView
-                                            observations={observations}
-                                            center={[lat, lon]}
-                                        />
-                                    )}
+                                    {viewMode === 'map' &&
+                                        lat !== undefined &&
+                                        lon !== undefined && (
+                                            <ObservationMapView
+                                                observations={observations}
+                                                center={[lat, lon]}
+                                            />
+                                        )}
                                 </>
                             ) : (
-                                <motion.p
+                                <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.4, delay: 0.3 }}
-                                    className="text-center py-8 text-muted-foreground"
+                                    className="text-center py-8"
                                 >
-                                    No observations found for this species in
-                                    this area.
-                                </motion.p>
+                                    <p className="text-muted-foreground mb-4">
+                                        {hasValidCoords && !showGlobal
+                                            ? `No observations found for this species within ${searchRadius}km.`
+                                            : `No observations found for this species globally.`}
+                                    </p>
+
+                                    {hasValidCoords &&
+                                        !showGlobal &&
+                                        searchRadius < 100 && (
+                                            <div className="flex flex-col gap-3 items-center">
+                                                <button
+                                                    onClick={() =>
+                                                        setSearchRadius(
+                                                            Math.min(
+                                                                searchRadius *
+                                                                    2,
+                                                                100
+                                                            )
+                                                        )
+                                                    }
+                                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
+                                                >
+                                                    Expand search to{' '}
+                                                    {Math.min(
+                                                        searchRadius * 2,
+                                                        100
+                                                    )}
+                                                    km
+                                                </button>
+                                                <button
+                                                    onClick={() =>
+                                                        setShowGlobal(true)
+                                                    }
+                                                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm"
+                                                >
+                                                    Show global observations
+                                                </button>
+                                            </div>
+                                        )}
+
+                                    {hasValidCoords && showGlobal && (
+                                        <button
+                                            onClick={() => {
+                                                setShowGlobal(false)
+                                                setSearchRadius(10)
+                                            }}
+                                            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors text-sm"
+                                        >
+                                            Back to local search
+                                        </button>
+                                    )}
+                                </motion.div>
                             )}
                         </motion.div>
                     </AnimatePresence>
@@ -366,29 +480,96 @@ function ObservationLoadingState() {
 }
 
 // Error State Component
-function ObservationErrorState() {
+function ObservationErrorState({ error }: { error?: Error }) {
+    const getErrorMessage = (error?: Error) => {
+        if (!error) return 'Error fetching observations.'
+
+        // Check for specific error types
+        if ('status' in error) {
+            const status = error.status as number
+            if (status === 429) {
+                return 'Too many requests. Please wait a moment and try again.'
+            }
+            if (status === 404) {
+                return 'Species not found in the database.'
+            }
+            if (status >= 500) {
+                return 'Server error. Please try again later.'
+            }
+            if (status >= 400) {
+                return 'Unable to fetch observations. Please check your connection.'
+            }
+        }
+
+        // Network or other errors
+        if (
+            error.message?.includes('Network Error') ||
+            error.message?.includes('fetch')
+        ) {
+            return 'Network error. Please check your internet connection and try again.'
+        }
+
+        return 'Error fetching observations. Please try again.'
+    }
+
     return (
-        <motion.p
-            className="mt-4 text-red-500 text-center py-8"
+        <motion.div
+            className="mt-4 text-center py-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
         >
-            Error fetching observations.
-        </motion.p>
+            <p className="text-red-500 mb-4">{getErrorMessage(error)}</p>
+            <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            >
+                Retry
+            </button>
+        </motion.div>
     )
 }
 
 async function getObservationsFromINat(
     taxonId: number,
-    lat: number,
-    lon: number
+    lat?: number,
+    lon?: number,
+    radius: number = 10,
+    globalSearch: boolean = false
 ) {
-    const response = await api.get(
-        `/iNatAPI/observations?taxon_id=${taxonId}&lat=${lat}&lng=${lon}&radius=10&per_page=6&order_by=observed_on`
-    )
-    if (!response.data) {
-        return []
+    let url = `/iNatAPI/observations?taxon_id=${taxonId}&per_page=6&order_by=observed_on`
+
+    // Add location parameters if coordinates are provided and not doing global search
+    if (!globalSearch && lat !== undefined && lon !== undefined) {
+        url += `&lat=${lat}&lng=${lon}&radius=${radius}`
     }
-    return response.data.results
+
+    try {
+        const searchType = globalSearch
+            ? 'global'
+            : lat !== undefined && lon !== undefined
+              ? `at ${lat}, ${lon} (radius: ${radius}km)`
+              : 'global'
+        console.log(
+            `Fetching observations for taxon ${taxonId} (${searchType})`
+        )
+        const response = await api.get(url)
+
+        if (!response.data) {
+            console.warn(`No data returned for observations request: ${url}`)
+            return []
+        }
+
+        const results = response.data.results || []
+        console.log(
+            `Fetched ${results.length} observations for taxon ${taxonId}`
+        )
+        return results
+    } catch (error) {
+        console.error(
+            `Error fetching observations for taxon ${taxonId}:`,
+            error
+        )
+        throw error
+    }
 }

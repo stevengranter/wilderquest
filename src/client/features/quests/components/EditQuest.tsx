@@ -256,7 +256,7 @@ export default function EditQuest() {
         const taxon_ids = taxa.map((t) => t.id)
         const payload = {
             name: data.questName,
-            location_name: data.locationName,
+            location_name: data.locationName || null,
             latitude: data.latitude,
             longitude: data.longitude,
             is_private: data.isPrivate,

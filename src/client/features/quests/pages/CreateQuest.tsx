@@ -105,7 +105,7 @@ export function CreateQuest() {
                 } = values
                 const payload = {
                     name: questName,
-                    location_name: locationName,
+                    location_name: locationName || null,
                     latitude: latitude,
                     longitude: longitude,
                     mode: mode,

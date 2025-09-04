@@ -50,16 +50,21 @@ export function SpeciesCardWithObservations(
         />
     )
 
-    if (!displayData?.latitude || !displayData?.longitude) {
-        return card
-    }
+    console.log(
+        `SpeciesCardWithObservations: Rendering for species ${species.id} (${species.name})`,
+        {
+            hasLocation: !!(displayData?.latitude && displayData?.longitude),
+            locationName: displayData?.location_name,
+            found,
+        }
+    )
 
     return (
         <ObservationDialog
             species={species}
-            latitude={displayData.latitude}
-            longitude={displayData.longitude}
-            locationName={displayData.location_name}
+            latitude={displayData?.latitude}
+            longitude={displayData?.longitude}
+            locationName={displayData?.location_name}
             found={found}
         >
             {card}

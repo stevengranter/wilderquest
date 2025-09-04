@@ -144,6 +144,17 @@ export function LocationInput({
 
                     <FormDescription>{description}</FormDescription>
                     <FormMessage />
+                    {watch &&
+                        !watch('latitude') &&
+                        !watch('longitude') &&
+                        field.value &&
+                        typeof field.value === 'string' &&
+                        field.value.trim().length > 0 && (
+                            <p className="text-sm text-amber-600 mt-1">
+                                Please select a location from the suggestions
+                                above to set coordinates.
+                            </p>
+                        )}
                 </FormItem>
             )}
         />

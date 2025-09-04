@@ -8,9 +8,8 @@ export default function App() {
         <AppProviders>
 
             {/*<ChatbotOld />*/}
-            <RouterProvider router={router}>
+            <RouterProvider router={router} />
 
-            </RouterProvider>
         </AppProviders>
     )
 }

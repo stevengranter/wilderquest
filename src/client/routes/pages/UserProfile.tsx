@@ -97,17 +97,17 @@ function UserQuests({
     )
 }
 
-// function offsetAvatarSvg(svg: string, x: number, y: number): string {
-//     // Extract the SVG contents inside the <svg>...</svg>
-//     const svgContentMatch = svg.match(/<svg[^>]*>([\s\S]*?)<\/svg>/)
-//     if (!svgContentMatch) return svg
+function offsetAvatarSvg(svg: string, x: number, y: number): string {
+    // Extract the SVG contents inside the <svg>...</svg>
+    const svgContentMatch = svg.match(/<svg[^>]*>([\s\S]*?)<\/svg>/)
+    if (!svgContentMatch) return svg
 
-//     const innerContent = svgContentMatch[1]
-//     const wrappedContent = `<g transform="translate(${x}, ${y})">${innerContent}</g>`
+    const innerContent = svgContentMatch[1]
+    const wrappedContent = `<g transform="translate(${x}, ${y})">${innerContent}</g>`
 
-//     // Replace original inner content with transformed group
-//     return svg.replace(innerContent, wrappedContent)
-// }
+    // Replace original inner content with transformed group
+    return svg.replace(innerContent, wrappedContent)
+}
 
 const UserProfile = () => {
     const { username } = useParams<{ username: string }>()
@@ -125,7 +125,7 @@ const UserProfile = () => {
 
     const { data: userStats, isLoading: statsLoading } = useUserStats(username)
 
-    const handleUserSelect = (selectedUser: SafeUser) => {
+    const _handleUserSelect = (selectedUser: SafeUser) => {
         // Navigate to the selected user's profile
         navigate(`/users/${selectedUser.username}`)
     }
@@ -139,9 +139,9 @@ const UserProfile = () => {
     }
 
     const avatarSvg = avatar(user.username, {
-        size: 120,
+        size: 140,
     })
-    // const offsetSvg = offsetAvatarSvg(avatarSvg, 25, 15)
+    const offsetSvg = offsetAvatarSvg(avatarSvg, -20, -25)
     const isOwnProfile = authUser?.username === user.username
 
     return (
@@ -151,7 +151,7 @@ const UserProfile = () => {
                     <div className="flex-shrink-0">
                         <ReactSVG
                             src={`data:image/svg+xml;utf8,${encodeURIComponent(
-                                avatarSvg
+                                offsetSvg
                             )}`}
                             className="w-24 h-24 rounded-full overflow-hidden border-2 border-border"
                         />
@@ -171,26 +171,26 @@ const UserProfile = () => {
                 </div>
             </div>
 
-            {/* User Search Section */}
-            <div className="mb-8">
-                <Card>
-                    <CardContent className="p-6">
-                        <h3 className="text-lg font-semibold mb-3">
-                            Discover Other Users
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                            Search for other users to view their profiles and
-                            quests.
-                        </p>
-                        <UserSearch
-                            onUserSelect={handleUserSelect}
-                            placeholder="Search for users..."
-                            className="max-w-md"
-                            excludeCurrentUser={true}
-                        />
-                    </CardContent>
-                </Card>
-            </div>
+            {/*/!* User Search Section *!/*/}
+            {/*<div className="mb-8">*/}
+            {/*    <Card>*/}
+            {/*        <CardContent className="p-6">*/}
+            {/*            <h3 className="text-lg font-semibold mb-3">*/}
+            {/*                Discover Other Users*/}
+            {/*            </h3>*/}
+            {/*            <p className="text-sm text-muted-foreground mb-4">*/}
+            {/*                Search for other users to view their profiles and*/}
+            {/*                quests.*/}
+            {/*            </p>*/}
+            {/*            <UserSearch*/}
+            {/*                onUserSelect={handleUserSelect}*/}
+            {/*                placeholder="Search for users..."*/}
+            {/*                className="max-w-md"*/}
+            {/*                excludeCurrentUser={true}*/}
+            {/*            />*/}
+            {/*        </CardContent>*/}
+            {/*    </Card>*/}
+            {/*</div>*/}
 
             <div className="mb-8">
                 <div className="flex items-center justify-between mb-6">
