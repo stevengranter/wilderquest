@@ -11,7 +11,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSelectionContext } from '@/contexts/selection/SelectionContext'
 import { cn } from '@/lib/utils'
-import { useProgressiveImage } from '@/hooks/useProgressiveImage'
+import { useLazyImage } from '@/hooks/useLazyImage'
 import { BiWorld } from 'react-icons/bi'
 import { AvatarOverlay } from './AvatarOverlay'
 
@@ -102,14 +102,42 @@ export function SpeciesCard({
     )
 }
 
-export function SpeciesCardSkeleton() {
+interface SpeciesCardSkeletonProps {
+    phase?: 'data' | 'image' | 'complete'
+}
+
+export function SpeciesCardSkeleton({
+    phase = 'data',
+}: SpeciesCardSkeletonProps) {
+    const getSkeletonColor = () => {
+        switch (phase) {
+            case 'data':
+                return 'bg-gradient-to-b from-gray-200 via-gray-100 to-gray-200'
+            case 'image':
+                return 'bg-gradient-to-b from-blue-100 via-blue-50 to-blue-100'
+            case 'complete':
+                return 'bg-gradient-to-b from-green-100 via-green-50 to-green-100'
+            default:
+                return 'bg-gradient-to-b from-gray-200 via-gray-100 to-gray-200'
+        }
+    }
+
     return (
-        <Card className="aspect-2.5/3.5 overflow-hidden bg-gradient-to-b from-gray-200 via-gray-100 to-gray-200 shadow-0 py-0 gap-0 border-3 rounded-xl border-gray-300">
+        <Card
+            className={`aspect-2.5/3.5 overflow-hidden ${getSkeletonColor()} shadow-0 py-0 gap-0 border-3 rounded-xl border-gray-300 animate-pulse`}
+        >
             <CardHeader className="gap-0 pt-2 pb-2">
                 <Skeleton className="h-6 w-3/4" />
             </CardHeader>
             <CardContent className="relative px-0 mx-6">
                 <Skeleton className="w-full aspect-square rounded-sm" />
+                {phase === 'image' && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-xs text-blue-600 font-medium">
+                            Loading image...
+                        </div>
+                    </div>
+                )}
             </CardContent>
             <CardContent className="block sm:hidden md:block">
                 <div className="h-full bg-gray-200 text-xs content-start text-left p-2 outline-2 rounded-sm">
@@ -119,6 +147,13 @@ export function SpeciesCardSkeleton() {
             </CardContent>
             <CardFooter className="py-4 gap-2">
                 <Skeleton className="h-6 w-1/4" />
+                {phase === 'complete' && (
+                    <div className="absolute bottom-2 right-2">
+                        <div className="text-xs text-green-600 font-medium">
+                            ✓ Ready
+                        </div>
+                    </div>
+                )}
             </CardFooter>
         </Card>
     )
@@ -158,10 +193,12 @@ function SpeciesGridItem({
     } | null
 }) {
     const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
-    const { src, isBlurred } = useProgressiveImage(
-        species.default_photo?.square_url || '',
-        species.default_photo?.medium_url || ''
-    )
+    const { src, isBlurred, imgRef } = useLazyImage({
+        lowQualitySrc: species.default_photo?.square_url || '',
+        highQualitySrc: species.default_photo?.medium_url || '',
+        rootMargin: '100px', // Load high-res when image is 100px from viewport
+        threshold: 0.1,
+    })
 
     const hoverClasses = {
         lift: 'hover:shadow-shadow hover:-translate-y-2 hover:-translate-x-2',
@@ -227,6 +264,7 @@ function SpeciesGridItem({
                     {src ? (
                         <div className="overflow-hidden w-full h-full aspect-square rounded-sm">
                             <img
+                                ref={imgRef}
                                 src={src}
                                 alt={species.name}
                                 className={cn(
@@ -317,10 +355,12 @@ function SpeciesListItem({
     found?: boolean
     hoverEffect?: 'lift' | 'shadow' | 'none'
 }) {
-    const { src, isBlurred } = useProgressiveImage(
-        species.default_photo?.square_url || '',
-        species.default_photo?.medium_url || ''
-    )
+    const { src, isBlurred, imgRef } = useLazyImage({
+        lowQualitySrc: species.default_photo?.square_url || '',
+        highQualitySrc: species.default_photo?.medium_url || '',
+        rootMargin: '100px', // Load high-res when image is 100px from viewport
+        threshold: 0.1,
+    })
     const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
 
     const hoverClasses = {
@@ -350,6 +390,7 @@ function SpeciesListItem({
             {src && (
                 <div className="overflow-hidden h-16 w-16 rounded-sm flex-shrink-0">
                     <img
+                        ref={imgRef}
                         src={src}
                         alt={species.name}
                         className={cn(

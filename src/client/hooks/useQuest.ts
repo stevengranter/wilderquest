@@ -3,6 +3,7 @@ import {
     QueryClient,
     useMutation,
     useQuery,
+    useInfiniteQuery,
     useQueryClient,
 } from '@tanstack/react-query'
 import chunk from 'lodash/chunk'
@@ -90,6 +91,65 @@ export const fetchTaxa = async (taxonIds: number[]) => {
     return taxaData.flatMap((data) => data)
 }
 
+// New paginated version for UI-level pagination
+export const fetchTaxaPaginated = async ({
+    taxonIds,
+    pageParam = 1,
+    pageSize = 12,
+}: {
+    taxonIds: number[]
+    pageParam?: number
+    pageSize?: number
+}) => {
+    if (!taxonIds || taxonIds.length === 0) {
+        return { taxa: [], nextPage: undefined, totalCount: 0 }
+    }
+
+    // Filter out invalid taxon IDs
+    const validTaxonIds = taxonIds.filter(
+        (id) => id && typeof id === 'number' && id > 0
+    )
+
+    if (validTaxonIds.length === 0) {
+        return { taxa: [], nextPage: undefined, totalCount: 0 }
+    }
+
+    // Calculate pagination indices
+    const startIndex = (pageParam - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    const paginatedTaxonIds = validTaxonIds.slice(startIndex, endIndex)
+
+    if (paginatedTaxonIds.length === 0) {
+        return {
+            taxa: [],
+            nextPage: undefined,
+            totalCount: validTaxonIds.length,
+        }
+    }
+
+    // Fetch taxa for this page
+    const taxonIdChunks = chunk(paginatedTaxonIds, 30)
+    const taxaData = await Promise.all(
+        taxonIdChunks.map(async (ids) => {
+            const fields =
+                'id,name,preferred_common_name,default_photo,iconic_taxon_name,rank,observations_count,wikipedia_url'
+            const { data } = await api.get(
+                `/iNatAPI/taxa/${ids.join(',')}?fields=${fields}`
+            )
+            return data.results || []
+        })
+    )
+
+    const taxa = taxaData.flatMap((data) => data)
+    const nextPage = endIndex < validTaxonIds.length ? pageParam + 1 : undefined
+
+    return {
+        taxa,
+        nextPage,
+        totalCount: validTaxonIds.length,
+    }
+}
+
 const fetchMappingsAndProgress = async (
     qid: string | number
 ): Promise<ProgressData> => {
@@ -158,6 +218,9 @@ export const useQuestOwner = ({
             isQuestSuccess && !!(quest as QuestWithTaxa)?.taxon_ids?.length,
         staleTime: 1000 * 60 * 5, // 5 minutes
     })
+
+    // For pagination, we'll implement UI-level pagination in the component
+    // This keeps the data structure simple while allowing progressive loading
 
     const progressQuery = useQuery({
         queryKey: ['progress', quest?.id],
@@ -316,7 +379,7 @@ export const useQuestOwner = ({
             leaderboardQuery.isLoading,
         isTaxaLoading: questQuery.isLoading || taxaQuery.isLoading,
         isTaxaFetchingNextPage: taxaQuery.isFetching,
-        taxaHasNextPage: false,
+        taxaHasNextPage: false, // Will be updated when we implement UI pagination
         fetchNextTaxaPage: () => {
             // Placeholder for future pagination - taxa are loaded in single request
         },

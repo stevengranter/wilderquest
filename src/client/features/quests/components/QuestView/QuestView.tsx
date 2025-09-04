@@ -9,6 +9,7 @@ import { TaxaPieChart } from './parts/TaxaPieChart'
 import { QuestSpecies } from './parts/QuestSpecies'
 import { QuestControls } from './parts/QuestControls'
 import { QuestSummaryModal } from '../QuestSummaryModal'
+import { ClientQuest } from '../SpeciesCardWithObservations'
 import { useAuth } from '@/hooks/useAuth'
 import { useState, useEffect } from 'react'
 
@@ -71,11 +72,18 @@ export const QuestView = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <QuestHeader
-                questData={questData}
-                isOwner={isOwner}
-                share={share}
-            />
+            {questData && (
+                <QuestHeader
+                    questData={
+                        {
+                            ...questData,
+                            user_id: questData.user_id.toString(),
+                        } as ClientQuest
+                    }
+                    isOwner={isOwner}
+                    share={share}
+                />
+            )}
 
             <div className="grid grid-cols-2 gap-8 items-start">
                 <QuestLeaderboard
@@ -105,26 +113,38 @@ export const QuestView = () => {
                 </div>
             </div>
 
-            <QuestSpecies
-                taxaWithProgress={taxaWithProgress}
-                questData={questData}
-                isOwner={isOwner}
-                token={token}
-                share={share}
-                detailedProgress={detailedProgress}
-                aggregatedProgress={aggregatedProgress}
-                isTaxaFetchingNextPage={isTaxaFetchingNextPage}
-                taxaHasNextPage={taxaHasNextPage}
-                fetchNextTaxaPage={fetchNextTaxaPage}
-                taxa={taxa}
-                mappings={mappings?.map((m) => ({
-                    ...m,
-                    created_at: m.created_at || new Date().toISOString(),
-                }))} // Convert TaxonMapping to QuestMapping
-                updateStatus={updateStatus} // updateStatus is optional in the component
-                isTaxaLoading={isTaxaLoading}
-                user={user || undefined}
-            />
+            {questData && (
+                <QuestSpecies
+                    taxaWithProgress={taxaWithProgress}
+                    questData={
+                        {
+                            ...questData,
+                            user_id: questData.user_id.toString(),
+                        } as ClientQuest
+                    }
+                    isOwner={isOwner}
+                    token={token}
+                    share={share}
+                    detailedProgress={detailedProgress}
+                    aggregatedProgress={aggregatedProgress}
+                    isTaxaFetchingNextPage={isTaxaFetchingNextPage}
+                    taxaHasNextPage={taxaHasNextPage}
+                    fetchNextTaxaPage={fetchNextTaxaPage}
+                    taxa={taxa}
+                    mappings={mappings?.map((m) => ({
+                        ...m,
+                        created_at: m.created_at || new Date().toISOString(),
+                    }))} // Convert TaxonMapping to QuestMapping
+                    updateStatus={
+                        updateStatus ||
+                        (() => {
+                            // Fallback function for guests who cannot update quest status
+                        })
+                    }
+                    isTaxaLoading={isTaxaLoading}
+                    user={user || undefined}
+                />
+            )}
 
             {canEdit && updateStatus && (
                 <div className="py-4">

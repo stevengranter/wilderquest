@@ -1,14 +1,23 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { ClientQuest, SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
+import {
+    ClientQuest,
+    SpeciesCardWithObservations,
+} from '@/features/quests/components/SpeciesCardWithObservations'
 import { SpeciesCardSkeleton } from '@/features/quests/components/SpeciesCard'
 import { FoundButton } from '@/features/quests/components/FoundButton'
 import { QuestListView } from '../../QuestListView'
 import { QuestMapView } from '../../QuestMapView'
 // Import QuestMapping type
-import { AggregatedProgress, DetailedProgress, QuestMapping, QuestStatus, Share } from '@/features/quests/types'
+import {
+    AggregatedProgress,
+    DetailedProgress,
+    QuestMapping,
+    QuestStatus,
+    Share,
+} from '@/features/quests/types'
 import { INatTaxon } from '@shared/types/iNatTypes'
 import { LoggedInUser } from '@shared/types/authTypes'
 import { useSpeciesActions, useSpeciesProgress } from '@/hooks/useQuest'
@@ -60,6 +69,13 @@ export const QuestSpecies = ({
 }: QuestSpeciesProps) => {
     const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid')
 
+    // Batched rendering state - combined for all species
+    const [visibleCount, setVisibleCount] = useState(24) // Start with 24 species total
+    const [isLoadingMore, setIsLoadingMore] = useState(false)
+    const batchSize = 24 // Load 24 more species at a time
+
+    const observer = useRef<IntersectionObserver | null>(null)
+
     // Use the hooks from useQuest
     const { handleProgressUpdate, getAvatarOverlay } = useSpeciesProgress({
         mappings,
@@ -76,20 +92,34 @@ export const QuestSpecies = ({
         share,
     })
 
-    const observer = useRef<IntersectionObserver | null>(null)
+    // Load more species in batches - combined for all species
+    const loadMoreSpecies = useCallback(async () => {
+        if (isLoadingMore || visibleCount >= taxaWithProgress.length) return
+
+        setIsLoadingMore(true)
+        // Simulate loading delay for better UX
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        setVisibleCount((prev) =>
+            Math.min(prev + batchSize, taxaWithProgress.length)
+        )
+        setIsLoadingMore(false)
+    }, [isLoadingMore, visibleCount, taxaWithProgress.length, batchSize])
 
     const lastTaxonElementRef = useCallback(
         (node: HTMLDivElement) => {
-            if (isTaxaFetchingNextPage) return
+            if (isLoadingMore) return
             if (observer.current) observer.current.disconnect()
             observer.current = new IntersectionObserver((entries) => {
-                if (entries[0].isIntersecting && taxaHasNextPage) {
-                    fetchNextTaxaPage()
+                if (
+                    entries[0].isIntersecting &&
+                    visibleCount < taxaWithProgress.length
+                ) {
+                    loadMoreSpecies()
                 }
             })
             if (node) observer.current.observe(node)
         },
-        [isTaxaFetchingNextPage, taxaHasNextPage, fetchNextTaxaPage]
+        [isLoadingMore, visibleCount, taxaWithProgress.length, loadMoreSpecies]
     )
 
     // Create wrapper functions for the hook functions
@@ -157,7 +187,11 @@ export const QuestSpecies = ({
 
     // Extract skeleton rendering
     const renderSkeletons = useCallback(
-        (keyPrefix: string, count: number = 6) => {
+        (
+            keyPrefix: string,
+            count: number = 6,
+            phase: 'data' | 'image' | 'complete' = 'data'
+        ) => {
             return Array.from({
                 length: Math.min(mappings?.length || count, count),
             }).map((_, i) => (
@@ -167,8 +201,9 @@ export const QuestSpecies = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
+                    transition={{ delay: i * 0.05 }} // Stagger animation
                 >
-                    <SpeciesCardSkeleton />
+                    <SpeciesCardSkeleton phase={phase} />
                 </motion.div>
             ))
         },
@@ -181,7 +216,7 @@ export const QuestSpecies = ({
             return (
                 <motion.div
                     key={taxon.id}
-                    ref={isLast ? lastTaxonElementRef : null}
+                    ref={isLast ? lastTaxonElementRef : undefined}
                     className="relative"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -205,41 +240,11 @@ export const QuestSpecies = ({
         ]
     )
 
-    // Extract section rendering
-    const renderSpeciesSection = useCallback(
-        (
-            title: string,
-            taxa: TaxonWithProgress[],
-            keyPrefix: string,
-            enableInfiniteScroll = false
-        ) => {
-            return (
-                <div>
-                    <h3 className="text-lg font-semibold mb-3">
-                        {title} ({isTaxaLoading ? '...' : taxa.length})
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 lg:gap-6 auto-rows-fr">
-                        <AnimatePresence mode="popLayout">
-                            {isTaxaLoading
-                                ? renderSkeletons(keyPrefix)
-                                : taxa.map((taxon, index, arr) =>
-                                      renderSpeciesCard(
-                                          taxon,
-                                          index,
-                                          enableInfiniteScroll &&
-                                              index === arr.length - 1
-                                      )
-                                  )}
-                        </AnimatePresence>
-                    </div>
-                </div>
-            )
-        },
-        [isTaxaLoading, renderSkeletons, renderSpeciesCard]
-    )
-
-    const notFoundTaxa = taxaWithProgress.filter((t) => !t.isFound)
-    const foundTaxa = taxaWithProgress.filter((t) => t.isFound)
+    // Reset visible count when taxa data changes
+    useEffect(() => {
+        setVisibleCount(24) // Reset to initial batch size
+        setIsLoadingMore(false)
+    }, [taxaWithProgress.length])
 
     return (
         <div className="mt-8">
@@ -271,13 +276,69 @@ export const QuestSpecies = ({
             {/* View Content */}
             {viewMode === 'grid' && (
                 <div className="space-y-8">
-                    {renderSpeciesSection(
-                        'Not Found',
-                        notFoundTaxa,
-                        'not-found',
-                        true
-                    )}
-                    {renderSpeciesSection('Found', foundTaxa, 'found')}
+                    {/* Combined section for all species */}
+                    <div>
+                        <h3 className="text-lg font-semibold mb-3">
+                            All Species (
+                            {isTaxaLoading ? '...' : taxaWithProgress.length})
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 lg:gap-6 auto-rows-fr">
+                            <AnimatePresence mode="popLayout">
+                                {isTaxaLoading
+                                    ? renderSkeletons('all-species')
+                                    : taxaWithProgress
+                                          .slice(0, visibleCount)
+                                          .map((taxon, index, arr) =>
+                                              renderSpeciesCard(
+                                                  taxon,
+                                                  index,
+                                                  index === arr.length - 1 &&
+                                                      visibleCount <
+                                                          taxaWithProgress.length
+                                              )
+                                          )}
+                            </AnimatePresence>
+
+                            {/* Enhanced loading indicator for batched loading */}
+                            {isLoadingMore &&
+                                visibleCount < taxaWithProgress.length && (
+                                    <motion.div
+                                        className="col-span-full flex justify-center py-4"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                    >
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
+                                            Loading more species... (
+                                            {visibleCount} of{' '}
+                                            {taxaWithProgress.length})
+                                        </div>
+                                    </motion.div>
+                                )}
+
+                            {/* Show "Load More" button when near the end */}
+                            {!isLoadingMore &&
+                                visibleCount < taxaWithProgress.length &&
+                                visibleCount >
+                                    taxaWithProgress.length * 0.8 && (
+                                    <motion.div
+                                        className="col-span-full flex justify-center py-4"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                    >
+                                        <button
+                                            onClick={loadMoreSpecies}
+                                            className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                                            disabled={isLoadingMore}
+                                        >
+                                            Load More Species
+                                        </button>
+                                    </motion.div>
+                                )}
+                        </div>
+                    </div>
                 </div>
             )}
 
