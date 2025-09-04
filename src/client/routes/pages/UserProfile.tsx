@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, useParams } from 'react-router'
+import { Link, useParams, useNavigate } from 'react-router'
 import { ReactSVG } from 'react-svg'
 import avatar from 'animal-avatar-generator'
 import api from '@/api/api'
@@ -12,6 +12,8 @@ import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 import { QuestCardSkeleton } from '@/features/quests/components/QuestCardSkeleton'
 import { UserStats } from '@/components/UserStats'
 import { useUserStats } from '@/hooks/useUserStats'
+import { UserSearch } from '@/components/UserSearch'
+import { type SafeUser } from '@/hooks/useUserSearch'
 
 function UserQuests({
     userId,
@@ -110,6 +112,7 @@ function UserQuests({
 const UserProfile = () => {
     const { username } = useParams<{ username: string }>()
     const { user: authUser } = useAuth()
+    const navigate = useNavigate()
     const {
         data: user,
         isLoading,
@@ -122,6 +125,11 @@ const UserProfile = () => {
 
     const { data: userStats, isLoading: statsLoading } = useUserStats(username)
 
+    const handleUserSelect = (selectedUser: SafeUser) => {
+        // Navigate to the selected user's profile
+        navigate(`/users/${selectedUser.username}`)
+    }
+
     if (isLoading) {
         return <div>Loading...</div>
     }
@@ -132,7 +140,6 @@ const UserProfile = () => {
 
     const avatarSvg = avatar(user.username, {
         size: 120,
-        padding: 200,
     })
     // const offsetSvg = offsetAvatarSvg(avatarSvg, 25, 15)
     const isOwnProfile = authUser?.username === user.username
@@ -162,6 +169,27 @@ const UserProfile = () => {
                         </p>
                     </div>
                 </div>
+            </div>
+
+            {/* User Search Section */}
+            <div className="mb-8">
+                <Card>
+                    <CardContent className="p-6">
+                        <h3 className="text-lg font-semibold mb-3">
+                            Discover Other Users
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            Search for other users to view their profiles and
+                            quests.
+                        </p>
+                        <UserSearch
+                            onUserSelect={handleUserSelect}
+                            placeholder="Search for users..."
+                            className="max-w-md"
+                            excludeCurrentUser={true}
+                        />
+                    </CardContent>
+                </Card>
             </div>
 
             <div className="mb-8">

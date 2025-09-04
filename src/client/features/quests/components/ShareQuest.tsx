@@ -1,19 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FaShareFromSquare } from 'react-icons/fa6'
+import { FaShareFromSquare, FaPlus } from 'react-icons/fa6'
+import { motion, AnimatePresence } from 'motion/react'
 import api from '@/api/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog'
 import { useAuth } from '@/hooks/useAuth'
 import { useQueryClient } from '@tanstack/react-query'
+import { UserSearch } from '@/components/UserSearch'
+import { type SafeUser } from '@/hooks/useUserSearch'
 
 type QuestShare = {
     id: number
@@ -21,6 +16,8 @@ type QuestShare = {
     quest_id: number
     created_by_user_id: number
     guest_name?: string | null
+    shared_with_user_id?: number | null
+    invited_username?: string | null
     expires_at?: string | null
     is_primary?: boolean
     created_at: string
@@ -31,10 +28,16 @@ export function ShareQuest({
     questId,
     ownerUserId,
     questName,
+    showDrawerOnly = false,
+    showForm: externalShowForm,
+    onToggleForm: externalOnToggleForm,
 }: {
     questId: number | string
     ownerUserId: number | string
     questName?: string
+    showDrawerOnly?: boolean
+    showForm?: boolean
+    onToggleForm?: (show: boolean) => void
 }) {
     const { user } = useAuth()
     const queryClient = useQueryClient()
@@ -43,15 +46,22 @@ export function ShareQuest({
         return Number(ownerUserId) === Number(user.id)
     }, [user, ownerUserId])
 
-    const [open, setOpen] = useState(false)
+    const [internalShowForm, setInternalShowForm] = useState(false)
+    const showForm =
+        externalShowForm !== undefined ? externalShowForm : internalShowForm
+    const setShowForm = externalOnToggleForm || setInternalShowForm
     const [shares, setShares] = useState<QuestShare[]>([])
     const [loading, setLoading] = useState(false)
     const [creating, setCreating] = useState(false)
+    const [invitationMode, setInvitationMode] = useState<'guest' | 'user'>(
+        'guest'
+    )
     const [guestName, setGuestName] = useState('')
+    const [selectedUser, setSelectedUser] = useState<SafeUser | null>(null)
     const [expiresAt, setExpiresAt] = useState<string>('')
 
     useEffect(() => {
-        if (!open || !isOwner) return
+        if (!showForm || !isOwner) return
         const fetchShares = async () => {
             setLoading(true)
             try {
@@ -66,21 +76,38 @@ export function ShareQuest({
             }
         }
         fetchShares()
-    }, [open, isOwner, questId])
+    }, [showForm, isOwner, questId])
 
     const createShare = async () => {
         setCreating(true)
         try {
-            const payload: { guest_name?: string; expires_at?: string } = {}
-            if (guestName) payload.guest_name = guestName
+            const payload: {
+                guest_name?: string
+                shared_with_user_id?: number
+                expires_at?: string
+            } = {}
+
+            if (invitationMode === 'guest') {
+                if (guestName) payload.guest_name = guestName
+            } else if (invitationMode === 'user' && selectedUser) {
+                payload.shared_with_user_id = selectedUser.id
+            }
+
             if (expiresAt)
                 payload.expires_at = new Date(expiresAt).toISOString()
+
             const res = await api.post(
                 `/quest-sharing/quests/${questId}/shares`,
                 payload
             )
             setShares((prev) => [res.data, ...prev])
-            setGuestName('')
+
+            // Reset form
+            if (invitationMode === 'guest') {
+                setGuestName('')
+            } else {
+                setSelectedUser(null)
+            }
             setExpiresAt('')
 
             // Invalidate leaderboard queries so they update immediately
@@ -116,154 +143,155 @@ export function ShareQuest({
     if (!isOwner) return null
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button size="sm">Add explorer</Button>
-            </DialogTrigger>
-            <DialogContent className="max-h-[80vh] flex flex-col">
-                <DialogHeader className="flex-shrink-0">
-                    <DialogTitle>Share this quest</DialogTitle>
-                    <DialogDescription>
-                        Create a share link to let someone mark species as
-                        observed. Only you (the owner) can manage links.
-                    </DialogDescription>
-                </DialogHeader>
+        <div className={showDrawerOnly ? 'w-full' : 'relative'}>
+            {!showDrawerOnly && (
+                <Button
+                    size="sm"
+                    onClick={() => setShowForm(!showForm)}
+                    variant="default"
+                >
+                    <FaPlus className="h-4 w-4 mr-2" />
+                    Invite Explorer
+                </Button>
+            )}
 
-                <div className="flex-1 overflow-y-auto space-y-4">
-                    <div className="space-y-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="guestName">
-                                Guest name (optional)
-                            </Label>
-                            <Input
-                                id="guestName"
-                                placeholder="e.g. Alex"
-                                value={guestName}
-                                onChange={(e) => setGuestName(e.target.value)}
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="expiresAt">
-                                Expires at (optional)
-                            </Label>
-                            <Input
-                                id="expiresAt"
-                                type="datetime-local"
-                                value={expiresAt}
-                                onChange={(e) => setExpiresAt(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex justify-end">
-                            <Button onClick={createShare} disabled={creating}>
-                                {creating ? 'Creating…' : 'Create share link'}
-                            </Button>
-                        </div>
-                    </div>
-
-                    <div className="mt-4">
-                        <h3 className="font-medium mb-2">
-                            Existing share links
-                        </h3>
-                        {loading ? (
-                            <div>Loading…</div>
-                        ) : shares.length === 0 ? (
-                            <div className="text-sm text-muted-foreground">
-                                No shares yet.
+            <AnimatePresence>
+                {showForm && showDrawerOnly && (
+                    <motion.div
+                        initial={{ opacity: 0, maxHeight: 0, y: -5 }}
+                        animate={{ opacity: 1, maxHeight: 500, y: 0 }}
+                        exit={{
+                            opacity: 0,
+                            maxHeight: 0,
+                            y: -5,
+                            transition: {
+                                maxHeight: { duration: 0.2, ease: 'easeInOut' },
+                                opacity: { duration: 0.15, delay: 0.05 },
+                                y: { duration: 0.2, ease: 'easeInOut' },
+                            },
+                        }}
+                        transition={{
+                            type: 'spring',
+                            stiffness: 500,
+                            damping: 40,
+                            mass: 0.6,
+                            opacity: { duration: 0.1 },
+                        }}
+                        className="overflow-hidden bg-background border border-slate-400 rounded-xl shadow-sm p-3"
+                    >
+                        <div className="space-y-4">
+                            {/* Invitation Mode Toggle */}
+                            <div className="space-y-2">
+                                <Label>Invitation type</Label>
+                                <div className="flex gap-2">
+                                    <Button
+                                        type="button"
+                                        variant={
+                                            invitationMode === 'guest'
+                                                ? 'default'
+                                                : 'neutral'
+                                        }
+                                        size="sm"
+                                        onClick={() =>
+                                            setInvitationMode('guest')
+                                        }
+                                    >
+                                        Invite Guest
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant={
+                                            invitationMode === 'user'
+                                                ? 'default'
+                                                : 'neutral'
+                                        }
+                                        size="sm"
+                                        onClick={() =>
+                                            setInvitationMode('user')
+                                        }
+                                    >
+                                        Invite User
+                                    </Button>
+                                </div>
                             </div>
-                        ) : (
-                            <ul className="space-y-3">
-                                {shares
-                                    .filter((s) => !s.is_primary)
-                                    .map((s) => (
-                                        <li
-                                            key={s.id}
-                                            className="border rounded-base p-3 flex flex-col gap-2"
-                                        >
-                                            <div className="text-sm break-all">
-                                                <span className="font-medium">
-                                                    Link:
-                                                </span>{' '}
-                                                <a
-                                                    href={buildShareLink(
-                                                        s.token
-                                                    )}
-                                                    className="underline"
-                                                >
-                                                    {buildShareLink(s.token)}
-                                                </a>
-                                            </div>
-                                            {s.guest_name ? (
-                                                <div className="text-sm">
-                                                    Guest: {s.guest_name}
-                                                </div>
-                                            ) : null}
-                                            {s.expires_at ? (
-                                                <div className="text-xs text-muted-foreground">
-                                                    Expires:{' '}
-                                                    {new Date(
-                                                        s.expires_at
-                                                    ).toLocaleString()}
-                                                </div>
-                                            ) : null}
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(
-                                                            buildShareLink(
-                                                                s.token
-                                                            )
-                                                        )
-                                                    }}
-                                                >
-                                                    Copy link
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="noShadow"
-                                                    onClick={() => {
-                                                        const shareUrl =
-                                                            buildShareLink(
-                                                                s.token
-                                                            )
-                                                        const shareTitle = `Join my quest: ${questName || 'Quest'}`
-                                                        const shareText = `Join my quest to discover species! ${shareUrl}`
 
-                                                        if (navigator.share) {
-                                                            navigator.share({
-                                                                title: shareTitle,
-                                                                text: shareText,
-                                                                url: shareUrl,
-                                                            })
-                                                        } else {
-                                                            // Fallback to clipboard copy
-                                                            navigator.clipboard.writeText(
-                                                                shareUrl
-                                                            )
-                                                        }
-                                                    }}
-                                                >
-                                                    <FaShareFromSquare className="h-4 w-4 mr-2" />
-                                                    Share
-                                                </Button>
-                                                <Button
-                                                    variant="neutral"
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        deleteShare(s.id)
-                                                    }
-                                                >
-                                                    Delete
-                                                </Button>
-                                            </div>
-                                        </li>
-                                    ))}
-                            </ul>
-                        )}
-                    </div>
-                </div>
-            </DialogContent>
-        </Dialog>
+                            {/* Guest Invitation Form */}
+                            {invitationMode === 'guest' && (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="guestName">
+                                        Guest name (optional)
+                                    </Label>
+                                    <Input
+                                        id="guestName"
+                                        placeholder="e.g. Alex"
+                                        value={guestName}
+                                        onChange={(e) =>
+                                            setGuestName(e.target.value)
+                                        }
+                                    />
+                                </div>
+                            )}
+
+                            {/* User Invitation Form */}
+                            {invitationMode === 'user' && (
+                                <div className="space-y-2">
+                                    <Label>Search for user to invite</Label>
+                                    <UserSearch
+                                        onUserSelect={setSelectedUser}
+                                        placeholder="Search users..."
+                                        className="w-full"
+                                    />
+                                    {selectedUser && (
+                                        <div className="text-sm text-muted-foreground">
+                                            Selected:{' '}
+                                            <span className="font-medium">
+                                                {selectedUser.username}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="expiresAt">
+                                    Expires at (optional)
+                                </Label>
+                                <Input
+                                    id="expiresAt"
+                                    type="datetime-local"
+                                    value={expiresAt}
+                                    onChange={(e) =>
+                                        setExpiresAt(e.target.value)
+                                    }
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={createShare}
+                                    disabled={
+                                        creating ||
+                                        (invitationMode === 'user' &&
+                                            !selectedUser)
+                                    }
+                                    size="sm"
+                                >
+                                    {creating
+                                        ? 'Creating…'
+                                        : 'Create invitation'}
+                                </Button>
+                                <Button
+                                    variant="neutral"
+                                    size="sm"
+                                    onClick={() => setShowForm(false)}
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     )
 }
 

@@ -31,9 +31,35 @@ export function createQuestShareService(
     async function createShare(
         questId: number,
         userId: number,
-        data: { guest_name?: string | null; expires_at?: string | Date | null }
+        data: {
+            guest_name?: string | null
+            shared_with_user_id?: number | null
+            expires_at?: string | Date | null
+        }
     ) {
         await assertQuestOwnership(questId, userId)
+
+        // Validate invited user exists if provided
+        if (data.shared_with_user_id) {
+            const invitedUser = await userRepo.findUserForDisplay({
+                id: data.shared_with_user_id,
+            })
+            if (!invitedUser) {
+                throw new AppError('Invited user not found', 404)
+            }
+
+            // Check for duplicate invitation
+            const existingShares = await questShareRepo.findByQuestId(questId)
+            const duplicateInvitation = existingShares.find(
+                (s) => s.shared_with_user_id === data.shared_with_user_id
+            )
+            if (duplicateInvitation) {
+                throw new AppError(
+                    'User has already been invited to this quest',
+                    409
+                )
+            }
+        }
 
         // Check if this should be the primary share
         const existingShares = await questShareRepo.findByQuestId(questId)
@@ -45,13 +71,15 @@ export function createQuestShareService(
         // A share is primary if:
         // 1. No primary share exists yet for this quest+owner
         // 2. The new share is created by the owner
-        // 3. The guest_name is null (or not provided)
-        const isPrimary = !hasPrimaryShare && !data.guest_name
+        // 3. Both guest_name and shared_with_user_id are null (or not provided)
+        const isPrimary =
+            !hasPrimaryShare && !data.guest_name && !data.shared_with_user_id
 
         const shareId = await questShareRepo.createShare({
             quest_id: questId,
             created_by_user_id: userId,
             guest_name: data.guest_name ?? null,
+            shared_with_user_id: data.shared_with_user_id ?? null,
             expires_at: data.expires_at ? new Date(data.expires_at) : null,
             is_primary: isPrimary,
         })

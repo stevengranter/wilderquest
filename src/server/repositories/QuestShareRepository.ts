@@ -44,7 +44,14 @@ export function createQuestShareRepository(
     }
 
     async function findByQuestId(questId: number): Promise<QuestShare[]> {
-        return base.findMany({ quest_id: questId })
+        const [rows] = await dbPool.execute<RowDataPacket[]>(
+            `SELECT qs.*, u_invited.username as invited_username
+             FROM ${tableName} qs
+             LEFT JOIN users u_invited ON u_invited.id = qs.shared_with_user_id
+             WHERE qs.quest_id = ?`,
+            [questId]
+        )
+        return rows as QuestShare[]
     }
 
     async function createShare(data: Partial<QuestShare>): Promise<number> {
@@ -115,6 +122,7 @@ export function createSharedQuestProgressRepository(
                    p_last.observed_at AS last_observed_at,
                     CASE
                       WHEN s_last.guest_name IS NOT NULL THEN s_last.guest_name
+                      WHEN s_last.shared_with_user_id IS NOT NULL THEN u_invited.username
                       WHEN s_last.is_primary = TRUE THEN u.username
                       ELSE 'Guest'
                     END AS last_display_name
@@ -136,9 +144,10 @@ export function createSharedQuestProgressRepository(
                 ) p_last ON p_last.taxon_id = p.taxon_id
                 LEFT JOIN quest_shares s_last ON s_last.id = p_last.quest_share_id
                LEFT JOIN users u ON u.id = s_last.created_by_user_id
+               LEFT JOIN users u_invited ON u_invited.id = s_last.shared_with_user_id
                INNER JOIN quests q ON q.id = s.quest_id
                 WHERE s.quest_id = ?
-                GROUP BY p.taxon_id, p_last.observed_at, s_last.guest_name, s_last.created_by_user_id, u.username, q.user_id, s_last.id`,
+                GROUP BY p.taxon_id, p_last.observed_at, s_last.guest_name, s_last.created_by_user_id, s_last.shared_with_user_id, u.username, u_invited.username, q.user_id, s_last.id`,
             [questId, questId]
         )
         return rows as AggregatedProgress[]
@@ -155,12 +164,14 @@ export function createSharedQuestProgressRepository(
                   s.id AS quest_share_id,
                    CASE
                      WHEN s.guest_name IS NOT NULL THEN s.guest_name
+                     WHEN s.shared_with_user_id IS NOT NULL THEN u_invited.username
                      WHEN s.is_primary = TRUE THEN u.username
                      ELSE 'Guest'
                    END AS display_name
                FROM shared_quest_progress p
                INNER JOIN quest_shares s ON s.id = p.quest_share_id
                LEFT JOIN users u ON u.id = s.created_by_user_id
+               LEFT JOIN users u_invited ON u_invited.id = s.shared_with_user_id
                INNER JOIN quests q ON q.id = s.quest_id
                WHERE s.quest_id = ?
                ORDER BY p.observed_at DESC`,
@@ -176,6 +187,7 @@ export function createSharedQuestProgressRepository(
             `SELECT
                         CASE
                           WHEN s.guest_name IS NOT NULL THEN s.guest_name
+                          WHEN s.shared_with_user_id IS NOT NULL THEN u_invited.username
                           WHEN s.is_primary = TRUE THEN u.username
                           ELSE 'Guest'
                         END AS display_name,
@@ -185,10 +197,11 @@ export function createSharedQuestProgressRepository(
                        s.created_at AS invited_at
                        FROM quest_shares s
                        LEFT JOIN users u ON u.id = s.created_by_user_id
+                       LEFT JOIN users u_invited ON u_invited.id = s.shared_with_user_id
                        LEFT JOIN shared_quest_progress p ON p.quest_share_id = s.id
                        INNER JOIN quests q ON q.id = s.quest_id
                        WHERE s.quest_id = ?
-                       GROUP BY s.id, s.guest_name, s.created_by_user_id, u.username, s.first_accessed_at, s.created_at, q.user_id
+                       GROUP BY s.id, s.guest_name, s.created_by_user_id, s.shared_with_user_id, u.username, u_invited.username, s.first_accessed_at, s.created_at, q.user_id
                         ORDER BY observation_count DESC, display_name ASC;
                     `,
             [questId]

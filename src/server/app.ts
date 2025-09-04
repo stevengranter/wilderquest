@@ -13,13 +13,22 @@ import { rateLimiter } from './middlewares/rateLimiter.js'
 import { rateSlowDown } from './middlewares/rateSlowDown.js'
 import requestLogger from './middlewares/requestLogger.js'
 import { CollectionRepository } from './repositories/CollectionRepository.js'
-import { QuestRepository, QuestToTaxaRepository } from './repositories/QuestRepository.js'
-import type { QuestShareRepository, SharedQuestProgressRepository } from './repositories/QuestShareRepository.js'
-import { mapTilesProxyRouter, wikipediaProxyRouter } from './routes/api/proxies.routes.js'
+import {
+    QuestRepository,
+    QuestToTaxaRepository,
+} from './repositories/QuestRepository.js'
+import type {
+    QuestShareRepository,
+    SharedQuestProgressRepository,
+} from './repositories/QuestShareRepository.js'
+import {
+    mapTilesProxyRouter,
+    wikipediaProxyRouter,
+} from './routes/api/proxies.routes.js'
 import { serviceRouter } from './routes/api/services.routes.js'
 import { createAuthRouter } from './routes/authRouter.js'
 import { createCollectionRouter } from './routes/collectionRouter.js'
-import questEventsRouter from './routes/questEventsRouter.js'
+import { createQuestEventsRouter } from './routes/questEventsRouter.js'
 import { createQuestRouter } from './routes/questRouter.js'
 import { createQuestShareRouter } from './routes/questShareRouter.js'
 import { createUserRouter } from './routes/userRouter.js'
@@ -52,6 +61,10 @@ export function buildApp({
             level: 6, // Good balance between compression and speed
             threshold: 1024, // Only compress responses larger than 1KB
             filter: (req, res) => {
+                // Don't compress EventSource responses
+                if (req.headers.accept === 'text/event-stream') {
+                    return false
+                }
                 // Don't compress responses with this request header
                 if (req.headers['x-no-compression']) {
                     return false
@@ -96,6 +109,7 @@ export function buildApp({
     const questShareController = createQuestShareController(questShareService)
     const questShareRouter = createQuestShareRouter(questShareController)
     apiRouter.use('/quest-sharing', questShareRouter)
+    const questEventsRouter = createQuestEventsRouter(questService)
     apiRouter.use('/quests', questEventsRouter)
 
     const authService = createAuthService(userRepository)

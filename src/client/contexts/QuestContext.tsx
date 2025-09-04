@@ -13,7 +13,7 @@ import { Quest } from '../../server/models/quests'
 
 interface QuestContextType {
     // Quest data
-    questData: Quest | null
+    questData: Quest | null | undefined
     taxa: INatTaxon[]
     mappings?: QuestMapping[]
     aggregatedProgress?: AggregatedProgress[]

@@ -6,6 +6,7 @@ export const QuestShareSchema = z.object({
     quest_id: z.number().int(),
     created_by_user_id: z.number().int(),
     guest_name: z.string().nullable().optional(), // string | null | undefined
+    shared_with_user_id: z.number().int().nullable().optional(), // number | null | undefined
     expires_at: z.date().nullable().optional(), // Date | null | undefined
     is_primary: z.boolean().optional(), // boolean | undefined
     first_accessed_at: z.date().nullable().optional(), // Date | null | undefined

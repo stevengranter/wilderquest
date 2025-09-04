@@ -19,6 +19,7 @@ interface FoundButtonProps {
 
     // Quest context
     questStatus: QuestStatus
+    questMode?: 'cooperative' | 'competitive'
 
     // Interaction
     onClick?: (e: React.MouseEvent) => void | Promise<void>
@@ -42,6 +43,7 @@ export function FoundButton({
     share,
     token,
     questStatus,
+    questMode,
     onClick,
     variant = 'neutral',
     size = 'sm',
@@ -62,6 +64,10 @@ export function FoundButton({
             progress.mapping_id === mapping?.id &&
             progress.display_name === currentUserDisplayName
     )
+
+    // In competitive mode, if someone else has found it, disable the button
+    const isDisabledInCompetitiveMode =
+        questMode === 'competitive' && progressCount > 0 && !userHasFound
 
     // Don't render if no mapping or can't interact
     if (!mapping || !canUserInteract) {
@@ -91,7 +97,7 @@ export function FoundButton({
             )}
             size={size}
             variant={progressCount > 0 ? 'neutral' : variant}
-            disabled={questStatus !== 'active'}
+            disabled={questStatus !== 'active' || isDisabledInCompetitiveMode}
             onClick={handleClick}
         >
             {userHasFound ? 'Mark as unfound' : 'Found'}

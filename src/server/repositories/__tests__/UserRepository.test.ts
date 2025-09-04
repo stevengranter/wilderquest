@@ -134,4 +134,84 @@ describe('UserRepository', () => {
             expect(result).toBe(123)
         })
     })
+
+    describe('searchUsersByUsername', () => {
+        const mockSafeUsers = [
+            {
+                id: 1,
+                username: 'john_doe',
+                created_at: new Date(),
+                updated_at: new Date(),
+            },
+            {
+                id: 2,
+                username: 'jane_smith',
+                created_at: new Date(),
+                updated_at: new Date(),
+            },
+        ]
+
+        it('should return users matching search query with pagination', async () => {
+            // Mock count query
+            mockExecute.mockResolvedValueOnce([[{ total: 2 }]])
+            // Mock users query
+            mockExecute.mockResolvedValueOnce([mockSafeUsers])
+
+            const result = await userRepo.searchUsersByUsername('john', {
+                limit: 10,
+                offset: 0,
+            })
+
+            expect(result).toEqual({
+                users: mockSafeUsers,
+                total: 2,
+            })
+            expect(mockExecute).toHaveBeenCalledTimes(2)
+        })
+
+        it('should exclude specified user from results', async () => {
+            // Mock count query
+            mockExecute.mockResolvedValueOnce([[{ total: 1 }]])
+            // Mock users query
+            mockExecute.mockResolvedValueOnce([[mockSafeUsers[1]]])
+
+            const result = await userRepo.searchUsersByUsername('jane', {
+                limit: 10,
+                offset: 0,
+                excludeUserId: 1,
+            })
+
+            expect(result.users).toHaveLength(1)
+            expect(result.users[0].username).toBe('jane_smith')
+        })
+
+        it('should return empty results when no matches found', async () => {
+            // Mock count query
+            mockExecute.mockResolvedValueOnce([[{ total: 0 }]])
+            // Mock users query
+            mockExecute.mockResolvedValueOnce([[]])
+
+            const result = await userRepo.searchUsersByUsername('nonexistent', {
+                limit: 10,
+                offset: 0,
+            })
+
+            expect(result).toEqual({
+                users: [],
+                total: 0,
+            })
+        })
+
+        it('should use default limit and offset when not provided', async () => {
+            // Mock count query
+            mockExecute.mockResolvedValueOnce([[{ total: 2 }]])
+            // Mock users query
+            mockExecute.mockResolvedValueOnce([mockSafeUsers])
+
+            const result = await userRepo.searchUsersByUsername('test')
+
+            expect(result.users).toHaveLength(2)
+            expect(result.total).toBe(2)
+        })
+    })
 })

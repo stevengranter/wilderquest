@@ -1,11 +1,14 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { FaChevronDown, FaLink, FaPlus, FaShareFromSquare, FaTrash } from 'react-icons/fa6'
+import {
+    FaChevronDown,
+    FaLink,
+    FaShareFromSquare,
+    FaTrash,
+} from 'react-icons/fa6'
 import { LeaderboardEntry } from '@/features/quests/types'
 import { AvatarOverlay } from '../../AvatarOverlay'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import api from '@/api/api'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -17,6 +20,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
+import { ShareQuest } from '../../ShareQuest'
 
 type QuestShare = {
     id: number
@@ -86,42 +90,13 @@ export const QuestLeaderboard = ({
     questName,
     isOwner,
 }: QuestLeaderboardProps) => {
-    const [showAddForm, setShowAddForm] = useState(false)
-    const [guestName, setGuestName] = useState('')
-    const [expiresAt, setExpiresAt] = useState('')
-    const [creating, setCreating] = useState(false)
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const [participantToDelete, setParticipantToDelete] =
         useState<LeaderboardEntry | null>(null)
     const [deleting, setDeleting] = useState(false)
     const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
+    const [showInviteDrawer, setShowInviteDrawer] = useState(false)
     const queryClient = useQueryClient()
-
-    const createShare = async () => {
-        if (!questId) return
-
-        setCreating(true)
-        try {
-            const payload: { guest_name?: string; expires_at?: string } = {}
-            if (guestName) payload.guest_name = guestName
-            if (expiresAt)
-                payload.expires_at = new Date(expiresAt).toISOString()
-
-            await api.post(`/quest-sharing/quests/${questId}/shares`, payload)
-            setGuestName('')
-            setExpiresAt('')
-            setShowAddForm(false)
-
-            // Invalidate leaderboard queries so they update immediately
-            queryClient.invalidateQueries({
-                queryKey: ['leaderboard', questId],
-            })
-        } catch (e) {
-            console.error('Failed to create share', e)
-        } finally {
-            setCreating(false)
-        }
-    }
 
     const handleDeleteClick = (entry: LeaderboardEntry) => {
         setParticipantToDelete(entry)
@@ -142,11 +117,17 @@ export const QuestLeaderboard = ({
                 `/quest-sharing/quests/${questId}/shares`
             )
             const shares = response.data || []
+
+            // Find matching share - handle both guest and user shares
             const matchingShare = shares.find(
-                (s: QuestShare) =>
+                (s: any) =>
+                    // Match guest shares by name
                     s.guest_name === participantToDelete.display_name ||
                     (s.guest_name === null &&
-                        participantToDelete.display_name === 'Guest')
+                        participantToDelete.display_name === 'Guest') ||
+                    // Match user shares by username (display_name will be the username for user shares)
+                    (s.shared_with_user_id &&
+                        s.invited_username === participantToDelete.display_name)
             )
 
             if (matchingShare) {
@@ -197,66 +178,27 @@ export const QuestLeaderboard = ({
         <div>
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Quest Explorers</h2>
-                {questId && isOwner && (
-                    <Button
-                        size="sm"
-                        onClick={() => setShowAddForm(!showAddForm)}
-                        variant="default"
-                    >
-                        <FaPlus className="h-4 w-4 mr-2" />
-                        Add Explorer
-                    </Button>
+                {questId && ownerUserId && isOwner && (
+                    <ShareQuest
+                        questId={questId}
+                        ownerUserId={ownerUserId}
+                        questName={questName}
+                        showDrawerOnly={false}
+                        showForm={showInviteDrawer}
+                        onToggleForm={setShowInviteDrawer}
+                    />
                 )}
             </div>
 
-            {showAddForm && (
-                <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md"
-                >
-                    <div className="grid gap-3">
-                        <div className="grid gap-2">
-                            <Label htmlFor="guestName">
-                                Explorer name (optional)
-                            </Label>
-                            <Input
-                                id="guestName"
-                                placeholder="e.g. Alex"
-                                value={guestName}
-                                onChange={(e) => setGuestName(e.target.value)}
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="expiresAt">
-                                Expires at (optional)
-                            </Label>
-                            <Input
-                                id="expiresAt"
-                                type="datetime-local"
-                                value={expiresAt}
-                                onChange={(e) => setExpiresAt(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex gap-2">
-                            <Button
-                                onClick={createShare}
-                                disabled={creating}
-                                size="sm"
-                            >
-                                {creating ? 'Creating…' : 'Create invitation'}
-                            </Button>
-                            <Button
-                                variant="neutral"
-                                size="sm"
-                                onClick={() => setShowAddForm(false)}
-                            >
-                                Cancel
-                            </Button>
-                        </div>
-                    </div>
-                </motion.div>
+            {questId && ownerUserId && isOwner && (
+                <ShareQuest
+                    questId={questId}
+                    ownerUserId={ownerUserId}
+                    questName={questName}
+                    showDrawerOnly={true}
+                    showForm={showInviteDrawer}
+                    onToggleForm={setShowInviteDrawer}
+                />
             )}
 
             {questStatus === 'pending' && (
@@ -417,12 +359,15 @@ export const QuestLeaderboard = ({
                                                                 navigator.clipboard.writeText(
                                                                     shareUrl
                                                                 )
-                                                                toast.success('Link Copied!', {
-                                                                    description: `The share link for ${
-                                                                        entry.display_name ||
-                                                                        'Guest'
-                                                                    } has been copied to your clipboard.`,
-                                                                })
+                                                                toast.success(
+                                                                    'Link Copied!',
+                                                                    {
+                                                                        description: `The share link for ${
+                                                                            entry.display_name ||
+                                                                            'Guest'
+                                                                        } has been copied to your clipboard.`,
+                                                                    }
+                                                                )
                                                             }}
                                                         >
                                                             <FaLink className="h-3 w-3 mr-1" />
@@ -455,12 +400,15 @@ export const QuestLeaderboard = ({
                                                                     navigator.clipboard.writeText(
                                                                         shareUrl
                                                                     )
-                                                                    toast.success('Link Copied!', {
-                                                                        description: `The share link for ${
-                                                                            entry.display_name ||
-                                                                            'Guest'
-                                                                        } has been copied to your clipboard.`,
-                                                                    })
+                                                                    toast.success(
+                                                                        'Link Copied!',
+                                                                        {
+                                                                            description: `The share link for ${
+                                                                                entry.display_name ||
+                                                                                'Guest'
+                                                                            } has been copied to your clipboard.`,
+                                                                        }
+                                                                    )
                                                                 }
                                                             }}
                                                         >

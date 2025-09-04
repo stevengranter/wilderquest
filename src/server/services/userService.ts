@@ -15,6 +15,33 @@ export function createUserService(userRepository: UserRepository) {
         return userRepository.findUserForDisplay({ username })
     }
 
+    async function searchUsers(
+        query: string,
+        options: {
+            limit?: number
+            offset?: number
+            excludeUserId?: number
+        } = {}
+    ): Promise<{ users: SafeUserDTO[]; total: number } | null> {
+        // Validate query
+        if (!query || query.trim().length < 2) {
+            return null
+        }
+
+        const trimmedQuery = query.trim()
+
+        // Validate limit
+        const { limit = 20, offset = 0, excludeUserId } = options
+        const validLimit = Math.min(Math.max(limit, 1), 50) // 1-50
+        const validOffset = Math.max(offset, 0)
+
+        return userRepository.searchUsersByUsername(trimmedQuery, {
+            limit: validLimit,
+            offset: validOffset,
+            excludeUserId,
+        })
+    }
+
     async function getUserStats(username: string): Promise<{
         totalQuestsParticipated: number
         activeQuests: number
@@ -29,5 +56,10 @@ export function createUserService(userRepository: UserRepository) {
         return userRepository.getUserStats(user.id)
     }
 
-    return { getUserProfileById, getUserProfileByUsername, getUserStats }
+    return {
+        getUserProfileById,
+        getUserProfileByUsername,
+        searchUsers,
+        getUserStats,
+    }
 }

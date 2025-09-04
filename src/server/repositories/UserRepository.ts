@@ -47,6 +47,48 @@ export function createUserRepository(
         return base.find(conditions, options)
     }
 
+    // Search users by username (partial match)
+    async function searchUsersByUsername(
+        query: string,
+        options: {
+            limit?: number
+            offset?: number
+            excludeUserId?: number
+        } = {}
+    ): Promise<{ users: SafeUserDTO[]; total: number }> {
+        const { limit = 20, offset = 0, excludeUserId } = options
+        const db = base.getDb()
+
+        // Build WHERE clause
+        let whereClause = 'username LIKE ?'
+        const params: (string | number)[] = [`%${query}%`]
+
+        if (excludeUserId) {
+            whereClause += ' AND id != ?'
+            params.push(excludeUserId)
+        }
+
+        // Get total count
+        const [countResult] = await db.execute<RowDataPacket[]>(
+            `SELECT COUNT(*) as total FROM users WHERE ${whereClause}`,
+            params
+        )
+        const total = (countResult as { total: number }[])[0].total
+
+        // Get users with pagination
+        const [userResults] = await db.execute<RowDataPacket[]>(
+            `SELECT ${safeUserColumns.join(', ')} FROM users
+             WHERE ${whereClause}
+             ORDER BY username ASC
+             LIMIT ${limit} OFFSET ${offset}`,
+            params
+        )
+
+        const users = userResults as SafeUserDTO[]
+
+        return { users, total }
+    }
+
     // Get user stats: total quests participated, active quests, taxa found
     async function getUserStats(userId: number): Promise<{
         totalQuestsParticipated: number
@@ -119,6 +161,7 @@ export function createUserRepository(
         create,
         findUserForDisplay,
         findUsersForAdmin,
+        searchUsersByUsername,
         getUserStats,
     }
 }
