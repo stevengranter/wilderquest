@@ -8,9 +8,10 @@ import { INatTaxon } from '@shared/types/iNatTypes'
 import api from '@/api/api'
 import { toast } from 'sonner'
 import { ObservationDialog } from './ObservationDialog'
+import { Observation } from './ObservationGridView'
 import { cn } from '@/lib/utils'
 import { LoggedInUser } from '@shared/types/authTypes'
-import { JSX } from 'react'
+import { JSX, useState } from 'react'
 import { AvatarOverlay } from './AvatarOverlay'
 
 type TaxaWithProgress = INatTaxon & {
@@ -201,15 +202,17 @@ function SpeciesListCard(props: {
 
     if (props.latitude && props.longitude) {
         return (
-            <ObservationDialog
-                species={props.taxon}
-                latitude={props.latitude}
-                longitude={props.longitude}
-                locationName={props.locationName}
-                found={props.taxon.progressCount > 0}
-            >
-                {cardContent}
-            </ObservationDialog>
+            <>
+                <ObservationDialog
+                    species={props.taxon}
+                    latitude={props.latitude}
+                    longitude={props.longitude}
+                    locationName={props.locationName}
+                    found={props.taxon.progressCount > 0}
+                >
+                    {cardContent}
+                </ObservationDialog>
+            </>
         )
     }
 

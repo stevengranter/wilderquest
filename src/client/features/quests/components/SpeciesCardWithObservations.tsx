@@ -60,14 +60,16 @@ export function SpeciesCardWithObservations(
     )
 
     return (
-        <ObservationDialog
-            species={species}
-            latitude={displayData?.latitude}
-            longitude={displayData?.longitude}
-            locationName={displayData?.location_name}
-            found={found}
-        >
-            {card}
-        </ObservationDialog>
+        <>
+            <ObservationDialog
+                species={species}
+                latitude={displayData?.latitude}
+                longitude={displayData?.longitude}
+                locationName={displayData?.location_name}
+                found={found}
+            >
+                {card}
+            </ObservationDialog>
+        </>
     )
 }

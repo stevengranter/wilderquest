@@ -1,13 +1,10 @@
 import React, { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Card } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+
 import { useProgressiveImage } from '@/hooks/useProgressiveImage'
 import { useLeaflet } from '@/hooks/useLeaflet'
 import { cn } from '@/lib/utils'
-import type { LatLngBounds } from 'leaflet'
 
 interface ObservationPhoto {
     id: number
@@ -27,6 +24,7 @@ export interface Observation {
     user: {
         login: string
     }
+    searchRadius?: number // Track which radius this observation came from
 }
 
 function ProgressiveObservationImage({
@@ -58,248 +56,112 @@ function ProgressiveObservationImage({
 
 export function ObservationGridView({
     observations,
+    showRadiusBadges = true,
 }: {
     observations: Observation[]
+    showRadiusBadges?: boolean
 }) {
-    const [zoomedIndex, setZoomedIndex] = useState<number | null>(null)
-
     const observationsWithPhotos = observations.filter(
         (obs) => obs.photos.length > 0
     )
-    // const rotations = observationsWithPhotos.map(
-    //     () => (Math.random() - 0.5) * 16
-    // )
-
-    const handleNext = () => {
-        if (zoomedIndex === null) return
-        setZoomedIndex((zoomedIndex + 1) % observationsWithPhotos.length)
-    }
-
-    const handlePrev = () => {
-        if (zoomedIndex === null) return
-        setZoomedIndex(
-            (zoomedIndex - 1 + observationsWithPhotos.length) %
-                observationsWithPhotos.length
-        )
-    }
 
     return (
-        <Dialog
-            open={zoomedIndex !== null}
-            onOpenChange={(isOpen) => !isOpen && setZoomedIndex(null)}
-        >
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                <AnimatePresence>
-                    {observationsWithPhotos.map((obs, index) => {
-                        // const _rotation = rotations[index]
-                        return (
-                            <DialogTrigger
-                                key={obs.id}
-                                asChild
-                                onClick={() => setZoomedIndex(index)}
-                            >
-                                <motion.div
-                                    initial={{
-                                        opacity: 0,
-                                        y: 30,
-                                        scale: 0.8,
-                                    }}
-                                    animate={{
-                                        opacity: 1,
-                                        y: 0,
-                                        scale: 1,
-                                    }}
-                                    exit={{
-                                        opacity: 0,
-                                        y: -20,
-                                        scale: 0.8,
-                                    }}
-                                    transition={{
-                                        duration: 0.6,
-                                        delay: index * 0.15,
-                                        ease: 'easeOut',
-                                        type: 'spring',
-                                        damping: 15,
-                                        stiffness: 100,
-                                    }}
-                                    // whileHover={{
-                                    //     scale: 1.05,
-                                    //     y: -8,
-                                    //     transition: {
-                                    //         duration: 0.3,
-                                    //         type: 'spring',
-                                    //         damping: 10,
-                                    //         stiffness: 200,
-                                    //     },
-                                    // }}
-                                    whileTap={{
-                                        scale: 0.95,
-                                    }}
-                                    className="cursor-pointer"
-                                    style={{
-                                        transformOrigin: 'center center',
-                                    }}
-                                >
-                                    {/* Polaroid Card */}
-                                    <div className="bg-white p-3 rounded-lg border-1 hover:shadow-shadow hover:-translate-y-2 transition:shadow duration-300">
-                                        {/* Photo Area */}
-                                        <ProgressiveObservationImage
-                                            photo={obs.photos[0]}
-                                            className="aspect-square bg-gray-100 rounded-sm mb-3"
-                                        />
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+            <AnimatePresence>
+                {observationsWithPhotos.map((obs, index) => {
+                    return (
+                        <motion.div
+                            key={obs.id}
+                            initial={{
+                                opacity: 0,
+                                y: 30,
+                                scale: 0.8,
+                            }}
+                            animate={{
+                                opacity: 1,
+                                y: 0,
+                                scale: 1,
+                            }}
+                            exit={{
+                                opacity: 0,
+                                y: -20,
+                                scale: 0.8,
+                            }}
+                            transition={{
+                                duration: 0.6,
+                                delay: index * 0.15,
+                                ease: 'easeOut',
+                                type: 'spring',
+                                damping: 15,
+                                stiffness: 100,
+                            }}
+                            whileTap={{
+                                scale: 0.95,
+                            }}
+                            style={{
+                                transformOrigin: 'center center',
+                            }}
+                        >
+                            {/* Polaroid Card */}
+                            <div className="bg-white p-3 rounded-lg border-1 hover:shadow-shadow hover:-translate-y-2 transition:shadow duration-300">
+                                {/* Photo Area */}
+                                <ProgressiveObservationImage
+                                    photo={obs.photos[0]}
+                                    className="aspect-square bg-gray-100 rounded-sm mb-3"
+                                />
 
-                                        {/* Polaroid Caption Area */}
-                                        {/*<motion.div*/}
-                                        {/*    className="text-xs text-gray-700 space-y-1"*/}
-                                        {/*    initial={{ y: 10, opacity: 0 }}*/}
-                                        {/*    animate={{ y: 0, opacity: 1 }}*/}
-                                        {/*    transition={{*/}
-                                        {/*        duration: 0.5,*/}
-                                        {/*        delay: index * 0.15 + 0.4,*/}
-                                        {/*    }}*/}
-                                        {/*>*/}
-                                        <p className="font-medium truncate line-clamp-1">
-                                            {obs.user.login}
-                                        </p>
-                                        <p className="text-gray-500 line-clamp-1">
-                                            {obs.observed_on_string}
-                                        </p>
-                                        {obs.place_guess && (
-                                            <p className="text-gray-500 truncate text-[10px] line-clamp-1">
-                                                📍 {obs.place_guess}
-                                            </p>
-                                        )}
-                                        {/*</motion.div>*/}
-                                    </div>
-                                </motion.div>
-                            </DialogTrigger>
-                        )
-                    })}
-                </AnimatePresence>
-            </div>
-            <DialogContent className="p-0 border-0 w-full max-w-sm md:max-w-md lg:max-w-lg bg-transparent shadow-none flex items-center justify-center">
-                <AnimatePresence>
-                    {observationsWithPhotos.map((obs, index) => {
-                        if (zoomedIndex === null) {
-                            return null
-                        }
-
-                        if (index < zoomedIndex) {
-                            return null
-                        }
-                        if (index > zoomedIndex + 2) {
-                            return null
-                        }
-                        return (
-                            <motion.div
-                                key={obs.id}
-                                className="absolute bg-white p-4 rounded-lg border-1 shadow-xl w-full"
-                                style={{
-                                    transformOrigin: 'center center',
-                                }}
-                                initial={{
-                                    scale: 1,
-                                    y: 0,
-                                }}
-                                animate={{
-                                    scale: 1 - (index - zoomedIndex) * 0.1,
-                                    y: (index - zoomedIndex) * 20,
-                                    rotate: (index - zoomedIndex) * 5,
-                                    zIndex:
-                                        observationsWithPhotos.length - index,
-                                }}
-                                exit={{
-                                    x: 300,
-                                    opacity: 0,
-                                    scale: 0.5,
-                                    transition: { duration: 0.3 },
-                                }}
-                                transition={{
-                                    type: 'spring',
-                                    stiffness: 100,
-                                    damping: 20,
-                                }}
-                                drag="x"
-                                dragConstraints={{ left: 0, right: 0 }}
-                                onDragEnd={(event, { offset }) => {
-                                    if (Math.abs(offset.x) > 50) {
-                                        if (offset.x > 0) {
-                                            handlePrev()
-                                        } else {
-                                            handleNext()
-                                        }
-                                    }
-                                }}
-                            >
-                                <div className="aspect-square bg-gray-100 rounded-sm overflow-hidden mb-4">
-                                    <img
-                                        src={obs.photos[0].url.replace(
-                                            'square',
-                                            'large'
-                                        )}
-                                        alt="Zoomed observation"
-                                        className="w-full h-full object-cover"
-                                        draggable={false}
-                                    />
-                                </div>
-                                <div className="text-center text-gray-800 space-y-1">
-                                    <p className="font-bold text-lg">
-                                        Observed by: {obs.user.login}
+                                {/* Polaroid Caption Area */}
+                                <div className="flex items-center gap-2">
+                                    <p className="font-medium truncate line-clamp-1">
+                                        {obs.user.login}
                                     </p>
-                                    <p className="text-sm text-gray-600">
-                                        {obs.observed_on_string}
-                                    </p>
-                                    {obs.place_guess && (
-                                        <p className="text-sm text-gray-500 truncate">
-                                            📍 {obs.place_guess}
-                                        </p>
+                                    {obs.searchRadius && showRadiusBadges && (
+                                        <span
+                                            className={`text-xs px-1.5 py-0.5 rounded-full text-white ${
+                                                obs.searchRadius === 20
+                                                    ? 'bg-blue-500'
+                                                    : obs.searchRadius === 100
+                                                      ? 'bg-green-500'
+                                                      : 'bg-purple-500'
+                                            }`}
+                                        >
+                                            {obs.searchRadius}km
+                                        </span>
                                     )}
                                 </div>
-                            </motion.div>
-                        )
-                    })}
-                </AnimatePresence>
-                <Button
-                    variant="neutral"
-                    size="icon"
-                    className="absolute rounded-full bg-white z-50 shadow-lg hover:shadow-xl transition-shadow"
-                    style={{
-                        left: '-60px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                    }}
-                    onClick={handlePrev}
-                >
-                    <ChevronLeft className="h-6 w-6" />
-                </Button>
-                <Button
-                    variant="neutral"
-                    size="icon"
-                    className="absolute rounded-full bg-white z-50 shadow-lg hover:shadow-xl transition-shadow"
-                    style={{
-                        right: '-60px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                    }}
-                    onClick={handleNext}
-                >
-                    <ChevronRight className="h-6 w-6" />
-                </Button>
-            </DialogContent>
-        </Dialog>
+                                <p className="text-gray-500 line-clamp-1">
+                                    {obs.observed_on_string}
+                                </p>
+                                {obs.place_guess && (
+                                    <p className="text-gray-500 truncate text-[10px] line-clamp-1">
+                                        📍 {obs.place_guess}
+                                    </p>
+                                )}
+                            </div>
+                        </motion.div>
+                    )
+                })}
+            </AnimatePresence>
+        </div>
     )
 }
 
 // List View Component
 export function ObservationListView({
     observations,
+    showRadiusBadges = true,
 }: {
     observations: Observation[]
+    showRadiusBadges?: boolean
 }) {
+    const observationsWithPhotos = observations.filter(
+        (obs) => obs.photos.length > 0
+    )
+
     return (
         <div className="space-y-3">
             <AnimatePresence>
-                {observations.map((obs, index) => (
+                {observationsWithPhotos.map((obs, index) => (
                     <motion.div
                         key={obs.id}
                         initial={{ opacity: 0, x: -20 }}
@@ -311,7 +173,7 @@ export function ObservationListView({
                         }}
                         whileHover={{ scale: 1.01 }}
                     >
-                        <Card className="p-3 cursor-pointer">
+                        <Card className="p-3">
                             <div className="flex items-center gap-4">
                                 {obs.photos.length > 0 && (
                                     <ProgressiveObservationImage
@@ -320,9 +182,26 @@ export function ObservationListView({
                                     />
                                 )}
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-sm truncate">
-                                        Observed by {obs.user.login}
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-medium text-sm truncate">
+                                            Observed by {obs.user.login}
+                                        </p>
+                                        {obs.searchRadius &&
+                                            showRadiusBadges && (
+                                                <span
+                                                    className={`text-xs px-1.5 py-0.5 rounded-full text-white flex-shrink-0 ${
+                                                        obs.searchRadius === 20
+                                                            ? 'bg-blue-500'
+                                                            : obs.searchRadius ===
+                                                                100
+                                                              ? 'bg-green-500'
+                                                              : 'bg-purple-500'
+                                                    }`}
+                                                >
+                                                    {obs.searchRadius}km
+                                                </span>
+                                            )}
+                                    </div>
                                     <p className="text-xs text-muted-foreground">
                                         {obs.observed_on_string}
                                     </p>
@@ -342,12 +221,16 @@ export function ObservationListView({
 }
 
 // Map View Component
-export function ObservationMapView({
+export const ObservationMapView = React.memo(function ObservationMapView({
     observations,
     center,
+    searchRadius,
+    showRadiusBadges = true,
 }: {
     observations: Observation[]
     center: [number, number]
+    searchRadius: number
+    showRadiusBadges?: boolean
 }) {
     const { isLoading, error, isLoaded, L } = useLeaflet()
 
@@ -404,19 +287,25 @@ export function ObservationMapView({
         <ObservationMapViewInner
             observations={observations}
             center={center}
+            searchRadius={searchRadius}
+            showRadiusBadges={showRadiusBadges}
             L={L}
         />
     )
-}
+})
 
 // Separate component that uses react-leaflet components
-function ObservationMapViewInner({
+const ObservationMapViewInner = React.memo(function ObservationMapViewInner({
     observations,
     center,
+    searchRadius,
+    showRadiusBadges,
     L,
 }: {
     observations: Observation[]
     center: [number, number]
+    searchRadius: number
+    showRadiusBadges: boolean
     L: typeof import('leaflet')
 }) {
     // Dynamically import react-leaflet components after Leaflet is loaded
@@ -455,7 +344,34 @@ function ObservationMapViewInner({
         )
     }
 
-    const { MapContainer, Marker, Popup, TileLayer } = components
+    const { MapContainer, Marker, Popup, TileLayer, useMap } = components
+
+    // Calculate zoom level based on search radius
+    const getZoomForRadius = (radius: number): number => {
+        // Approximate zoom levels for different radii (in km)
+        if (radius <= 20) return 12 // ~4km visible radius
+        if (radius <= 50) return 10 // ~16km visible radius
+        if (radius <= 100) return 9 // ~32km visible radius
+        if (radius <= 200) return 8 // ~64km visible radius
+        if (radius <= 500) return 7 // ~128km visible radius
+        if (radius <= 1000) return 6 // ~256km visible radius
+        return 5 // >1000km, ~512km visible radius
+    }
+
+    const zoomLevel = getZoomForRadius(searchRadius)
+
+    // Component to handle dynamic zoom updates
+    function MapZoomController() {
+        const map = useMap()
+
+        React.useEffect(() => {
+            if (map && zoomLevel && map.getZoom() !== zoomLevel) {
+                map.setZoom(zoomLevel)
+            }
+        }, [map, zoomLevel])
+
+        return null
+    }
 
     return (
         <motion.div
@@ -470,6 +386,7 @@ function ObservationMapViewInner({
                 scrollWheelZoom={true}
                 style={{ height: '100%', width: '100%' }}
             >
+                <MapZoomController />
                 <TileLayer
                     attribution='Maps &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, Data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                     url="/api/tiles/{z}/{x}/{y}.png"
@@ -505,9 +422,26 @@ function ObservationMapViewInner({
                                             className="w-full h-32 object-cover rounded mb-2"
                                         />
                                     )}
-                                    <p className="font-medium text-sm">
-                                        Observed by {obs.user.login}
-                                    </p>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <p className="font-medium text-sm">
+                                            Observed by {obs.user.login}
+                                        </p>
+                                        {obs.searchRadius &&
+                                            showRadiusBadges && (
+                                                <span
+                                                    className={`text-xs px-1.5 py-0.5 rounded-full text-white ${
+                                                        obs.searchRadius === 20
+                                                            ? 'bg-blue-500'
+                                                            : obs.searchRadius ===
+                                                                100
+                                                              ? 'bg-green-500'
+                                                              : 'bg-purple-500'
+                                                    }`}
+                                                >
+                                                    {obs.searchRadius}km
+                                                </span>
+                                            )}
+                                    </div>
                                     <p className="text-xs text-muted-foreground">
                                         {obs.observed_on_string}
                                     </p>
@@ -524,4 +458,4 @@ function ObservationMapViewInner({
             </MapContainer>
         </motion.div>
     )
-}
+})

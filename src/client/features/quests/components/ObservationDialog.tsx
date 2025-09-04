@@ -2,7 +2,7 @@ import { INatTaxon } from '@shared/types/iNatTypes'
 import { useQuery } from '@tanstack/react-query'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { ReactNode, useEffect, useState } from 'react'
+import React, { ReactNode, useEffect, useState } from 'react'
 import api from '@/api/api'
 import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
 import {
@@ -15,6 +15,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 // Grid View Component
@@ -41,6 +42,71 @@ export function ObservationDialog(props: ObservationDialogProps) {
         props
     const prefetchTaxonPhoto = usePrefetchTaxonPhoto()
     const [open, setOpen] = useState(false)
+
+    const [searchRadius, setSearchRadius] = useState<number>(20)
+    const [showGlobal, setShowGlobal] = useState<boolean>(false)
+
+    // Ensure coords are numbers and round for stable caching
+    const hasValidCoords =
+        latitude !== undefined &&
+        longitude !== undefined &&
+        !isNaN(Number(latitude)) &&
+        !isNaN(Number(longitude))
+    const roundedLat = hasValidCoords
+        ? Math.round(Number(latitude) * 10000) / 10000
+        : undefined
+    const roundedLon = hasValidCoords
+        ? Math.round(Number(longitude) * 10000) / 10000
+        : undefined
+
+    // Get all radii that should be included for cumulative results
+    const getCumulativeRadii = (currentRadius: number): number[] => {
+        const radii = [20, 100, 1000]
+        return radii.filter((radius) => radius <= currentRadius)
+    }
+
+    const cumulativeRadii = getCumulativeRadii(searchRadius)
+
+    const {
+        data: observations,
+        isLoading,
+        isError,
+        error,
+    } = useQuery<Observation[], Error>({
+        queryKey: [
+            'observations-cumulative',
+            species.id,
+            roundedLat,
+            roundedLon,
+            cumulativeRadii,
+            showGlobal,
+        ],
+        queryFn: () =>
+            getCumulativeObservationsFromINat(
+                species.id,
+                cumulativeRadii,
+                roundedLat,
+                roundedLon,
+                showGlobal
+            ),
+        enabled: !!species.id,
+
+        retry: (failureCount, error) => {
+            // Don't retry on 4xx errors (client errors)
+            if (
+                error &&
+                'status' in error &&
+                typeof error.status === 'number' &&
+                error.status >= 400 &&
+                error.status < 500
+            ) {
+                return false
+            }
+            // Retry up to 2 times for other errors
+            return failureCount < 2
+        },
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    })
 
     console.log(
         `ObservationDialog: Initialized for species ${species.id} (${species.name})`,
@@ -134,10 +200,17 @@ export function ObservationDialog(props: ObservationDialogProps) {
                 {/* Right Column: Observations */}
                 <div className="flex-1 overflow-hidden -ml-10">
                     <ObservationList
-                        taxonId={species.id}
+                        observations={observations}
+                        isLoading={isLoading}
+                        isError={isError}
+                        error={error || undefined}
                         lat={latitude}
                         lon={longitude}
                         locationName={locationName}
+                        searchRadius={searchRadius}
+                        setSearchRadius={setSearchRadius}
+                        showGlobal={showGlobal}
+                        setShowGlobal={setShowGlobal}
                     />
                 </div>
             </DialogContent>
@@ -166,19 +239,31 @@ function lockScroll() {
 type ViewMode = 'grid' | 'list' | 'map'
 
 function ObservationList({
-    taxonId,
+    observations,
+    isLoading,
+    isError,
+    error,
     lat,
     lon,
     locationName,
+    searchRadius,
+    setSearchRadius,
+    showGlobal,
+    setShowGlobal,
 }: {
-    taxonId: number
+    observations?: Observation[]
+    isLoading: boolean
+    isError: boolean
+    error?: Error
     lat?: number
     lon?: number
     locationName?: string
+    searchRadius: number
+    setSearchRadius: (radius: number) => void
+    showGlobal: boolean
+    setShowGlobal: (global: boolean) => void
 }) {
     const [viewMode, setViewMode] = useState<ViewMode>('grid')
-    const [searchRadius, setSearchRadius] = useState<number>(10) // Default 10km radius
-    const [showGlobal, setShowGlobal] = useState<boolean>(false)
 
     // Ensure coords are numbers and round for stable caching
     const hasValidCoords =
@@ -186,105 +271,154 @@ function ObservationList({
         lon !== undefined &&
         !isNaN(Number(lat)) &&
         !isNaN(Number(lon))
-    const roundedLat = hasValidCoords
-        ? Math.round(Number(lat) * 10000) / 10000
-        : undefined
-    const roundedLon = hasValidCoords
-        ? Math.round(Number(lon) * 10000) / 10000
-        : undefined
 
-    const {
-        data: observations,
-        isLoading,
-        isError,
-        error,
-    } = useQuery<Observation[], Error>({
-        queryKey: [
-            'observations',
-            taxonId,
-            roundedLat,
-            roundedLon,
-            searchRadius,
-            showGlobal,
-        ],
-        queryFn: () =>
-            getObservationsFromINat(
-                taxonId,
-                roundedLat,
-                roundedLon,
-                searchRadius,
-                showGlobal
-            ),
-        enabled: !!taxonId,
-        retry: (failureCount, error) => {
-            // Don't retry on 4xx errors (client errors)
-            if (
-                error &&
-                'status' in error &&
-                typeof error.status === 'number' &&
-                error.status >= 400 &&
-                error.status < 500
-            ) {
-                return false
+    // Get all radii that should be included for cumulative results
+    const getCumulativeRadii = (currentRadius: number): number[] => {
+        const radii = [20, 100, 1000]
+        return radii.filter((radius) => radius <= currentRadius)
+    }
+
+    const cumulativeRadii = getCumulativeRadii(searchRadius)
+
+    // Group observations by search radius
+    const groupedObservations = React.useMemo(() => {
+        if (!observations) return {}
+
+        const groups: Record<number, typeof observations> = {}
+        cumulativeRadii.forEach((radius) => {
+            groups[radius] = []
+        })
+
+        observations.forEach((obs) => {
+            if (obs.searchRadius && groups[obs.searchRadius]) {
+                groups[obs.searchRadius].push(obs)
             }
-            // Retry up to 2 times for other errors
-            return failureCount < 2
-        },
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    })
+        })
+
+        return groups
+    }, [observations, cumulativeRadii])
+
+    // Track expanded accordion sections
+    const [expandedSections, setExpandedSections] = React.useState<string[]>([])
+    const [lastCumulativeRadii, setLastCumulativeRadii] = React.useState<
+        number[]
+    >([])
+
+    // Update expanded sections when cumulative radii change
+    React.useEffect(() => {
+        if (cumulativeRadii.length > 0) {
+            const mostRecentRadius =
+                cumulativeRadii[cumulativeRadii.length - 1].toString()
+
+            // Only auto-expand if the cumulative radii actually changed (not just user interaction)
+            if (
+                JSON.stringify(cumulativeRadii) !==
+                JSON.stringify(lastCumulativeRadii)
+            ) {
+                setExpandedSections([mostRecentRadius])
+                setLastCumulativeRadii([...cumulativeRadii])
+            }
+        }
+    }, [cumulativeRadii, lastCumulativeRadii])
+
+    // Handle accordion expansion changes (user interactions)
+    const handleAccordionChange = (value: string[]) => {
+        setExpandedSections(value)
+    }
 
     return (
         <div className={`mx-2 mt-2 flex h-full flex-col`}>
             {/* Header / Toggle */}
             <motion.div
-                className="flex items-center justify-between mb-4 min-h-12 px-4"
+                className="flex flex-col mb-1 min-h-12 px-4"
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
             >
-                <div className="flex flex-col">
-                    <h3 className="text-lg font-semibold">
-                        Recent Observations ({observations?.length || 0})
-                        {showGlobal && (
-                            <span className="text-xs text-green-600 ml-2">
-                                (Global)
-                            </span>
-                        )}
-                        {searchRadius > 10 && !showGlobal && (
-                            <span className="text-xs text-blue-600 ml-2">
-                                (Expanded)
-                            </span>
-                        )}
-                    </h3>
-                    <div className="flex flex-row items-center">
-                        <MdOutlineLocationOn className="mr-1" />
-                        {showGlobal
-                            ? 'Global observations'
-                            : locationName
-                              ? `${locationName}${hasValidCoords ? ` (${searchRadius}km radius)` : ''}`
-                              : hasValidCoords
-                                ? `${searchRadius}km radius`
-                                : 'Global observations'}
+                {/* Title and location row */}
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-col">
+                        <h3 className="text-lg font-semibold">
+                            Recent Observations ({observations?.length || 0})
+                            {showGlobal && (
+                                <span className="text-xs text-green-600 ml-2">
+                                    (Global)
+                                </span>
+                            )}
+                        </h3>
+                        <div className="flex flex-row items-center">
+                            <MdOutlineLocationOn className="mr-1" />
+                            {showGlobal
+                                ? 'Global observations'
+                                : locationName
+                                  ? `${locationName}${hasValidCoords ? ` (${searchRadius}km)` : ''}`
+                                  : hasValidCoords
+                                    ? `${searchRadius}km`
+                                    : 'Global observations'}
+                        </div>
                     </div>
                 </div>
-                <ToggleGroup
-                    type="single"
-                    value={viewMode}
-                    onValueChange={(value: ViewMode) =>
-                        value && setViewMode(value)
-                    }
-                    className="border-0 rounded-lg"
-                >
-                    <ToggleGroupItem value="grid" aria-label="Grid view">
-                        <Grid className="h-4 w-4" />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="list" aria-label="List view">
-                        <List className="h-4 w-4" />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="map" aria-label="Map view">
-                        <MapIcon className="h-4 w-4" />
-                    </ToggleGroupItem>
-                </ToggleGroup>
+
+                {/* Controls row */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                        {hasValidCoords && !showGlobal && (
+                            <ToggleGroup
+                                type="single"
+                                value={searchRadius.toString()}
+                                onValueChange={(value) =>
+                                    value && setSearchRadius(parseInt(value))
+                                }
+                                className="border rounded-lg"
+                            >
+                                <ToggleGroupItem
+                                    value="20"
+                                    aria-label="20km radius"
+                                >
+                                    20km
+                                </ToggleGroupItem>
+                                <ToggleGroupItem
+                                    value="100"
+                                    aria-label="100km radius"
+                                >
+                                    100km
+                                </ToggleGroupItem>
+                                <ToggleGroupItem
+                                    value="1000"
+                                    aria-label="1000km radius"
+                                >
+                                    1000km
+                                </ToggleGroupItem>
+                            </ToggleGroup>
+                        )}
+                    </div>
+                    <div className="flex items-center">
+                        <ToggleGroup
+                            type="single"
+                            value={viewMode}
+                            onValueChange={(value: ViewMode) =>
+                                value && setViewMode(value)
+                            }
+                            className="border-0 rounded-lg"
+                        >
+                            <ToggleGroupItem
+                                value="grid"
+                                aria-label="Grid view"
+                            >
+                                <Grid className="h-4 w-4" />
+                            </ToggleGroupItem>
+                            <ToggleGroupItem
+                                value="list"
+                                aria-label="List view"
+                            >
+                                <List className="h-4 w-4" />
+                            </ToggleGroupItem>
+                            <ToggleGroupItem value="map" aria-label="Map view">
+                                <MapIcon className="h-4 w-4" />
+                            </ToggleGroupItem>
+                        </ToggleGroup>
+                    </div>
+                </div>
             </motion.div>
 
             {/* Content wrapper with fixed height and relative positioning */}
@@ -296,7 +430,7 @@ function ObservationList({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 overflow-y-auto pt-6 pb-6"
+                        className="absolute inset-0 overflow-y-auto pt-2 pb-6"
                         style={{ pointerEvents: 'none' }}
                     >
                         <ObservationLoadingState />
@@ -312,31 +446,107 @@ function ObservationList({
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.3 }}
-                            className="absolute inset-0 overflow-y-auto pt-6 pb-6"
+                            className="absolute inset-0 overflow-y-auto pt-2 pb-6"
                         >
                             {isError ? (
                                 <ObservationErrorState error={error} />
                             ) : observations && observations.length > 0 ? (
-                                <>
-                                    {viewMode === 'grid' && (
-                                        <ObservationGridView
-                                            observations={observations}
-                                        />
-                                    )}
-                                    {viewMode === 'list' && (
-                                        <ObservationListView
-                                            observations={observations}
-                                        />
-                                    )}
+                                <div className="space-y-2">
+                                    {/* Map view - show all observations on single map */}
                                     {viewMode === 'map' &&
                                         lat !== undefined &&
                                         lon !== undefined && (
                                             <ObservationMapView
                                                 observations={observations}
                                                 center={[lat, lon]}
+                                                searchRadius={searchRadius}
+                                                showRadiusBadges={true}
                                             />
                                         )}
-                                </>
+
+                                    {/* Accordion for grouped observations (grid and list views only) */}
+                                    {viewMode !== 'map' && (
+                                        <Accordion
+                                            type="multiple"
+                                            value={expandedSections}
+                                            onValueChange={
+                                                handleAccordionChange
+                                            }
+                                            className="w-full"
+                                        >
+                                            {cumulativeRadii.map((radius) => {
+                                                const radiusObservations =
+                                                    groupedObservations[
+                                                        radius
+                                                    ] || []
+                                                if (
+                                                    radiusObservations.length ===
+                                                    0
+                                                )
+                                                    return null
+
+                                                return (
+                                                    <AccordionItem
+                                                        key={radius}
+                                                        value={radius.toString()}
+                                                    >
+                                                        <AccordionTrigger className="hover:no-underline">
+                                                            <div className="flex items-center gap-3">
+                                                                <span
+                                                                    className={`text-xs px-2 py-1 rounded-full text-white font-medium ${
+                                                                        radius ===
+                                                                        20
+                                                                            ? 'bg-blue-500'
+                                                                            : radius ===
+                                                                                100
+                                                                              ? 'bg-green-500'
+                                                                              : 'bg-purple-500'
+                                                                    }`}
+                                                                >
+                                                                    {radius}km
+                                                                </span>
+                                                                <span className="text-sm font-medium">
+                                                                    {
+                                                                        radiusObservations.length
+                                                                    }{' '}
+                                                                    observation
+                                                                    {radiusObservations.length !==
+                                                                    1
+                                                                        ? 's'
+                                                                        : ''}
+                                                                </span>
+                                                            </div>
+                                                        </AccordionTrigger>
+                                                        <AccordionContent className="pt-4">
+                                                            {viewMode ===
+                                                                'grid' && (
+                                                                <ObservationGridView
+                                                                    observations={
+                                                                        radiusObservations
+                                                                    }
+                                                                    showRadiusBadges={
+                                                                        false
+                                                                    }
+                                                                />
+                                                            )}
+                                                            {viewMode ===
+                                                                'list' && (
+                                                                <ObservationListView
+                                                                    observations={
+                                                                        radiusObservations
+                                                                    }
+                                                                    showRadiusBadges={
+                                                                        false
+                                                                    }
+                                                                />
+                                                            )}
+                                                        </AccordionContent>
+                                                    </AccordionItem>
+                                                )
+                                            })}
+                                        </Accordion>
+                                    )}
+                                </div>
                             ) : (
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
@@ -346,33 +556,38 @@ function ObservationList({
                                 >
                                     <p className="text-muted-foreground mb-4">
                                         {hasValidCoords && !showGlobal
-                                            ? `No observations found for this species within ${searchRadius}km.`
+                                            ? `No observations found for this species within ${cumulativeRadii.join('+')}km combined search.`
                                             : `No observations found for this species globally.`}
                                     </p>
 
                                     {hasValidCoords &&
                                         !showGlobal &&
-                                        searchRadius < 100 && (
+                                        searchRadius < 1000 && (
                                             <div className="flex flex-col gap-3 items-center">
-                                                <button
-                                                    onClick={() =>
-                                                        setSearchRadius(
-                                                            Math.min(
-                                                                searchRadius *
-                                                                    2,
-                                                                100
+                                                {searchRadius === 20 && (
+                                                    <button
+                                                        onClick={() =>
+                                                            setSearchRadius(100)
+                                                        }
+                                                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
+                                                    >
+                                                        Expand search to 100km
+                                                        (keep existing results)
+                                                    </button>
+                                                )}
+                                                {searchRadius === 100 && (
+                                                    <button
+                                                        onClick={() =>
+                                                            setSearchRadius(
+                                                                1000
                                                             )
-                                                        )
-                                                    }
-                                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
-                                                >
-                                                    Expand search to{' '}
-                                                    {Math.min(
-                                                        searchRadius * 2,
-                                                        100
-                                                    )}
-                                                    km
-                                                </button>
+                                                        }
+                                                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
+                                                    >
+                                                        Expand search to 1000km
+                                                        (keep existing results)
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() =>
                                                         setShowGlobal(true)
@@ -388,7 +603,7 @@ function ObservationList({
                                         <button
                                             onClick={() => {
                                                 setShowGlobal(false)
-                                                setSearchRadius(10)
+                                                setSearchRadius(20)
                                             }}
                                             className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors text-sm"
                                         >
@@ -534,7 +749,7 @@ async function getObservationsFromINat(
     taxonId: number,
     lat?: number,
     lon?: number,
-    radius: number = 10,
+    radius: number = 20,
     globalSearch: boolean = false
 ) {
     let url = `/iNatAPI/observations?taxon_id=${taxonId}&per_page=6&order_by=observed_on`
@@ -568,6 +783,60 @@ async function getObservationsFromINat(
     } catch (error) {
         console.error(
             `Error fetching observations for taxon ${taxonId}:`,
+            error
+        )
+        throw error
+    }
+}
+
+async function getCumulativeObservationsFromINat(
+    taxonId: number,
+    radii: number[],
+    lat?: number,
+    lon?: number,
+    globalSearch: boolean = false
+) {
+    try {
+        console.log(
+            `Fetching cumulative observations for taxon ${taxonId} with radii: ${radii.join(', ')}km`
+        )
+
+        // Fetch observations for each radius
+        const fetchPromises = radii.map((radius) =>
+            getObservationsFromINat(taxonId, lat, lon, radius, globalSearch)
+        )
+
+        const resultsArrays = await Promise.all(fetchPromises)
+
+        // Combine all results and deduplicate by ID
+        const seenIds = new Set<number>()
+        const combinedResults: Observation[] = []
+
+        // Process results in order of increasing radius (so smaller radius results come first)
+        for (let i = 0; i < resultsArrays.length; i++) {
+            const results = resultsArrays[i]
+            const radius = radii[i]
+
+            for (const observation of results) {
+                if (!seenIds.has(observation.id)) {
+                    seenIds.add(observation.id)
+                    // Add radius information to track where this observation came from
+                    combinedResults.push({
+                        ...observation,
+                        searchRadius: radius,
+                    })
+                }
+            }
+        }
+
+        console.log(
+            `Combined ${combinedResults.length} unique observations from radii: ${radii.join(', ')}km`
+        )
+
+        return combinedResults
+    } catch (error) {
+        console.error(
+            `Error fetching cumulative observations for taxon ${taxonId}:`,
             error
         )
         throw error
