@@ -27,6 +27,8 @@ type QuestShare = {
     guest_name: string | null
     token: string
     expires_at?: string
+    shared_with_user_id?: number | null
+    invited_username?: string | null
 }
 
 type QuestLeaderboardProps = {
@@ -120,7 +122,7 @@ export const QuestLeaderboard = ({
 
             // Find matching share - handle both guest and user shares
             const matchingShare = shares.find(
-                (s: any) =>
+                (s: QuestShare) =>
                     // Match guest shares by name
                     s.guest_name === participantToDelete.display_name ||
                     (s.guest_name === null &&

@@ -50,8 +50,8 @@ export function ShareQuest({
     const showForm =
         externalShowForm !== undefined ? externalShowForm : internalShowForm
     const setShowForm = externalOnToggleForm || setInternalShowForm
-    const [shares, setShares] = useState<QuestShare[]>([])
-    const [loading, setLoading] = useState(false)
+    const [_shares, setShares] = useState<QuestShare[]>([])
+    const [_loading, setLoading] = useState(false)
     const [creating, setCreating] = useState(false)
     const [invitationMode, setInvitationMode] = useState<'guest' | 'user'>(
         'guest'
@@ -121,7 +121,7 @@ export function ShareQuest({
         }
     }
 
-    const deleteShare = async (shareId: number) => {
+    const _deleteShare = async (shareId: number) => {
         try {
             await api.delete(`/quest-sharing/shares/${shareId}`)
             setShares((prev) => prev.filter((s) => s.id !== shareId))
@@ -135,7 +135,7 @@ export function ShareQuest({
         }
     }
 
-    const buildShareLink = (token: string) => {
+    const _buildShareLink = (token: string) => {
         // Placeholder guest URL for future UI. Token-based API is already active.
         return `${window.location.origin}/share/${token}`
     }
