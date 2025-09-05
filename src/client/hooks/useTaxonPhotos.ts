@@ -8,7 +8,7 @@ import { INatTaxon } from '@shared/types/iNatTypes'
 import { useCallback, useMemo } from 'react'
 import { QuestWithTaxa } from '@/../types/types'
 
-const BATCH_SIZE = 30
+const BATCH_SIZE = 150 // Reduced from 200 to 150 to be more conservative with rate limits
 
 /**
  * Fetches taxa in batches to avoid too many requests.
@@ -55,8 +55,8 @@ export function useTaxonPhotos(taxonIds: number[]) {
             )
         },
         enabled: taxonIds.length > 0,
-        staleTime: 30 * 60 * 1000, // 30 minutes
-        gcTime: 60 * 60 * 1000, // 1 hour (was cacheTime in v4)
+        staleTime: 24 * 60 * 60 * 1000, // Increased from 30min to 24h for taxa data
+        gcTime: 48 * 60 * 60 * 1000, // Increased from 1h to 48h
         placeholderData: keepPreviousData,
         refetchOnMount: false, // Don't refetch on mount if data is cached
     })
@@ -219,7 +219,7 @@ export function usePrefetchTaxonPhoto() {
                 const taxa = await fetchTaxaInBatches([taxonId])
                 return [taxa[0]?.default_photo?.medium_url || null]
             },
-            staleTime: 30 * 60 * 1000,
+            staleTime: 24 * 60 * 60 * 1000, // Increased from 30min to 24h
         })
     }
 }

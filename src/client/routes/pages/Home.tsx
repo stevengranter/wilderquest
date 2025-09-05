@@ -1,15 +1,16 @@
 import { ArrowRight, ChevronRight, Compass } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import api from '@/api/api'
 import { QuestCard } from '@/features/quests/components/QuestCard'
 import { QuestCardSkeleton } from '@/features/quests/components/QuestCardSkeleton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
-import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 import { paths } from '@/routes/paths'
 import { QuestWithTaxa } from '../../../server/repositories/QuestRepository'
+import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 
 function _StatsCard({
     icon: Icon,
@@ -44,59 +45,29 @@ function _StatsCard({
 
 export function Home() {
     const { isAuthenticated, user: _user } = useAuth()
-    const [recentQuests, setRecentQuests] = useState<QuestWithTaxa[]>([])
-    const [isLoading, setIsLoading] = useState(true)
-    const [_stats, setStats] = useState({
-        totalQuests: 0,
-        activeQuests: 0,
-        totalSpecies: 0,
+
+    // Use React Query for efficient caching and automatic refetching
+    const { data: recentQuests = [], isLoading } = useQuery({
+        queryKey: ['homepageQuests'],
+        queryFn: async () => {
+            const response = await api.get('/quests?page=1&limit=6')
+            return response.data as QuestWithTaxa[]
+        },
+        staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+        gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
     })
 
-    const { questToPhotosMap, isLoading: photosLoading } =
-        useQuestPhotoCollage(recentQuests)
+    // Basic stats - will be enhanced with a dedicated stats endpoint later
+    // const stats = {
+    //     totalQuests: 0,
+    //     activeQuests: 0,
+    //     totalSpecies: 0,
+    // }
 
-    useEffect(() => {
-        const fetchRecentQuests = async () => {
-            try {
-                setIsLoading(true)
-                const response = await api.get('/quests')
-                const allQuests = response.data as QuestWithTaxa[]
-
-                // Get the 6 most recent quests (sorted by creation date)
-                const recent = allQuests
-                    .sort(
-                        (a, b) =>
-                            new Date(b.created_at || '').getTime() -
-                            new Date(a.created_at || '').getTime()
-                    )
-                    .slice(0, 6)
-
-                setRecentQuests(recent)
-
-                // Calculate stats
-                const activeCount = allQuests.filter(
-                    (q) => q.status === 'active'
-                ).length
-                const totalSpecies = allQuests.reduce(
-                    (sum, quest) => sum + (quest.taxon_ids?.length || 0),
-                    0
-                )
-
-                setStats({
-                    totalQuests: allQuests.length,
-                    activeQuests: activeCount,
-                    totalSpecies,
-                })
-
-                setIsLoading(false)
-            } catch (error) {
-                console.error('Failed to fetch recent quests:', error)
-                setIsLoading(false)
-            }
-        }
-
-        fetchRecentQuests()
-    }, [])
+    // Use the same photo loading approach as QuestsPage
+    const { questToPhotosMap, isLoading: photosLoading } = useQuestPhotoCollage(
+        recentQuests || []
+    )
 
     return (
         <div className="min-h-screen bg-background">

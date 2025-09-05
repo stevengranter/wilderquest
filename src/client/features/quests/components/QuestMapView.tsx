@@ -352,7 +352,7 @@ function QuestMapViewInner({
 
                 // Batch taxa IDs to minimize API calls
                 const taxonIds = taxa.map((t) => t.id)
-                const batchSize = 30 // iNaturalist API batch limit
+                const batchSize = 200 // Increased from 30 to 200 to reduce API calls (iNaturalist taxa batch limit)
                 const batches = []
 
                 for (let i = 0; i < taxonIds.length; i += batchSize) {
@@ -364,7 +364,7 @@ function QuestMapViewInner({
 
                 for (const batch of batches) {
                     const taxonIdsParam = batch.join(',')
-                    const url = `/iNatAPI/observations?nelat=${ne.lat}&nelng=${ne.lng}&swlat=${sw.lat}&swlng=${sw.lng}&geo=true&photos=true&verifiable=true&per_page=50&taxon_id=${taxonIdsParam}`
+                    const url = `/iNatAPI/observations?nelat=${ne.lat}&nelng=${ne.lng}&swlat=${sw.lat}&swlng=${sw.lng}&geo=true&photos=true&verifiable=true&per_page=20&taxon_id=${taxonIdsParam}`
 
                     try {
                         const response = await api.get(url)

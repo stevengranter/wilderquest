@@ -14,8 +14,8 @@ export const handleError = (error: unknown) => {
                 }
                 toast.error(
                     val.description ||
-                    val.message ||
-                    'A validation error occurred.',
+                        val.message ||
+                        'A validation error occurred.'
                 )
             }
         } else if (typeof err?.data.errors === 'object') {
@@ -29,8 +29,23 @@ export const handleError = (error: unknown) => {
         } else if (err?.data) {
             if (!isProduction) {
                 console.log('Axios data error:', err)
+                // Log rate limit source for debugging
+                if (err.status === 429) {
+                    console.log(
+                        '🚨 429 Error Source:',
+                        err.data.source || 'unknown'
+                    )
+                    console.log('🚨 Rate limit headers:', err.headers)
+                }
             }
-            toast.error(err.data.message || 'An unexpected error occurred.')
+            // Special handling for 429 errors
+            if (err.status === 429) {
+                const source = err.data.source || 'unknown'
+                const message = err.data.message || 'Rate limit exceeded'
+                toast.error(`${message} (Source: ${source})`)
+            } else {
+                toast.error(err.data.message || 'An unexpected error occurred.')
+            }
         } else if (err?.status === 401) {
             if (!isProduction) {
                 console.log('Axios 401 error: Please login')

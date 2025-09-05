@@ -8,6 +8,7 @@ import { genSaltSync, hashSync } from 'bcrypt-ts'
 import fs from 'fs'
 import env from '../config/app.config.js'
 import * as os from 'node:os'
+import { MockINatService } from '../services/mockINatService.js'
 
 type User = {
     username: string
@@ -26,8 +27,8 @@ const db = await mysql.createConnection({
     password: env.MYSQL_PASSWORD,
 })
 
-// Use internal proxy instead of direct API call for rate limiting and caching
-const API_URL = 'http://localhost:3000/api/iNatAPI/observations/species_counts'
+// Available mock taxa IDs from MockINatService
+const MOCK_TAXA_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 type inatApiParams = {
     lat: number
@@ -39,62 +40,48 @@ type inatApiParams = {
     verifiable?: boolean
 }
 
-// Fetch real taxa from iNaturalist based on location
+// Fetch taxa from mock data instead of real API
 const fetchLocationTaxa = async (
     lat: number,
     lng: number,
     limit: number = 20
 ) => {
     try {
-        const params: inatApiParams = {
+        // Get species counts from mock service
+        const speciesCountsResponse = MockINatService.getSpeciesCounts({
             lat,
             lng,
-            radius: 50, // 50km radius
-            per_page: Math.min(limit * 2, 100), // Get more than needed for variety
+            radius: 50,
+            per_page: Math.min(limit * 2, 100),
             quality_grade: 'research',
             verifiable: true,
-        }
+        })
 
-        const queryString = Object.entries(params)
-            .map(
-                ([key, value]) =>
-                    `${key}=${encodeURIComponent(value.toString())}`
-            )
-            .join('&')
-
-        const response = await fetch(`${API_URL}?${queryString}`)
-
-        if (!response.ok) {
+        if (
+            !speciesCountsResponse.results ||
+            speciesCountsResponse.results.length === 0
+        ) {
             console.warn(
-                `iNaturalist API error: ${response.status}. Using fallback taxa.`
+                `No mock species found for location ${lat}, ${lng}. Using fallback taxa.`
             )
             return generateFallbackTaxa(limit)
         }
 
-        const data = await response.json()
-
-        if (!data.results || data.results.length === 0) {
-            console.warn(
-                `No observations found for location ${lat}, ${lng}. Using fallback taxa.`
-            )
-            return generateFallbackTaxa(limit)
-        }
-
-        // Extract taxon IDs and shuffle for variety
-        const taxonIds = data.results
+        // Extract taxon IDs from mock response
+        const taxonIds = speciesCountsResponse.results
             .map((result: { taxon: { id: number } }) => result.taxon.id)
-            .filter((id: number) => id && id > 0)
+            .filter((id: number) => id && MOCK_TAXA_IDS.includes(id))
 
         // Shuffle and return requested number
         const shuffled = taxonIds.sort(() => 0.5 - Math.random())
         const selected = shuffled.slice(0, limit)
 
         console.log(
-            `Fetched ${selected.length} real taxa for location ${lat}, ${lng}`
+            `Fetched ${selected.length} mock taxa for location ${lat}, ${lng}`
         )
         return selected
     } catch (error) {
-        console.error('Error fetching taxa from iNaturalist:', error)
+        console.error('Error fetching taxa from mock service:', error)
         console.log('Using fallback random taxa')
         return generateFallbackTaxa(limit)
     }
@@ -103,7 +90,8 @@ const fetchLocationTaxa = async (
 const generateFallbackTaxa = (quantity: number) => {
     const taxa = []
     for (let i = 0; i < quantity; i++) {
-        taxa.push(getRandomInt(5000, 999999))
+        // Use only available mock taxa IDs
+        taxa.push(faker.helpers.arrayElement(MOCK_TAXA_IDS))
     }
     return taxa
 }
@@ -270,7 +258,7 @@ const logRawUserData = (user: User) => {
         .replace(/\./g, '_')
 
     // Construct the filename with the OS identifier
-    const filename = `users_table_data_${dateString}.${osIdentifier}.dev.csv`
+    const filename = `users_table_data_mock_${dateString}.${osIdentifier}.dev.csv`
 
     // Append the data to a CSV file
     const csvRow = rawUserData.join(',') + '\n'
@@ -287,7 +275,7 @@ const logRawUserData = (user: User) => {
 // Function to ensure the CSV header is written to the file
 const writeCsvHeader = () => {
     const header = 'username,email,password,created_at,updated_at,user_cuid\n'
-    fs.writeFile('raw_users.dev.csv', header, (err) => {
+    fs.writeFile('raw_users_mock.dev.csv', header, (err) => {
         if (err) {
             console.error('Error writing CSV header:', err)
         }
@@ -432,8 +420,8 @@ const createUsers = async (quantity: number) => {
             quest.user_id = user_id
             const quest_id = await addRowToTable('quests', quest)
 
-            // Add taxa to the quest based on location
-            const numberOfTaxa = getRandomInt(5, 20)
+            // Add taxa to the quest based on location using mock data
+            const numberOfTaxa = getRandomInt(3, 8) // Reduced to fit available mock taxa
             const taxaArray = await fetchLocationTaxa(
                 quest.latitude,
                 quest.longitude,
@@ -447,8 +435,8 @@ const createUsers = async (quantity: number) => {
                 })
             }
 
-            // Add small delay to avoid rate limiting
-            await new Promise((resolve) => setTimeout(resolve, 100))
+            // Add small delay to avoid overwhelming the database
+            await new Promise((resolve) => setTimeout(resolve, 50))
         }
         userIds.push(user_id)
     }
@@ -531,16 +519,16 @@ const sampleQuests = [
         date_time_end: new Date('2024-06-21'),
     },
     {
-        name: 'African Safari Documentation 🦁',
+        name: 'Forest Ecosystem Survey 🌲',
         user_id: getRandomInt(1, 12),
         status: 'paused' as const,
         is_private: true,
-        location_name: 'Kruger National Park, South Africa',
-        latitude: -24.0058,
-        longitude: 31.4914,
-        place_id: 'kruger_np_za',
-        date_time_start: new Date('2024-04-15'),
-        date_time_end: new Date('2024-10-15'),
+        location_name: 'Banff National Park, Alberta',
+        latitude: 51.496705,
+        longitude: -115.928917,
+        place_id: 'banff_np_ab',
+        date_time_start: new Date('2024-07-01'),
+        date_time_end: new Date('2024-09-30'),
     },
 ]
 
@@ -562,8 +550,8 @@ for (const questData of sampleQuests) {
 
     const quest_id = await addRowToTable('quests', quest)
 
-    // Add location-based taxa to each sample quest
-    const numberOfTaxa = getRandomInt(8, 25)
+    // Add location-based taxa to each sample quest using mock data
+    const numberOfTaxa = getRandomInt(4, 7) // Reduced to fit available mock taxa
     const taxaArray = await fetchLocationTaxa(
         quest.latitude,
         quest.longitude,
@@ -577,16 +565,17 @@ for (const questData of sampleQuests) {
     }
 
     console.log(
-        `Created sample quest: ${quest.name} with ${taxaArray.length} location-based taxa`
+        `Created sample quest: ${quest.name} with ${taxaArray.length} mock taxa`
     )
 
-    // Add delay to avoid rate limiting
-    await new Promise((resolve) => setTimeout(resolve, 200))
+    // Add delay to avoid overwhelming the database
+    await new Promise((resolve) => setTimeout(resolve, 100))
 }
 
 db.end().then(() => {
-    console.log('Seed completed!')
+    console.log('Mock seed completed!')
     console.log(`Created ${users?.length} users with quests`)
     console.log('Created admin user')
     console.log('Created sample quests')
+    console.log('Used only mock iNaturalist data (taxa IDs 1-10)')
 })

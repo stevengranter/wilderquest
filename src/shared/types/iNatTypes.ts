@@ -33,7 +33,7 @@ export type INatTaxon = {
     flag_counts: { resolved: number; unresolved: number }
     current_synonymous_taxon_ids: number | null
     atlas_id: number
-    complete_species_count: null
+    complete_species_count: number | null
     wikipedia_url: string
     matched_term: string
     iconic_taxon_name: string

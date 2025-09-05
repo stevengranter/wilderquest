@@ -46,7 +46,7 @@ export default function MapView({ taxonId, localQuery }: MapViewProps) {
             const sw = bounds.getSouthWest()
             const ne = bounds.getNorthEast()
 
-            const url = `/api/iNatAPI/observations?nelat=${ne.lat}&nelng=${ne.lng}&swlat=${sw.lat}&swlng=${sw.lng}&geo=true&photos=true&verifiable=true&per_page=100&${localQuery ? `q=${localQuery}` : ''}&${taxonId ? `taxon_id=${taxonId}` : ''}`
+            const url = `/api/iNatAPI/observations?nelat=${ne.lat}&nelng=${ne.lng}&swlat=${sw.lat}&swlng=${sw.lng}&geo=true&photos=true&verifiable=true&per_page=50&${localQuery ? `q=${localQuery}` : ''}&${taxonId ? `taxon_id=${taxonId}` : ''}`
 
             try {
                 const response = await axios.get<INatObservationsResponse>(url)

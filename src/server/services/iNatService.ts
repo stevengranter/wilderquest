@@ -12,8 +12,12 @@ async function fetchTaxaByIds(taxonIds: number[]): Promise<INatTaxon[]> {
     }
 
     const batchPromises = batches.map(async (batch) => {
-        const response = await iNatAPI.get(`/taxa/${batch.join(',')}`)
-        return response.data.results as INatTaxon[]
+        const response = await fetch(
+            `http://localhost:3000/api/iNatAPI/taxa/${batch.join(',')}`
+        )
+        if (!response.ok) throw new Error(`API error: ${response.status}`)
+        const data = await response.json()
+        return data.results as INatTaxon[]
     })
 
     const results = await Promise.all(batchPromises)

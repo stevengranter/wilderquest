@@ -20,7 +20,7 @@ async function fetchAllSpeciesCounts(placeId: number): Promise<SpeciesCount[]> {
 
     while (true) {
         const res = await fetch(
-            `https://api.inaturalist.org/v1/observations/species_counts?place_id=${placeId}&per_page=${perPage}&page=${page}&order=desc&order_by=count`
+            `http://localhost:3000/api/iNatAPI/observations/species_counts?place_id=${placeId}&per_page=${perPage}&page=${page}&order=desc&order_by=count`
         )
         if (!res.ok) throw new Error(`iNat API error: ${res.status}`)
 

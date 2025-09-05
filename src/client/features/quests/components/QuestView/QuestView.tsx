@@ -1,6 +1,12 @@
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/components/ui/accordion'
 import { useQuestContext } from '@/contexts/QuestContext'
 import { useTaxaWithProgress } from '../../hooks/useTaxaWithProgress'
 import { QuestHeader } from './parts/QuestHeader'
@@ -88,65 +94,152 @@ export const QuestView = () => {
                 />
             )}
 
-            {(questData?.status === 'active' ||
-                questData?.status === 'ended') && (
-                <div className="grid grid-cols-2 gap-8 items-start">
-                    <div>
-                        {isLeaderboardError ? (
-                            <div className="text-sm text-amber-600 mb-3 bg-amber-50 p-4 rounded-md border border-amber-200">
-                                ⚠️ Unable to load leaderboard data. This may be
-                                due to rate limiting.
-                                <button
-                                    onClick={() => window.location.reload()}
-                                    className="ml-2 text-blue-600 hover:text-blue-800 underline"
-                                >
-                                    Retry
-                                </button>
-                            </div>
-                        ) : (
-                            <QuestLeaderboard
-                                leaderboard={leaderboard}
-                                questStatus={questData?.status}
-                                questId={questData?.id}
-                                ownerUserId={questData?.user_id}
-                                questName={questData?.name}
-                                isOwner={isOwner}
-                            />
-                        )}
+            {questData &&
+                (questData?.status === 'paused' ||
+                questData?.status === 'pending' ? (
+                    <Accordion
+                        type="single"
+                        collapsible
+                        className="w-full mb-8"
+                    >
+                        <AccordionItem value="quest-data">
+                            <AccordionTrigger className="text-left">
+                                <div className="flex items-center gap-2">
+                                    <span>Quest Progress & Leaderboard</span>
+                                    <span className="text-sm text-muted-foreground">
+                                        (
+                                        {questData.status === 'paused'
+                                            ? 'Paused'
+                                            : 'Pending'}
+                                        )
+                                    </span>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <div className="grid grid-cols-2 gap-8 items-start">
+                                    <div>
+                                        {isLeaderboardError ? (
+                                            <div className="text-sm text-amber-600 mb-3 bg-amber-50 p-4 rounded-md border border-amber-200">
+                                                ⚠️ Unable to load leaderboard
+                                                data. This may be due to rate
+                                                limiting.
+                                                <button
+                                                    onClick={() =>
+                                                        window.location.reload()
+                                                    }
+                                                    className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                                                >
+                                                    Retry
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <QuestLeaderboard
+                                                leaderboard={leaderboard}
+                                                questStatus={questData?.status}
+                                                questId={questData?.id}
+                                                ownerUserId={questData?.user_id}
+                                                questName={questData?.name}
+                                                isOwner={isOwner}
+                                            />
+                                        )}
+                                    </div>
+                                    <div className="flex justify-center items-start min-h-[300px] pt-4">
+                                        {isProgressError || isTaxaError ? (
+                                            <div className="text-sm text-amber-600 bg-amber-50 p-4 rounded-md border border-amber-200 max-w-xs">
+                                                ⚠️ Unable to load progress data.
+                                                This may be due to rate
+                                                limiting.
+                                                <button
+                                                    onClick={() =>
+                                                        window.location.reload()
+                                                    }
+                                                    className="block mt-2 text-blue-600 hover:text-blue-800 underline"
+                                                >
+                                                    Retry
+                                                </button>
+                                            </div>
+                                        ) : mappings && mappings.length > 0 ? (
+                                            <div className="w-64 h-64">
+                                                {(() => {
+                                                    const total =
+                                                        mappings.length
+                                                    const found =
+                                                        aggregatedProgress?.filter(
+                                                            (a) =>
+                                                                (a.count || 0) >
+                                                                0
+                                                        ).length || 0
+                                                    return (
+                                                        <TaxaPieChart
+                                                            found={found}
+                                                            total={total}
+                                                        />
+                                                    )
+                                                })()}
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                ) : (
+                    <div className="grid grid-cols-2 gap-8 items-start mb-8">
+                        <div>
+                            {isLeaderboardError ? (
+                                <div className="text-sm text-amber-600 mb-3 bg-amber-50 p-4 rounded-md border border-amber-200">
+                                    ⚠️ Unable to load leaderboard data. This may
+                                    be due to rate limiting.
+                                    <button
+                                        onClick={() => window.location.reload()}
+                                        className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                                    >
+                                        Retry
+                                    </button>
+                                </div>
+                            ) : (
+                                <QuestLeaderboard
+                                    leaderboard={leaderboard}
+                                    questStatus={questData?.status}
+                                    questId={questData?.id}
+                                    ownerUserId={questData?.user_id}
+                                    questName={questData?.name}
+                                    isOwner={isOwner}
+                                />
+                            )}
+                        </div>
+                        <div className="flex justify-center items-start min-h-[300px] pt-4">
+                            {isProgressError || isTaxaError ? (
+                                <div className="text-sm text-amber-600 bg-amber-50 p-4 rounded-md border border-amber-200 max-w-xs">
+                                    ⚠️ Unable to load progress data. This may be
+                                    due to rate limiting.
+                                    <button
+                                        onClick={() => window.location.reload()}
+                                        className="block mt-2 text-blue-600 hover:text-blue-800 underline"
+                                    >
+                                        Retry
+                                    </button>
+                                </div>
+                            ) : mappings && mappings.length > 0 ? (
+                                <div className="w-64 h-64">
+                                    {(() => {
+                                        const total = mappings.length
+                                        const found =
+                                            aggregatedProgress?.filter(
+                                                (a) => (a.count || 0) > 0
+                                            ).length || 0
+                                        return (
+                                            <TaxaPieChart
+                                                found={found}
+                                                total={total}
+                                            />
+                                        )
+                                    })()}
+                                </div>
+                            ) : null}
+                        </div>
                     </div>
-
-                    <div className="flex justify-center items-start min-h-[300px] pt-4">
-                        {isProgressError || isTaxaError ? (
-                            <div className="text-sm text-amber-600 bg-amber-50 p-4 rounded-md border border-amber-200 max-w-xs">
-                                ⚠️ Unable to load progress data. This may be due
-                                to rate limiting.
-                                <button
-                                    onClick={() => window.location.reload()}
-                                    className="block mt-2 text-blue-600 hover:text-blue-800 underline"
-                                >
-                                    Retry
-                                </button>
-                            </div>
-                        ) : mappings && mappings.length > 0 ? (
-                            <div className="w-64 h-64">
-                                {(() => {
-                                    const total = mappings.length
-                                    const found =
-                                        aggregatedProgress?.filter(
-                                            (a) => (a.count || 0) > 0
-                                        ).length || 0
-                                    return (
-                                        <TaxaPieChart
-                                            found={found}
-                                            total={total}
-                                        />
-                                    )
-                                })()}
-                            </div>
-                        ) : null}
-                    </div>
-                </div>
-            )}
+                ))}
 
             {questData && (
                 <QuestSpecies

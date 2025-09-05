@@ -664,7 +664,7 @@ async function getSpeciesCountsByGeoLocation(
     longitude: number,
     radius = 10,
     page = 1,
-    perPage = 50
+    perPage = 20
 ) {
     const response = await api.get(
         `/iNatAPI/observations/species_counts?lat=${latitude}&lng=${longitude}&radius=${radius}&include_ancestors=false&page=${page}&per_page=${perPage}`

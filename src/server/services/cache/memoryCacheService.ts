@@ -1,7 +1,7 @@
 import NodeCache from 'node-cache'
 import { ICacheService } from './ICacheService.types.js'
 
-const memoryCache = new NodeCache({ stdTTL: 3600 }) // 1 hour TTL
+const memoryCache = new NodeCache({ stdTTL: 7 * 86400 }) // 7 days to match Redis cache
 
 export const memoryCacheService: ICacheService = {
     get: async <T>(key: string): Promise<T | undefined> => {

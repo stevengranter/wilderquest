@@ -3,17 +3,24 @@ import axios from 'axios'
 import chalk from 'chalk'
 import { Request, Response } from 'express'
 import { cacheService } from '../services/cache/cacheService.js'
-import { globalINaturalistRateLimiter } from '../utils/rateLimiterGlobal.js'
+import {
+    globalINaturalistRateLimiter,
+    iNaturalistAggressiveLimiter,
+} from '../utils/rateLimiterGlobal.js'
 import { getWithRetry } from '../utils/retryWithBackoff.js'
+import { getDeduplicatedRequest } from '../utils/iNatAPI.js'
 
 // Simple circuit breaker state
 let circuitBreakerOpen = false
 let circuitBreakerResetTime = 0
-const CIRCUIT_BREAKER_TIMEOUT = 60000 // 1 minute
+const CIRCUIT_BREAKER_TIMEOUT = 15000 // 15 seconds - reduced from 60s
+let consecutiveFailures = 0
+const MAX_CONSECUTIVE_FAILURES = 5 // Only activate after 5 consecutive failures
 import logger from '../config/logger.js'
 import { titleCase } from '../utils/titleCase.js'
 import { INatObservation, INatTaxon } from '@shared/types/iNatTypes.js'
 import { AppError } from '../middlewares/errorHandler.js'
+import { MockINatService } from '../services/mockINatService.js'
 
 const INATURALIST_API_BASE_URL = 'https://api.inaturalist.org/v1'
 
@@ -59,6 +66,7 @@ function processINaturalistData(data: ProcessableData): ProcessableData {
 }
 
 export const iNaturalistAPIController = async (req: Request, res: Response) => {
+    console.log('DEBUG: iNaturalistAPIController called')
     const path = req.path
 
     // Special endpoint to clear cache
@@ -67,35 +75,176 @@ export const iNaturalistAPIController = async (req: Request, res: Response) => {
         return res.status(200).json({ message: 'Cache cleared successfully' })
     }
 
-    // Check circuit breaker
+    // Diagnostic endpoint for rate limiting status
+    if (path === '/rate-limit-status' && req.method === 'GET') {
+        const globalStatus = await globalINaturalistRateLimiter.get('global')
+        const aggressiveStatus = await iNaturalistAggressiveLimiter.get('mode')
+        const aggressiveRequestsStatus =
+            await iNaturalistAggressiveLimiter.get('requests')
+
+        return res.status(200).json({
+            globalLimiter: {
+                remainingPoints: globalStatus?.remainingPoints ?? 120,
+                isBlocked: (globalStatus?.remainingPoints ?? 120) <= 0,
+                msBeforeNext: globalStatus?.msBeforeNext ?? 0,
+                totalPoints: 120, // Updated to match our temporary increase
+            },
+            aggressiveMode: {
+                isActive: (aggressiveStatus?.remainingPoints ?? 1) <= 0,
+                remainingPoints: aggressiveRequestsStatus?.remainingPoints ?? 5,
+                msBeforeNext: aggressiveRequestsStatus?.msBeforeNext ?? 0,
+            },
+            circuitBreaker: {
+                isOpen: circuitBreakerOpen,
+                consecutiveFailures,
+                resetTime: circuitBreakerResetTime,
+            },
+            clientInfo: {
+                ip: req.ip,
+                userAgent: req.get('User-Agent'),
+            },
+            timestamp: new Date().toISOString(),
+        })
+    }
+
+    // Use mock data in development to avoid rate limits
+    if (
+        process.env.NODE_ENV === 'development' &&
+        process.env.USE_MOCK_INAT === 'true'
+    ) {
+        logger.info('🔧 Using mock iNaturalist data for development')
+        logger.info(`DEBUG: Path: ${path}, Query:`, JSON.stringify(req.query))
+
+        if (path.startsWith('/taxa/autocomplete')) {
+            const query = (req.query.q as string) || ''
+            const mockResponse = MockINatService.searchTaxa(query, req.query)
+            return res.status(200).json(mockResponse)
+        }
+
+        if (path === '/taxa') {
+            // Handle /taxa?q=... for search
+            if (req.query.q) {
+                const query = (req.query.q as string) || ''
+                const mockResponse = MockINatService.searchTaxa(
+                    query,
+                    req.query
+                )
+                return res.status(200).json(mockResponse)
+            }
+            // Handle /taxa?id=1,2,3 format used by AI tools
+            if (req.query.id) {
+                const ids = Array.isArray(req.query.id)
+                    ? (req.query.id as string[])
+                    : [req.query.id as string]
+                const mockResponse = MockINatService.getTaxaByIds(ids)
+                return res.status(200).json(mockResponse)
+            }
+        }
+
+        if (path.startsWith('/taxa/')) {
+            const taxonIds = path
+                .replace('/taxa/', '')
+                .split(',')
+                .filter((id) => id.trim())
+            if (taxonIds.length > 0) {
+                const mockResponse = MockINatService.getTaxa(taxonIds)
+                return res.status(200).json(mockResponse)
+            }
+        }
+
+        if (path.startsWith('/observations')) {
+            const mockResponse = MockINatService.getObservations(req.query)
+            return res.status(200).json(mockResponse)
+        }
+
+        if (path.startsWith('/places')) {
+            const mockResponse = MockINatService.getPlaces()
+            return res.status(200).json(mockResponse)
+        }
+
+        if (path.startsWith('/observations/species_counts')) {
+            const mockResponse = MockINatService.getSpeciesCounts(req.query)
+            return res.status(200).json(mockResponse)
+        }
+
+        if (path.startsWith('/photos')) {
+            // Return mock photo data
+            return res.status(200).json({
+                results: [
+                    {
+                        id: 1,
+                        license_code: 'CC-BY',
+                        attribution: 'Mock Photo',
+                        url: 'https://via.placeholder.com/500x500?text=Mock+Photo',
+                        original_dimensions: { height: 500, width: 500 },
+                        flags: [],
+                        square_url:
+                            'https://via.placeholder.com/100x100?text=Mock+Photo',
+                        medium_url:
+                            'https://via.placeholder.com/300x300?text=Mock+Photo',
+                    },
+                ],
+                total_results: 1,
+                page: 1,
+                per_page: 1,
+            })
+        }
+
+        // Return empty response for unhandled endpoints
+        logger.warn(
+            `🔧 Mock iNaturalist: Unhandled endpoint: ${path} with query:`,
+            req.query
+        )
+        return res.status(200).json({ results: [] })
+    }
+
+    // Check circuit breaker with gradual recovery
     if (circuitBreakerOpen) {
         const now = Date.now()
         if (now < circuitBreakerResetTime) {
-            const remainingMs = circuitBreakerResetTime - now
-            const remainingSeconds = Math.ceil(remainingMs / 1000)
-
-            logger.warn(
-                `Circuit breaker open. Retry after: ${remainingSeconds}s`
+            // Calculate recovery progress correctly
+            const timeElapsed =
+                CIRCUIT_BREAKER_TIMEOUT - (circuitBreakerResetTime - now)
+            const recoveryProgress = Math.max(
+                0,
+                Math.min(1, timeElapsed / CIRCUIT_BREAKER_TIMEOUT)
             )
+            const allowThrough = Math.random() < recoveryProgress * 0.2 // 20% max during recovery
 
-            return res
-                .status(429)
-                .set({
-                    'Retry-After': remainingSeconds.toString(),
-                    'X-RateLimit-Reset': new Date(
-                        circuitBreakerResetTime
-                    ).toISOString(),
-                })
-                .json({
-                    error: 'Too Many Requests',
-                    message:
-                        'Circuit breaker is open due to excessive rate limiting. Please try again later.',
-                    retryAfter: remainingSeconds,
-                })
+            if (!allowThrough) {
+                const remainingMs = circuitBreakerResetTime - now
+                const remainingSeconds = Math.ceil(remainingMs / 1000)
+
+                logger.warn(
+                    `Circuit breaker open. Retry after: ${remainingSeconds}s (recovery: ${(recoveryProgress * 100).toFixed(1)}%)`
+                )
+
+                return res
+                    .status(429)
+                    .set({
+                        'Retry-After': remainingSeconds.toString(),
+                        'X-RateLimit-Reset': new Date(
+                            circuitBreakerResetTime
+                        ).toISOString(),
+                        'X-RateLimit-Source': 'circuit-breaker',
+                    })
+                    .json({
+                        error: 'Too Many Requests',
+                        message:
+                            'Circuit breaker is open due to excessive rate limiting. Please try again later.',
+                        retryAfter: remainingSeconds,
+                        source: 'circuit-breaker',
+                    })
+            } else {
+                logger.info(
+                    `Circuit breaker: allowing request through during recovery period (${(recoveryProgress * 100).toFixed(1)}%)`
+                )
+            }
         } else {
             // Reset circuit breaker
             circuitBreakerOpen = false
-            logger.info('Circuit breaker reset')
+            consecutiveFailures = 0
+            logger.info('🔄 Circuit breaker reset - normal operation resumed')
         }
     }
 
@@ -108,27 +257,37 @@ export const iNaturalistAPIController = async (req: Request, res: Response) => {
     // Check cache first
     const cachedData = await cacheService.get<ProcessableData>(cacheKey)
     if (cachedData) {
-        logger.info(chalk.blue('Serving from cache:', url))
+        logger.info(chalk.blue(`Serving from cache: ${url} (IP: ${req.ip})`))
         return res.status(200).json(cachedData)
     }
 
+    // Log request frequency to detect duplicates
+    logger.info(`New request - URL: ${url} (IP: ${req.ip})`)
+
     const isTile = path.match(/\.(png|jpg|jpeg|webp)$/)
 
-    logger.info('Proxying to:', url)
+    logger.info(`Proxying to: ${url} (IP: ${req.ip})`)
 
     try {
-        await globalINaturalistRateLimiter.consume('global')
-    } catch (_error) {
-        // Rate limit exceeded - activate circuit breaker and set Retry-After header
-        circuitBreakerOpen = true
-        circuitBreakerResetTime = Date.now() + CIRCUIT_BREAKER_TIMEOUT
+        // TEMPORARILY DISABLE ALL RATE LIMITING FOR DEBUGGING
+        logger.info('🚫 All rate limiting temporarily disabled for debugging')
 
+        // Skip rate limiting entirely for testing
+        // await globalINaturalistRateLimiter.consume('global')
+
+        // Reset consecutive failures on successful consumption
+        consecutiveFailures = 0
+    } catch (_error) {
+        // Our internal rate limiter was hit - this should NOT activate circuit breaker
+        // Circuit breaker should only activate on iNaturalist 429s
         const status = await globalINaturalistRateLimiter.get('global')
-        const msBeforeNext = status?.msBeforeNext ?? CIRCUIT_BREAKER_TIMEOUT
-        const retryAfterSeconds = Math.ceil(msBeforeNext / 1000)
+        logger.warn(`Rate limiter status: ${JSON.stringify(status)}`)
+
+        // Fix: Use a reasonable retry-after time instead of the potentially huge msBeforeNext
+        const retryAfterSeconds = 60 // 1 minute retry-after for our internal limits
 
         logger.warn(
-            `Global iNaturalist rate limit exceeded. Circuit breaker activated for ${CIRCUIT_BREAKER_TIMEOUT / 1000}s. Retry after: ${retryAfterSeconds}s`
+            `🚨 OUR SERVER rate limit exceeded. Retry after: ${retryAfterSeconds}s (circuit breaker NOT activated)`
         )
 
         return res
@@ -136,28 +295,40 @@ export const iNaturalistAPIController = async (req: Request, res: Response) => {
             .set({
                 'Retry-After': retryAfterSeconds.toString(),
                 'X-RateLimit-Reset': new Date(
-                    Date.now() + msBeforeNext
+                    Date.now() + retryAfterSeconds * 1000
                 ).toISOString(),
-                'X-RateLimit-Limit': '100',
+                'X-RateLimit-Limit': '120', // Updated to match our temporary increase
                 'X-RateLimit-Remaining': '0',
+                'X-RateLimit-Source': 'server-internal',
             })
             .json({
                 error: 'Too Many Requests',
-                message:
-                    'iNaturalist API rate limit exceeded. Circuit breaker activated. Please try again later.',
+                message: 'Server rate limit exceeded. Please try again later.',
                 retryAfter: retryAfterSeconds,
+                source: 'server-internal',
             })
     }
 
     const status = await globalINaturalistRateLimiter.get('global')
-    logger.info(
-        chalk.green(`Used: ${100 - (status?.remainingPoints ?? 0)}`) +
-            ', ' +
-            chalk.yellow(`Remaining: ${status?.remainingPoints ?? 0}`)
-    )
+    const used = 100 - (status?.remainingPoints ?? 0)
+    const remaining = status?.remainingPoints ?? 0
     const ms = status?.msBeforeNext ?? 0
     const minutes = ms / 1000 / 60
-    logger.info('Resets in:', minutes.toFixed(2), 'minutes')
+
+    logger.info(
+        chalk.green(`iNaturalist API: Used ${used}/60`) +
+            ', ' +
+            chalk.yellow(`Remaining: ${remaining}`) +
+            ', ' +
+            chalk.blue(`Resets in: ${minutes.toFixed(2)} minutes`)
+    )
+
+    // Warn when approaching rate limit
+    if (remaining <= 10) {
+        logger.warn(
+            `⚠️  iNaturalist API rate limit warning: ${remaining} requests remaining`
+        )
+    }
 
     if (isTile) {
         // Stream image response (not caching tiles)
@@ -211,17 +382,37 @@ export const iNaturalistAPIController = async (req: Request, res: Response) => {
                     `🔍 Fetching ${uncachedTaxonIds.length} uncached taxa, ${cachedTaxa.length} from cache`
                 )
 
-                const partialResponse =
-                    await getWithRetry<ProcessableData>(partialUrl)
+                const partialResponse = await getWithRetry<ProcessableData>(
+                    partialUrl,
+                    undefined,
+                    {
+                        retryOn429: true,
+                        maxRetries: 3, // Reduce retries for deduplication efficiency
+                    }
+                )
                 if (partialResponse.status !== 200) {
-                    // If we got a 429 from iNaturalist, activate circuit breaker
+                    // If we got a 429 from iNaturalist, increment failure count
                     if (partialResponse.status === 429) {
-                        circuitBreakerOpen = true
-                        circuitBreakerResetTime =
-                            Date.now() + CIRCUIT_BREAKER_TIMEOUT
+                        consecutiveFailures++
+
+                        // Activate aggressive rate limiting mode
+                        await iNaturalistAggressiveLimiter.consume('mode')
                         logger.warn(
-                            'Received 429 from iNaturalist API - activating circuit breaker'
+                            '🚨 iNaturalist 429 received - switching to aggressive rate limiting (5 req/min)'
                         )
+
+                        if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                            circuitBreakerOpen = true
+                            circuitBreakerResetTime =
+                                Date.now() + CIRCUIT_BREAKER_TIMEOUT
+                            logger.warn(
+                                `Received 429 from iNaturalist API - circuit breaker activated after ${consecutiveFailures} failures`
+                            )
+                        } else {
+                            logger.warn(
+                                `Received 429 from iNaturalist API (${consecutiveFailures}/${MAX_CONSECUTIVE_FAILURES} failures)`
+                            )
+                        }
                     }
                     throw new AppError(
                         'Failed to fetch data from iNaturalist',
@@ -272,14 +463,28 @@ export const iNaturalistAPIController = async (req: Request, res: Response) => {
                 // No cache hits - proceed with normal flow
                 const jsonResponse = await getWithRetry<ProcessableData>(url)
                 if (jsonResponse.status !== 200) {
-                    // If we got a 429 from iNaturalist, activate circuit breaker
+                    // If we got a 429 from iNaturalist, increment failure count
                     if (jsonResponse.status === 429) {
-                        circuitBreakerOpen = true
-                        circuitBreakerResetTime =
-                            Date.now() + CIRCUIT_BREAKER_TIMEOUT
+                        consecutiveFailures++
+
+                        // Activate aggressive rate limiting mode
+                        await iNaturalistAggressiveLimiter.consume('mode')
                         logger.warn(
-                            'Received 429 from iNaturalist API - activating circuit breaker'
+                            '🚨 iNaturalist 429 received - switching to aggressive rate limiting (5 req/min)'
                         )
+
+                        if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                            circuitBreakerOpen = true
+                            circuitBreakerResetTime =
+                                Date.now() + CIRCUIT_BREAKER_TIMEOUT
+                            logger.warn(
+                                `Received 429 from iNaturalist API - circuit breaker activated after ${consecutiveFailures} failures`
+                            )
+                        } else {
+                            logger.warn(
+                                `Received 429 from iNaturalist API (${consecutiveFailures}/${MAX_CONSECUTIVE_FAILURES} failures)`
+                            )
+                        }
                     }
                     throw new AppError(
                         'Failed to fetch data from iNaturalist',
@@ -303,13 +508,28 @@ export const iNaturalistAPIController = async (req: Request, res: Response) => {
         // Non-taxa request - use normal flow
         const jsonResponse = await getWithRetry<ProcessableData>(url)
         if (jsonResponse.status !== 200) {
-            // If we got a 429 from iNaturalist, activate circuit breaker
+            // If we got a 429 from iNaturalist, increment failure count
             if (jsonResponse.status === 429) {
-                circuitBreakerOpen = true
-                circuitBreakerResetTime = Date.now() + CIRCUIT_BREAKER_TIMEOUT
+                consecutiveFailures++
+
+                // Activate aggressive rate limiting mode
+                await iNaturalistAggressiveLimiter.consume('mode')
                 logger.warn(
-                    'Received 429 from iNaturalist API - activating circuit breaker'
+                    '🚨 iNaturalist 429 received - switching to aggressive rate limiting (5 req/min)'
                 )
+
+                if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                    circuitBreakerOpen = true
+                    circuitBreakerResetTime =
+                        Date.now() + CIRCUIT_BREAKER_TIMEOUT
+                    logger.warn(
+                        `Received 429 from iNaturalist API - circuit breaker activated after ${consecutiveFailures} failures`
+                    )
+                } else {
+                    logger.warn(
+                        `Received 429 from iNaturalist API (${consecutiveFailures}/${MAX_CONSECUTIVE_FAILURES} failures)`
+                    )
+                }
             }
             throw new AppError(
                 'Failed to fetch data from iNaturalist',

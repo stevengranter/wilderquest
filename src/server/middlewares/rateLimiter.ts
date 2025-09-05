@@ -1,4 +1,6 @@
-import rateLimit, { type RateLimitExceededEventHandler } from 'express-rate-limit'
+import rateLimit, {
+    type RateLimitExceededEventHandler,
+} from 'express-rate-limit'
 import type { Request, RequestHandler, Response } from 'express'
 
 const DEFAULT_WINDOW_MS = 60 * 1000 // 1 minute
@@ -41,10 +43,12 @@ export const rateLimiter = (
             const resetTime = new Date(Date.now() + windowMs)
             res.set('Retry-After', Math.ceil(windowMs / 1000).toString())
             res.set('X-RateLimit-Reset', resetTime.toISOString())
+            res.set('X-RateLimit-Source', 'middleware-per-ip') // Distinguish source
             res.status(429).json({
                 error: 'Too Many Requests',
                 message: `Rate limit exceeded. Try again in ${Math.ceil(windowMs / 1000)} seconds.`,
                 retryAfter: Math.ceil(windowMs / 1000),
+                source: 'middleware-per-ip', // Help client distinguish
             })
         }) as unknown as RateLimitExceededEventHandler,
         // Include rate limit headers in all responses

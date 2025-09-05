@@ -1,7 +1,7 @@
 import redisClient from '../../config/redisClient.js'
 import { ICacheService } from './ICacheService.types.js'
 
-const CACHE_TTL = 86400 // 24 hours
+const CACHE_TTL = 7 * 86400 // 7 days
 
 export const redisCacheService: ICacheService = {
     get: async <T>(key: string): Promise<T | undefined> => {
@@ -17,7 +17,7 @@ export const redisCacheService: ICacheService = {
             key,
             JSON.stringify(value),
             'EX',
-            CACHE_TTL,
+            CACHE_TTL
         )
         return result === 'OK'
     },

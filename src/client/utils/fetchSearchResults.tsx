@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { INatTaxaResponse } from '../../shared/types/iNatTypes.js'
 
 const API_URL = '/api/iNatAPI/taxa/autocomplete'
 

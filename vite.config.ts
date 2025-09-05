@@ -90,14 +90,6 @@ export default defineConfig({
         },
     },
     server: {
-        proxy: {
-            // Development API proxy
-            '/api': {
-                target: 'http://localhost:3000/api',
-                changeOrigin: true,
-                // rewrite: (path) => path.replace(/^\/api/, ''),
-            },
-        },
         watch: {
             usePolling: true,
         },

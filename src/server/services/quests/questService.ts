@@ -1,4 +1,8 @@
-import { QuestRepository, QuestToTaxaRepository, QuestWithTaxa } from '../../repositories/QuestRepository.js'
+import {
+    QuestRepository,
+    QuestToTaxaRepository,
+    QuestWithTaxa,
+} from '../../repositories/QuestRepository.js'
 import { QuestShareRepository } from '../../repositories/QuestShareRepository.js'
 import { iNatService } from '../iNatService.js'
 import { sendEvent } from './questEventsService.js'
@@ -23,16 +27,13 @@ export function createQuestService(
                 { is_private: false },
                 { limit, offset }
             )
-            const questsWithTaxaAndPhotos = await Promise.all(
+            const questsWithTaxa = await Promise.all(
                 quests.map(async (quest) => {
                     const taxa = await getTaxaForQuestId(quest.id)
                     const taxon_ids = taxa
                         .map((t) => t.taxon_id)
                         .filter((id) => id && typeof id === 'number' && id > 0)
-                    const photoUrl =
-                        taxon_ids.length > 0
-                            ? await iNatService.getTaxonPhoto(taxon_ids[0])
-                            : null
+                    const photoUrl = null // Disable server-side photo fetching to prevent 429 errors
                     return {
                         ...quest,
                         taxon_ids,
@@ -40,7 +41,7 @@ export function createQuestService(
                     }
                 })
             )
-            return questsWithTaxaAndPhotos
+            return questsWithTaxa
         } catch (error) {
             console.error('Error in getAllPublicQuests:', error)
             throw new AppError('Failed to retrieve public quests', 500)
@@ -72,16 +73,13 @@ export function createQuestService(
                 limit,
                 offset
             )
-            const questsWithTaxaAndPhotos = await Promise.all(
+            const questsWithTaxa = await Promise.all(
                 quests.map(async (quest) => {
                     const taxa = await getTaxaForQuestId(quest.id)
                     const taxon_ids = taxa
                         .map((t) => t.taxon_id)
                         .filter((id) => id && typeof id === 'number' && id > 0)
-                    const photoUrl =
-                        taxon_ids.length > 0
-                            ? await iNatService.getTaxonPhoto(taxon_ids[0])
-                            : null
+                    const photoUrl = null // Disable server-side photo fetching to prevent 429 errors
                     return {
                         ...quest,
                         taxon_ids,
@@ -89,7 +87,7 @@ export function createQuestService(
                     }
                 })
             )
-            return questsWithTaxaAndPhotos
+            return questsWithTaxa
         } catch (error) {
             console.error('Error in getUserQuests:', error)
             throw new AppError('Failed to retrieve user quests', 500)
@@ -130,7 +128,10 @@ export function createQuestService(
             if (taxon_ids.length > 0) {
                 await Promise.all(
                     taxon_ids.map((taxonId) =>
-                        questsToTaxaRepo.create({ quest_id: questId, taxon_id: taxonId })
+                        questsToTaxaRepo.create({
+                            quest_id: questId,
+                            taxon_id: taxonId,
+                        })
                     )
                 )
             }
@@ -150,7 +151,9 @@ export function createQuestService(
     }
 
     // 6. Return quest + taxon_ids
-    async function getQuestWithTaxaById(questId: number): Promise<QuestWithTaxa> {
+    async function getQuestWithTaxaById(
+        questId: number
+    ): Promise<QuestWithTaxa> {
         const quest = await questsRepo.findById(questId)
         if (!quest) throw new AppError('Quest not found', 404)
 
@@ -180,7 +183,8 @@ export function createQuestService(
     ): Promise<QuestWithTaxa> {
         const existingQuest = await questsRepo.findById(questId)
         if (!existingQuest) throw new AppError('Quest not found', 404)
-        if (existingQuest.user_id !== userId) throw new AppError('Access denied', 403)
+        if (existingQuest.user_id !== userId)
+            throw new AppError('Access denied', 403)
 
         const { taxon_ids, starts_at, ends_at, ...rest } = updatedData
         const questTableData = {
@@ -197,7 +201,10 @@ export function createQuestService(
             await questsToTaxaRepo.deleteMany({ quest_id: questId })
             await Promise.all(
                 taxon_ids.map((taxonId) =>
-                    questsToTaxaRepo.create({ quest_id: questId, taxon_id: taxonId })
+                    questsToTaxaRepo.create({
+                        quest_id: questId,
+                        taxon_id: taxonId,
+                    })
                 )
             )
         }
@@ -213,7 +220,8 @@ export function createQuestService(
     ): Promise<void> {
         const existingQuest = await questsRepo.findById(questId)
         if (!existingQuest) throw new AppError('Quest not found', 404)
-        if (existingQuest.user_id !== userId) throw new AppError('Access denied', 403)
+        if (existingQuest.user_id !== userId)
+            throw new AppError('Access denied', 403)
         if (!['pending', 'active', 'paused', 'ended'].includes(status)) {
             throw new AppError('Invalid status', 400)
         }
