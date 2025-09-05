@@ -924,10 +924,27 @@ const handleSpeciesEvent = (
         hasImage: !!species?.default_photo?.square_url,
     })
 
-    // Show toast
-    toast.success(`${guestName} ${action} ${speciesName}`, {
-        duration: 4000,
-    })
+    // Show QuestEventToast
+    toast(
+        React.createElement(QuestEventToast, {
+            guestName,
+            speciesName,
+            action,
+            speciesImage: species?.default_photo?.square_url,
+        }),
+        {
+            position: 'top-left',
+            style: {
+                padding: 0,
+                margin: 0,
+                width: '90svw',
+                borderWidth: 0,
+                boxShadow: 'none',
+                background: 'none',
+                outline: 'none',
+            },
+        }
+    )
 
     // Invalidate relevant queries based on context
     if (token) {
