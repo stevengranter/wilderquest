@@ -6,6 +6,7 @@ import { paths } from '@/routes/paths'
 import { ClientQuest } from '@/features/quests/components/SpeciesCardWithObservations'
 import { QuestTimestamps } from '@/features/quests/components/QuestView/parts/QuestTimestamps'
 import { Share } from '@/features/quests/types'
+import { QuestStatusBadge } from '../../QuestStatusBadge'
 
 type QuestHeaderProps = {
     questData: ClientQuest
@@ -34,6 +35,7 @@ export const QuestHeader = ({
                     />
                 </div>
                 <div className="flex items-center gap-3">
+                    <QuestStatusBadge status={questData.status} />
                     {questData.is_private ? (
                         <Badge>
                             <Lock className="h-5 w-5 text-muted-foreground" />

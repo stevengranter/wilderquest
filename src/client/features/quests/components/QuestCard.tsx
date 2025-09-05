@@ -11,6 +11,7 @@ import { MdLocationPin } from 'react-icons/md'
 import { IoMdCompass } from 'react-icons/io'
 import { QuestCardSkeleton } from './QuestCardSkeleton'
 import { FaRegImage } from 'react-icons/fa'
+import { QuestStatusBadge } from './QuestStatusBadge'
 
 const cn = (...classes: Array<string | undefined | null | false>) =>
     twMerge(clsx(classes))
@@ -95,6 +96,21 @@ function QuestCardContent({
         none: '',
     }
 
+    const getStatusBackgroundClass = (status: string) => {
+        switch (status) {
+            case 'pending':
+                return 'bg-gray-50/50'
+            case 'active':
+                return 'bg-white'
+            case 'paused':
+                return 'bg-yellow-50/50'
+            case 'ended':
+                return 'bg-blue-50/50'
+            default:
+                return 'bg-white'
+        }
+    }
+
     if (isLoading) {
         return <QuestCardSkeleton />
     }
@@ -110,7 +126,8 @@ function QuestCardContent({
             <Link to={paths.questDetail(quest.id)} className="block">
                 <Card
                     className={cn(
-                        'm-0 p-0 shadow-0 overflow-hidden bg-white border rounded-2xl gap-2 hover:bg-orange-50',
+                        'm-0 p-0 shadow-0 overflow-hidden border rounded-2xl gap-2 hover:bg-orange-50',
+                        getStatusBackgroundClass(quest.status),
                         hoverClasses[hoverEffect || 'lift'],
                         className
                     )}
@@ -196,9 +213,7 @@ function QuestCardContent({
                                     ? 'Competitive'
                                     : 'Cooperative'}
                             </span>
-                            <span>
-                                {quest.status}
-                            </span>
+                            <QuestStatusBadge status={quest.status} />
                         </div>
 
                         <div className="text-xs">{formattedDate}</div>
