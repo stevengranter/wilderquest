@@ -72,6 +72,10 @@ export function ObservationDialog(props: ObservationDialogProps) {
 
     const cumulativeRadii = getCumulativeRadii(searchRadius)
 
+    // Track previous cumulative radii to identify new radius being fetched
+    const [previousCumulativeRadii, setPreviousCumulativeRadii] =
+        React.useState<number[]>([])
+
     const {
         data: observations,
         isLoading,
@@ -112,6 +116,20 @@ export function ObservationDialog(props: ObservationDialogProps) {
         },
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     })
+
+    const newRadiusBeingFetched = React.useMemo(() => {
+        const newRadii = cumulativeRadii.filter(
+            (radius) => !previousCumulativeRadii.includes(radius)
+        )
+        return newRadii.length > 0 ? newRadii[newRadii.length - 1] : null
+    }, [cumulativeRadii, previousCumulativeRadii])
+
+    // Update previous radii when observations data changes (loading completed)
+    React.useEffect(() => {
+        if (observations && cumulativeRadii.length > 0) {
+            setPreviousCumulativeRadii([...cumulativeRadii])
+        }
+    }, [observations]) // Only depend on observations to avoid loops
 
     console.log(
         `ObservationDialog: Initialized for species ${species.id} (${species.name})`,
@@ -216,6 +234,8 @@ export function ObservationDialog(props: ObservationDialogProps) {
                         setSearchRadius={setSearchRadius}
                         showGlobal={showGlobal}
                         setShowGlobal={setShowGlobal}
+                        newRadiusBeingFetched={newRadiusBeingFetched}
+                        previousCumulativeRadii={previousCumulativeRadii}
                     />
                 </div>
             </DialogContent>
@@ -243,6 +263,72 @@ function lockScroll() {
 
 type ViewMode = 'grid' | 'list' | 'map'
 
+// Loading skeleton for individual accordion items
+function AccordionItemLoadingSkeleton() {
+    return (
+        <motion.div
+            className="pt-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+        >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 30, scale: 1 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{
+                            duration: 0.6,
+                            delay: i * 0.15,
+                            ease: 'easeOut',
+                        }}
+                        className="cursor-pointer"
+                    >
+                        {/* Polaroid Card */}
+                        <div className="bg-white p-3 rounded-lg border border-gray-800">
+                            {/* Photo Area: same aspect ratio as your actual photos */}
+                            <motion.div
+                                className="aspect-square bg-gray-200 rounded-sm overflow-hidden mb-3 relative"
+                                animate={{ opacity: [0.5, 1, 0.5] }}
+                                transition={{
+                                    duration: 1.5,
+                                    repeat: Infinity,
+                                    ease: 'easeInOut',
+                                    delay: i * 0.2,
+                                }}
+                            />
+                            {/* Caption placeholders */}
+                            <div className="space-y-2">
+                                <motion.div
+                                    className="h-4 bg-gray-200 rounded w-3/4"
+                                    animate={{ opacity: [0.5, 1, 0.5] }}
+                                    transition={{
+                                        duration: 1.5,
+                                        repeat: Infinity,
+                                        ease: 'easeInOut',
+                                        delay: i * 0.2 + 0.3,
+                                    }}
+                                />
+                                <motion.div
+                                    className="h-3 bg-gray-200 rounded w-1/2"
+                                    animate={{ opacity: [0.5, 1, 0.5] }}
+                                    transition={{
+                                        duration: 1.5,
+                                        repeat: Infinity,
+                                        ease: 'easeInOut',
+                                        delay: i * 0.2 + 0.6,
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+        </motion.div>
+    )
+}
+
 function ObservationList({
     observations,
     isLoading,
@@ -255,6 +341,8 @@ function ObservationList({
     setSearchRadius,
     showGlobal,
     setShowGlobal,
+    newRadiusBeingFetched,
+    previousCumulativeRadii,
 }: {
     observations?: Observation[]
     isLoading: boolean
@@ -267,6 +355,8 @@ function ObservationList({
     setSearchRadius: (radius: number) => void
     showGlobal: boolean
     setShowGlobal: (global: boolean) => void
+    newRadiusBeingFetched: number | null
+    previousCumulativeRadii: number[]
 }) {
     const [viewMode, setViewMode] = useState<ViewMode>('grid')
 
@@ -335,7 +425,7 @@ function ObservationList({
         <div className={`mx-2 mt-2 flex h-full flex-col`}>
             {/* Header / Toggle */}
             <motion.div
-                className="flex flex-col mb-1 min-h-12 px-4"
+                className="flex flex-col flex-shrink-0 mb-2 min-h-12 relative z-20 bg-background rounded-lg"
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
@@ -365,7 +455,7 @@ function ObservationList({
                 </div>
 
                 {/* Controls row */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between px-0">
                     <div className="flex items-center">
                         {hasValidCoords && !showGlobal && (
                             <ToggleGroup
@@ -374,7 +464,7 @@ function ObservationList({
                                 onValueChange={(value) =>
                                     value && setSearchRadius(parseInt(value))
                                 }
-                                className="border rounded-lg"
+                                className="rounded-lg mx-0"
                             >
                                 <ToggleGroupItem
                                     value="20"
@@ -404,7 +494,7 @@ function ObservationList({
                             onValueChange={(value: ViewMode) =>
                                 value && setViewMode(value)
                             }
-                            className="border-0 rounded-lg"
+                            className="border-0 rounded-lg mx-0"
                         >
                             <ToggleGroupItem
                                 value="grid"
@@ -426,276 +516,192 @@ function ObservationList({
                 </div>
             </motion.div>
 
-            {/* Content wrapper with fixed height and relative positioning */}
-            <div className={`relative flex-1`}>
-                {/* Skeleton behind */}
-                {isLoading && (
+            {/* Content wrapper with constrained height */}
+            <div className="flex-1 overflow-hidden">
+                <AnimatePresence mode="wait">
                     <motion.div
-                        key="loading-skeleton"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute inset-0 overflow-y-auto pt-2 pb-6"
-                        style={{ pointerEvents: 'none' }}
+                        key={viewMode}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="h-full pt-2 pb-6"
                     >
-                        <ObservationLoadingState />
-                    </motion.div>
-                )}
-
-                {/* Actual content on top */}
-                {!isLoading && (
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={viewMode}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
-                            className="absolute inset-0 overflow-y-auto pt-2 pb-6"
-                        >
-                            {isError ? (
-                                <ObservationErrorState error={error} />
-                            ) : observations && observations.length > 0 ? (
-                                <div className="space-y-2">
-                                    {/* Map view - show all observations on single map */}
-                                    {viewMode === 'map' &&
-                                        lat !== undefined &&
-                                        lon !== undefined && (
-                                            <ObservationMapView
-                                                observations={observations}
-                                                center={[lat, lon]}
-                                                searchRadius={searchRadius}
-                                                showRadiusBadges={true}
-                                            />
-                                        )}
-
-                                    {/* Accordion for grouped observations (grid and list views only) */}
-                                    {viewMode !== 'map' && (
-                                        <Accordion
-                                            type="multiple"
-                                            value={expandedSections}
-                                            onValueChange={
-                                                handleAccordionChange
-                                            }
-                                            className="w-full"
-                                        >
-                                            {cumulativeRadii.map((radius) => {
-                                                const radiusObservations =
-                                                    groupedObservations[
-                                                        radius
-                                                    ] || []
-                                                if (
-                                                    radiusObservations.length ===
-                                                    0
-                                                )
-                                                    return null
-
-                                                return (
-                                                    <AccordionItem
-                                                        key={radius}
-                                                        value={radius.toString()}
-                                                    >
-                                                        <AccordionTrigger className="hover:no-underline">
-                                                            <div className="flex items-center gap-3">
-                                                                <span
-                                                                    className={`text-xs px-2 py-1 rounded-full text-white font-medium ${
-                                                                        radius ===
-                                                                        20
-                                                                            ? 'bg-blue-500'
-                                                                            : radius ===
-                                                                                100
-                                                                              ? 'bg-green-500'
-                                                                              : 'bg-purple-500'
-                                                                    }`}
-                                                                >
-                                                                    {radius}km
-                                                                </span>
-                                                                <span className="text-sm font-medium">
-                                                                    {
-                                                                        radiusObservations.length
-                                                                    }{' '}
-                                                                    observation
-                                                                    {radiusObservations.length !==
-                                                                    1
-                                                                        ? 's'
-                                                                        : ''}
-                                                                </span>
-                                                            </div>
-                                                        </AccordionTrigger>
-                                                        <AccordionContent className="pt-4">
-                                                            {viewMode ===
-                                                                'grid' && (
-                                                                <ObservationGridView
-                                                                    observations={
-                                                                        radiusObservations
-                                                                    }
-                                                                    showRadiusBadges={
-                                                                        false
-                                                                    }
-                                                                />
-                                                            )}
-                                                            {viewMode ===
-                                                                'list' && (
-                                                                <ObservationListView
-                                                                    observations={
-                                                                        radiusObservations
-                                                                    }
-                                                                    showRadiusBadges={
-                                                                        false
-                                                                    }
-                                                                />
-                                                            )}
-                                                        </AccordionContent>
-                                                    </AccordionItem>
-                                                )
-                                            })}
-                                        </Accordion>
+                        {isError ? (
+                            <ObservationErrorState error={error} />
+                        ) : isLoading ||
+                          (observations && observations.length > 0) ? (
+                            <div className="space-y-2">
+                                {/* Map view - show all observations on single map */}
+                                {viewMode === 'map' &&
+                                    lat !== undefined &&
+                                    lon !== undefined && (
+                                        <ObservationMapView
+                                            observations={observations || []}
+                                            center={[lat, lon]}
+                                            searchRadius={searchRadius}
+                                            showRadiusBadges={true}
+                                        />
                                     )}
-                                </div>
-                            ) : (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.4, delay: 0.3 }}
-                                    className="text-center py-8"
-                                >
-                                    <p className="text-muted-foreground mb-4">
-                                        {hasValidCoords && !showGlobal
-                                            ? `No observations found for this species within ${cumulativeRadii.join('+')}km combined search.`
-                                            : `No observations found for this species globally.`}
-                                    </p>
 
-                                    {hasValidCoords &&
-                                        !showGlobal &&
-                                        searchRadius < 1000 && (
-                                            <div className="flex flex-col gap-3 items-center">
-                                                {searchRadius === 20 && (
-                                                    <button
-                                                        onClick={() =>
-                                                            setSearchRadius(100)
-                                                        }
-                                                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
-                                                    >
-                                                        Expand search to 100km
-                                                        (keep existing results)
-                                                    </button>
-                                                )}
-                                                {searchRadius === 100 && (
-                                                    <button
-                                                        onClick={() =>
-                                                            setSearchRadius(
-                                                                1000
-                                                            )
-                                                        }
-                                                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
-                                                    >
-                                                        Expand search to 1000km
-                                                        (keep existing results)
-                                                    </button>
-                                                )}
+                                {/* Accordion for grouped observations (grid and list views only) */}
+                                {viewMode !== 'map' && (
+                                    <Accordion
+                                        type="multiple"
+                                        value={expandedSections}
+                                        onValueChange={handleAccordionChange}
+                                        className="w-full border rounded-lg bg-background p-0"
+                                    >
+                                        {cumulativeRadii.map((radius) => {
+                                            const radiusObservations =
+                                                groupedObservations[radius] ||
+                                                []
+                                            const isNewRadiusLoading =
+                                                isLoading &&
+                                                newRadiusBeingFetched === radius
+                                            // Keep accordions visible if they have observations OR are currently loading
+                                            // OR if they were previously loaded (tracked by previousCumulativeRadii)
+                                            // OR if this radius is included in the current cumulative radii (to show loading state)
+                                            const shouldShowAccordion =
+                                                radiusObservations.length > 0 ||
+                                                isNewRadiusLoading ||
+                                                (previousCumulativeRadii.includes(
+                                                    radius
+                                                ) &&
+                                                    !isLoading) ||
+                                                (cumulativeRadii.includes(
+                                                    radius
+                                                ) &&
+                                                    isLoading)
+
+                                            if (!shouldShowAccordion)
+                                                return null
+
+                                            return (
+                                                <AccordionItem
+                                                    key={radius}
+                                                    value={radius.toString()}
+                                                    className="border-b last:border-b-0"
+                                                >
+                                                    <AccordionTrigger className="hover:no-underline px-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <span
+                                                                className={`text-xs px-2 py-1 rounded-full text-white font-medium ${
+                                                                    radius ===
+                                                                    20
+                                                                        ? 'bg-blue-500'
+                                                                        : radius ===
+                                                                            100
+                                                                          ? 'bg-green-500'
+                                                                          : 'bg-purple-500'
+                                                                }`}
+                                                            >
+                                                                {radius}km
+                                                            </span>
+                                                            <span className="text-sm font-medium">
+                                                                {isNewRadiusLoading
+                                                                    ? 'Loading...'
+                                                                    : `${radiusObservations.length} observation${radiusObservations.length !== 1 ? 's' : ''}`}
+                                                            </span>
+                                                        </div>
+                                                    </AccordionTrigger>
+                                                    <AccordionContent className="pt-4 pb-4 px-4 max-h-96 overflow-y-auto">
+                                                        {isNewRadiusLoading ? (
+                                                            <AccordionItemLoadingSkeleton />
+                                                        ) : viewMode ===
+                                                          'grid' ? (
+                                                            <ObservationGridView
+                                                                observations={
+                                                                    radiusObservations
+                                                                }
+                                                                showRadiusBadges={
+                                                                    false
+                                                                }
+                                                            />
+                                                        ) : (
+                                                            <ObservationListView
+                                                                observations={
+                                                                    radiusObservations
+                                                                }
+                                                                showRadiusBadges={
+                                                                    false
+                                                                }
+                                                            />
+                                                        )}
+                                                    </AccordionContent>
+                                                </AccordionItem>
+                                            )
+                                        })}
+                                    </Accordion>
+                                )}
+                            </div>
+                        ) : (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.3 }}
+                                className="text-center py-8"
+                            >
+                                <p className="text-muted-foreground mb-4">
+                                    {hasValidCoords && !showGlobal
+                                        ? `No observations found for this species within ${cumulativeRadii.join('+')}km combined search.`
+                                        : `No observations found for this species globally.`}
+                                </p>
+
+                                {hasValidCoords &&
+                                    !showGlobal &&
+                                    searchRadius < 1000 && (
+                                        <div className="flex flex-col gap-3 items-center">
+                                            {searchRadius === 20 && (
                                                 <button
                                                     onClick={() =>
-                                                        setShowGlobal(true)
+                                                        setSearchRadius(100)
                                                     }
-                                                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm"
+                                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
                                                 >
-                                                    Show global observations
+                                                    Expand search to 100km (keep
+                                                    existing results)
                                                 </button>
-                                            </div>
-                                        )}
-
-                                    {hasValidCoords && showGlobal && (
-                                        <button
-                                            onClick={() => {
-                                                setShowGlobal(false)
-                                                setSearchRadius(20)
-                                            }}
-                                            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors text-sm"
-                                        >
-                                            Back to local search
-                                        </button>
+                                            )}
+                                            {searchRadius === 100 && (
+                                                <button
+                                                    onClick={() =>
+                                                        setSearchRadius(1000)
+                                                    }
+                                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
+                                                >
+                                                    Expand search to 1000km
+                                                    (keep existing results)
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() =>
+                                                    setShowGlobal(true)
+                                                }
+                                                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm"
+                                            >
+                                                Show global observations
+                                            </button>
+                                        </div>
                                     )}
-                                </motion.div>
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
-                )}
+
+                                {hasValidCoords && showGlobal && (
+                                    <button
+                                        onClick={() => {
+                                            setShowGlobal(false)
+                                            setSearchRadius(20)
+                                        }}
+                                        className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors text-sm"
+                                    >
+                                        Back to local search
+                                    </button>
+                                )}
+                            </motion.div>
+                        )}
+                    </motion.div>
+                </AnimatePresence>
             </div>
         </div>
-    )
-}
-
-function ObservationLoadingState() {
-    return (
-        <motion.div
-            className="mt-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-        >
-            <motion.h3
-                className="text-lg font-semibold mb-4"
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4 }}
-            >
-                Recent Observations
-            </motion.h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                    <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 30, scale: 1 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{
-                            duration: 0.6,
-                            delay: i * 0.15,
-                            ease: 'easeOut',
-                        }}
-                        className="cursor-pointer"
-                    >
-                        {/* Polaroid Card */}
-                        <div className="bg-white p-3 rounded-lg border border-gray-800">
-                            {/* Photo Area: same aspect ratio as your actual photos */}
-                            <motion.div
-                                className="aspect-square bg-gray-200 rounded-sm overflow-hidden mb-3 relative"
-                                animate={{ opacity: [0.5, 1, 0.5] }}
-                                transition={{
-                                    duration: 1.5,
-                                    repeat: Infinity,
-                                    ease: 'easeInOut',
-                                    delay: i * 0.2,
-                                }}
-                            />
-                            {/* Caption placeholders */}
-                            <div className="space-y-2">
-                                <motion.div
-                                    className="h-4 bg-gray-200 rounded w-3/4"
-                                    animate={{ opacity: [0.5, 1, 0.5] }}
-                                    transition={{
-                                        duration: 1.5,
-                                        repeat: Infinity,
-                                        ease: 'easeInOut',
-                                        delay: i * 0.2 + 0.3,
-                                    }}
-                                />
-                                <motion.div
-                                    className="h-3 bg-gray-200 rounded w-1/2"
-                                    animate={{ opacity: [0.5, 1, 0.5] }}
-                                    transition={{
-                                        duration: 1.5,
-                                        repeat: Infinity,
-                                        ease: 'easeInOut',
-                                        delay: i * 0.2 + 0.6,
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    </motion.div>
-                ))}
-            </div>
-        </motion.div>
     )
 }
 

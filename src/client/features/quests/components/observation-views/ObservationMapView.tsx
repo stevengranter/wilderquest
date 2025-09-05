@@ -171,15 +171,19 @@ const ObservationMapViewInner = React.memo(function ObservationMapViewInner({
 
     const zoomLevel = getZoomForRadius(searchRadius)
 
-    // Component to handle dynamic zoom updates
+    // Component to handle dynamic zoom updates with smooth animation
     function MapZoomController() {
         const map = useMap()
 
         React.useEffect(() => {
             if (map && zoomLevel && map.getZoom() !== zoomLevel) {
-                map.setZoom(zoomLevel)
+                // Use flyTo for smooth animated zoom transition
+                map.flyTo(center, zoomLevel, {
+                    duration: 1.5, // Animation duration in seconds
+                    easeLinearity: 0.25, // Easing curve (lower = more easing)
+                })
             }
-        }, [map, zoomLevel])
+        }, [map, zoomLevel, center])
 
         return null
     }
@@ -193,7 +197,7 @@ const ObservationMapViewInner = React.memo(function ObservationMapViewInner({
         >
             <MapContainer
                 center={center}
-                zoom={12}
+                zoom={zoomLevel}
                 scrollWheelZoom={true}
                 style={{ height: '100%', width: '100%' }}
             >
