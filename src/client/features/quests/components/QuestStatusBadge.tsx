@@ -14,32 +14,34 @@ export function QuestStatusBadge({ status, className }: QuestStatusBadgeProps) {
                 return {
                     label: 'Pending',
                     icon: Clock,
-                    className: 'bg-gray-100 text-gray-800 border-gray-300',
+                    className: 'bg-gray-50/70 text-gray-600 border-gray-200/50',
                 }
             case 'active':
                 return {
                     label: 'Active',
                     icon: Play,
-                    className: 'bg-green-100 text-green-800 border-green-300',
+                    className:
+                        'bg-green-100 text-green-800 border-green-300 animate-pulse',
                 }
             case 'paused':
                 return {
                     label: 'Paused',
                     icon: Pause,
                     className:
-                        'bg-yellow-100 text-yellow-800 border-yellow-300',
+                        'bg-yellow-50/70 text-yellow-600 border-yellow-200/50',
                 }
             case 'ended':
                 return {
                     label: 'Ended',
                     icon: Square,
-                    className: 'bg-blue-100 text-blue-800 border-blue-300',
+                    className:
+                        'bg-yellow-50/70 text-yellow-600 border-yellow-200/50',
                 }
             default:
                 return {
                     label: status,
                     icon: Clock,
-                    className: 'bg-gray-100 text-gray-800 border-gray-300',
+                    className: 'bg-gray-50/70 text-gray-600 border-gray-200/50',
                 }
         }
     }
