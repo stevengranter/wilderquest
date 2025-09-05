@@ -15,11 +15,6 @@ export const configureApiTokens = (
 
 // Request interceptor
 api.interceptors.request.use(async (config) => {
-    // Skip token for public quest-sharing URLs
-    if (config.url?.includes('/quest-sharing/')) {
-        return config
-    }
-
     // Get a valid token (will refresh if needed)
     if (getValidToken) {
         try {

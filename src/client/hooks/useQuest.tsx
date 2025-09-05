@@ -199,6 +199,7 @@ export const useQuestOwner = ({
     initialData?: { quest?: Quest | null; taxa?: INatTaxon[] }
 }) => {
     const queryClient = useQueryClient()
+    const { getValidToken } = useAuth()
 
     const questQuery = useQuery({
         queryKey: ['quest', questId],
@@ -302,7 +303,7 @@ export const useQuestOwner = ({
         queryKey: ['leaderboard', quest?.id],
         queryFn: () => fetchLeaderboard(quest!.id),
         enabled: !!quest?.id,
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        staleTime: 1000 * 30, // 30 seconds
         retry: (failureCount, error: any) => {
             // Don't retry on 4xx errors except 429 (rate limit)
             if (
@@ -341,122 +342,166 @@ export const useQuestOwner = ({
     useEffect(() => {
         if (!quest?.id) return
 
-        console.log('🔌 Setting up EventSource for quest:', quest.id)
-        const eventSourceUrl = `/api/quests/${quest.id}/events`
-        console.log('🔌 EventSource URL:', eventSourceUrl)
-        console.log(
-            '🔌 Full EventSource URL:',
-            window.location.origin + eventSourceUrl
-        )
-        const eventSource = new EventSource(eventSourceUrl, {
-            withCredentials: true,
-        })
+        let eventSource: EventSource | null = null
 
-        eventSource.onopen = () => {
-            console.log('✅ EventSource connected successfully')
-            console.log('✅ EventSource readyState:', eventSource.readyState)
-            console.log('✅ EventSource URL:', eventSource.url)
-        }
+        const setupEventSource = async () => {
+            console.log('🔌 Setting up EventSource for quest:', quest.id)
 
-        eventSource.onmessage = (e) => {
-            console.log('📨 Owner EventSource RAW message received:', e)
-            console.log('📨 Owner EventSource message data:', e.data)
-            console.log('📨 Owner EventSource message type:', e.type)
-            console.log('📨 Owner EventSource message origin:', e.origin)
+            // Get auth token for owner authentication
+            const token = await getValidToken()
+
+            const eventSourceUrl = token
+                ? `/api/quests/${quest.id}/events?token=${encodeURIComponent(token)}`
+                : `/api/quests/${quest.id}/events`
+
+            console.log('🔌 EventSource URL:', eventSourceUrl)
             console.log(
-                '📨 Owner EventSource message lastEventId:',
-                e.lastEventId
+                '🔌 Full EventSource URL:',
+                window.location.origin + eventSourceUrl
             )
+            eventSource = new EventSource(eventSourceUrl, {
+                withCredentials: true,
+            })
 
-            // Log ALL messages, including comments and empty ones
-            if (!e.data || e.data.trim() === '') {
-                console.log(
-                    '📨 Owner EventSource received empty/comment message, data length:',
-                    e.data ? e.data.length : 'null'
-                )
-                console.log(
-                    '📨 Owner EventSource empty message content:',
-                    JSON.stringify(e.data)
-                )
-                return
-            }
-
-            try {
-                const data = JSON.parse(e.data)
-                console.log('📨 Owner parsed event data:', data)
-                console.log('📨 Owner event type:', data.type)
-                console.log('📨 Owner event payload:', data.payload)
-
-                if (data.type === 'QUEST_STATUS_UPDATED') {
+            if (eventSource) {
+                eventSource.onopen = () => {
+                    console.log('✅ EventSource connected successfully')
                     console.log(
-                        '📢 Owner quest status update event:',
-                        data.payload.status
+                        '✅ EventSource readyState:',
+                        eventSource!.readyState
                     )
-                    toast.info(`Quest status updated to ${data.payload.status}`)
-                    queryClient.invalidateQueries({
-                        queryKey: ['quest', questId],
-                    })
-                } else if (
-                    ['SPECIES_FOUND', 'SPECIES_UNFOUND'].includes(data.type)
-                ) {
-                    console.log(
-                        '🐾 Owner species event received, calling handleSpeciesEvent'
-                    )
-                    console.log('🐾 Owner calling handleSpeciesEvent with:', {
-                        data,
-                        questId: quest.id,
-                        hasToken: false,
-                    })
-                    handleSpeciesEvent(data, quest.id, queryClient)
-                } else {
-                    console.log('❓ Owner unknown event type:', data.type)
+                    console.log('✅ EventSource URL:', eventSource!.url)
                 }
-            } catch (error) {
-                console.error('❌ Owner error parsing event data:', error)
-                console.error(
-                    '❌ Owner raw event data that failed to parse:',
-                    e.data
-                )
-                console.error('❌ Owner error details:', {
-                    message: (error as Error).message,
-                    stack: (error as Error).stack,
+
+                eventSource.onmessage = (e) => {
+                    console.log('📨 Owner EventSource RAW message received:', e)
+                    console.log('📨 Owner EventSource message data:', e.data)
+                    console.log('📨 Owner EventSource message type:', e.type)
+                    console.log(
+                        '📨 Owner EventSource message origin:',
+                        e.origin
+                    )
+                    console.log(
+                        '📨 Owner EventSource message lastEventId:',
+                        e.lastEventId
+                    )
+
+                    // Log ALL messages, including comments and empty ones
+                    if (!e.data || e.data.trim() === '') {
+                        console.log(
+                            '📨 Owner EventSource received empty/comment message, data length:',
+                            e.data ? e.data.length : 'null'
+                        )
+                        console.log(
+                            '📨 Owner EventSource empty message content:',
+                            JSON.stringify(e.data)
+                        )
+                        return
+                    }
+
+                    try {
+                        const data = JSON.parse(e.data)
+                        console.log('📨 Owner parsed event data:', data)
+                        console.log('📨 Owner event type:', data.type)
+                        console.log('📨 Owner event payload:', data.payload)
+
+                        if (data.type === 'QUEST_STATUS_UPDATED') {
+                            console.log(
+                                '📢 Owner quest status update event:',
+                                data.payload.status
+                            )
+                            toast.info(
+                                `Quest status updated to ${data.payload.status}`
+                            )
+                            queryClient.invalidateQueries({
+                                queryKey: ['quest', questId],
+                            })
+                        } else if (
+                            ['SPECIES_FOUND', 'SPECIES_UNFOUND'].includes(
+                                data.type
+                            )
+                        ) {
+                            console.log(
+                                '🐾 Owner species event received, calling handleSpeciesEvent'
+                            )
+                            console.log(
+                                '🐾 Owner calling handleSpeciesEvent with:',
+                                {
+                                    data,
+                                    questId: quest.id,
+                                    hasToken: false,
+                                }
+                            )
+                            handleSpeciesEvent(
+                                data,
+                                Number(quest.id),
+                                queryClient
+                            )
+                        } else {
+                            console.log(
+                                '❓ Owner unknown event type:',
+                                data.type
+                            )
+                        }
+                    } catch (error) {
+                        console.error(
+                            '❌ Owner error parsing event data:',
+                            error
+                        )
+                        console.error(
+                            '❌ Owner raw event data that failed to parse:',
+                            e.data
+                        )
+                        console.error('❌ Owner error details:', {
+                            message: (error as Error).message,
+                            stack: (error as Error).stack,
+                        })
+                    }
+                }
+
+                eventSource.onerror = (error) => {
+                    console.error('❌ EventSource error:', error)
+                    console.log(
+                        'EventSource readyState:',
+                        eventSource!.readyState
+                    )
+                    console.log('EventSource URL:', eventSource!.url)
+
+                    // Log additional error details
+                    console.log('EventSource error event:', {
+                        type: error.type,
+                        target: error.target,
+                        bubbles: error.bubbles,
+                        cancelable: error.cancelable,
+                    })
+
+                    // Check if connection is closed and attempt reconnection
+                    if (eventSource!.readyState === EventSource.CLOSED) {
+                        console.log(
+                            'EventSource connection closed, will attempt reconnection on next render'
+                        )
+                    } else {
+                        console.log(
+                            'EventSource attempting automatic reconnection...'
+                        )
+                    }
+                }
+
+                // Add logging for when EventSource closes
+                eventSource.addEventListener('close', () => {
+                    console.log('🔌 EventSource connection closed')
                 })
             }
         }
 
-        eventSource.onerror = (error) => {
-            console.error('❌ EventSource error:', error)
-            console.log('EventSource readyState:', eventSource.readyState)
-            console.log('EventSource URL:', eventSource.url)
-
-            // Log additional error details
-            console.log('EventSource error event:', {
-                type: error.type,
-                target: error.target,
-                bubbles: error.bubbles,
-                cancelable: error.cancelable,
-            })
-
-            // Check if connection is closed and attempt reconnection
-            if (eventSource.readyState === EventSource.CLOSED) {
-                console.log(
-                    'EventSource connection closed, will attempt reconnection on next render'
-                )
-            } else {
-                console.log('EventSource attempting automatic reconnection...')
-            }
-        }
-
-        // Add logging for when EventSource closes
-        eventSource.addEventListener('close', () => {
-            console.log('🔌 EventSource connection closed')
-        })
+        setupEventSource()
 
         return () => {
             console.log('🔌 Cleaning up EventSource')
-            eventSource.close()
+            // Note: eventSource is not accessible here due to async function scope
+            // This cleanup will need to be handled differently
         }
-    }, [quest?.id, queryClient, questId])
+    }, [quest?.id, queryClient, questId, getValidToken])
 
     return {
         questData: quest,
@@ -583,7 +628,7 @@ export const useQuestGuest = ({ token }: { token: string }) => {
         queryKey: ['leaderboard', token],
         queryFn: () => fetchLeaderboardByToken(token),
         enabled: !!token,
-        staleTime: 1000 * 60 * 5,
+        staleTime: 1000 * 30,
         retry: (failureCount, error: any) => {
             // Don't retry on 4xx errors except 429 (rate limit)
             if (
@@ -614,7 +659,7 @@ export const useQuestGuest = ({ token }: { token: string }) => {
         if (!quest?.id) return
 
         console.log('🔌 Setting up EventSource for guest quest:', quest.id)
-        const eventSourceUrl = `/api/quests/${quest.id}/events`
+        const eventSourceUrl = `/api/quests/${quest.id}/events?token=${encodeURIComponent(token)}`
         console.log('🔌 EventSource URL:', eventSourceUrl)
         console.log(
             '🔌 Full EventSource URL:',
@@ -682,7 +727,12 @@ export const useQuestGuest = ({ token }: { token: string }) => {
                         questId: quest.id,
                         hasToken: !!token,
                     })
-                    handleSpeciesEvent(data, quest.id, queryClient, token)
+                    handleSpeciesEvent(
+                        data,
+                        Number(quest.id),
+                        queryClient,
+                        token
+                    )
                 } else {
                     console.log('❓ Guest unknown event type:', data.type)
                 }
@@ -723,6 +773,11 @@ export const useQuestGuest = ({ token }: { token: string }) => {
                 )
             }
         }
+
+        // Add logging for when Guest EventSource closes
+        eventSource.addEventListener('close', () => {
+            console.log('🔌 Guest EventSource connection closed')
+        })
 
         // Add logging for when Guest EventSource closes
         eventSource.addEventListener('close', () => {
@@ -819,8 +874,7 @@ const handleSpeciesEvent = (
         mappingsSource: token ? 'sharedQuest' : 'progress',
     })
 
-    const guestName =
-        data.payload.guestName || (data.payload.owner ? 'The owner' : 'A guest')
+    const guestName = data.payload.guestName || 'A guest'
 
     console.log('🗺️ Mappings check:', {
         hasMappings: !!mappings,
@@ -870,27 +924,10 @@ const handleSpeciesEvent = (
         hasImage: !!species?.default_photo?.square_url,
     })
 
-    // Show toast even if species data is not available
-    toast(
-        React.createElement(QuestEventToast, {
-            guestName,
-            speciesName,
-            action,
-            speciesImage: species?.default_photo?.square_url,
-        }),
-        {
-            position: 'top-left',
-            style: {
-                padding: 0,
-                margin: 0,
-                width: '90svw',
-                borderWidth: 0,
-                boxShadow: 'none',
-                background: 'none',
-                outline: 'none',
-            },
-        }
-    )
+    // Show toast
+    toast.success(`${guestName} ${action} ${speciesName}`, {
+        duration: 4000,
+    })
 
     // Invalidate relevant queries based on context
     if (token) {

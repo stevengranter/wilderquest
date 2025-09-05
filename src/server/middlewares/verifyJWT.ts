@@ -66,12 +66,10 @@ export const optionalAuthMiddleware = (
     _res: Response,
     next: NextFunction
 ) => {
-    const authHeader = req.headers.authorization
+    const authHeader =
+        req.headers.authorization || (req.headers as any).Authorization
 
     if (!authHeader) {
-        console.log(
-            'Authorization header is missing — proceeding as unauthenticated'
-        )
         return next()
     }
 
@@ -80,9 +78,8 @@ export const optionalAuthMiddleware = (
     jwt.verify(
         token,
         process.env.ACCESS_TOKEN_SECRET! as string,
-        (err, decoded) => {
+        (err: any, decoded: any) => {
             if (err) {
-                console.log('Invalid token or token expired:', err)
                 return next()
             }
 
@@ -94,10 +91,6 @@ export const optionalAuthMiddleware = (
                     cuid: userData.cuid,
                     role_id: userData.role_id,
                 }
-            } else {
-                console.error(
-                    'Decoded token is undefined in optionalAuthMiddleware after successful verification.'
-                )
             }
             next()
         }

@@ -279,11 +279,7 @@ export const QuestListView = ({
                                 )
                             }
 
-                            toast.success(
-                                next
-                                    ? 'Marked as found!'
-                                    : 'Marked as not found'
-                            )
+                            // Toast will be shown via real-time events
                         } catch (error: unknown) {
                             // Handle specific competitive mode conflict
                             const axiosError = error as {

@@ -109,7 +109,10 @@ export function buildApp({
     const questShareController = createQuestShareController(questShareService)
     const questShareRouter = createQuestShareRouter(questShareController)
     apiRouter.use('/quest-sharing', questShareRouter)
-    const questEventsRouter = createQuestEventsRouter(questService)
+    const questEventsRouter = createQuestEventsRouter(
+        questService,
+        questShareService
+    )
     apiRouter.use('/quests', questEventsRouter)
 
     const authService = createAuthService(userRepository)
