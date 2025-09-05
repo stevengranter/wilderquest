@@ -205,6 +205,29 @@ export const useQuestOwner = ({
         queryFn: () => fetchQuest(questId),
         initialData: initialData?.quest,
         staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: (failureCount, error: any) => {
+            // Don't retry on 4xx errors except 429 (rate limit)
+            if (
+                error?.status &&
+                error.status >= 400 &&
+                error.status < 500 &&
+                error.status !== 429
+            ) {
+                return false
+            }
+            // For 429 errors, retry up to 3 times with exponential backoff
+            if (error?.status === 429) {
+                return failureCount < 3
+            }
+            // For other errors, retry up to 2 times
+            return failureCount < 2
+        },
+        retryDelay: (attemptIndex) => {
+            // For 429 errors, use longer delays
+            const baseDelay =
+                attemptIndex === 0 ? 1000 : 2000 * 2 ** attemptIndex
+            return Math.min(baseDelay, 30000)
+        },
     })
 
     const quest = questQuery.data
@@ -217,6 +240,29 @@ export const useQuestOwner = ({
         enabled:
             isQuestSuccess && !!(quest as QuestWithTaxa)?.taxon_ids?.length,
         staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: (failureCount, error: any) => {
+            // Don't retry on 4xx errors except 429 (rate limit)
+            if (
+                error?.status &&
+                error.status >= 400 &&
+                error.status < 500 &&
+                error.status !== 429
+            ) {
+                return false
+            }
+            // For 429 errors, retry up to 3 times with exponential backoff
+            if (error?.status === 429) {
+                return failureCount < 3
+            }
+            // For other errors, retry up to 2 times
+            return failureCount < 2
+        },
+        retryDelay: (attemptIndex) => {
+            // For 429 errors, use longer delays
+            const baseDelay =
+                attemptIndex === 0 ? 1000 : 2000 * 2 ** attemptIndex
+            return Math.min(baseDelay, 30000)
+        },
     })
 
     // For pagination, we'll implement UI-level pagination in the component
@@ -227,6 +273,29 @@ export const useQuestOwner = ({
         queryFn: () => fetchMappingsAndProgress(quest!.id),
         enabled: !!quest?.id,
         staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: (failureCount, error: any) => {
+            // Don't retry on 4xx errors except 429 (rate limit)
+            if (
+                error?.status &&
+                error.status >= 400 &&
+                error.status < 500 &&
+                error.status !== 429
+            ) {
+                return false
+            }
+            // For 429 errors, retry up to 3 times with exponential backoff
+            if (error?.status === 429) {
+                return failureCount < 3
+            }
+            // For other errors, retry up to 2 times
+            return failureCount < 2
+        },
+        retryDelay: (attemptIndex) => {
+            // For 429 errors, use longer delays
+            const baseDelay =
+                attemptIndex === 0 ? 1000 : 2000 * 2 ** attemptIndex
+            return Math.min(baseDelay, 30000)
+        },
     })
 
     const leaderboardQuery = useQuery({
@@ -234,6 +303,29 @@ export const useQuestOwner = ({
         queryFn: () => fetchLeaderboard(quest!.id),
         enabled: !!quest?.id,
         staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: (failureCount, error: any) => {
+            // Don't retry on 4xx errors except 429 (rate limit)
+            if (
+                error?.status &&
+                error.status >= 400 &&
+                error.status < 500 &&
+                error.status !== 429
+            ) {
+                return false
+            }
+            // For 429 errors, retry up to 3 times with exponential backoff
+            if (error?.status === 429) {
+                return failureCount < 3
+            }
+            // For other errors, retry up to 2 times
+            return failureCount < 2
+        },
+        retryDelay: (attemptIndex) => {
+            // For 429 errors, use longer delays
+            const baseDelay =
+                attemptIndex === 0 ? 1000 : 2000 * 2 ** attemptIndex
+            return Math.min(baseDelay, 30000)
+        },
     })
 
     const updateStatus = useMutation({
@@ -383,11 +475,10 @@ export const useQuestOwner = ({
         fetchNextTaxaPage: () => {
             // Placeholder for future pagination - taxa are loaded in single request
         },
-        isError:
-            questQuery.isError ||
-            progressQuery.isError ||
-            leaderboardQuery.isError ||
-            taxaQuery.isError,
+        isError: questQuery.isError, // Only fail on quest data error
+        isProgressError: progressQuery.isError,
+        isLeaderboardError: leaderboardQuery.isError,
+        isTaxaError: taxaQuery.isError,
         updateStatus: updateStatus.mutate,
     }
 }
@@ -399,6 +490,29 @@ export const useQuestGuest = ({ token }: { token: string }) => {
     const sharedQuestQuery = useQuery({
         queryKey: ['sharedQuest', token],
         queryFn: () => fetchQuestByToken(token),
+        retry: (failureCount, error: any) => {
+            // Don't retry on 4xx errors except 429 (rate limit)
+            if (
+                error?.status &&
+                error.status >= 400 &&
+                error.status < 500 &&
+                error.status !== 429
+            ) {
+                return false
+            }
+            // For 429 errors, retry up to 3 times with exponential backoff
+            if (error?.status === 429) {
+                return failureCount < 3
+            }
+            // For other errors, retry up to 2 times
+            return failureCount < 2
+        },
+        retryDelay: (attemptIndex) => {
+            // For 429 errors, use longer delays
+            const baseDelay =
+                attemptIndex === 0 ? 1000 : 2000 * 2 ** attemptIndex
+            return Math.min(baseDelay, 30000)
+        },
     })
 
     const quest = sharedQuestQuery.data?.quest
@@ -411,12 +525,58 @@ export const useQuestGuest = ({ token }: { token: string }) => {
         enabled:
             isQuestSuccess && !!(quest as QuestWithTaxa)?.taxon_ids?.length,
         staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: (failureCount, error: any) => {
+            // Don't retry on 4xx errors except 429 (rate limit)
+            if (
+                error?.status &&
+                error.status >= 400 &&
+                error.status < 500 &&
+                error.status !== 429
+            ) {
+                return false
+            }
+            // For 429 errors, retry up to 3 times with exponential backoff
+            if (error?.status === 429) {
+                return failureCount < 3
+            }
+            // For other errors, retry up to 2 times
+            return failureCount < 2
+        },
+        retryDelay: (attemptIndex) => {
+            // For 429 errors, use longer delays
+            const baseDelay =
+                attemptIndex === 0 ? 1000 : 2000 * 2 ** attemptIndex
+            return Math.min(baseDelay, 30000)
+        },
     })
 
     const guestProgressQuery = useQuery({
         queryKey: ['guestProgress', token],
         queryFn: () => fetchGuestProgress(token),
         enabled: !!token,
+        retry: (failureCount, error: any) => {
+            // Don't retry on 4xx errors except 429 (rate limit)
+            if (
+                error?.status &&
+                error.status >= 400 &&
+                error.status < 500 &&
+                error.status !== 429
+            ) {
+                return false
+            }
+            // For 429 errors, retry up to 3 times with exponential backoff
+            if (error?.status === 429) {
+                return failureCount < 3
+            }
+            // For other errors, retry up to 2 times
+            return failureCount < 2
+        },
+        retryDelay: (attemptIndex) => {
+            // For 429 errors, use longer delays
+            const baseDelay =
+                attemptIndex === 0 ? 1000 : 2000 * 2 ** attemptIndex
+            return Math.min(baseDelay, 30000)
+        },
     })
 
     const guestLeaderboardQuery = useQuery({
@@ -424,6 +584,29 @@ export const useQuestGuest = ({ token }: { token: string }) => {
         queryFn: () => fetchLeaderboardByToken(token),
         enabled: !!token,
         staleTime: 1000 * 60 * 5,
+        retry: (failureCount, error: any) => {
+            // Don't retry on 4xx errors except 429 (rate limit)
+            if (
+                error?.status &&
+                error.status >= 400 &&
+                error.status < 500 &&
+                error.status !== 429
+            ) {
+                return false
+            }
+            // For 429 errors, retry up to 3 times with exponential backoff
+            if (error?.status === 429) {
+                return failureCount < 3
+            }
+            // For other errors, retry up to 2 times
+            return failureCount < 2
+        },
+        retryDelay: (attemptIndex) => {
+            // For 429 errors, use longer delays
+            const baseDelay =
+                attemptIndex === 0 ? 1000 : 2000 * 2 ** attemptIndex
+            return Math.min(baseDelay, 30000)
+        },
     })
 
     // EventSource for real-time updates
@@ -570,11 +753,10 @@ export const useQuestGuest = ({ token }: { token: string }) => {
         fetchNextTaxaPage: () => {
             // Placeholder for future pagination - taxa are loaded in single request
         },
-        isError:
-            sharedQuestQuery.isError ||
-            guestProgressQuery.isError ||
-            guestLeaderboardQuery.isError ||
-            taxaQuery.isError,
+        isError: sharedQuestQuery.isError, // Only fail on quest data error
+        isProgressError: guestProgressQuery.isError,
+        isLeaderboardError: guestLeaderboardQuery.isError,
+        isTaxaError: taxaQuery.isError,
         updateStatus: undefined, // Guests cannot update quest status
     }
 }
@@ -754,6 +936,9 @@ interface QuestDataResult {
     isTaxaFetchingNextPage: boolean
     taxaHasNextPage: boolean
     isError: boolean
+    isProgressError?: boolean
+    isLeaderboardError?: boolean
+    isTaxaError?: boolean
     updateStatus?: (status: 'pending' | 'active' | 'paused' | 'ended') => void
     fetchNextTaxaPage: () => void
 }

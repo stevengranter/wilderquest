@@ -30,6 +30,9 @@ export const QuestView = () => {
         taxaHasNextPage,
         fetchNextTaxaPage,
         isError,
+        isProgressError,
+        isLeaderboardError,
+        isTaxaError,
         updateStatus,
         isOwner,
         canEdit,
@@ -85,33 +88,65 @@ export const QuestView = () => {
                 />
             )}
 
-            <div className="grid grid-cols-2 gap-8 items-start">
-                <QuestLeaderboard
-                    leaderboard={leaderboard}
-                    questStatus={questData?.status}
-                    questId={questData?.id}
-                    ownerUserId={questData?.user_id}
-                    questName={questData?.name}
-                    isOwner={isOwner}
-                />
+            {(questData?.status === 'active' ||
+                questData?.status === 'ended') && (
+                <div className="grid grid-cols-2 gap-8 items-start">
+                    <div>
+                        {isLeaderboardError ? (
+                            <div className="text-sm text-amber-600 mb-3 bg-amber-50 p-4 rounded-md border border-amber-200">
+                                ⚠️ Unable to load leaderboard data. This may be
+                                due to rate limiting.
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                                >
+                                    Retry
+                                </button>
+                            </div>
+                        ) : (
+                            <QuestLeaderboard
+                                leaderboard={leaderboard}
+                                questStatus={questData?.status}
+                                questId={questData?.id}
+                                ownerUserId={questData?.user_id}
+                                questName={questData?.name}
+                                isOwner={isOwner}
+                            />
+                        )}
+                    </div>
 
-                <div className="flex justify-center items-start min-h-[300px] pt-4">
-                    {mappings && mappings.length > 0 && (
-                        <div className="w-64 h-64">
-                            {(() => {
-                                const total = mappings.length
-                                const found =
-                                    aggregatedProgress?.filter(
-                                        (a) => (a.count || 0) > 0
-                                    ).length || 0
-                                return (
-                                    <TaxaPieChart found={found} total={total} />
-                                )
-                            })()}
-                        </div>
-                    )}
+                    <div className="flex justify-center items-start min-h-[300px] pt-4">
+                        {isProgressError || isTaxaError ? (
+                            <div className="text-sm text-amber-600 bg-amber-50 p-4 rounded-md border border-amber-200 max-w-xs">
+                                ⚠️ Unable to load progress data. This may be due
+                                to rate limiting.
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="block mt-2 text-blue-600 hover:text-blue-800 underline"
+                                >
+                                    Retry
+                                </button>
+                            </div>
+                        ) : mappings && mappings.length > 0 ? (
+                            <div className="w-64 h-64">
+                                {(() => {
+                                    const total = mappings.length
+                                    const found =
+                                        aggregatedProgress?.filter(
+                                            (a) => (a.count || 0) > 0
+                                        ).length || 0
+                                    return (
+                                        <TaxaPieChart
+                                            found={found}
+                                            total={total}
+                                        />
+                                    )
+                                })()}
+                            </div>
+                        ) : null}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {questData && (
                 <QuestSpecies

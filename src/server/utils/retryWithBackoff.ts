@@ -14,9 +14,9 @@ export async function retryWithBackoff<T>(
     options: RetryOptions = {}
 ): Promise<AxiosResponse<T>> {
     const {
-        maxRetries = 3,
-        baseDelay = 1000, // 1 second
-        maxDelay = 30000, // 30 seconds
+        maxRetries = 5, // Increased from 3 to 5 for better rate limit handling
+        baseDelay = 2000, // Increased from 1s to 2s for rate limits
+        maxDelay = 60000, // Increased from 30s to 60s
         retryOn429 = true,
     } = options
 
@@ -42,15 +42,14 @@ export async function retryWithBackoff<T>(
                 retryOn429
             ) {
                 if (attempt < maxRetries) {
-                    // Calculate exponential backoff delay
-                    const delay = Math.min(
-                        baseDelay * Math.pow(2, attempt),
-                        maxDelay
-                    )
+                    // Calculate exponential backoff delay with jitter
+                    const exponentialDelay = baseDelay * Math.pow(2, attempt)
+                    const jitter = Math.random() * 1000 // Add up to 1 second of jitter
+                    const delay = Math.min(exponentialDelay + jitter, maxDelay)
 
                     logger.warn(
                         `Received 429 error on attempt ${attempt + 1}/${maxRetries + 1}. ` +
-                            `Retrying in ${delay}ms...`
+                            `Retrying in ${(delay / 1000).toFixed(1)}s...`
                     )
 
                     // Wait before retrying

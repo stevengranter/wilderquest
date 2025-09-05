@@ -95,7 +95,7 @@ export function useQuestsWithPhotos(questsEnabled = true) {
         },
         enabled: questsEnabled,
         staleTime: 5 * 60 * 1000,
-        cacheTime: 30 * 60 * 1000,
+        gcTime: 30 * 60 * 1000,
     })
 
     useEffect(() => {
@@ -134,7 +134,7 @@ export function useUserQuestsWithPhotos(userId: number | undefined) {
         },
         enabled: !!userId,
         staleTime: 5 * 60 * 1000,
-        cacheTime: 30 * 60 * 1000,
+        gcTime: 30 * 60 * 1000,
     })
 
     useEffect(() => {

@@ -335,6 +335,21 @@ function QuestMapViewInner({
                 const sw = bounds.getSouthWest()
                 const ne = bounds.getNorthEast()
 
+                // Only fetch if the bounds are reasonable (not too large)
+                const latDiff = Math.abs(ne.lat - sw.lat)
+                const lngDiff = Math.abs(ne.lng - sw.lng)
+
+                // Skip if bounds are too large (entire world or continent)
+                if (latDiff > 50 || lngDiff > 50) {
+                    console.log(
+                        'Skipping observation fetch - bounds too large:',
+                        { latDiff, lngDiff }
+                    )
+                    setObservations([])
+                    setIsLoading(false)
+                    return
+                }
+
                 // Batch taxa IDs to minimize API calls
                 const taxonIds = taxa.map((t) => t.id)
                 const batchSize = 30 // iNaturalist API batch limit
@@ -349,7 +364,7 @@ function QuestMapViewInner({
 
                 for (const batch of batches) {
                     const taxonIdsParam = batch.join(',')
-                    const url = `/iNatAPI/observations?nelat=${ne.lat}&nelng=${ne.lng}&swlat=${sw.lat}&swlng=${sw.lng}&geo=true&photos=true&verifiable=true&per_page=100&taxon_id=${taxonIdsParam}`
+                    const url = `/iNatAPI/observations?nelat=${ne.lat}&nelng=${ne.lng}&swlat=${sw.lat}&swlng=${sw.lng}&geo=true&photos=true&verifiable=true&per_page=50&taxon_id=${taxonIdsParam}`
 
                     try {
                         const response = await api.get(url)
@@ -374,8 +389,8 @@ function QuestMapViewInner({
             }
         }
 
-        // Debounce the API calls
-        const timeoutId = setTimeout(fetchObservations, 500)
+        // Increase debounce time and add bounds stability check
+        const timeoutId = setTimeout(fetchObservations, 1000) // Increased from 500ms
         return () => clearTimeout(timeoutId)
     }, [bounds, taxa])
 

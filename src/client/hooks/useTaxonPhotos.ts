@@ -26,33 +26,8 @@ const fetchTaxaInBatches = async (taxonIds: number[]) => {
             const response = await api.get(`/iNatAPI/taxa/${batch.join(',')}`)
             return response.data.results as INatTaxon[]
         } catch (error: unknown) {
-            // If we get a 429 error, wait a bit and retry once
-            if (
-                error &&
-                typeof error === 'object' &&
-                'response' in error &&
-                error.response &&
-                typeof error.response === 'object' &&
-                'status' in error.response &&
-                error.response.status === 429
-            ) {
-                console.warn(
-                    `Rate limit hit for batch: ${batch.join(',')}, retrying in 2s...`
-                )
-                try {
-                    await new Promise((resolve) => setTimeout(resolve, 2000))
-                    const retryResponse = await api.get(
-                        `/iNatAPI/taxa/${batch.join(',')}`
-                    )
-                    return retryResponse.data.results as INatTaxon[]
-                } catch (_retryError: unknown) {
-                    console.warn(
-                        `Retry failed for batch: ${batch.join(',')}, skipping...`
-                    )
-                    return []
-                }
-            }
-            // For other errors, return empty array to not break everything
+            // For errors, return empty array to not break everything
+            // Backend handles rate limiting and retries
             console.warn(`Error fetching batch: ${batch.join(',')}`, error)
             return []
         }

@@ -98,7 +98,7 @@ export function ObservationDialog(props: ObservationDialogProps) {
                 roundedLon,
                 showGlobal
             ),
-        enabled: !!species.id,
+        enabled: !!species.id && open, // Only fetch when dialog is open
 
         retry: (failureCount, error) => {
             // Don't retry on 4xx errors (client errors)

@@ -121,7 +121,7 @@ export function buildApp({
     apiRouter.use(
         '/iNatAPI',
         rateSlowDown,
-        rateLimiter(60 * 1000, 30),
+        rateLimiter(60 * 1000, 10), // Reduced from 30 to 10 requests per minute
         iNatController
     )
     apiRouter.use('/tiles', mapTilesProxyRouter)

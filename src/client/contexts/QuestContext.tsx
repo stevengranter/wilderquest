@@ -28,6 +28,9 @@ interface QuestContextType {
     isTaxaFetchingNextPage: boolean
     taxaHasNextPage: boolean
     isError: boolean
+    isProgressError?: boolean
+    isLeaderboardError?: boolean
+    isTaxaError?: boolean
 
     // Actions
     updateStatus?: (status: 'pending' | 'active' | 'paused' | 'ended') => void
@@ -72,6 +75,9 @@ export const QuestProvider: React.FC<QuestProviderProps> = ({
         isTaxaFetchingNextPage: questData.isTaxaFetchingNextPage,
         taxaHasNextPage: questData.taxaHasNextPage,
         isError: questData.isError,
+        isProgressError: questData.isProgressError,
+        isLeaderboardError: questData.isLeaderboardError,
+        isTaxaError: questData.isTaxaError,
 
         // Actions
         updateStatus: questData.updateStatus,

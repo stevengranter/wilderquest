@@ -5,8 +5,8 @@ import redisClient from '../config/redisClient.js'
 export const globalINaturalistRateLimiter = new RateLimiterRedis({
     storeClient: redisClient,
     keyPrefix: 'iNaturalistGlobal',
-    points: 10_000, // Allow 10_000 requests
-    duration: 24 * 60 * 60, // Reset every day
+    points: 100, // Allow 100 requests per minute (iNaturalist's limit)
+    duration: 60, // Reset every minute
 })
 
 export const globalThunderForestRateLimiter = new RateLimiterRedis({
