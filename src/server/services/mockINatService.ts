@@ -591,7 +591,9 @@ export class MockINatService {
         }
     }
 
-    static getPlaces(): any {
+    static getPlaces(): {
+        results: Array<{ id: number; name: string; display_name: string }>
+    } {
         return {
             results: [
                 {
@@ -603,7 +605,22 @@ export class MockINatService {
         }
     }
 
-    static getSpeciesCounts(params: Record<string, unknown>): any {
+    static getSpeciesCounts(params: Record<string, unknown>): {
+        total_results: number
+        page: number
+        per_page: number
+        results: Array<{
+            count: number
+            taxon: {
+                id: number
+                name: string
+                preferred_common_name: string
+                iconic_taxon_name: string
+                rank: string
+                rank_level: number
+            }
+        }>
+    } {
         // Mock species counts response for observations/species_counts endpoint
         const mockCounts = mockTaxa.map((taxon) => ({
             count: Math.floor(Math.random() * 100) + 1,
@@ -619,8 +636,8 @@ export class MockINatService {
 
         return {
             total_results: mockCounts.length,
-            page: params.page || 1,
-            per_page: params.per_page || 20,
+            page: (params.page as number) || 1,
+            per_page: (params.per_page as number) || 20,
             results: mockCounts,
         }
     }

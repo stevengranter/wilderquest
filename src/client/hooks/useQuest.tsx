@@ -206,7 +206,7 @@ export const useQuestOwner = ({
         queryFn: () => fetchQuest(questId),
         initialData: initialData?.quest,
         staleTime: 1000 * 60 * 5, // 5 minutes
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: Error & { status?: number }) => {
             // Don't retry on 4xx errors except 429 (rate limit)
             if (
                 error?.status &&
@@ -241,7 +241,7 @@ export const useQuestOwner = ({
         enabled:
             isQuestSuccess && !!(quest as QuestWithTaxa)?.taxon_ids?.length,
         staleTime: 1000 * 60 * 5, // 5 minutes
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: Error & { status?: number }) => {
             // Don't retry on 4xx errors except 429 (rate limit)
             if (
                 error?.status &&
@@ -274,7 +274,7 @@ export const useQuestOwner = ({
         queryFn: () => fetchMappingsAndProgress(quest!.id),
         enabled: !!quest?.id,
         staleTime: 1000 * 60 * 5, // 5 minutes
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: Error & { status?: number }) => {
             // Don't retry on 4xx errors except 429 (rate limit)
             if (
                 error?.status &&
@@ -304,7 +304,7 @@ export const useQuestOwner = ({
         queryFn: () => fetchLeaderboard(quest!.id),
         enabled: !!quest?.id,
         staleTime: 1000 * 30, // 30 seconds
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: Error & { status?: number }) => {
             // Don't retry on 4xx errors except 429 (rate limit)
             if (
                 error?.status &&
@@ -415,6 +415,12 @@ export const useQuestOwner = ({
                             )
                             queryClient.invalidateQueries({
                                 queryKey: ['quest', questId],
+                            })
+                        } else if (data.type === 'QUEST_EDITING_STARTED') {
+                            console.log('📝 Quest editing started event')
+                            toast.info('Quest Editing in Progress', {
+                                description: data.payload.message,
+                                duration: 8000, // Show for 8 seconds
                             })
                         } else if (
                             ['SPECIES_FOUND', 'SPECIES_UNFOUND'].includes(
@@ -535,7 +541,7 @@ export const useQuestGuest = ({ token }: { token: string }) => {
     const sharedQuestQuery = useQuery({
         queryKey: ['sharedQuest', token],
         queryFn: () => fetchQuestByToken(token),
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: Error & { status?: number }) => {
             // Don't retry on 4xx errors except 429 (rate limit)
             if (
                 error?.status &&
@@ -570,7 +576,7 @@ export const useQuestGuest = ({ token }: { token: string }) => {
         enabled:
             isQuestSuccess && !!(quest as QuestWithTaxa)?.taxon_ids?.length,
         staleTime: 1000 * 60 * 5, // 5 minutes
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: Error & { status?: number }) => {
             // Don't retry on 4xx errors except 429 (rate limit)
             if (
                 error?.status &&
@@ -599,7 +605,7 @@ export const useQuestGuest = ({ token }: { token: string }) => {
         queryKey: ['guestProgress', token],
         queryFn: () => fetchGuestProgress(token),
         enabled: !!token,
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: Error & { status?: number }) => {
             // Don't retry on 4xx errors except 429 (rate limit)
             if (
                 error?.status &&
@@ -629,7 +635,7 @@ export const useQuestGuest = ({ token }: { token: string }) => {
         queryFn: () => fetchLeaderboardByToken(token),
         enabled: !!token,
         staleTime: 1000 * 30,
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: Error & { status?: number }) => {
             // Don't retry on 4xx errors except 429 (rate limit)
             if (
                 error?.status &&
@@ -715,6 +721,12 @@ export const useQuestGuest = ({ token }: { token: string }) => {
                     toast.info(`Quest status updated to ${data.payload.status}`)
                     queryClient.invalidateQueries({
                         queryKey: ['sharedQuest', token],
+                    })
+                } else if (data.type === 'QUEST_EDITING_STARTED') {
+                    console.log('📝 Guest quest editing started event')
+                    toast.info('Quest Editing in Progress', {
+                        description: data.payload.message,
+                        duration: 8000, // Show for 8 seconds
                     })
                 } else if (
                     ['SPECIES_FOUND', 'SPECIES_UNFOUND'].includes(data.type)

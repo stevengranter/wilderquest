@@ -30,16 +30,6 @@ const db = await mysql.createConnection({
 // Available mock taxa IDs from MockINatService
 const MOCK_TAXA_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-type inatApiParams = {
-    lat: number
-    lng: number
-    radius?: number
-    per_page?: number
-    order_by?: string
-    quality_grade?: string
-    verifiable?: boolean
-}
-
 // Fetch taxa from mock data instead of real API
 const fetchLocationTaxa = async (
     lat: number,

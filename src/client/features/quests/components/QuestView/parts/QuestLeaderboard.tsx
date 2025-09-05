@@ -167,7 +167,14 @@ export const QuestLeaderboard = ({
             )
 
             if (matchingShare) {
-                return `${window.location.origin}/share/${matchingShare.token}`
+                const shareUrl = `${window.location.origin}/share/${matchingShare.token}`
+                console.log(
+                    'Generated share URL:',
+                    shareUrl,
+                    'for entry:',
+                    entry.display_name
+                )
+                return shareUrl
             }
         } catch (e) {
             console.error('Failed to get share link', e)
@@ -358,7 +365,7 @@ export const QuestLeaderboard = ({
                                                                     await buildShareLink(
                                                                         entry
                                                                     )
-                                                                navigator.clipboard.writeText(
+                                                                await navigator.clipboard.writeText(
                                                                     shareUrl
                                                                 )
                                                                 toast.success(
@@ -399,7 +406,7 @@ export const QuestLeaderboard = ({
                                                                         }
                                                                     )
                                                                 } else {
-                                                                    navigator.clipboard.writeText(
+                                                                    await navigator.clipboard.writeText(
                                                                         shareUrl
                                                                     )
                                                                     toast.success(

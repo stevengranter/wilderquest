@@ -94,7 +94,8 @@ export function buildApp({
     const questService = createQuestService(
         questRepository,
         questToTaxaRepository,
-        questShareRepository
+        questShareRepository,
+        sharedQuestProgressRepository
     )
     const questController = createQuestController(questService)
     const questRouter = createQuestRouter(questController)

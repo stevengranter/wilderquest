@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken'
 export interface AuthenticatedRequest extends Request {
     headers: {
         authorization?: string
+        Authorization?: string
     }
     user?: TokenUserData
 }
@@ -66,8 +67,7 @@ export const optionalAuthMiddleware = (
     _res: Response,
     next: NextFunction
 ) => {
-    const authHeader =
-        req.headers.authorization || (req.headers as any).Authorization
+    const authHeader = req.headers.authorization || req.headers.Authorization
 
     if (!authHeader) {
         return next()
@@ -78,7 +78,7 @@ export const optionalAuthMiddleware = (
     jwt.verify(
         token,
         process.env.ACCESS_TOKEN_SECRET! as string,
-        (err: any, decoded: any) => {
+        (err, decoded) => {
             if (err) {
                 return next()
             }

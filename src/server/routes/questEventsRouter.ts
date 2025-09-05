@@ -49,7 +49,7 @@ export function createQuestEventsRouter(
                         console.log(
                             '🔌 SERVER: Access check passed for share token'
                         )
-                    } catch (shareError) {
+                    } catch (_shareError) {
                         // If share token validation fails, try access token validation
                         console.log(
                             '🔌 SERVER: Share token validation failed, trying access token'
@@ -58,7 +58,7 @@ export function createQuestEventsRouter(
                             const decoded = jwt.verify(
                                 token,
                                 process.env.ACCESS_TOKEN_SECRET!
-                            ) as any
+                            ) as jwt.JwtPayload
                             if (decoded && decoded.id) {
                                 await questService.getAccessibleQuestById(
                                     questId,
@@ -71,7 +71,7 @@ export function createQuestEventsRouter(
                             } else {
                                 throw new Error('Invalid access token')
                             }
-                        } catch (accessError) {
+                        } catch (_accessError) {
                             console.error(
                                 '🔌 SERVER: Both share token and access token validation failed'
                             )

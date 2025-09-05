@@ -94,6 +94,25 @@ export default function EditQuest() {
             try {
                 const response = await api.get(`/quests/${questId}`)
                 const quest = response.data
+
+                // Auto-pause active quest when editing starts
+                if (quest.status === 'active') {
+                    try {
+                        await api.patch(`/quests/${questId}/status`, {
+                            status: 'paused',
+                        })
+                        toast.info('Quest has been paused for editing', {
+                            description:
+                                'Explorers will be notified that you are editing the quest.',
+                        })
+                        // Update the quest status in the response for form reset
+                        quest.status = 'paused'
+                    } catch (pauseError) {
+                        console.error('Failed to pause quest:', pauseError)
+                        toast.error('Failed to pause quest for editing')
+                    }
+                }
+
                 form.reset({
                     questName: quest.name,
                     locationName: quest.location_name,
@@ -365,6 +384,37 @@ export default function EditQuest() {
                 {/*    </CardHeader>*/}
                 {/*    <CardContent>*/}
                 <h1>Edit quest</h1>
+
+                {/* Status banner for paused quests */}
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                            <svg
+                                className="h-5 w-5 text-blue-400"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                        </div>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-blue-800">
+                                Quest Paused for Editing
+                            </h3>
+                            <div className="mt-2 text-sm text-blue-700">
+                                <p>
+                                    Your quest has been automatically paused
+                                    while you make changes. Quest explorers have
+                                    been notified.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <FormProvider {...form}>
                     <form
                         onSubmit={form.handleSubmit(onSubmit)}

@@ -3,7 +3,10 @@ import {
     QuestToTaxaRepository,
     QuestWithTaxa,
 } from '../../repositories/QuestRepository.js'
-import { QuestShareRepository } from '../../repositories/QuestShareRepository.js'
+import {
+    QuestShareRepository,
+    SharedQuestProgressRepository,
+} from '../../repositories/QuestShareRepository.js'
 import { iNatService } from '../iNatService.js'
 import { sendEvent } from './questEventsService.js'
 import { Quest } from '../../models/quests.js'
@@ -14,7 +17,8 @@ export type QuestService = ReturnType<typeof createQuestService>
 export function createQuestService(
     questsRepo: QuestRepository,
     questsToTaxaRepo: QuestToTaxaRepository,
-    questShareRepo: QuestShareRepository
+    questShareRepo: QuestShareRepository,
+    sharedQuestProgressRepo?: SharedQuestProgressRepository
 ) {
     // 1. Get all public quests
     async function getAllPublicQuests(
@@ -197,16 +201,8 @@ export function createQuestService(
             await questsRepo.update(questId, questTableData)
         }
 
-        if (taxon_ids) {
-            await questsToTaxaRepo.deleteMany({ quest_id: questId })
-            await Promise.all(
-                taxon_ids.map((taxonId) =>
-                    questsToTaxaRepo.create({
-                        quest_id: questId,
-                        taxon_id: taxonId,
-                    })
-                )
-            )
+        if (taxon_ids !== undefined) {
+            await updateQuestTaxaPreservingProgress(questId, taxon_ids)
         }
 
         return getQuestWithTaxaById(questId)
@@ -232,6 +228,73 @@ export function createQuestService(
             type: 'QUEST_STATUS_UPDATED',
             payload: { status },
         })
+
+        // Send additional event for editing notification
+        if (status === 'paused') {
+            sendEvent(String(questId), {
+                type: 'QUEST_EDITING_STARTED',
+                payload: {
+                    message:
+                        'The quest creator has started editing this quest. Progress tracking is temporarily paused.',
+                },
+            })
+        }
+    }
+
+    // Helper function to update quest taxa while preserving progress
+    async function updateQuestTaxaPreservingProgress(
+        questId: number,
+        newTaxonIds: number[]
+    ): Promise<void> {
+        // Get existing mappings
+        const existingMappings = await getTaxaForQuestId(questId)
+        const existingTaxonIds = existingMappings.map((m) => m.taxon_id)
+
+        // Find taxa to add and remove
+        const taxaToAdd = newTaxonIds.filter(
+            (id) => !existingTaxonIds.includes(id)
+        )
+        const taxaToRemove = existingTaxonIds.filter(
+            (id) => !newTaxonIds.includes(id)
+        )
+
+        // Remove mappings for taxa that are no longer in the quest
+        if (taxaToRemove.length > 0 && sharedQuestProgressRepo) {
+            const mappingsToRemove = existingMappings.filter((m) =>
+                taxaToRemove.includes(m.taxon_id)
+            )
+
+            // Delete progress records for removed taxa
+            await Promise.all(
+                mappingsToRemove.map((mapping) =>
+                    sharedQuestProgressRepo!.clearMappingProgress(
+                        questId,
+                        mapping.id
+                    )
+                )
+            )
+
+            // Delete the mappings themselves
+            await Promise.all(
+                mappingsToRemove.map((mapping) =>
+                    questsToTaxaRepo.delete(mapping.id)
+                )
+            )
+        }
+
+        // Add new mappings for taxa that were added
+        if (taxaToAdd.length > 0) {
+            await Promise.all(
+                taxaToAdd.map((taxonId) =>
+                    questsToTaxaRepo.create({
+                        quest_id: questId,
+                        taxon_id: taxonId,
+                    })
+                )
+            )
+        }
+
+        // Taxa that are kept don't need any changes - their mappings and progress remain intact
     }
 
     return {
