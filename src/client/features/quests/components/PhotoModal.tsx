@@ -21,11 +21,20 @@ export function PhotoModal({
     initialPhotoIndex,
     initialObservationIndex,
 }: PhotoModalProps) {
+    // All state variables declared at the top
     const [currentObservationIndex, setCurrentObservationIndex] = useState(
         initialObservationIndex
     )
     const [currentPhotoIndex, setCurrentPhotoIndex] =
         useState(initialPhotoIndex)
+    const [direction, setDirection] = useState<'left' | 'right'>('right')
+    const [touchStart, setTouchStart] = useState<number | null>(null)
+    const [touchEnd, setTouchEnd] = useState<number | null>(null)
+    const [mouseDown, setMouseDown] = useState(false)
+    const [dragStart, setDragStart] = useState<number | null>(null)
+    const [dragEnd, setDragEnd] = useState<number | null>(null)
+
+    const minSwipeDistance = 50
 
     // Reset indices when modal opens with new data
     useEffect(() => {
@@ -57,13 +66,19 @@ export function PhotoModal({
     const goToNext = () => {
         if (!currentObservation) return
 
+        setDirection('left') // Card slides out to the left when going forward
+
         // Try to go to next photo in current observation
         if (currentPhotoIndex < currentObservation.photos.length - 1) {
             setCurrentPhotoIndex(currentPhotoIndex + 1)
         } else {
-            // Go to next observation's first photo
+            // Go to next observation's first photo, or wrap to beginning
             if (currentObservationIndex < observations.length - 1) {
                 setCurrentObservationIndex(currentObservationIndex + 1)
+                setCurrentPhotoIndex(0)
+            } else {
+                // Wrap around to the very first photo of the first observation
+                setCurrentObservationIndex(0)
                 setCurrentPhotoIndex(0)
             }
         }
@@ -72,18 +87,90 @@ export function PhotoModal({
     const goToPrevious = () => {
         if (!currentObservation) return
 
+        setDirection('right') // Card slides out to the right when going backward
+
         // Try to go to previous photo in current observation
         if (currentPhotoIndex > 0) {
             setCurrentPhotoIndex(currentPhotoIndex - 1)
         } else {
-            // Go to previous observation's last photo
+            // Go to previous observation's last photo, or wrap to end
             if (currentObservationIndex > 0) {
                 const prevObservation =
                     observations[currentObservationIndex - 1]
                 setCurrentObservationIndex(currentObservationIndex - 1)
                 setCurrentPhotoIndex(prevObservation.photos.length - 1)
+            } else {
+                // Wrap around to the very last photo of the last observation
+                const lastObservationIndex = observations.length - 1
+                const lastObservation = observations[lastObservationIndex]
+                setCurrentObservationIndex(lastObservationIndex)
+                setCurrentPhotoIndex(lastObservation.photos.length - 1)
             }
         }
+    }
+
+    // Touch handlers
+    const onTouchStart = (e: React.TouchEvent) => {
+        setTouchEnd(null)
+        setTouchStart(e.targetTouches[0].clientX)
+    }
+
+    const onTouchMove = (e: React.TouchEvent) => {
+        setTouchEnd(e.targetTouches[0].clientX)
+    }
+
+    const onTouchEnd = () => {
+        if (!touchStart || !touchEnd) return
+
+        const distance = touchStart - touchEnd
+        const isLeftSwipe = distance > minSwipeDistance
+        const isRightSwipe = distance < -minSwipeDistance
+
+        if (isLeftSwipe) {
+            goToNext()
+        } else if (isRightSwipe) {
+            goToPrevious()
+        }
+    }
+
+    // Mouse drag handlers
+    const onMouseDown = (e: React.MouseEvent) => {
+        setMouseDown(true)
+        setDragEnd(null)
+        setDragStart(e.clientX)
+        e.preventDefault()
+    }
+
+    const onMouseMove = (e: React.MouseEvent) => {
+        if (!mouseDown) return
+        setDragEnd(e.clientX)
+    }
+
+    const onMouseUp = () => {
+        if (!mouseDown || !dragStart || !dragEnd) {
+            setMouseDown(false)
+            return
+        }
+
+        const distance = dragStart - dragEnd
+        const isLeftDrag = distance > minSwipeDistance
+        const isRightDrag = distance < -minSwipeDistance
+
+        if (isLeftDrag) {
+            goToNext()
+        } else if (isRightDrag) {
+            goToPrevious()
+        }
+
+        setMouseDown(false)
+        setDragStart(null)
+        setDragEnd(null)
+    }
+
+    const onMouseLeave = () => {
+        setMouseDown(false)
+        setDragStart(null)
+        setDragEnd(null)
     }
 
     // Keyboard navigation
@@ -111,56 +198,31 @@ export function PhotoModal({
         return () => window.removeEventListener('keydown', handleKeyPress)
     }, [isOpen, currentObservationIndex, currentPhotoIndex, observations])
 
-    // Touch/swipe support for mobile
-    const [touchStart, setTouchStart] = useState<number | null>(null)
-    const [touchEnd, setTouchEnd] = useState<number | null>(null)
-
-    const minSwipeDistance = 50
-
-    const onTouchStart = (e: React.TouchEvent) => {
-        setTouchEnd(null)
-        setTouchStart(e.targetTouches[0].clientX)
-    }
-
-    const onTouchMove = (e: React.TouchEvent) => {
-        setTouchEnd(e.targetTouches[0].clientX)
-    }
-
-    const onTouchEnd = () => {
-        if (!touchStart || !touchEnd) return
-
-        const distance = touchStart - touchEnd
-        const isLeftSwipe = distance > minSwipeDistance
-        const isRightSwipe = distance < -minSwipeDistance
-
-        if (isLeftSwipe) {
-            goToNext()
-        } else if (isRightSwipe) {
-            goToPrevious()
-        }
-    }
-
     if (!currentObservation || !currentPhoto) {
         return null
     }
 
-    const hasPrevious = currentObservationIndex > 0 || currentPhotoIndex > 0
-    const hasNext =
-        currentObservationIndex < observations.length - 1 ||
-        currentPhotoIndex < currentObservation.photos.length - 1
+    // Always show navigation buttons since we have continuous navigation
+    const hasPrevious = true
+    const hasNext = true
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent
-                className="max-w-4xl w-full h-[90vh] p-0 bg-transparent border-none shadow-none"
+                className="max-w-4xl w-full h-[90vh] p-0 bg-transparent border-none shadow-0"
                 onTouchStart={onTouchStart}
                 onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
+                onMouseDown={onMouseDown}
+                onMouseMove={onMouseMove}
+                onMouseUp={onMouseUp}
+                onMouseLeave={onMouseLeave}
+                style={{ cursor: mouseDown ? 'grabbing' : 'grab' }}
             >
                 {/* Close button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-2 right-2 sm:top-4 sm:right-4 z-50 rounded-full bg-black/50 p-2 sm:p-3 text-white hover:bg-black/70 transition-colors"
+                    className="absolute top-4 right-4 sm:top-2 sm:right-2 z-50 rounded-full bg-black/50 p-2 sm:p-3 text-white hover:bg-black/70 transition-colors"
                     aria-label="Close modal"
                 >
                     <X className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -170,7 +232,7 @@ export function PhotoModal({
                 {hasPrevious && (
                     <button
                         onClick={goToPrevious}
-                        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-50 rounded-full bg-black/50 p-3 sm:p-4 text-white hover:bg-black/70 transition-colors"
+                        className="absolute left-2 sm:-left-8 top-1/2 -translate-y-1/2 z-50 rounded-full bg-black/50 p-3 sm:p-4 text-white hover:bg-black/70 transition-colors"
                         aria-label="Previous photo"
                     >
                         <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7" />
@@ -180,7 +242,7 @@ export function PhotoModal({
                 {hasNext && (
                     <button
                         onClick={goToNext}
-                        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-50 rounded-full bg-black/50 p-3 sm:p-4 text-white hover:bg-black/70 transition-colors"
+                        className="absolute right-2 sm:-right-8 top-1/2 -translate-y-1/2 z-50 rounded-full bg-black/50 p-3 sm:p-4 text-white hover:bg-black/70 transition-colors"
                         aria-label="Next photo"
                     >
                         <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7" />
@@ -190,7 +252,7 @@ export function PhotoModal({
                 {/* Main content */}
                 <div className="flex flex-col h-full">
                     {/* Photo counter */}
-                    <div className="absolute top-2 sm:top-4 left-1/2 -translate-x-1/2 z-40 bg-black/50 px-3 py-1 rounded-full text-white text-xs sm:text-sm font-medium">
+                    <div className="absolute top-2 sm:top-2 left-1/2 -translate-x-1/2 z-40 bg-black/50 px-3 py-1 rounded-full text-white text-xs sm:text-sm font-medium">
                         {getCurrentPhotoNumber()} of {totalPhotos}
                     </div>
 
@@ -199,10 +261,19 @@ export function PhotoModal({
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={`${currentObservationIndex}-${currentPhotoIndex}`}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{
+                                    opacity: 0,
+                                }}
+                                animate={{
+                                    opacity: 1,
+                                }}
+                                exit={{
+                                    opacity: 0,
+                                }}
+                                transition={{
+                                    duration: 0.3,
+                                    ease: 'easeInOut',
+                                }}
                                 className="max-w-md w-full"
                             >
                                 {/* Polaroid-style card */}
@@ -259,21 +330,6 @@ export function PhotoModal({
                                 </div>
                             </motion.div>
                         </AnimatePresence>
-                    </div>
-
-                    {/* Bottom info bar */}
-                    <div className="bg-black/70 text-white p-3 sm:p-4">
-                        <div className="max-w-4xl mx-auto">
-                            <p className="text-xs sm:text-sm text-center opacity-75">
-                                <span className="hidden sm:inline">
-                                    Use arrow keys or swipe to navigate • Press
-                                    Escape to close
-                                </span>
-                                <span className="sm:hidden">
-                                    Swipe to navigate • Tap X to close
-                                </span>
-                            </p>
-                        </div>
                     </div>
                 </div>
             </DialogContent>
