@@ -149,8 +149,11 @@ export const QuestLeaderboard = ({
         }
     }
 
-    const buildShareLink = async (entry: LeaderboardEntry) => {
-        if (!questId) return `${window.location.origin}/share/placeholder-token`
+    const buildShareLink = async (entry: LeaderboardEntry): Promise<string> => {
+        if (!questId) {
+            console.error('No quest ID provided')
+            return ''
+        }
 
         try {
             // Get all shares for this quest
@@ -160,11 +163,24 @@ export const QuestLeaderboard = ({
             const shares = response.data || []
 
             // Find the share that matches this entry
-            const matchingShare = shares.find(
-                (s: QuestShare) =>
-                    s.guest_name === entry.display_name ||
-                    (s.guest_name === null && entry.display_name === 'Guest')
-            )
+            const matchingShare = shares.find((s: QuestShare) => {
+                // For user shares (invited registered users)
+                if (s.shared_with_user_id && s.invited_username) {
+                    return s.invited_username === entry.display_name
+                }
+
+                // For guest shares (invited by name/email)
+                if (s.guest_name) {
+                    return s.guest_name === entry.display_name
+                }
+
+                // For generic guest entries
+                if (s.guest_name === null && entry.display_name === 'Guest') {
+                    return true
+                }
+
+                return false
+            })
 
             if (matchingShare) {
                 const shareUrl = `${window.location.origin}/share/${matchingShare.token}`
@@ -175,12 +191,175 @@ export const QuestLeaderboard = ({
                     entry.display_name
                 )
                 return shareUrl
+            } else {
+                console.warn(
+                    'No matching share found for entry:',
+                    entry.display_name
+                )
+                return ''
             }
         } catch (e) {
             console.error('Failed to get share link', e)
+            return ''
+        }
+    }
+
+    const handleCopyLink = async (
+        entry: LeaderboardEntry,
+        e: React.MouseEvent
+    ) => {
+        e.stopPropagation()
+        try {
+            const shareUrl = await buildShareLink(entry)
+            if (shareUrl) {
+                await navigator.clipboard.writeText(shareUrl)
+                toast.success('Link Copied!', {
+                    description: `The share link for ${
+                        entry.display_name || 'Guest'
+                    } has been copied to your clipboard.`,
+                })
+            } else {
+                toast.error('Failed to generate share link', {
+                    description:
+                        'Could not find a valid share link for this participant.',
+                })
+            }
+        } catch (error) {
+            console.error('Error copying link:', error)
+            toast.error('Failed to copy link', {
+                description:
+                    'An error occurred while copying the link to your clipboard.',
+            })
+        }
+    }
+
+    const handleShare = async (
+        entry: LeaderboardEntry,
+        e: React.MouseEvent
+    ) => {
+        e.stopPropagation()
+
+        // Show loading state immediately
+        const loadingToast = toast.loading('Generating link...', {
+            description: 'Please wait while we prepare the share link.',
+        })
+
+        try {
+            const shareUrl = await buildShareLink(entry)
+
+            // Dismiss loading toast
+            toast.dismiss(loadingToast)
+
+            if (!shareUrl) {
+                toast.error('Failed to generate share link', {
+                    description:
+                        'Could not find a valid share link for this participant.',
+                })
+                return
+            }
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: `Join my quest: ${questName || 'Quest'}`,
+                        text: `Join my quest to discover species!`,
+                        url: shareUrl,
+                    })
+                } catch (shareError) {
+                    // User cancelled share or share failed, fall back to clipboard
+                    if (shareError.name !== 'AbortError') {
+                        console.warn(
+                            'Native share failed, falling back to clipboard:',
+                            shareError
+                        )
+                        await handleClipboardCopy(
+                            shareUrl,
+                            entry.display_name || 'Guest'
+                        )
+                    }
+                }
+            } else {
+                await handleClipboardCopy(
+                    shareUrl,
+                    entry.display_name || 'Guest'
+                )
+            }
+        } catch (error) {
+            toast.dismiss(loadingToast)
+            console.error('Error sharing link:', error)
+            toast.error('Failed to share link', {
+                description: 'An error occurred while sharing the link.',
+            })
+        }
+    }
+
+    const handleClipboardCopy = async (url: string, displayName: string) => {
+        // Check if we're in a secure context
+        const isSecureContext = window.isSecureContext
+        const hasClipboard = !!navigator.clipboard
+
+        console.log('Clipboard debug info:', {
+            isSecureContext,
+            hasClipboard,
+            protocol: window.location.protocol,
+            hostname: window.location.hostname,
+        })
+
+        // Try modern clipboard API first (only in secure contexts)
+        if (isSecureContext && hasClipboard) {
+            try {
+                await navigator.clipboard.writeText(url)
+                toast.success('Link Copied!', {
+                    description: `The share link for ${displayName} has been copied to your clipboard.`,
+                })
+                return
+            } catch (clipboardError) {
+                console.warn('Clipboard API failed:', clipboardError)
+                // Continue to fallback method
+            }
         }
 
-        return `${window.location.origin}/share/placeholder-token`
+        // Fallback method using execCommand (works in non-secure contexts)
+        console.log('Using fallback copy method')
+        const textArea = document.createElement('textarea')
+        textArea.value = url
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        textArea.style.top = '-999999px'
+        textArea.style.opacity = '0'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+
+        try {
+            const successful = document.execCommand('copy')
+            if (successful) {
+                toast.success('Link Copied!', {
+                    description: `The share link for ${displayName} has been copied to your clipboard.`,
+                })
+            } else {
+                throw new Error('Copy command failed')
+            }
+        } catch (fallbackError) {
+            console.error('All copy methods failed:', fallbackError)
+            // Last resort: show the URL for manual copying
+            toast.info('Manual Copy Required', {
+                description: `Copy this link: ${url}`,
+                duration: 15000,
+                action: {
+                    label: 'Select All',
+                    onClick: () => {
+                        // Try to select the text in the toast if possible
+                        const selection = window.getSelection()
+                        const range = document.createRange()
+                        // This won't work perfectly but gives user feedback
+                        console.log('Manual copy needed:', url)
+                    },
+                },
+            })
+        } finally {
+            document.body.removeChild(textArea)
+        }
     }
 
     return (
@@ -357,27 +536,12 @@ export const QuestLeaderboard = ({
                                                             size="sm"
                                                             variant="noShadow"
                                                             className="h-7 px-2 text-xs text-green-700 shadow-none border-0 bg-transparent hover:bg-gray-100"
-                                                            onClick={async (
-                                                                e
-                                                            ) => {
-                                                                e.stopPropagation()
-                                                                const shareUrl =
-                                                                    await buildShareLink(
-                                                                        entry
-                                                                    )
-                                                                await navigator.clipboard.writeText(
-                                                                    shareUrl
+                                                            onClick={(e) =>
+                                                                handleCopyLink(
+                                                                    entry,
+                                                                    e
                                                                 )
-                                                                toast.success(
-                                                                    'Link Copied!',
-                                                                    {
-                                                                        description: `The share link for ${
-                                                                            entry.display_name ||
-                                                                            'Guest'
-                                                                        } has been copied to your clipboard.`,
-                                                                    }
-                                                                )
-                                                            }}
+                                                            }
                                                         >
                                                             <FaLink className="h-3 w-3 mr-1" />
                                                             Copy Link
@@ -386,40 +550,12 @@ export const QuestLeaderboard = ({
                                                             size="sm"
                                                             variant="noShadow"
                                                             className="h-7 px-2 text-xs text-green-700 shadow-none border-0 bg-transparent hover:bg-gray-100"
-                                                            onClick={async (
-                                                                e
-                                                            ) => {
-                                                                e.stopPropagation()
-                                                                const shareUrl =
-                                                                    await buildShareLink(
-                                                                        entry
-                                                                    )
-
-                                                                if (
-                                                                    navigator.share
-                                                                ) {
-                                                                    navigator.share(
-                                                                        {
-                                                                            title: `Join my quest: ${questName || 'Quest'}`,
-                                                                            text: `Join my quest to discover species!`,
-                                                                            url: shareUrl,
-                                                                        }
-                                                                    )
-                                                                } else {
-                                                                    await navigator.clipboard.writeText(
-                                                                        shareUrl
-                                                                    )
-                                                                    toast.success(
-                                                                        'Link Copied!',
-                                                                        {
-                                                                            description: `The share link for ${
-                                                                                entry.display_name ||
-                                                                                'Guest'
-                                                                            } has been copied to your clipboard.`,
-                                                                        }
-                                                                    )
-                                                                }
-                                                            }}
+                                                            onClick={(e) =>
+                                                                handleShare(
+                                                                    entry,
+                                                                    e
+                                                                )
+                                                            }
                                                         >
                                                             <FaShareFromSquare className="h-3 w-3 mr-1" />
                                                             Share

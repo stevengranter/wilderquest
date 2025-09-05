@@ -517,7 +517,7 @@ function ObservationList({
             </motion.div>
 
             {/* Content wrapper with constrained height */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-y-auto min-h-0">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={viewMode}
@@ -550,7 +550,7 @@ function ObservationList({
                                         type="multiple"
                                         value={expandedSections}
                                         onValueChange={handleAccordionChange}
-                                        className="w-full border rounded-lg bg-background p-0"
+                                        className="w-full h-full border rounded-lg bg-background p-0 flex flex-col"
                                     >
                                         {cumulativeRadii.map((radius) => {
                                             const radiusObservations =
@@ -581,7 +581,7 @@ function ObservationList({
                                                 <AccordionItem
                                                     key={radius}
                                                     value={radius.toString()}
-                                                    className="border-b last:border-b-0"
+                                                    className="border-b last:border-b-0 flex flex-col"
                                                 >
                                                     <AccordionTrigger className="hover:no-underline px-4">
                                                         <div className="flex items-center gap-3">
@@ -605,7 +605,7 @@ function ObservationList({
                                                             </span>
                                                         </div>
                                                     </AccordionTrigger>
-                                                    <AccordionContent className="pt-4 pb-4 px-4 max-h-96 overflow-y-auto">
+                                                    <AccordionContent className="pt-4 pb-4 px-4 overflow-y-scrollo flex-1 min-h-0">
                                                         {isNewRadiusLoading ? (
                                                             <AccordionItemLoadingSkeleton />
                                                         ) : viewMode ===
