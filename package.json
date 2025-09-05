@@ -7,7 +7,7 @@
         "lint:server": "biome lint --write src/server",
         "lint:client": "biome lint --write src/client",
         "lint": "pnpm run lint:server && pnpm run lint:client",
-        "dev": "NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts",
+        "dev": "NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts --",
         "start:preview": "NODE_ENV=production tsx src/server/server.ts",
         "start": "NODE_ENV=production node dist/server/server.js",
         "build": "NODE_ENV=production rm -rf dist && vite build && tsc -p src/server/tsconfig.json && tsc-alias -p src/server/tsconfig.json",

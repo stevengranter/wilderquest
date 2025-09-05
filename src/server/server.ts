@@ -14,7 +14,11 @@ import env from './config/app.config.js'
 import { initApp } from './init.js'
 import { buildApp } from './app.js'
 
-const PORT = env.PORT || 3000;
+const DEFAULT_PORT = env.PORT || 3000;
+
+// command line port override
+const portArg = process.argv.find(arg => arg.startsWith('--port='));
+const PORT = portArg ? parseInt(portArg.split('=')[1], 10) : DEFAULT_PORT;
 
 
 async function startServer() {
@@ -48,9 +52,9 @@ async function startServer() {
             // Error Handler
             app.use(errorHandler)
 
-            app.listen(PORT, () => {
+            app.listen(DEFAULT_PORT, () => {
                 logger.info(
-                    `Server running on ${PORT} ✅ `
+                    `Server running on ${DEFAULT_PORT} ✅ `
                 ) //Log the actual port
             })
         }

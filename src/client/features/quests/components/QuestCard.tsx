@@ -196,6 +196,9 @@ function QuestCardContent({
                                     ? 'Competitive'
                                     : 'Cooperative'}
                             </span>
+                            <span>
+                                {quest.status}
+                            </span>
                         </div>
 
                         <div className="text-xs">{formattedDate}</div>
