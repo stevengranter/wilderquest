@@ -171,7 +171,7 @@ export function ObservationCard({
 
                     {/* Photo count badge */}
                     {obs.photos.length > 1 && (
-                        <div className="absolute -top-1 -right-1 w-6 h-6 bg-black/70 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                        <div className="absolute -top-1 -right-1 w-6 h-6 bg-black/80 text-white text-xs rounded-full flex items-center justify-center font-medium">
                             +{obs.photos.length - 1}
                         </div>
                     )}

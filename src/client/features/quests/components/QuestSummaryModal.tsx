@@ -127,9 +127,9 @@ export function QuestSummaryModal({
                             <div className="bg-yellow-300 border border-black p-6 rounded-md transform  mb-6 relative overflow-hidden">
                                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-orange-300 opacity-50"></div>
                                 <DialogTitle className="text-5xl font-black text-black mb-2 relative z-10">
-                                    <h1>Quest Complete</h1>
+                                    <h1>Quest Complete!</h1>
                                 </DialogTitle>
-                                <motion.div
+                                {/*<motion.div
                                     className="absolute top-2 right-2 text-6xl opacity-20"
                                     animate={{ rotate: [0, 10, -10, 0] }}
                                     transition={{
@@ -138,15 +138,15 @@ export function QuestSummaryModal({
                                     }}
                                 >
                                     ⚡
-                                </motion.div>
+                                </motion.div>*/}
                             </div>
-                            <div className="bg-white border border-black p-4 rounded-md transform rotate-1">
+                            <div className="bg-white border border-black p-4 rounded-md">
                                 <p className="text-2xl text-black font-bold uppercase">
                                     {questData?.name}
                                 </p>
                             </div>
                         </motion.div>
-
+                        {/*
                         <Button
                             variant="default"
                             size="sm"
@@ -154,7 +154,7 @@ export function QuestSummaryModal({
                             className="absolute right-4 top-4 bg-red-400 hover:bg-red-500 border border-black rounded-md font-bold"
                         >
                             <X className="h-5 w-5 text-black" />
-                        </Button>
+                        </Button>*/}
                     </DialogHeader>
 
                     <div className="space-y-8">
@@ -253,9 +253,9 @@ export function QuestSummaryModal({
                             initial={{ opacity: 0, y: 50 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.9, duration: 0.6 }}
-                            className="bg-white border border-black p-8 rounded-md transform -rotate-1"
+                            className="p-8"
                         >
-                            <div className="bg-orange-300 border border-black p-4 mb-6 rounded-md transform rotate-2">
+                            <div className="bg-orange-300 border border-black p-4 mb-6 rounded-md">
                                 <h3 className="text-3xl font-black uppercase text-center text-black flex items-center justify-center gap-3">
                                     <Trophy className="h-8 w-8" />
                                     TOP PERFORMERS
@@ -286,14 +286,14 @@ export function QuestSummaryModal({
                                                     stiffness: 200,
                                                     damping: 20,
                                                 }}
-                                                className={`flex items-center justify-between p-6 border border-black rounded-md transform ${
+                                                className={`flex items-center justify-between p-6 border border-black rounded-md ${
                                                     index === 0
-                                                        ? 'bg-gradient-to-r from-yellow-300 to-yellow-200 rotate-1'
+                                                        ? 'bg-gradient-to-r from-yellow-300 to-yellow-200'
                                                         : index === 1
-                                                          ? 'bg-gradient-to-r from-gray-300 to-gray-200 -rotate-1'
+                                                          ? 'bg-gradient-to-r from-gray-300 to-gray-200'
                                                           : index === 2
-                                                            ? 'bg-gradient-to-r from-orange-300 to-orange-200 rotate-1'
-                                                            : 'bg-gradient-to-r from-blue-200 to-blue-100 -rotate-1'
+                                                            ? 'bg-gradient-to-r from-orange-300 to-orange-200'
+                                                            : 'bg-gradient-to-r from-blue-200 to-blue-100'
                                                 }`}
                                             >
                                                 <div className="flex items-center gap-6">
@@ -369,9 +369,9 @@ export function QuestSummaryModal({
                             initial={{ opacity: 0, y: 50 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 1.4, duration: 0.6 }}
-                            className="bg-white border border-black p-8 rounded-md transform rotate-1"
+                            className="p-8"
                         >
-                            <div className="bg-green-300 border border-black p-4 mb-6 rounded-md transform -rotate-2">
+                            <div className="bg-green-300 border border-black p-4 mb-6 rounded-md">
                                 <h3 className="text-3xl font-black uppercase text-center text-black flex items-center justify-center gap-3">
                                     <Zap className="h-8 w-8" />
                                     QUEST SUMMARY
@@ -380,7 +380,7 @@ export function QuestSummaryModal({
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="bg-yellow-200 border border-black p-6 rounded-md transform -rotate-1">
+                                <div className="bg-yellow-200 border border-black p-6 rounded-md">
                                     <h4 className="font-black text-xl text-black mb-4 uppercase border-b border-black pb-2">
                                         COMPLETION PROGRESS
                                     </h4>
@@ -415,7 +415,7 @@ export function QuestSummaryModal({
                                     </div>
                                 </div>
 
-                                <div className="bg-pink-200 border border-black p-6 rounded-md transform rotate-1">
+                                <div className="bg-pink-200 border border-black p-6 rounded-md">
                                     <h4 className="font-black text-xl text-black mb-4 uppercase border-b border-black pb-2">
                                         PARTICIPATION STATS
                                     </h4>
