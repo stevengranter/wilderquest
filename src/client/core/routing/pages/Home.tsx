@@ -44,7 +44,7 @@ function _StatsCard({
 }
 
 export function Home() {
-    const { isAuthenticated, user: _user } = useAuth()
+    const { user: _user } = useAuth()
 
     // Use React Query for efficient caching and automatic refetching
     const { data: recentQuests = [], isLoading } = useQuery({
