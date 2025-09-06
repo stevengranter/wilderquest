@@ -13,6 +13,7 @@ import {
 } from '@/components/ui'
 import { paths } from '@/core/routing/paths'
 
+
 export function MainMenu() {
     const { isAuthenticated, user, logout } = useAuth()
     const navigate = useNavigate()

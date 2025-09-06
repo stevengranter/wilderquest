@@ -14,6 +14,7 @@ import { useUserStats } from '@/features/users/hooks/useUserStats'
 import { UserSearch } from '@/components/shared/UserSearch'
 import { type SafeUser } from '@/hooks/useUserSearch'
 
+
 function UserQuests({
     userId,
     isOwnProfile,
@@ -97,6 +98,8 @@ function UserQuests({
     )
 }
 
+
+
 function offsetAvatarSvg(svg: string, x: number, y: number): string {
     // Extract the SVG contents inside the <svg>...</svg>
     const svgContentMatch = svg.match(/<svg[^>]*>([\s\S]*?)<\/svg>/)
@@ -108,7 +111,6 @@ function offsetAvatarSvg(svg: string, x: number, y: number): string {
     // Replace original inner content with transformed group
     return svg.replace(innerContent, wrappedContent)
 }
-
 const UserProfile = () => {
     const { username } = useParams<{ username: string }>()
     const { user: authUser } = useAuth()
