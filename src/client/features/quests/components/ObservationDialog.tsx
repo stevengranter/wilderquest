@@ -554,7 +554,7 @@ function ObservationList({
                                         type="multiple"
                                         value={expandedSections}
                                         onValueChange={handleAccordionChange}
-                                        className="w-full h-full border rounded-lg bg-background p-0 flex flex-col"
+                                        className="w-full h-full  rounded-lg bg-background p-0 flex flex-col"
                                     >
                                         {cumulativeRadii.map((radius) => {
                                             const radiusObservations =

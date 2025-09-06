@@ -230,3 +230,32 @@ html {
     color: white;
     z-index: 2;
 }
+
+/* Chart scaling animation - only for colored section when number changes */
+.chart-scale svg path:first-child {
+    animation: chart-scale-pulse 0.6s ease-out;
+}
+
+@keyframes chart-scale-pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes chart-breath {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}

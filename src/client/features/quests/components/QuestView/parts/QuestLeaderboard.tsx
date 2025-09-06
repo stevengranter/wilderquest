@@ -21,7 +21,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui'
-import { ShareQuest } from '../../ShareQuest'
 
 type QuestShare = {
     id: number
@@ -98,7 +97,7 @@ export const QuestLeaderboard = ({
         useState<LeaderboardEntry | null>(null)
     const [deleting, setDeleting] = useState(false)
     const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
-    const [showInviteDrawer, setShowInviteDrawer] = useState(false)
+
     const queryClient = useQueryClient()
 
     const handleDeleteClick = (entry: LeaderboardEntry) => {
@@ -364,31 +363,6 @@ export const QuestLeaderboard = ({
 
     return (
         <div>
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Quest Explorers</h2>
-                {questId && ownerUserId && isOwner && (
-                    <ShareQuest
-                        questId={questId}
-                        ownerUserId={ownerUserId}
-                        questName={questName}
-                        showDrawerOnly={false}
-                        showForm={showInviteDrawer}
-                        onToggleForm={setShowInviteDrawer}
-                    />
-                )}
-            </div>
-
-            {questId && ownerUserId && isOwner && (
-                <ShareQuest
-                    questId={questId}
-                    ownerUserId={ownerUserId}
-                    questName={questName}
-                    showDrawerOnly={true}
-                    showForm={showInviteDrawer}
-                    onToggleForm={setShowInviteDrawer}
-                />
-            )}
-
             {questStatus === 'pending' && (
                 <div className="text-sm text-amber-600 mb-3 bg-amber-50 p-3 rounded-md border border-amber-200">
                     🕒 Quest hasn't started yet. Leaderboard will show progress
@@ -435,7 +409,7 @@ export const QuestLeaderboard = ({
                                             scale: 0.95,
                                             transition: { duration: 0.2 },
                                         }}
-                                        className={`flex flex-col gap-3 p-3 rounded-xl border-1 border-slate-400 transition-all duration-300 ease-out ${
+                                        className={`flex flex-col gap-3 py-3 px-4 rounded-xl border-1 border-slate-400 transition-all duration-300 ease-out ${
                                             isOwner
                                                 ? 'cursor-pointer hover:shadow-sm'
                                                 : ''
@@ -492,33 +466,38 @@ export const QuestLeaderboard = ({
                                                     </motion.span>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <span
-                                                    className={`text-sm font-medium ${
-                                                        entry.observation_count >
-                                                        0
-                                                            ? 'text-green-700'
-                                                            : 'text-gray-500'
-                                                    }`}
-                                                >
-                                                    {entry.observation_count}{' '}
-                                                    taxa found
-                                                </span>
-                                                {entry.observation_count > 0 &&
-                                                    entry.last_progress_at && (
-                                                        <div className="text-xs text-green-600 mt-0.5">
-                                                            Last active:{' '}
-                                                            {new Date(
-                                                                entry.last_progress_at
-                                                            ).toLocaleDateString()}
-                                                        </div>
-                                                    )}
-                                            </div>
-                                            {questId && isOwner && (
-                                                <div className="flex items-center justify-center w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors">
-                                                    <FaChevronDown className="h-3 w-3" />
+                                            <div className="flex items-center gap-2">
+                                                <div className="text-right">
+                                                    <span
+                                                        className={`text-sm font-medium ${
+                                                            entry.observation_count >
+                                                            0
+                                                                ? 'text-green-700'
+                                                                : 'text-gray-500'
+                                                        }`}
+                                                    >
+                                                        {
+                                                            entry.observation_count
+                                                        }{' '}
+                                                        taxa found
+                                                    </span>
+                                                    {entry.observation_count >
+                                                        0 &&
+                                                        entry.last_progress_at && (
+                                                            <div className="text-xs text-green-600 mt-0.5">
+                                                                Last active:{' '}
+                                                                {new Date(
+                                                                    entry.last_progress_at
+                                                                ).toLocaleDateString()}
+                                                            </div>
+                                                        )}
                                                 </div>
-                                            )}
+                                                {questId && isOwner && (
+                                                    <div className="flex items-center justify-center w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors">
+                                                        <FaChevronDown className="h-3 w-3" />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {/* Footer row: Action buttons */}

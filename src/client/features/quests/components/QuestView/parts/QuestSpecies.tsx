@@ -2,6 +2,7 @@ import { useCallback, useRef, useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui'
+
 import {
     ClientQuest,
     SpeciesCardWithObservations,
@@ -48,6 +49,8 @@ type QuestSpeciesProps = {
     updateStatus: (status: QuestStatus) => void
     isTaxaLoading: boolean
     user?: LoggedInUser
+    viewMode: 'grid' | 'list' | 'map'
+    setViewMode: (mode: 'grid' | 'list' | 'map') => void
 }
 
 export const QuestSpecies = ({
@@ -66,9 +69,9 @@ export const QuestSpecies = ({
     updateStatus,
     isTaxaLoading,
     user,
+    viewMode,
+    setViewMode,
 }: QuestSpeciesProps) => {
-    const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid')
-
     // Auto-switch between grid and list based on screen size
     useEffect(() => {
         const checkScreenSize = () => {
@@ -244,42 +247,13 @@ export const QuestSpecies = ({
     // No need to reset anything when taxa data changes - we show all loaded taxa
 
     return (
-        <div className="mt-8">
-            {/* View Mode Controls */}
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">
-                    Species ({mappings?.length ?? 0})
-                </h2>
-                <ToggleGroup
-                    type="single"
-                    value={viewMode}
-                    onValueChange={(value: 'grid' | 'list' | 'map') =>
-                        value && setViewMode(value)
-                    }
-                    className="border-0 rounded-lg"
-                >
-                    <ToggleGroupItem value="grid" aria-label="Grid view">
-                        <Grid className="h-4 w-4" />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="list" aria-label="List view">
-                        <List className="h-4 w-4" />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="map" aria-label="Map view">
-                        <MapIcon className="h-4 w-4" />
-                    </ToggleGroupItem>
-                </ToggleGroup>
-            </div>
-
+        <div>
             {/* View Content */}
             {viewMode === 'grid' && (
                 <div className="space-y-8">
                     {/* Combined section for all species */}
                     <div>
-                        <h3 className="text-lg font-semibold mb-3">
-                            All Species (
-                            {isTaxaLoading ? '...' : taxaWithProgress.length})
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 lg:gap-6 auto-rows-fr">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5 auto-rows-fr">
                             <AnimatePresence mode="popLayout">
                                 {isTaxaLoading
                                     ? renderSkeletons(

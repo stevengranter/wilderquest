@@ -6,7 +6,9 @@ import {
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
+    Badge,
 } from '@/components/ui'
+
 import { useQuestContext } from '@/features/quests/context/QuestContext'
 import { useTaxaWithProgress } from '../../hooks/useTaxaWithProgress'
 import { QuestHeader } from './parts/QuestHeader'
@@ -16,9 +18,12 @@ import { QuestSpecies } from './parts/QuestSpecies'
 import { QuestControls } from './parts/QuestControls'
 import { QuestSummaryModal } from '../QuestSummaryModal'
 import { ClientQuest } from '../SpeciesCardWithObservations'
+import { ShareQuest } from '../ShareQuest'
 import { useAuth } from '@/features/auth/useAuth'
 import { useState, useEffect } from 'react'
 import { QuestStatusBadge } from '../QuestStatusBadge'
+import { Grid, List, Map as MapIcon } from 'lucide-react'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui'
 
 export const QuestView = () => {
     const { user } = useAuth()
@@ -55,6 +60,8 @@ export const QuestView = () => {
     // State for quest summary modal
     const [showSummaryModal, setShowSummaryModal] = useState(false)
     const [prevQuestStatus, setPrevQuestStatus] = useState<string | undefined>()
+    const [showInviteDrawer, setShowInviteDrawer] = useState(false)
+    const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid')
 
     // Show summary modal when quest ends (only for quest owner)
     useEffect(() => {
@@ -104,196 +111,160 @@ export const QuestView = () => {
                         }
                         isOwner={isOwner}
                         share={share}
-                    />
-                )}
-
-                {questData &&
-                    (questData?.status === 'paused' ||
-                    questData?.status === 'pending' ? (
-                        <Accordion
-                            type="single"
-                            collapsible
-                            className="w-full mb-8"
-                        >
-                            <AccordionItem value="quest-data">
-                                <AccordionTrigger className="text-left">
-                                    <div className="flex items-center gap-2">
-                                        <span>
-                                            Quest Progress & Leaderboard
-                                        </span>
-                                        <QuestStatusBadge
-                                            status={questData.status}
-                                        />
-                                    </div>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                    <div className="grid grid-cols-2 gap-8 items-start">
-                                        <div>
-                                            {isLeaderboardError ? (
-                                                <div className="text-sm text-amber-600 mb-3 bg-amber-50 p-4 rounded-md border border-amber-200">
-                                                    ⚠️ Unable to load leaderboard
-                                                    data. This may be due to
-                                                    rate limiting.
-                                                    <button
-                                                        onClick={() =>
-                                                            window.location.reload()
-                                                        }
-                                                        className="ml-2 text-blue-600 hover:text-blue-800 underline"
-                                                    >
-                                                        Retry
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <QuestLeaderboard
-                                                    leaderboard={leaderboard}
-                                                    questStatus={
-                                                        questData?.status
-                                                    }
-                                                    questId={questData?.id}
-                                                    ownerUserId={
-                                                        questData?.user_id
-                                                    }
-                                                    questName={questData?.name}
-                                                    isOwner={isOwner}
-                                                />
-                                            )}
-                                        </div>
-                                        <div className="flex justify-center items-start min-h-[300px] pt-4">
-                                            {isProgressError || isTaxaError ? (
-                                                <div className="text-sm text-amber-600 bg-amber-50 p-4 rounded-md border border-amber-200 max-w-xs">
-                                                    ⚠️ Unable to load progress
-                                                    data. This may be due to
-                                                    rate limiting.
-                                                    <button
-                                                        onClick={() =>
-                                                            window.location.reload()
-                                                        }
-                                                        className="block mt-2 text-blue-600 hover:text-blue-800 underline"
-                                                    >
-                                                        Retry
-                                                    </button>
-                                                </div>
-                                            ) : mappings &&
-                                              mappings.length > 0 ? (
-                                                <div className="w-64 h-64">
-                                                    {(() => {
-                                                        const total =
-                                                            mappings.length
-                                                        const found =
-                                                            aggregatedProgress?.filter(
-                                                                (a) =>
-                                                                    (a.count ||
-                                                                        0) > 0
-                                                            ).length || 0
-                                                        return (
-                                                            <TaxaPieChart
-                                                                found={found}
-                                                                total={total}
-                                                            />
-                                                        )
-                                                    })()}
-                                                </div>
-                                            ) : null}
-                                        </div>
-                                    </div>
-                                </AccordionContent>
-                            </AccordionItem>
-                        </Accordion>
-                    ) : (
-                        <div className="grid grid-cols-2 gap-8 items-start mb-8">
-                            <div>
-                                {isLeaderboardError ? (
-                                    <div className="text-sm text-amber-600 mb-3 bg-amber-50 p-4 rounded-md border border-amber-200">
-                                        ⚠️ Unable to load leaderboard data. This
-                                        may be due to rate limiting.
-                                        <button
-                                            onClick={() =>
-                                                window.location.reload()
-                                            }
-                                            className="ml-2 text-blue-600 hover:text-blue-800 underline"
-                                        >
-                                            Retry
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <QuestLeaderboard
-                                        leaderboard={leaderboard}
-                                        questStatus={questData?.status}
-                                        questId={questData?.id}
-                                        ownerUserId={questData?.user_id}
-                                        questName={questData?.name}
-                                        isOwner={isOwner}
-                                    />
-                                )}
-                            </div>
-                            <div className="flex justify-center items-start min-h-[300px] pt-4">
-                                {isProgressError || isTaxaError ? (
-                                    <div className="text-sm text-amber-600 bg-amber-50 p-4 rounded-md border border-amber-200 max-w-xs">
-                                        ⚠️ Unable to load progress data. This may
-                                        be due to rate limiting.
-                                        <button
-                                            onClick={() =>
-                                                window.location.reload()
-                                            }
-                                            className="block mt-2 text-blue-600 hover:text-blue-800 underline"
-                                        >
-                                            Retry
-                                        </button>
-                                    </div>
-                                ) : mappings && mappings.length > 0 ? (
-                                    <div className="w-64 h-64">
-                                        {(() => {
-                                            const total = mappings.length
-                                            const found =
-                                                aggregatedProgress?.filter(
-                                                    (a) => (a.count || 0) > 0
-                                                ).length || 0
-                                            return (
-                                                <TaxaPieChart
-                                                    found={found}
-                                                    total={total}
-                                                />
-                                            )
-                                        })()}
-                                    </div>
-                                ) : null}
-                            </div>
-                        </div>
-                    ))}
-
-                {questData && (
-                    <QuestSpecies
-                        taxaWithProgress={taxaWithProgress}
-                        questData={
-                            {
-                                ...questData,
-                                user_id: questData.user_id.toString(),
-                            } as ClientQuest
-                        }
-                        isOwner={isOwner}
-                        token={token}
-                        share={share}
-                        detailedProgress={detailedProgress}
+                        mappings={mappings}
                         aggregatedProgress={aggregatedProgress}
-                        isTaxaFetchingNextPage={isTaxaFetchingNextPage}
-                        taxaHasNextPage={taxaHasNextPage}
-                        fetchNextTaxaPage={fetchNextTaxaPage}
-                        taxa={taxa}
-                        mappings={mappings?.map((m) => ({
-                            ...m,
-                            created_at:
-                                m.created_at || new Date().toISOString(),
-                        }))} // Convert TaxonMapping to QuestMapping
-                        updateStatus={
-                            updateStatus ||
-                            (() => {
-                                // Fallback function for guests who cannot update quest status
-                            })
-                        }
-                        isTaxaLoading={isTaxaLoading}
-                        user={user || undefined}
+                        isProgressError={isProgressError}
+                        isTaxaError={isTaxaError}
                     />
                 )}
+
+                <div className="xl:flex xl:gap-12 mb-8">
+                    {/* Quest Explorers - appears first on small screens, auto width on xl */}
+                    <div className="order-1 xl:w-auto xl:min-w-80 xl:max-w-sm mb-8 xl:mb-0">
+                        <div className="flex items-center justify-between pt-6 mb-4">
+                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                                Explorers
+                                <Badge
+                                    variant="neutral"
+                                    className="border border-gray-300 font-semibold"
+                                >
+                                    {leaderboard?.length || 0}
+                                </Badge>
+                            </h2>
+                            {questData?.id && questData?.user_id && isOwner && (
+                                <ShareQuest
+                                    questId={questData.id}
+                                    questName={questData.name}
+                                    ownerUserId={questData.user_id}
+                                    showForm={showInviteDrawer}
+                                    onToggleForm={setShowInviteDrawer}
+                                    showDrawerOnly={false}
+                                />
+                            )}
+                        </div>
+                        {showInviteDrawer &&
+                            questData?.id &&
+                            questData?.user_id &&
+                            isOwner && (
+                                <div className="pb-6">
+                                    <ShareQuest
+                                        questId={questData.id}
+                                        questName={questData.name}
+                                        ownerUserId={questData.user_id}
+                                        showForm={showInviteDrawer}
+                                        onToggleForm={setShowInviteDrawer}
+                                        showDrawerOnly={true}
+                                    />
+                                </div>
+                            )}
+                        <div className="px-0 pb-6">
+                            {isLeaderboardError ? (
+                                <div className="text-sm text-amber-600 mb-3 bg-amber-50 p-4 rounded-md border border-amber-200">
+                                    ⚠️ Unable to load leaderboard data. This may
+                                    be due to rate limiting.
+                                    <button
+                                        onClick={() => window.location.reload()}
+                                        className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                                    >
+                                        Retry
+                                    </button>
+                                </div>
+                            ) : (
+                                <QuestLeaderboard
+                                    leaderboard={leaderboard}
+                                    questStatus={questData?.status}
+                                    questId={questData?.id}
+                                    ownerUserId={questData?.user_id}
+                                    questName={questData?.name}
+                                    isOwner={isOwner}
+                                />
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Species Cards - appears second on small screens, flex-1 on xl */}
+                    <div className="order-2 xl:flex-1">
+                        <div className="flex items-center justify-between mb-6 pt-6">
+                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                                Species
+                                <Badge
+                                    variant="neutral"
+                                    className="border border-gray-300 font-semibold"
+                                >
+                                    {mappings?.length || 0}
+                                </Badge>
+                            </h2>
+                            <ToggleGroup
+                                type="single"
+                                value={viewMode}
+                                onValueChange={(
+                                    value: 'grid' | 'list' | 'map'
+                                ) => value && setViewMode(value)}
+                                className="border-0 rounded-lg"
+                            >
+                                <ToggleGroupItem
+                                    value="grid"
+                                    aria-label="Grid view"
+                                >
+                                    <Grid className="h-4 w-4" />
+                                </ToggleGroupItem>
+                                <ToggleGroupItem
+                                    value="list"
+                                    aria-label="List view"
+                                >
+                                    <List className="h-4 w-4" />
+                                </ToggleGroupItem>
+                                <ToggleGroupItem
+                                    value="map"
+                                    aria-label="Map view"
+                                >
+                                    <MapIcon className="h-4 w-4" />
+                                </ToggleGroupItem>
+                            </ToggleGroup>
+                        </div>
+                        <div className="-mt-1">
+                            {questData && (
+                                <QuestSpecies
+                                    taxaWithProgress={taxaWithProgress}
+                                    questData={
+                                        {
+                                            ...questData,
+                                            user_id:
+                                                questData.user_id.toString(),
+                                        } as ClientQuest
+                                    }
+                                    isOwner={isOwner}
+                                    token={token}
+                                    share={share}
+                                    detailedProgress={detailedProgress}
+                                    aggregatedProgress={aggregatedProgress}
+                                    isTaxaFetchingNextPage={
+                                        isTaxaFetchingNextPage
+                                    }
+                                    taxaHasNextPage={taxaHasNextPage}
+                                    fetchNextTaxaPage={fetchNextTaxaPage}
+                                    taxa={taxa}
+                                    mappings={mappings?.map((m) => ({
+                                        ...m,
+                                        created_at:
+                                            m.created_at ||
+                                            new Date().toISOString(),
+                                    }))} // Convert TaxonMapping to QuestMapping
+                                    updateStatus={
+                                        updateStatus ||
+                                        (() => {
+                                            // Fallback function for guests who cannot update quest status
+                                        })
+                                    }
+                                    isTaxaLoading={isTaxaLoading}
+                                    user={user || undefined}
+                                    viewMode={viewMode}
+                                    setViewMode={setViewMode}
+                                />
+                            )}
+                        </div>
+                    </div>
+                </div>
 
                 {canEdit && updateStatus && (
                     <div className="py-4">

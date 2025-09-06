@@ -1,53 +1,108 @@
 import { Link } from 'react-router-dom'
 import { Lock, LockOpen, Pencil } from 'lucide-react'
+import { FaMapPin } from 'react-icons/fa'
 import { Badge } from '@/components/ui'
 import { Button } from '@/components/ui'
 import { paths } from '@/core/routing/paths'
 import { ClientQuest } from '@/features/quests/components/SpeciesCardWithObservations'
 import { QuestTimestamps } from '@/features/quests/components/QuestView/parts/QuestTimestamps'
-import { Share } from '@/features/quests/types'
+import {
+    Share,
+    QuestMapping,
+    AggregatedProgress,
+} from '@/features/quests/types'
 import { QuestStatusBadge } from '../../QuestStatusBadge'
+import { TaxaPieChart } from './TaxaPieChart'
 
 type QuestHeaderProps = {
     questData: ClientQuest
     isOwner: boolean
     share?: Share
+    mappings?: QuestMapping[]
+    aggregatedProgress?: AggregatedProgress[]
+    isProgressError?: boolean
+    isTaxaError?: boolean
 }
 
 export const QuestHeader = ({
     questData,
     isOwner,
     share,
+    mappings,
+    aggregatedProgress,
+    isProgressError,
+    isTaxaError,
 }: QuestHeaderProps) => {
     return (
         <div>
-            <div className="flex flex-row justify-between align-middle">
-                <div className="flex flex-col">
-                    <h2 className="text-3xl font-bold text-primary">
-                        {questData.name}
-                    </h2>
-                    {questData?.location_name && (
-                        <h3>Location: {questData?.location_name}</h3>
-                    )}
-                    <QuestTimestamps
-                        startsAt={questData.starts_at || undefined}
-                        endsAt={questData.ends_at || undefined}
-                    />
+            <div className="flex flex-row justify-between items-start">
+                <div className="flex items-start gap-6">
+                    {/* Quest Progress Chart */}
+                    {mappings &&
+                        mappings.length > 0 &&
+                        !isProgressError &&
+                        !isTaxaError && (
+                            <div className="flex-shrink-0">
+                                <div className="w-32 h-32">
+                                    {(() => {
+                                        const total = mappings.length
+                                        const found =
+                                            aggregatedProgress?.filter(
+                                                (a) => (a.count || 0) > 0
+                                            ).length || 0
+                                        return (
+                                            <TaxaPieChart
+                                                found={found}
+                                                total={total}
+                                                questStatus={questData.status}
+                                            />
+                                        )
+                                    })()}
+                                </div>
+                            </div>
+                        )}
+
+                    {/* Quest Info */}
+                    <div className="flex flex-col flex-1">
+                        <h2 className="text-3xl font-bold text-primary">
+                            {questData.name}
+                        </h2>
+                        {questData?.location_name && (
+                            <h3 className="flex items-center gap-2">
+                                <FaMapPin className="h-4 w-4" />
+                                {questData?.location_name}
+                            </h3>
+                        )}
+                        <div className="flex items-center gap-3 mt-2">
+                            <QuestStatusBadge status={questData.status} />
+                            {questData.is_private ? (
+                                <Badge>
+                                    <Lock className="h-5 w-5 text-muted-foreground" />
+                                    Private
+                                </Badge>
+                            ) : (
+                                <Badge>
+                                    <LockOpen className="h-5 w-5 text-muted-foreground" />
+                                    Public
+                                </Badge>
+                            )}
+                        </div>
+                        <QuestTimestamps
+                            startsAt={questData.starts_at || undefined}
+                            endsAt={questData.ends_at || undefined}
+                        />
+                    </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <QuestStatusBadge status={questData.status} />
-                    {questData.is_private ? (
-                        <Badge>
-                            <Lock className="h-5 w-5 text-muted-foreground" />
-                            Private
-                        </Badge>
-                    ) : (
-                        <Badge>
-                            <LockOpen className="h-5 w-5 text-muted-foreground" />
-                            Public
-                        </Badge>
-                    )}
-                </div>
+                {isOwner && (
+                    <div className="flex items-center">
+                        <Button variant="default" size="sm" asChild>
+                            <Link to={paths.editQuest(questData.id)}>
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Edit Quest
+                            </Link>
+                        </Button>
+                    </div>
+                )}
             </div>
 
             <div className="flex justify-between items-start mb-6">
@@ -69,16 +124,6 @@ export const QuestHeader = ({
                         </h4>
                     )}
                 </div>
-                {isOwner && (
-                    <div className="flex items-center gap-2">
-                        <Button variant="default" size="sm" asChild>
-                            <Link to={paths.editQuest(questData.id)}>
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Edit Quest
-                            </Link>
-                        </Button>
-                    </div>
-                )}
             </div>
         </div>
     )
