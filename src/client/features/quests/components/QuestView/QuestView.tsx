@@ -82,26 +82,18 @@ export const QuestView = () => {
 
     const getStatusBackgroundClass = (status: string) => {
         switch (status) {
-            case 'pending':
-                return 'bg-gray-50'
             case 'active':
-                return 'bg-green-50'
-            case 'paused':
-                return 'bg-yellow-50'
-            case 'ended':
-                return 'bg-blue-50'
+                return 'relative before:fixed before:inset-0 before:bg-green-200 before:animate-pulse before:duration-2000 before:-z-10'
             default:
-                return 'bg-green-50'
+                return ''
         }
     }
 
     return (
         <div
-            className={`min-h-screen ${getStatusBackgroundClass(
-                questData.status
-            )} transition-colors duration-300`}
+            className={`min-h-screen ${getStatusBackgroundClass(questData.status)} transition-colors duration-300`}
         >
-            <div className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-4 py-8 relative z-10">
                 {questData && (
                     <QuestHeader
                         questData={
