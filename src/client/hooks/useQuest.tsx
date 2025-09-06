@@ -10,7 +10,7 @@ import chunk from 'lodash/chunk'
 import React, { useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import api from '@/core/api/axios'
-import { useAuth } from '@/core/auth/useAuth'
+import { useAuth } from '@/features/auth/useAuth'
 
 import {
     AggregatedProgress,
@@ -20,8 +20,7 @@ import {
     Share,
 } from '@/features/quests/types'
 import { INatTaxon } from '@shared/types'
-import { Quest } from '@/shared/types/types'
-import { QuestWithTaxa } from '@/shared/types/types'
+import { Quest, QuestWithTaxa } from '@shared/types'
 
 type ProgressData = {
     mappings: QuestMapping[]

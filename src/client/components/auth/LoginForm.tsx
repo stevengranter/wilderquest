@@ -16,7 +16,7 @@ import {
     FormMessage,
 } from '@/components/ui/form.js'
 import { Input } from '@/components/ui/input.js'
-import { useAuth } from '@/core/auth/useAuth.js'
+import { useAuth } from '@/features/auth/useAuth'
 import { LoginRequestSchema } from '@shared/schemas/Auth'
 
 const LoginForm = React.forwardRef(() => {

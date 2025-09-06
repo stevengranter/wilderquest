@@ -8,11 +8,11 @@ import { QuestCardSkeleton } from '@/features/quests/components/QuestCardSkeleto
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { paths } from '@/app/routing/paths'
-import { QuestWithTaxa } from '@/shared/types/types'
-import { useAuth } from '@/core/auth/useAuth'
-import { useQuestPhotoCollage } from '@/shared/hooks/useTaxonPhotos'
-import { useDebounce } from '@/shared/hooks/useDebounce'
+import { paths } from '@/core/routing/paths'
+import { QuestWithTaxa } from '@shared/types'
+import { useAuth } from '@/features/auth/useAuth'
+import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
+import { useDebounce } from '@/hooks/useDebounce'
 
 export function QuestsPage() {
     const { isAuthenticated, user } = useAuth()

@@ -6,7 +6,7 @@ import {
 import api from '@/core/api/axios'
 import { INatTaxon } from '@shared/types'
 import { useCallback, useMemo } from 'react'
-import { QuestWithTaxa } from '@/shared/types/types'
+import { QuestWithTaxa } from '@shared/types'
 
 const BATCH_SIZE = 150 // Reduced from 200 to 150 to be more conservative with rate limits
 

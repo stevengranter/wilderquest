@@ -7,10 +7,10 @@ import { QuestCard } from '@/features/quests/components/QuestCard'
 import { QuestCardSkeleton } from '@/features/quests/components/QuestCardSkeleton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { useAuth } from '@/core/auth/useAuth'
-import { paths } from '@/app/routing/paths'
-import { QuestWithTaxa } from '@/shared/types/types'
-import { useQuestPhotoCollage } from '@/shared/hooks/useTaxonPhotos'
+import { useAuth } from '@/features/auth/useAuth'
+import { paths } from '@/core/routing/paths'
+import { QuestWithTaxa } from '@/types'
+import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 
 function _StatsCard({
     icon: Icon,

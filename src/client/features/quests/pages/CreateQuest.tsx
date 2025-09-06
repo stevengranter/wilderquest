@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select'
 import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
-import { useAuth } from '@/core/auth/useAuth'
+import { useAuth } from '@/features/auth/useAuth'
 import { SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeSelector'
 import { SpeciesCountItem } from '@/features/quests/components/ResponsiveSpeciesThumbnail'
 import { SpeciesAnimationProvider } from '@/features/quests/components/SpeciesAnimationProvider'

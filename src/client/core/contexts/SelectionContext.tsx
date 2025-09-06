@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from 'react'
-import { SelectionStae } from '@/shared/hooks/useSelectionState'
+import { SelectionStae } from '@/hooks/useSelectionState'
 
 const SelectionContext = createContext<SelectionStae | null>(null)
 

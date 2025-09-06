@@ -31,7 +31,7 @@ import {
     ObservationMapView,
 } from './observation-views'
 import { MdOutlineLocationOn } from 'react-icons/md'
-import { usePrefetchTaxonPhoto } from '@/shared/hooks/useTaxonPhotos'
+import { usePrefetchTaxonPhoto } from '@/hooks/useTaxonPhotos'
 
 interface ObservationDialogProps {
     species: INatTaxon

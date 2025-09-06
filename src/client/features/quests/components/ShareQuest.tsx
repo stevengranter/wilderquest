@@ -5,10 +5,10 @@ import api from '@/core/api/axios'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAuth } from '@/core/auth/useAuth'
+import { useAuth } from '@/features/auth/useAuth'
 import { useQueryClient } from '@tanstack/react-query'
 import { UserSearch } from '@/components/shared/UserSearch'
-import { type SafeUser } from '@/shared/hooks/useUserSearch'
+import { type SafeUser } from '@/hooks/useUserSearch'
 
 type QuestShare = {
     id: number

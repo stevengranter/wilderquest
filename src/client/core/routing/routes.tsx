@@ -2,7 +2,7 @@
 
 import { createBrowserRouter } from 'react-router'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
-import { Home } from '@/app/routing/pages/Home'
+import { Home } from '@/core/routing/pages/Home'
 import Login from '@/features/auth/pages/Login'
 import Register from '@/features/auth/pages/Register'
 import UserProfile from '@/features/users/pages/UserProfile'
@@ -12,7 +12,7 @@ import { CreateQuest } from '@/features/quests/pages/CreateQuest'
 import { QuestsPage } from '@/features/quests/pages/QuestsPage'
 import UserQuestsPage from '@/features/quests/pages/UserQuestsPage'
 import SharedQuestGuest from '@/features/quests/pages/SharedQuestGuest'
-import { AppLayout } from '@/app/layouts/AppLayout'
+import { AppLayout } from '@/core/layouts/AppLayout'
 import { QueryClient } from '@tanstack/react-query'
 
 export const queryClient = new QueryClient()

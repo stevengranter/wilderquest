@@ -2,16 +2,25 @@ import { useCallback, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { ClientQuest, SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
+import {
+    ClientQuest,
+    SpeciesCardWithObservations,
+} from '@/features/quests/components/SpeciesCardWithObservations'
 import { SpeciesCardSkeleton } from '@/features/quests/components/SpeciesCard'
 import { FoundButton } from '@/features/quests/components/FoundButton'
 import { QuestListView } from '../../QuestListView'
 import { QuestMapView } from '../../QuestMapView'
 // Import QuestMapping type
-import { AggregatedProgress, DetailedProgress, QuestMapping, QuestStatus, Share } from '@/features/quests/types'
+import {
+    AggregatedProgress,
+    DetailedProgress,
+    QuestMapping,
+    QuestStatus,
+    Share,
+} from '@/features/quests/types'
 import { INatTaxon } from '@shared/types'
 import { LoggedInUser } from '@shared/types/authTypes'
-import { useSpeciesActions, useSpeciesProgress } from '@/shared/hooks/useQuest'
+import { useSpeciesActions, useSpeciesProgress } from '@/hooks/useQuest'
 
 // Use QuestMapping instead of defining TaxonMapping
 type TaxonMapping = QuestMapping

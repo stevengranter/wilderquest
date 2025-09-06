@@ -3,9 +3,9 @@ import { useState } from 'react'
 import { Check, Search, X } from 'lucide-react'
 
 import { cn } from '@/shared/lib/utils'
-import { useDebounce } from '@/shared/hooks/useDebounce'
-import { useUserSearch, type SafeUser } from '@/shared/hooks/useUserSearch'
-import { useAuth } from '@/core/auth/useAuth'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useUserSearch, type SafeUser } from '@/hooks/useUserSearch'
+import { useAuth } from '@/features/auth/useAuth'
 import { AvatarOverlay } from '@/features/quests/components/AvatarOverlay'
 import { Button } from '@/components/ui/button'
 import {

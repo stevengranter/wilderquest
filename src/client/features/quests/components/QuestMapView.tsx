@@ -6,7 +6,7 @@ import { QuestMapping } from '../types'
 import api from '@/core/api/axios'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, MapPin } from 'lucide-react'
-import { useLeaflet } from '@/shared/hooks/useLeaflet'
+import { useLeaflet } from '@/hooks/useLeaflet'
 
 // Add custom CSS for markers
 const markerStyles = `

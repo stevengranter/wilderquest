@@ -16,7 +16,7 @@ import { QuestSpecies } from './parts/QuestSpecies'
 import { QuestControls } from './parts/QuestControls'
 import { QuestSummaryModal } from '../QuestSummaryModal'
 import { ClientQuest } from '../SpeciesCardWithObservations'
-import { useAuth } from '@/core/auth/useAuth'
+import { useAuth } from '@/features/auth/useAuth'
 import { useState, useEffect } from 'react'
 import { QuestStatusBadge } from '../QuestStatusBadge'
 

@@ -1,4 +1,4 @@
-import { useProgressiveImage } from '@/shared/hooks/useProgressiveImage'
+import { useProgressiveImage } from '@/hooks/useProgressiveImage'
 import { cn } from '@/shared/lib/utils'
 
 interface ObservationPhoto {

@@ -3,7 +3,7 @@
 import { Outlet, ScrollRestoration } from 'react-router'
 import { Toaster } from '@/components/ui/sonner'
 import { SearchProvider } from '@/features/search/context/SearchContext'
-import { SelectionProvider } from '@/shared/SelectionContext'
+import { SelectionProvider } from '@/core/contexts/SelectionContext'
 import { MainMenu } from '@/components/layout/MainMenu'
 
 export function AppLayout() {

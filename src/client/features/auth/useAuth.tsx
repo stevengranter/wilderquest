@@ -14,7 +14,7 @@ import type {
     LoginResponseData,
     RegisterResponseData,
 } from '@shared/types/authTypes'
-import { LoginRequestBody, RegisterRequestBody } from '@/shared/types/types'
+import { LoginRequestBody, RegisterRequestBody } from '@/types'
 
 type AuthContextType = {
     isAuthenticated: boolean
