@@ -21,19 +21,6 @@ export function AppLayout() {
                         <ScrollRestoration />
                     </div>
                     <Footer />
-<<<<<<< HEAD
-=======
-                    {/*<SidebarProvider defaultOpen={true}>*/}
-                    {/*    <div className='flex flex-row'>*/}
-                    {/*        /!*<AiAssistant />*!/*/}
-                    {/*        <SidebarInset className='p-6'>*/}
-                    {/*            <SidebarTrigger className='mr-2' />*/}
-                    {/*            <Outlet />*/}
-                    {/*        </SidebarInset>*/}
-                    {/*    </div>*/}
-                    {/*</SidebarProvider>*/}
-                    {/*<SelectionDrawer />*/}
->>>>>>> main
                 </SelectionProvider>
             </SearchProvider>
             <Toaster />

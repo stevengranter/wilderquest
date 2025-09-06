@@ -44,7 +44,7 @@ function _StatsCard({
 }
 
 export function Home() {
-    const { user: _user } = useAuth()
+    const { user: _user, isAuthenticated } = useAuth()
 
     // Use React Query for efficient caching and automatic refetching
     const { data: recentQuests = [], isLoading } = useQuery({
@@ -171,8 +171,6 @@ export function Home() {
                     </div>
                 )}
             </section>
-<<<<<<< HEAD
-=======
 
             {/* CTA Section */}
             <section className="hidden px-4 py-20 max-w-4xl mx-auto text-center">
@@ -214,7 +212,6 @@ export function Home() {
                     </div>
                 </div>
             </section>
->>>>>>> main
         </div>
     )
 }
