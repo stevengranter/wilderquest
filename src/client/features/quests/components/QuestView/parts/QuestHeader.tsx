@@ -34,36 +34,58 @@ export const QuestHeader = ({
     isTaxaError,
 }: QuestHeaderProps) => {
     return (
-        <div>
-            <div className="flex flex-row justify-between items-start">
-                <div className="flex items-start gap-6">
-                    {/* Quest Progress Chart */}
-                    {mappings &&
-                        mappings.length > 0 &&
-                        !isProgressError &&
-                        !isTaxaError && (
-                            <div className="flex-shrink-0">
-                                <div className="w-32 h-32">
-                                    {(() => {
-                                        const total = mappings.length
-                                        const found =
-                                            aggregatedProgress?.filter(
-                                                (a) => (a.count || 0) > 0
-                                            ).length || 0
-                                        return (
-                                            <TaxaPieChart
-                                                found={found}
-                                                total={total}
-                                                questStatus={questData.status}
-                                            />
-                                        )
-                                    })()}
-                                </div>
-                            </div>
-                        )}
+        <div className="relative">
+            {/* Edit Quest Button - Always in upper right */}
+            {isOwner && (
+                <div className="absolute top-0 right-0 z-10">
+                    <Button
+                        variant="reverse"
+                        size="sm"
+                        className="bg-background"
+                        asChild
+                    >
+                        <Link to={paths.editQuest(questData.id)}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit Quest
+                        </Link>
+                    </Button>
+                </div>
+            )}
 
-                    {/* Quest Info */}
-                    <div className="flex flex-col flex-1">
+            <div className="flex flex-row justify-between items-start">
+                <div className="flex flex-nowrap gap-4 md:flex-row md:items-start md:gap-6 w-full">
+                    {/* Progress Chart - Left column on xl+ screens */}
+                    <div className="flex flex-col items-end gap-4 flex-shrink-0 w-40 sm:w-auto xl:order-1">
+                        {/* Quest Progress Chart */}
+                        {mappings &&
+                            mappings.length > 0 &&
+                            !isProgressError &&
+                            !isTaxaError && (
+                                <div className="flex-shrink-0">
+                                    <div className="w-32 h-32">
+                                        {(() => {
+                                            const total = mappings.length
+                                            const found =
+                                                aggregatedProgress?.filter(
+                                                    (a) => (a.count || 0) > 0
+                                                ).length || 0
+                                            return (
+                                                <TaxaPieChart
+                                                    found={found}
+                                                    total={total}
+                                                    questStatus={
+                                                        questData.status
+                                                    }
+                                                />
+                                            )
+                                        })()}
+                                    </div>
+                                </div>
+                            )}
+                    </div>
+
+                    {/* Quest Info - Right column on xl+ screens */}
+                    <div className="flex flex-col flex-1 min-w-0 xl:order-2">
                         <h2 className="text-3xl font-bold text-primary">
                             {questData.name}
                         </h2>
@@ -93,16 +115,6 @@ export const QuestHeader = ({
                         />
                     </div>
                 </div>
-                {isOwner && (
-                    <div className="flex items-center">
-                        <Button variant="default" size="sm" asChild>
-                            <Link to={paths.editQuest(questData.id)}>
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Edit Quest
-                            </Link>
-                        </Button>
-                    </div>
-                )}
             </div>
 
             <div className="flex justify-between items-start mb-6">

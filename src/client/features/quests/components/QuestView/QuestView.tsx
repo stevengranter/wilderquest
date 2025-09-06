@@ -100,7 +100,7 @@ export const QuestView = () => {
         <div
             className={`min-h-screen ${getStatusBackgroundClass(questData.status)} transition-colors duration-300`}
         >
-            <div className="container mx-auto px-4 py-8 relative z-10">
+            <div className="container mx-auto px-4 relative z-10">
                 {questData && (
                     <QuestHeader
                         questData={
@@ -121,8 +121,8 @@ export const QuestView = () => {
                 <div className="xl:flex xl:gap-12 mb-8">
                     {/* Quest Explorers - appears first on small screens, auto width on xl */}
                     <div className="order-1 xl:w-auto xl:min-w-80 xl:max-w-sm mb-8 xl:mb-0">
-                        <div className="flex items-center justify-between pt-6 mb-4">
-                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-semibold flex items-center gap-2">
                                 Explorers
                                 <Badge
                                     variant="neutral"
@@ -184,8 +184,8 @@ export const QuestView = () => {
 
                     {/* Species Cards - appears second on small screens, flex-1 on xl */}
                     <div className="order-2 xl:flex-1">
-                        <div className="flex items-center justify-between mb-6 pt-6">
-                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <div className="flex items-center justify-between mb-6 ">
+                            <h2 className="text-xl font-semibold flex items-center gap-2">
                                 Species
                                 <Badge
                                     variant="neutral"

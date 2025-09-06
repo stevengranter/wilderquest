@@ -258,10 +258,10 @@ function SpeciesGridItem({
                 </CardHeader>
 
                 <CardContent className="relative px-0 mx-6">
-                    <div className="absolute -top-3 -right-3">
+                    <div className="absolute -top-1 -right-1">
                         {species.iconic_taxon_name && (
                             <div className="bg-yellow-300 rounded-full text-bg-main-foreground p-2 rotate-15 border-2">
-                                <KingdomIcon size={20} />
+                                <KingdomIcon size={16} />
                             </div>
                         )}
                     </div>
