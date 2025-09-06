@@ -70,9 +70,9 @@ export function Home() {
     )
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background animate-in fade-in duration-500">
             {/* Hero Section */}
-            <section className="relative px-4 pt-20 pb-16 text-center">
+            <section className="relative px-4 pt-20 pb-16 text-center animate-in fade-in duration-700">
                 <div className="max-w-4xl mx-auto">
                     <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
                         wilderQuest
@@ -95,7 +95,7 @@ export function Home() {
             </section>
 
             {/* Recent Quests Section */}
-            <section className="px-4 py-16 max-w-6xl mx-auto">
+            <section className="px-4 py-16 max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h2 className="text-3xl font-bold text-foreground mb-2">
@@ -127,7 +127,7 @@ export function Home() {
                     </div>
                 ) : recentQuests.length > 0 ? (
                     <div
-                        className="grid gap-8 auto-rows-fr overflow-hidden p-1"
+                        className="grid gap-8 auto-rows-fr overflow-hidden p-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300"
                         style={{
                             gridTemplateColumns:
                                 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -173,8 +173,8 @@ export function Home() {
             </section>
 
             {/* CTA Section */}
-            <section className="px-4 py-20 max-w-4xl mx-auto text-center">
-                <div className="bg-emerald-600 rounded-2xl p-12 text-white relative overflow-hidden">
+            <section className="hidden px-4 py-20 max-w-4xl mx-auto text-center">
+                <div className="bg-main rounded-2xl p-12 text-white relative overflow-hidden">
                     <div className="relative">
                         <h2 className="text-3xl font-bold mb-4">
                             Ready to Start Your Nature Adventure?

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Lock, LockOpen, Pencil } from 'lucide-react'
-import { FaMapPin } from 'react-icons/fa'
+import { MdLocationPin } from 'react-icons/md'
 import { Badge } from '@/components/ui'
 import { Button } from '@/components/ui'
 import { paths } from '@/core/routing/paths'
@@ -91,7 +91,7 @@ export const QuestHeader = ({
                         </h2>
                         {questData?.location_name && (
                             <h3 className="flex items-center gap-2">
-                                <FaMapPin className="h-4 w-4" />
+                                <MdLocationPin className="h-4 w-4" />
                                 {questData?.location_name}
                             </h3>
                         )}

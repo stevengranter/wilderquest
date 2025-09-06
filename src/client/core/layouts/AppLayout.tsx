@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui'
 import { SearchProvider } from '@/features/search/context/SearchContext'
 import { SelectionProvider } from '@/core/contexts/SelectionContext'
 import { MainMenu } from '@/components/layout/MainMenu'
+import { Footer } from '@/components/layout/Footer'
 
 export function AppLayout() {
     return (
@@ -18,17 +19,18 @@ export function AppLayout() {
                         {/*<UserToolbar />*/}
                         <Outlet />
                         <ScrollRestoration />
-                        {/*<SidebarProvider defaultOpen={true}>*/}
-                        {/*    <div className='flex flex-row'>*/}
-                        {/*        /!*<AiAssistant />*!/*/}
-                        {/*        <SidebarInset className='p-6'>*/}
-                        {/*            <SidebarTrigger className='mr-2' />*/}
-                        {/*            <Outlet />*/}
-                        {/*        </SidebarInset>*/}
-                        {/*    </div>*/}
-                        {/*</SidebarProvider>*/}
-                        {/*<SelectionDrawer />*/}
                     </div>
+                    <Footer />
+                    {/*<SidebarProvider defaultOpen={true}>*/}
+                    {/*    <div className='flex flex-row'>*/}
+                    {/*        /!*<AiAssistant />*!/*/}
+                    {/*        <SidebarInset className='p-6'>*/}
+                    {/*            <SidebarTrigger className='mr-2' />*/}
+                    {/*            <Outlet />*/}
+                    {/*        </SidebarInset>*/}
+                    {/*    </div>*/}
+                    {/*</SidebarProvider>*/}
+                    {/*<SelectionDrawer />*/}
                 </SelectionProvider>
             </SearchProvider>
             <Toaster />
