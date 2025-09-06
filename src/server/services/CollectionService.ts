@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { type CollectionRepository } from '../repositories/CollectionRepository.js'
+import { type CollectionRepository } from '../repositories/index.js'
 import {
     Collection,
     CollectionsToTaxa,

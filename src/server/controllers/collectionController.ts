@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
 import { z } from 'zod'
-import { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
-import { type CollectionRepository } from '../repositories/CollectionRepository.js'
-import { createCollectionService } from '../services/CollectionService.js'
+import { AuthenticatedRequest } from '../middlewares/index.js'
+import { type CollectionRepository } from '../repositories/index.js'
+import { createCollectionService } from '../services/index.js'
 import {
     Collection,
     CollectionSchema,

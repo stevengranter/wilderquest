@@ -2,40 +2,44 @@ import compression from 'compression'
 import cors from 'cors'
 import express from 'express'
 import corsConfig from './config/cors.config.js'
-import { createAuthController } from './controllers/authController.js'
-import { createCollectionController } from './controllers/collectionController.js'
-import { createINaturalistAPIController } from './controllers/iNaturalistAPIController.js'
-import { createQuestController } from './controllers/questController.js'
-import { createQuestShareController } from './controllers/questShareController.js'
-import { createUserController } from './controllers/userController.js'
-import { createUserService } from './services/userService.js'
-import { rateLimiter } from './middlewares/rateLimiter.js'
-import { rateSlowDown } from './middlewares/rateSlowDown.js'
-import requestLogger from './middlewares/requestLogger.js'
-import { CollectionRepository } from './repositories/CollectionRepository.js'
 import {
+    createAuthController,
+    createCollectionController,
+    createINaturalistAPIController,
+    createQuestController,
+    createQuestShareController,
+    createUserController,
+} from './controllers/index.js'
+import { createUserService } from './services/index.js'
+import {
+    rateLimiter,
+    rateSlowDown,
+    requestLogger,
+} from './middlewares/index.js'
+import {
+    CollectionRepository,
     QuestRepository,
     QuestToTaxaRepository,
-} from './repositories/QuestRepository.js'
-import type {
     QuestShareRepository,
     SharedQuestProgressRepository,
-} from './repositories/QuestShareRepository.js'
+} from './repositories/index.js'
 import {
+    createAuthRouter,
+    createCollectionRouter,
+    createQuestEventsRouter,
+    createQuestRouter,
+    createQuestShareRouter,
+    createUserRouter,
+    serviceRouter,
     mapTilesProxyRouter,
     wikipediaProxyRouter,
-} from './routes/api/proxies.routes.js'
-import { serviceRouter } from './routes/api/services.routes.js'
-import { createAuthRouter } from './routes/authRouter.js'
-import { createCollectionRouter } from './routes/collectionRouter.js'
-import { createQuestEventsRouter } from './routes/questEventsRouter.js'
-import { createQuestRouter } from './routes/questRouter.js'
-import { createQuestShareRouter } from './routes/questShareRouter.js'
-import { createUserRouter } from './routes/userRouter.js'
-import { createAuthService } from './services/authService.js'
-import { createQuestService } from './services/quests/questService.js'
-import { createQuestShareService } from './services/quests/questShareService.js'
-import { UserRepository } from './repositories/UserRepository.js'
+} from './routes/index.js'
+import {
+    createAuthService,
+    createQuestService,
+    createQuestShareService,
+} from './services/index.js'
+import { UserRepository } from './repositories/index.js'
 
 export function buildApp({
     userRepository,
