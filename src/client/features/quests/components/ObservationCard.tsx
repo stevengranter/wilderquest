@@ -54,7 +54,7 @@ export function ObservationCard({
                 {obs.photos.length > 0 && (
                     <div
                         className={cn(
-                            'cursor-pointer',
+                            'relative cursor-pointer',
                             isClickable && 'hover:opacity-80 transition-opacity'
                         )}
                         onClick={handleClick}
@@ -63,6 +63,11 @@ export function ObservationCard({
                             photo={obs.photos[0]}
                             className="w-full h-32 bg-gray-100 rounded mb-2"
                         />
+                        {obs.photos.length > 1 && (
+                            <div className="absolute -top-1 -right-1 w-6 h-6 bg-black/70 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                                +{obs.photos.length - 1}
+                            </div>
+                        )}
                     </div>
                 )}
                 <div className="flex items-center gap-2 mb-1">
@@ -102,10 +107,17 @@ export function ObservationCard({
         return (
             <div className={cn('flex items-center gap-4', className)}>
                 {obs.photos.length > 0 && (
-                    <ProgressiveObservationImage
-                        photo={obs.photos[0]}
-                        className="w-16 h-16 rounded-md flex-shrink-0"
-                    />
+                    <div className="relative flex-shrink-0">
+                        <ProgressiveObservationImage
+                            photo={obs.photos[0]}
+                            className="w-16 h-16 rounded-md"
+                        />
+                        {obs.photos.length > 1 && (
+                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-black/70 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                                +{obs.photos.length - 1}
+                            </div>
+                        )}
+                    </div>
                 )}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -151,10 +163,19 @@ export function ObservationCard({
         >
             {/* Photo Area */}
             {obs.photos.length > 0 && (
-                <ProgressiveObservationImage
-                    photo={obs.photos[0]}
-                    className="aspect-square bg-gray-100 rounded-sm mb-3"
-                />
+                <div className="relative mb-3">
+                    <ProgressiveObservationImage
+                        photo={obs.photos[0]}
+                        className="aspect-square bg-gray-100 rounded-sm"
+                    />
+
+                    {/* Photo count badge */}
+                    {obs.photos.length > 1 && (
+                        <div className="absolute -top-1 -right-1 w-6 h-6 bg-black/70 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                            +{obs.photos.length - 1}
+                        </div>
+                    )}
+                </div>
             )}
 
             {/* Polaroid Caption Area */}

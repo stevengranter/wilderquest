@@ -246,12 +246,9 @@ const getNearbyLocations: RequestHandler = async (
             ) {
                 const locationIQPlaces = locationIQResponse.data
                     .slice(0, 7)
-                    .map((place: any) => ({
+                    .map((place: LocationIQPlace) => ({
                         place_id: place.place_id || `${place.lat},${place.lon}`,
-                        display_name:
-                            place.display_name ||
-                            place.name ||
-                            'Nearby Location',
+                        display_name: place.display_name || 'Nearby Location',
                         lat: place.lat.toString(),
                         lon: place.lon.toString(),
                         source: 'locationiq' as const,
