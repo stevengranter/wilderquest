@@ -21,7 +21,7 @@ import {
     Input,
     Button,
 } from '@/components/ui'
-import { MapPin } from 'lucide-react'
+import { MdLocationPin } from 'react-icons/md'
 
 import { formSchema } from '@/features/quests/schemas/formSchema'
 
@@ -186,7 +186,7 @@ export function LocationInput({
                             onClick={handleNearbyClick}
                             title="Find nearby locations"
                         >
-                            <MapPin className="h-4 w-4 text-gray-500" />
+                            <MdLocationPin className="h-4 w-4 text-gray-500" />
                         </Button>
                     </div>
 

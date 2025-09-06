@@ -5,7 +5,8 @@ import { ClientQuest } from './SpeciesCardWithObservations'
 import { QuestMapping } from '../types'
 import api from '@/core/api/axios'
 import { Badge } from '@/components/ui'
-import { Calendar, MapPin } from 'lucide-react'
+import { Calendar } from 'lucide-react'
+import { MdLocationPin } from 'react-icons/md'
 import { useLeaflet } from '@/hooks/useLeaflet'
 import { clientDebug } from '@shared/utils/debug'
 
@@ -637,7 +638,7 @@ function QuestMapViewInner({
 
                                     {marker!.observation.place_guess && (
                                         <div className="flex items-center gap-1">
-                                            <MapPin className="h-3 w-3" />
+                                            <MdLocationPin className="h-3 w-3" />
                                             <span>
                                                 {
                                                     marker!.observation
