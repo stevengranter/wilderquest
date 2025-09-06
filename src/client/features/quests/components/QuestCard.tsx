@@ -95,7 +95,7 @@ function QuestCardContent({
         : 'Date TBD'
 
     const hoverClasses = {
-        lift: 'transition-transform transition duration-250 hover:-translate-1 hover:shadow-shadow',
+        lift: 'transition-transform duration-250 hover:-translate-1 hover:shadow-shadow',
         shadow: 'transition-shadow duration-200 hover:shadow-shadow',
         none: '',
     }
@@ -105,154 +105,140 @@ function QuestCardContent({
     }
 
     return (
-        <motion.div
-            ref={cardRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-        >
-            <Link to={paths.questDetail(quest.id)} className="block">
-                <Card
-                    className={cn(
-                        'm-0 p-0 shadow-0 overflow-hidden border rounded-xl gap-2 hover:bg-orange-50 relative group bg-white',
-                        hoverClasses[hoverEffect || 'lift'],
-                        className
-                    )}
-                >
-                    <CardContent className="p-0 m-0 bg-background">
-                        <div className="relative w-full h-40 overflow-hidden">
-                            <div
-                                className={cn(
-                                    'absolute inset-0 transition-all duration-500 ease-out',
-                                    enableCollageZoom &&
-                                        'group-hover:scale-110 group-hover:saturate-110',
-                                    totalTaxaCount > 0
-                                        ? `grid ${getGridClasses(gridSlotCount)}`
-                                        : 'flex items-center justify-center bg-orange-50'
-                                )}
-                                style={{
-                                    transformOrigin: 'center',
-                                    backfaceVisibility: 'hidden',
-                                    WebkitBackfaceVisibility: 'hidden',
-                                    ...(enableCollageZoom && {
-                                        willChange: 'transform',
-                                    }),
-                                }}
-                            >
-                                {totalTaxaCount > 0 ? (
-                                    Array.from({ length: gridSlotCount }).map(
-                                        (_, i) => {
-                                            const isLastSlot =
-                                                i === gridSlotCount - 1
-                                            const shouldShowOverlay =
-                                                totalTaxaCount > 6 && isLastSlot
-                                            const photoSrc = photos?.[i]
+        <Link to={paths.questDetail(quest.id)} className="block">
+            <Card
+                className={cn(
+                    'm-0 p-0 shadow-0 overflow-hidden border rounded-xl gap-2 hover:bg-orange-50 relative group bg-white',
+                    hoverClasses[hoverEffect || 'lift'],
+                    className
+                )}
+            >
+                <CardContent className="p-0 m-0 bg-background">
+                    <div className="relative w-full h-40 overflow-hidden">
+                        <div
+                            className={cn(
+                                'absolute inset-0 transition-all duration-500 ease-out',
+                                enableCollageZoom &&
+                                    'group-hover:scale-110 group-hover:saturate-110',
+                                totalTaxaCount > 0
+                                    ? `grid ${getGridClasses(gridSlotCount)}`
+                                    : 'flex items-center justify-center bg-orange-50'
+                            )}
+                            style={{
+                                transformOrigin: 'center',
+                                backfaceVisibility: 'hidden',
+                                WebkitBackfaceVisibility: 'hidden',
+                                ...(enableCollageZoom && {
+                                    willChange: 'transform',
+                                }),
+                            }}
+                        >
+                            {totalTaxaCount > 0 ? (
+                                Array.from({ length: gridSlotCount }).map(
+                                    (_, i) => {
+                                        const isLastSlot =
+                                            i === gridSlotCount - 1
+                                        const shouldShowOverlay =
+                                            totalTaxaCount > 6 && isLastSlot
+                                        const photoSrc = photos?.[i]
 
-                                            const extraClass =
-                                                gridSlotCount === 5 && i === 4
-                                                    ? 'col-start-2 row-start-2'
-                                                    : ''
+                                        const extraClass =
+                                            gridSlotCount === 5 && i === 4
+                                                ? 'col-start-2 row-start-2'
+                                                : ''
 
-                                            return (
-                                                <div
-                                                    key={i}
-                                                    className={cn(
-                                                        'relative overflow-hidden',
-                                                        extraClass
+                                        return (
+                                            <div
+                                                key={i}
+                                                className={cn(
+                                                    'relative overflow-hidden',
+                                                    extraClass
+                                                )}
+                                            >
+                                                {isLoading || !photoSrc ? (
+                                                    <ImageSkeleton
+                                                        className={extraClass}
+                                                    />
+                                                ) : (
+                                                    <img
+                                                        src={photoSrc}
+                                                        alt={`Quest wildlife ${
+                                                            i + 1
+                                                        }`}
+                                                        className="w-full h-full object-cover transition-opacity duration-300"
+                                                        // style={{
+                                                        //     imageRendering:
+                                                        //         '-webkit-optimize-contrast',
+                                                        //     backfaceVisibility:
+                                                        //         'hidden',
+                                                        //     transform:
+                                                        //         'translateZ(0)',
+                                                        // }}
+                                                    />
+                                                )}
+                                                {shouldShowOverlay &&
+                                                    photoSrc &&
+                                                    !isLoading && (
+                                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-lg font-semibold">
+                                                            +
+                                                            {remainingTaxaCount}{' '}
+                                                            more
+                                                        </div>
                                                     )}
-                                                >
-                                                    {isLoading || !photoSrc ? (
-                                                        <ImageSkeleton
-                                                            className={
-                                                                extraClass
-                                                            }
-                                                        />
-                                                    ) : (
-                                                        <img
-                                                            src={photoSrc}
-                                                            alt={`Quest wildlife ${
-                                                                i + 1
-                                                            }`}
-                                                            className="w-full h-full object-cover transition-opacity duration-300"
-                                                            style={{
-                                                                imageRendering:
-                                                                    '-webkit-optimize-contrast',
-                                                                backfaceVisibility:
-                                                                    'hidden',
-                                                                transform:
-                                                                    'translateZ(0)',
-                                                            }}
-                                                        />
-                                                    )}
-                                                    {shouldShowOverlay &&
-                                                        photoSrc &&
-                                                        !isLoading && (
-                                                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-lg font-semibold">
-                                                                +
-                                                                {
-                                                                    remainingTaxaCount
-                                                                }{' '}
-                                                                more
-                                                            </div>
-                                                        )}
-                                                </div>
-                                            )
-                                        }
-                                    )
-                                ) : (
-                                    <p className="text-gray-500">
-                                        No wildlife yet
-                                    </p>
-                                )}
-                            </div>
+                                            </div>
+                                        )
+                                    }
+                                )
+                            ) : (
+                                <p className="text-gray-500">No wildlife yet</p>
+                            )}
                         </div>
-                    </CardContent>
+                    </div>
+                </CardContent>
 
-                    <CardContent className="px-4 pr-4 py-2 m-0 space-y-1 relative">
-                        <IoMdCompass className="z-5 absolute -top-2 -right-3 -translate-x-1/2 text-orange-200 opacity-20 w-28 h-28 pointer-events-none" />
+                <CardContent className="px-4 pr-4 py-2 m-0 space-y-1 relative">
+                    <IoMdCompass className="z-5 absolute -top-2 -right-3 -translate-x-1/2 text-orange-200 opacity-20 w-28 h-28 pointer-events-none" />
 
-                        <div className="z-10 relative w-full">
-                            <h3
-                                className={cn(
-                                    'font-semibold text-green-900 overflow-hidden w-full',
-                                    scaleTextToFit
-                                        ? 'text-sm leading-tight whitespace-nowrap'
-                                        : 'text-lg line-clamp-1'
-                                )}
-                                style={
-                                    scaleTextToFit
-                                        ? {
-                                              fontSize: `clamp(0.875rem, ${Math.max(0.875, Math.min(1, 40 / quest.name.length))}rem, 1rem)`,
-                                          }
-                                        : undefined
-                                }
-                            >
-                                {quest.name}
-                            </h3>
-                        </div>
+                    <div className="z-10 relative w-full">
+                        <h3
+                            className={cn(
+                                'font-semibold text-green-900 overflow-hidden w-full',
+                                scaleTextToFit
+                                    ? 'text-sm leading-tight whitespace-nowrap'
+                                    : 'text-lg line-clamp-1'
+                            )}
+                            style={
+                                scaleTextToFit
+                                    ? {
+                                          fontSize: `clamp(0.875rem, ${Math.max(0.875, Math.min(1, 40 / quest.name.length))}rem, 1rem)`,
+                                      }
+                                    : undefined
+                            }
+                        >
+                            {quest.name}
+                        </h3>
+                    </div>
 
-                        <div className="flex items-center justify-between z-10 relative w-full">
-                            <div className="text-xs">{formattedDate}</div>
-                            <QuestStatusBadge status={quest.status} />
-                        </div>
-                    </CardContent>
-                    <CardFooter className="relative m-0 p-2 bg-orange-100 z-10">
-                        <div className="flex flex-row items-center justify-right relative z-10">
-                            <MdLocationPin />
-                            <h4
-                                className="text-xs font-normal truncate"
-                                style={{
-                                    fontSize: `clamp(0.75rem, ${Math.max(0.75, Math.min(0.875, 30 / (quest.location_name || '').length))}rem, 0.875rem)`,
-                                }}
-                            >
-                                {quest.location_name || 'Location TBD'}
-                            </h4>
-                        </div>
-                    </CardFooter>
-                </Card>
-            </Link>
-        </motion.div>
+                    <div className="flex items-center justify-between z-10 relative w-full">
+                        <div className="text-xs">{formattedDate}</div>
+                        <QuestStatusBadge status={quest.status} />
+                    </div>
+                </CardContent>
+                <CardFooter className="relative m-0 p-2 bg-orange-100 z-10">
+                    <div className="flex flex-row items-center justify-right relative z-10">
+                        <MdLocationPin />
+                        <h4
+                            className="text-xs font-normal truncate"
+                            style={{
+                                fontSize: `clamp(0.75rem, ${Math.max(0.75, Math.min(0.875, 30 / (quest.location_name || '').length))}rem, 0.875rem)`,
+                            }}
+                        >
+                            {quest.location_name || 'Location TBD'}
+                        </h4>
+                    </div>
+                </CardFooter>
+            </Card>
+        </Link>
     )
 }
 
