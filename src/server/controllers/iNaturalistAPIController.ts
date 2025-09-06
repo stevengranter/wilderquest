@@ -159,8 +159,14 @@ export const iNaturalistAPIController = async (req: Request, res: Response) => {
         }
 
         if (path.startsWith('/places')) {
-            const mockResponse = MockINatService.getPlaces()
-            return res.status(200).json(mockResponse)
+            if (
+                process.env.NODE_ENV === 'development' &&
+                process.env.USE_MOCK_INAT === 'true'
+            ) {
+                const mockResponse = MockINatService.getPlaces()
+                return res.status(200).json(mockResponse)
+            }
+            // For production, let it fall through to the normal API proxy
         }
 
         if (path.startsWith('/observations/species_counts')) {

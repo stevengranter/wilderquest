@@ -67,8 +67,8 @@ describe('MockINatService', () => {
         it('should return mock places', () => {
             const result = MockINatService.getPlaces()
 
-            expect(result.results).toHaveLength(1)
-            expect(result.results[0].name).toBe('Mock Place')
+            expect(result.results).toHaveLength(5)
+            expect(result.results[0].name).toBe('Banff National Park')
         })
     })
 

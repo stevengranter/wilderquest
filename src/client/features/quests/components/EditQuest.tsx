@@ -62,6 +62,7 @@ export default function EditQuest() {
             locationName: '',
             latitude: null,
             longitude: null,
+            place_id: undefined,
             isPrivate: false,
             starts_at: '',
             ends_at: '',
@@ -101,6 +102,7 @@ export default function EditQuest() {
                     longitude: quest.longitude
                         ? parseFloat(quest.longitude)
                         : null,
+                    place_id: quest.place_id || undefined,
                     isPrivate: !!quest.is_private,
                     mode: quest.mode || 'cooperative',
                     starts_at: quest.starts_at
@@ -257,6 +259,7 @@ export default function EditQuest() {
             location_name: data.locationName || null,
             latitude: data.latitude,
             longitude: data.longitude,
+            place_id: data.place_id || null,
             is_private: data.isPrivate,
             mode: data.mode,
             starts_at: data.starts_at || null,

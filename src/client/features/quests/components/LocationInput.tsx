@@ -7,7 +7,11 @@ import {
     UseFormWatch,
 } from 'react-hook-form'
 import { z } from 'zod'
-import { getCitySuggestions } from '@/shared/lib/locationUtils'
+import {
+    getCitySuggestions,
+    getNearbyLocations,
+    CombinedLocationResult,
+} from '@/shared/lib/locationUtils'
 import {
     FormControl,
     FormDescription,
@@ -15,16 +19,13 @@ import {
     FormLabel,
     FormMessage,
     Input,
+    Button,
 } from '@/components/ui'
+import { MapPin } from 'lucide-react'
 
 import { formSchema } from '@/features/quests/schemas/formSchema'
 
-type Suggestion = {
-    place_id: string
-    display_name: string
-    lat: string
-    lon: string
-}
+type Suggestion = CombinedLocationResult
 type LocationInputProps = {
     name: keyof z.infer<typeof formSchema>
     control: Control<z.infer<typeof formSchema>>
@@ -44,6 +45,7 @@ export function LocationInput({
 }: LocationInputProps) {
     const [suggestions, setSuggestions] = useState<Suggestion[]>([])
     const [showSuggestions, setShowSuggestions] = useState(false)
+    const [nearbyError, setNearbyError] = useState<string | null>(null)
     const suppressFetchRef = useRef(false)
 
     const fetchSuggestions = useMemo(
@@ -92,6 +94,65 @@ export function LocationInput({
         }, 150)
     }
 
+    const handleNearbyClick = async () => {
+        setShowSuggestions(false)
+        setNearbyError(null)
+
+        try {
+            const position = await new Promise<GeolocationPosition>(
+                (resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        reject(
+                            new Error(
+                                'Geolocation is not supported by this browser'
+                            )
+                        )
+                        return
+                    }
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                    })
+                }
+            )
+
+            const { latitude, longitude } = position.coords
+            const nearbyResults = await getNearbyLocations(latitude, longitude)
+
+            if (nearbyResults && nearbyResults.length > 0) {
+                setSuggestions(nearbyResults)
+                setShowSuggestions(true)
+            } else {
+                setSuggestions([])
+                setShowSuggestions(false)
+                setNearbyError('No nearby locations found')
+            }
+        } catch (error) {
+            console.error('Failed to get nearby locations:', error)
+            setSuggestions([])
+            setShowSuggestions(false)
+
+            let errorMessage = 'Failed to get your location'
+            if (error instanceof GeolocationPositionError) {
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage =
+                            'Location access denied. Please enable location permissions.'
+                        break
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = 'Location information is unavailable.'
+                        break
+                    case error.TIMEOUT:
+                        errorMessage = 'Location request timed out.'
+                        break
+                }
+            } else if (error instanceof Error) {
+                errorMessage = error.message
+            }
+            setNearbyError(errorMessage)
+        }
+    }
+
     return (
         <Controller
             name={name}
@@ -99,44 +160,76 @@ export function LocationInput({
             render={({ field }) => (
                 <FormItem className="relative">
                     <FormLabel>{label}</FormLabel>
-                    <FormControl>
-                        <Input
-                            placeholder="Search location..."
-                            {...field}
-                            value={(field.value as string) || ''}
-                            onBlur={handleBlur}
-                            onChange={(e) => {
-                                field.onChange(e)
-                                if (e.target.value.length < 2) {
-                                    setShowSuggestions(false)
-                                }
-                            }}
-                            autoComplete="off"
-                        />
-                    </FormControl>
+                    <div className="relative">
+                        <FormControl>
+                            <Input
+                                placeholder="Search location..."
+                                {...field}
+                                value={(field.value as string) || ''}
+                                onBlur={handleBlur}
+                                onChange={(e) => {
+                                    field.onChange(e)
+                                    if (e.target.value.length < 2) {
+                                        setShowSuggestions(false)
+                                    }
+                                }}
+                                autoComplete="off"
+                                className="pr-10"
+                            />
+                        </FormControl>
+
+                        <Button
+                            type="button"
+                            variant="noShadow"
+                            size="sm"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100"
+                            onClick={handleNearbyClick}
+                            title="Find nearby locations"
+                        >
+                            <MapPin className="h-4 w-4 text-gray-500" />
+                        </Button>
+                    </div>
 
                     {showSuggestions && suggestions.length > 0 && (
-                        <ul className="absolute mt-15 z-10 w-full bg-white border border-gray-300 rounded shadow-md">
+                        <ul className="absolute mt-16 z-10 w-full bg-white border-1 border-black rounded shadow-md max-h-60 overflow-y-auto">
                             {suggestions.map((s) => (
                                 <li
-                                    key={s.place_id}
-                                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                                    key={`${s.source}-${s.place_id}`}
+                                    className="p-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
                                     onMouseDown={() => {
                                         suppressFetchRef.current = true
                                         setValue(name, s.display_name, {
                                             shouldValidate: true,
                                         })
-                                        setValue('latitude', Number(s.lat), {
+                                        const lat = s.lat ? Number(s.lat) : null
+                                        const lon = s.lon ? Number(s.lon) : null
+                                        setValue('latitude', lat, {
                                             shouldValidate: true,
                                         })
-                                        setValue('longitude', Number(s.lon), {
+                                        setValue('longitude', lon, {
+                                            shouldValidate: true,
+                                        })
+                                        setValue('place_id', s.place_id, {
                                             shouldValidate: true,
                                         })
                                         setSuggestions([])
                                         setShowSuggestions(false)
                                     }}
                                 >
-                                    {s.display_name}
+                                    <span className="flex-1">
+                                        {s.display_name}
+                                    </span>
+                                    {/*<span
+                                        className={`ml-2 px-2 py-1 text-xs rounded-full ${
+                                            s.source === 'inaturalist'
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-blue-100 text-blue-800'
+                                        }`}
+                                    >
+                                        {s.source === 'inaturalist'
+                                            ? '🌿 iNat'
+                                            : ' City'}
+                                    </span>*/}
                                 </li>
                             ))}
                         </ul>
@@ -144,6 +237,11 @@ export function LocationInput({
 
                     <FormDescription>{description}</FormDescription>
                     <FormMessage />
+                    {nearbyError && (
+                        <p className="text-sm text-red-600 mt-1">
+                            {nearbyError}
+                        </p>
+                    )}
                     {watch &&
                         !watch('latitude') &&
                         !watch('longitude') &&

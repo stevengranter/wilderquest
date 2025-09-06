@@ -48,6 +48,7 @@ export function CreateQuest() {
             locationName: '',
             latitude: null,
             longitude: null,
+            place_id: undefined,
             isPrivate: false,
             mode: 'competitive' as const,
             starts_at: '',
@@ -66,6 +67,7 @@ export function CreateQuest() {
                     locationName,
                     latitude,
                     longitude,
+                    place_id,
                     mode,
                     starts_at,
                     ends_at,
@@ -75,6 +77,7 @@ export function CreateQuest() {
                     location_name: locationName || null,
                     latitude: latitude,
                     longitude: longitude,
+                    place_id: place_id || null,
                     mode: mode,
                     taxon_ids: taxonIds,
                     starts_at: starts_at

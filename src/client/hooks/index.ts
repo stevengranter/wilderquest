@@ -1,4 +1,5 @@
 export { useDebounce } from './useDebounce'
+export { useGeolocation } from './useGeolocation'
 export { useLazyImage } from './useLazyImage'
 export { useLeaflet } from './useLeaflet'
 export { useProgressiveImage } from './useProgressiveImage'

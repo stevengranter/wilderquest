@@ -618,14 +618,59 @@ export class MockINatService {
     }
 
     static getPlaces(): {
-        results: Array<{ id: number; name: string; display_name: string }>
+        results: Array<{
+            id: number
+            name: string
+            display_name: string
+            type: string
+            place_type: number
+            bbox_area?: number
+        }>
     } {
         return {
             results: [
                 {
                     id: 1,
-                    name: 'Mock Place',
-                    display_name: 'Mock Place, Mock State, USA',
+                    name: 'Banff National Park',
+                    display_name: 'Banff National Park, Alberta, Canada',
+                    type: 'national_park',
+                    place_type: 100,
+                    bbox_area: 6641000000,
+                },
+                {
+                    id: 2,
+                    name: 'Stanley Park',
+                    display_name:
+                        'Stanley Park, Vancouver, British Columbia, Canada',
+                    type: 'park',
+                    place_type: 22,
+                    bbox_area: 1000000,
+                },
+                {
+                    id: 3,
+                    name: 'Point Pelee National Park',
+                    display_name: 'Point Pelee National Park, Ontario, Canada',
+                    type: 'national_park',
+                    place_type: 100,
+                    bbox_area: 15000000,
+                },
+                {
+                    id: 4,
+                    name: 'Gros Morne National Park',
+                    display_name:
+                        'Gros Morne National Park, Newfoundland and Labrador, Canada',
+                    type: 'national_park',
+                    place_type: 100,
+                    bbox_area: 1805000000,
+                },
+                {
+                    id: 5,
+                    name: 'Pacific Rim National Park Reserve',
+                    display_name:
+                        'Pacific Rim National Park Reserve, British Columbia, Canada',
+                    type: 'national_park',
+                    place_type: 100,
+                    bbox_area: 511000000,
                 },
             ],
         }

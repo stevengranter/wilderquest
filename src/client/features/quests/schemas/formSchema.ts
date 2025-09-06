@@ -10,6 +10,7 @@ export const formSchema = z
         }),
         latitude: z.number().min(-90).max(90).nullable(),
         longitude: z.number().min(-180).max(180).nullable(),
+        place_id: z.string().optional(),
         isPrivate: z.boolean(),
         mode: z.enum(['competitive', 'cooperative']),
         starts_at: z
