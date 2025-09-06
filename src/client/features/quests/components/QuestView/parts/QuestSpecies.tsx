@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui'
@@ -68,6 +68,22 @@ export const QuestSpecies = ({
     user,
 }: QuestSpeciesProps) => {
     const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid')
+
+    // Auto-switch between grid and list based on screen size
+    useEffect(() => {
+        const checkScreenSize = () => {
+            const mobile = window.innerWidth < 640 // sm breakpoint
+            if (mobile && viewMode === 'grid') {
+                setViewMode('list')
+            } else if (!mobile && viewMode === 'list') {
+                setViewMode('grid')
+            }
+        }
+
+        checkScreenSize()
+        window.addEventListener('resize', checkScreenSize)
+        return () => window.removeEventListener('resize', checkScreenSize)
+    }, []) // Remove viewMode from dependencies to prevent overriding manual changes
 
     const observer = useRef<IntersectionObserver | null>(null)
 
