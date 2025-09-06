@@ -7,7 +7,7 @@ import {
     UseFormWatch,
 } from 'react-hook-form'
 import { z } from 'zod'
-import { getCitySuggestions } from '@/components/shared/location/locationUtils'
+import { getCitySuggestions } from '@/shared/lib/locationUtils'
 import {
     FormControl,
     FormDescription,

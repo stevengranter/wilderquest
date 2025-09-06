@@ -11,7 +11,7 @@ import { QuestCard } from '@/features/quests/components/QuestCard'
 import { useQuestPhotoCollage } from '@/shared/hooks/useTaxonPhotos'
 import { QuestCardSkeleton } from '@/features/quests/components/QuestCardSkeleton'
 import { UserStats } from '@/components/shared/UserStats'
-import { useUserStats } from '@/shared/hooks/useUserStats'
+import { useUserStats } from '@/features/users/hooks/useUserStats'
 import { UserSearch } from '@/components/shared/UserSearch'
 import { type SafeUser } from '@/shared/hooks/useUserSearch'
 

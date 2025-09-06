@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext } from 'react'
-import { useQuestDisplay } from '../../shared/hooks/useQuest'
+import { useQuestDisplay } from '../../../shared/hooks/useQuest'
 import { INatTaxon } from '@shared/types'
 // Import QuestMapping type
 import {

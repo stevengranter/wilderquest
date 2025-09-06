@@ -11,7 +11,7 @@ import { useAuth } from '@/core/auth/useAuth'
 import avatar from 'animal-avatar-generator'
 import { ReactSVG } from 'react-svg'
 import { Button } from '@/components/ui/button'
-import { paths } from '@/core/routing/paths'
+import { paths } from '@/app/routing/paths'
 
 export function MainMenu() {
     const { isAuthenticated, user, logout } = useAuth()

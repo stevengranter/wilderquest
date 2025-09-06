@@ -7,7 +7,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion'
-import { useQuestContext } from '@/core/auth/QuestContext'
+import { useQuestContext } from '@/features/quests/context/QuestContext'
 import { useTaxaWithProgress } from '../../hooks/useTaxaWithProgress'
 import { QuestHeader } from './parts/QuestHeader'
 import { QuestLeaderboard } from './parts/QuestLeaderboard'

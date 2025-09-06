@@ -8,7 +8,7 @@ import { QuestCardSkeleton } from '@/features/quests/components/QuestCardSkeleto
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/core/auth/useAuth'
-import { paths } from '@/core/routing/paths'
+import { paths } from '@/app/routing/paths'
 import { QuestWithTaxa } from '@/shared/types/types'
 import { useQuestPhotoCollage } from '@/shared/hooks/useTaxonPhotos'
 
