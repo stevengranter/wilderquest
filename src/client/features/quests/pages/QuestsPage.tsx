@@ -175,6 +175,7 @@ function QuestsList({
                                     questPhotos.length === 0)
                             }
                             observeQuest={observeQuest}
+                            scaleTextToFit={true}
                         />
                     )
 

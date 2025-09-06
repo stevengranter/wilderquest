@@ -89,6 +89,7 @@ function UserQuests({
                         quest={quest}
                         photos={questPhotos}
                         isLoading={photosLoading && questPhotos.length === 0}
+                        scaleTextToFit={true}
                     />
                 )
             })}

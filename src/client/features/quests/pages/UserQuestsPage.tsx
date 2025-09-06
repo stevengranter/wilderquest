@@ -92,11 +92,17 @@ function QuestsList({
                 if (quests.length === index + 1) {
                     return (
                         <div ref={lastQuestElementRef} key={quest.id}>
-                            <QuestCard quest={quest} />
+                            <QuestCard quest={quest} scaleTextToFit={true} />
                         </div>
                     )
                 } else {
-                    return <QuestCard key={quest.id} quest={quest} />
+                    return (
+                        <QuestCard
+                            key={quest.id}
+                            quest={quest}
+                            scaleTextToFit={true}
+                        />
+                    )
                 }
             })}
         </div>

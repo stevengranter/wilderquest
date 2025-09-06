@@ -147,6 +147,7 @@ export function Home() {
                                         photosLoading &&
                                         questPhotos.length === 0
                                     }
+                                    scaleTextToFit={true}
                                 />
                             )
                         })}
