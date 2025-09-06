@@ -171,47 +171,6 @@ export function Home() {
                     </div>
                 )}
             </section>
-
-            {/* CTA Section */}
-            <section className="px-4 py-20 max-w-4xl mx-auto text-center">
-                <div className="bg-emerald-600 rounded-2xl p-12 text-white relative overflow-hidden">
-                    <div className="relative">
-                        <h2 className="text-3xl font-bold mb-4">
-                            Ready to Start Your Nature Adventure?
-                        </h2>
-                        <p className="text-xl mb-8 text-emerald-50">
-                            Join other nature enthusiasts documenting
-                            biodiversity around the world.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Button
-                                size="lg"
-                                variant="neutral"
-                                className="px-8"
-                                asChild
-                            >
-                                <Link to="/quests">
-                                    Browse Quests
-                                    <Compass className="ml-2 h-5 w-5" />
-                                </Link>
-                            </Button>
-                            {!isAuthenticated && (
-                                <Button
-                                    size="lg"
-                                    variant="neutral"
-                                    className="px-8 border-white text-white hover:bg-white hover:text-emerald-600 dark:hover:bg-gray-100 dark:hover:text-emerald-700"
-                                    asChild
-                                >
-                                    <Link to="/register">
-                                        Sign Up Free
-                                        <ArrowRight className="ml-2 h-5 w-5" />
-                                    </Link>
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </section>
         </div>
     )
 }
