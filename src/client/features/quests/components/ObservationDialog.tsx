@@ -182,7 +182,7 @@ export function ObservationDialog(props: ObservationDialogProps) {
 
             <DialogContent
                 onOpenAutoFocus={(e) => e.preventDefault()}
-                className="sm:max-w-[80%] h-[80%] max-h-[90%] flex flex-col md:flex-row gap-6 p-6 bg-background z-50"
+                className="max-w-[calc(100vw-2rem)] sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] h-[80%] max-h-[90%] flex flex-col md:flex-row gap-6 p-6 bg-background z-50"
             >
                 {/* Mobile Header */}
                 <div className="md:hidden flex items-center gap-4 border-b pb-4">
@@ -193,7 +193,7 @@ export function ObservationDialog(props: ObservationDialogProps) {
                             className="w-12 h-12 rounded-md object-cover"
                         />
                     )}
-                    <DialogTitle className="text-lg">
+                    <DialogTitle className="text-lg truncate flex-1 min-w-0">
                         {species.preferred_common_name}
                     </DialogTitle>
                 </div>
@@ -225,7 +225,7 @@ export function ObservationDialog(props: ObservationDialogProps) {
                 </div>
 
                 {/* Right Column: Observations */}
-                <div className="flex-1 overflow-hidden -ml-10">
+                <div className="flex-1 overflow-hidden md:-ml-10">
                     <ObservationList
                         observations={observations}
                         isLoading={isLoading}
@@ -426,7 +426,7 @@ function ObservationList({
     }
 
     return (
-        <div className={`mx-2 mt-2 flex h-full flex-col`}>
+        <div className={`mx-2 mt-2 flex h-full flex-col overflow-hidden`}>
             {/* Header / Toggle */}
             <motion.div
                 className="flex flex-col flex-shrink-0 mb-2 min-h-12 relative z-20 bg-background rounded-lg"
@@ -459,7 +459,7 @@ function ObservationList({
                 </div>
 
                 {/* Controls row */}
-                <div className="flex items-center justify-between px-0">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-0">
                     <div className="flex items-center">
                         {hasValidCoords && !showGlobal && (
                             <ToggleGroup
@@ -468,7 +468,7 @@ function ObservationList({
                                 onValueChange={(value) =>
                                     value && setSearchRadius(parseInt(value))
                                 }
-                                className="rounded-lg mx-0"
+                                className="rounded-lg mx-0 flex-shrink-0"
                             >
                                 <ToggleGroupItem
                                     value="20"
@@ -498,7 +498,7 @@ function ObservationList({
                             onValueChange={(value: ViewMode) =>
                                 value && setViewMode(value)
                             }
-                            className="border-0 rounded-lg mx-0"
+                            className="border-0 rounded-lg mx-0 flex-shrink-0"
                         >
                             <ToggleGroupItem
                                 value="grid"
@@ -521,7 +521,7 @@ function ObservationList({
             </motion.div>
 
             {/* Content wrapper with constrained height */}
-            <div className="flex-1 overflow-y-auto min-h-0">
+            <div className="flex-1 overflow-y-auto min-h-0 max-h-full">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={viewMode}
@@ -609,7 +609,7 @@ function ObservationList({
                                                             </span>
                                                         </div>
                                                     </AccordionTrigger>
-                                                    <AccordionContent className="pt-4 pb-4 px-4 overflow-y-scrollo flex-1 min-h-0">
+                                                    <AccordionContent className="pt-4 pb-4 px-4 overflow-y-auto flex-1 min-h-0">
                                                         {isNewRadiusLoading ? (
                                                             <AccordionItemLoadingSkeleton />
                                                         ) : viewMode ===
