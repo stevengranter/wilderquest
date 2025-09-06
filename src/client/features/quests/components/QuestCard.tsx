@@ -95,7 +95,7 @@ function QuestCardContent({
         : 'Date TBD'
 
     const hoverClasses = {
-        lift: 'transition-transform duration-250 hover:-translate-1 hover:shadow-shadow',
+        lift: 'transition-all duration-250 hover:-translate-1 hover:shadow-shadow',
         shadow: 'transition-shadow duration-200 hover:shadow-shadow',
         none: '',
     }
