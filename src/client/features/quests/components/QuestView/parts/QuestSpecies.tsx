@@ -72,21 +72,8 @@ export const QuestSpecies = ({
     viewMode,
     setViewMode,
 }: QuestSpeciesProps) => {
-    // Auto-switch between grid and list based on screen size
-    useEffect(() => {
-        const checkScreenSize = () => {
-            const mobile = window.innerWidth < 640 // sm breakpoint
-            if (mobile && viewMode === 'grid') {
-                setViewMode('list')
-            } else if (!mobile && viewMode === 'list') {
-                setViewMode('grid')
-            }
-        }
-
-        checkScreenSize()
-        window.addEventListener('resize', checkScreenSize)
-        return () => window.removeEventListener('resize', checkScreenSize)
-    }, []) // Remove viewMode from dependencies to prevent overriding manual changes
+    // Removed auto-switching behavior to respect user's manual view mode selection
+    // Users can now choose their preferred view mode regardless of screen size
 
     const observer = useRef<IntersectionObserver | null>(null)
 
