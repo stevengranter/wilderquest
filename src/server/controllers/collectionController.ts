@@ -3,7 +3,11 @@ import { z } from 'zod'
 import { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
 import { type CollectionRepository } from '../repositories/CollectionRepository.js'
 import { createCollectionService } from '../services/CollectionService.js'
-import { Collection, CollectionSchema, CreateCollectionSchema } from '../models/_index.js'
+import {
+    Collection,
+    CollectionSchema,
+    CreateCollectionSchema,
+} from '../models/index.js'
 
 export function createCollectionController(
     collectionRepo: CollectionRepository

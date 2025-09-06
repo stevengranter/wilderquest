@@ -1,4 +1,4 @@
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@/components/ui'
 import { Trophy, Target, Leaf } from 'lucide-react'
 
 interface UserStatsProps {

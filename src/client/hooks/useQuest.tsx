@@ -1,4 +1,4 @@
-import QuestEventToast from '@/components/ui/QuestEventToast'
+import { QuestEventToast } from '@/features/quests/components'
 import {
     QueryClient,
     useMutation,

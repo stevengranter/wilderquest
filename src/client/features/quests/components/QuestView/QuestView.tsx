@@ -1,12 +1,12 @@
-import { Card } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui'
 import {
+    Skeleton,
+    Button,
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
-} from '@/components/ui/accordion'
+} from '@/components/ui'
 import { useQuestContext } from '@/features/quests/context/QuestContext'
 import { useTaxaWithProgress } from '../../hooks/useTaxaWithProgress'
 import { QuestHeader } from './parts/QuestHeader'

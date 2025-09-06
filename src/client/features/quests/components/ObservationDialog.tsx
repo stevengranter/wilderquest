@@ -13,14 +13,13 @@ import {
     DialogPortal,
     DialogTitle,
     DialogTrigger,
-} from '@/components/ui/dialog'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import {
+    ToggleGroup,
+    ToggleGroupItem,
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
-} from '@/components/ui/accordion'
+} from '@/components/ui'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 // Grid View Component

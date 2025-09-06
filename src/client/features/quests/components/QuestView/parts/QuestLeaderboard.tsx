@@ -7,19 +7,19 @@ import {
 } from 'react-icons/fa6'
 import { LeaderboardEntry } from '@/features/quests/types'
 import { AvatarOverlay } from '../../AvatarOverlay'
-import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import api from '@/core/api/axios'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
+    Button,
     Dialog,
     DialogContent,
     DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/components/ui'
 import { ShareQuest } from '../../ShareQuest'
 
 type QuestShare = {

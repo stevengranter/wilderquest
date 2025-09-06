@@ -14,8 +14,8 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+    Input,
+} from '@/components/ui'
 
 import { formSchema } from '@/features/quests/schemas/formSchema'
 

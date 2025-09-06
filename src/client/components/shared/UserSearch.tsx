@@ -7,20 +7,18 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { useUserSearch, type SafeUser } from '@/hooks/useUserSearch'
 import { useAuth } from '@/features/auth/useAuth'
 import { AvatarOverlay } from '@/features/quests/components/AvatarOverlay'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui'
 import {
     Command,
     CommandEmpty,
     CommandGroup,
     CommandItem,
     CommandList,
-} from '@/components/ui/command'
-import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from '@/components/ui/popover'
-import { Skeleton } from '@/components/ui/skeleton'
+    Skeleton,
+} from '@/components/ui'
 
 interface UserSearchProps {
     onUserSelect?: (user: SafeUser) => void

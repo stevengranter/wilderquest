@@ -1,5 +1,5 @@
 import RegisterForm from '@/components/auth/RegisterForm'
-import { Card } from '@/components/ui/card'
+import { Card } from '@/components/ui'
 
 export default function Register() {
     return (

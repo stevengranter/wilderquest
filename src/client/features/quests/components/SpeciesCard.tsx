@@ -6,9 +6,14 @@ import { motion } from 'motion/react'
 import React, { useRef } from 'react'
 import getKingdomIcon from '@/features/search/components/getKingdomIcon'
 
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import {
+    Badge,
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    Skeleton,
+} from '@/components/ui'
 import { useSelectionContext } from '@/core/contexts/SelectionContext'
 import { cn } from '@/shared/lib/utils'
 import { useLazyImage } from '@/hooks/useLazyImage'

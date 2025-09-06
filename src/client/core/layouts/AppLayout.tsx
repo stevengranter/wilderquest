@@ -1,7 +1,7 @@
 'use client'
 
 import { Outlet, ScrollRestoration } from 'react-router'
-import { Toaster } from '@/components/ui/sonner'
+import { Toaster } from '@/components/ui'
 import { SearchProvider } from '@/features/search/context/SearchContext'
 import { SelectionProvider } from '@/core/contexts/SelectionContext'
 import { MainMenu } from '@/components/layout/MainMenu'

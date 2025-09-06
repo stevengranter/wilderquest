@@ -1,5 +1,5 @@
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardFooter } from '@/components/ui'
+import { Skeleton } from '@/components/ui'
 
 export function QuestCardSkeleton() {
     return (

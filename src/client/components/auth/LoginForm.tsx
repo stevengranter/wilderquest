@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { Button } from '@/components/ui/button.js'
 import {
+    Button,
     Form,
     FormControl,
     FormDescription,
@@ -14,8 +14,8 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from '@/components/ui/form.js'
-import { Input } from '@/components/ui/input.js'
+    Input,
+} from '@/components/ui'
 import { useAuth } from '@/features/auth/useAuth'
 import { LoginRequestSchema } from '@shared/schemas/Auth'
 

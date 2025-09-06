@@ -2,8 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { Button } from '@/components/ui/button.js'
 import {
+    Button,
     Form,
     FormControl,
     FormDescription,
@@ -11,8 +11,8 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from '@/components/ui/form.js'
-import { Input } from '@/components/ui/input.js'
+    Input,
+} from '@/components/ui'
 import React, { useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '@/features/auth/useAuth'

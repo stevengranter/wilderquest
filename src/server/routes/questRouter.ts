@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { QuestController } from '../controllers/_index.js'
+import { QuestController } from '../controllers/index.js'
 import verifyJWT, { optionalAuthMiddleware } from '../middlewares/verifyJWT.js'
 
 export function createQuestRouter(controller: QuestController) {

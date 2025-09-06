@@ -1,3 +1,7 @@
+import { Link, useLocation, useNavigate } from 'react-router'
+import { useAuth } from '@/features/auth/useAuth'
+import avatar from 'animal-avatar-generator'
+import { ReactSVG } from 'react-svg'
 import {
     Menubar,
     MenubarContent,
@@ -5,12 +9,8 @@ import {
     MenubarMenu,
     MenubarSeparator,
     MenubarTrigger,
-} from '@/components/ui/menubar'
-import { Link, useLocation, useNavigate } from 'react-router'
-import { useAuth } from '@/features/auth/useAuth'
-import avatar from 'animal-avatar-generator'
-import { ReactSVG } from 'react-svg'
-import { Button } from '@/components/ui/button'
+    Button,
+} from '@/components/ui'
 import { paths } from '@/core/routing/paths'
 
 export function MainMenu() {

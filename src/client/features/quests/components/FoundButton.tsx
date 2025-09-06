@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui'
 import { DetailedProgress, QuestMapping, QuestStatus, Share } from '../types'
 import { LoggedInUser } from '@shared/types/authTypes'
 import { cn } from '@/shared/lib/utils'

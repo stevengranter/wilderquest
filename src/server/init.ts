@@ -7,7 +7,7 @@ import {
     createQuestToTaxaRepository,
     createSharedQuestProgressRepository,
     createUserRepository,
-} from './repositories/_index.js'
+} from './repositories/index.js'
 import { getTableColumns } from './utils/getTableColumns.js'
 
 // Initialize db and repositories
@@ -45,7 +45,10 @@ export async function initApp() {
         dbPool,
         questShareColumns
     )
-    const progressColumns = await getTableColumns(dbPool, 'shared_quest_progress')
+    const progressColumns = await getTableColumns(
+        dbPool,
+        'shared_quest_progress'
+    )
     const sharedQuestProgressRepository = createSharedQuestProgressRepository(
         'shared_quest_progress',
         dbPool,
