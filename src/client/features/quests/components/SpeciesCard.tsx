@@ -1,6 +1,6 @@
 'use client'
 
-import { type INatTaxon } from '@shared/types/iNatTypes'
+import { type INatTaxon } from '@shared/types'
 import { ExternalLink } from 'lucide-react'
 import { motion } from 'motion/react'
 import React, { useRef } from 'react'

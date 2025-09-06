@@ -4,7 +4,7 @@ import {
     useQueryClient,
 } from '@tanstack/react-query'
 import api from '@/api/api'
-import { INatTaxon } from '@shared/types/iNatTypes'
+import { INatTaxon } from '@shared/types'
 import { useCallback, useMemo } from 'react'
 import { QuestWithTaxa } from '@/../types/types'
 

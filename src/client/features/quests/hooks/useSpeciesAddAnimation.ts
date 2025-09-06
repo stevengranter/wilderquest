@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 
+import type { TaxonData } from '@shared/types'
+
 interface SpeciesCountItem {
     taxon: {
         id: number
@@ -18,16 +20,6 @@ interface SpeciesCountItem {
         }
     }
     count: number
-}
-
-interface TaxonData {
-    id: number
-    name: string
-    preferred_common_name: string
-    default_photo?: {
-        square_url: string
-        medium_url: string
-    }
 }
 
 interface AnimationInstance {

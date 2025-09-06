@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { LeaderboardEntry } from '@/features/quests/types'
 import { AvatarOverlay } from './AvatarOverlay'
 import { Quest } from '../../../../shared/types/questTypes'
-import { INatTaxon } from '../../../../shared/types/iNatTypes'
+import { INatTaxon } from '@shared/types'
 import { DetailedProgress, QuestMapping } from '../types'
 import { useEffect, useState } from 'react'
 

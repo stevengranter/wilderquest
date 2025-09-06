@@ -19,7 +19,7 @@ import {
     QuestMapping,
     Share,
 } from '@/features/quests/types'
-import { INatTaxon } from '@shared/types/iNatTypes'
+import { INatTaxon } from '@shared/types'
 import { Quest } from '../../server/models/quests'
 import { QuestWithTaxa } from '../../types/types'
 

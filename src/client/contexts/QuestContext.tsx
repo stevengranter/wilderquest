@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useContext } from 'react'
 import { useQuestDisplay } from '@/hooks/useQuest'
-import { INatTaxon } from '@shared/types/iNatTypes'
+import { INatTaxon } from '@shared/types'
 // Import QuestMapping type
 import {
     AggregatedProgress,

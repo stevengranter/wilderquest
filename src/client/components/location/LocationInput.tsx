@@ -7,10 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useGeoLocation } from '@/contexts/GeoLocationProvider'
-import {
-    LocationIQPlace,
-    LocationIQResults,
-} from '../../../shared/types/LocationIQPlace'
+import { LocationIQPlace, LocationIQResults } from '@shared/types'
 
 export default function LocationInput() {
     const { geoLocation, setGeoLocation } = useGeoLocation()
@@ -40,9 +37,9 @@ export default function LocationInput() {
         const geoLocationData = {
             longitude: city.lon,
             latitude: city.lat,
-            city: city.address.city,
-            state: city.address.state,
-            country: city.address.country,
+            city: city.address.city || '',
+            state: city.address.state || '',
+            country: city.address.country || '',
         }
         setGeoLocation(geoLocationData)
     }
@@ -83,7 +80,7 @@ export default function LocationInput() {
             </form>
             {results &&
                 results.length > 0 &&
-                results.map((place) => (
+                results.map((place: LocationIQPlace) => (
                     <Button
                         key={place.place_id}
                         onClick={(e) => {

@@ -9,7 +9,7 @@ import { QuestListView } from '../../QuestListView'
 import { QuestMapView } from '../../QuestMapView'
 // Import QuestMapping type
 import { AggregatedProgress, DetailedProgress, QuestMapping, QuestStatus, Share } from '@/features/quests/types'
-import { INatTaxon } from '@shared/types/iNatTypes'
+import { INatTaxon } from '@shared/types'
 import { LoggedInUser } from '@shared/types/authTypes'
 import { useSpeciesActions, useSpeciesProgress } from '@/hooks/useQuest'
 

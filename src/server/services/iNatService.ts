@@ -1,5 +1,5 @@
 import { cacheService } from './cache/cacheService.js'
-import { INatTaxon } from '@shared/types/iNatTypes.js'
+import { INatTaxon } from '../../shared/types/index.js'
 import { BATCH_SIZE, iNatAPI } from '../utils/iNatAPI.js'
 
 async function fetchTaxaByIds(taxonIds: number[]): Promise<INatTaxon[]> {

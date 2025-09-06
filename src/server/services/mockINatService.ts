@@ -1,8 +1,9 @@
 import {
     INatTaxon,
+    INatUser,
     INatObservationsResponse,
     INatTaxaResponse,
-} from '../../shared/types/iNatTypes.js'
+} from '../../shared/types/index.js'
 
 // Mock data for development - expanded with diverse taxa
 const mockTaxa: INatTaxon[] = [
@@ -365,6 +366,15 @@ const mockTaxa: INatTaxon[] = [
     },
 ]
 
+const mockUser: INatUser = {
+    id: 1,
+    login: 'mockuser',
+    name: 'Mock User',
+    user_icon_url: 'https://via.placeholder.com/100x100?text=Mock+User',
+    observations_count: 42,
+    identifications_count: 15,
+}
+
 const mockObservationsResponse: INatObservationsResponse = {
     total_results: 6,
     page: 1,
@@ -375,6 +385,7 @@ const mockObservationsResponse: INatObservationsResponse = {
             uuid: 'mock-uuid-1',
             species_guess: 'Mock Species 1',
             taxon: mockTaxa[0], // Common Raven
+            user: mockUser,
             observed_on: '2024-01-01',
             time_observed_at: '2024-01-01T12:00:00Z',
             created_at: '2024-01-01T12:00:00Z',
@@ -399,6 +410,7 @@ const mockObservationsResponse: INatObservationsResponse = {
                     attribution: 'Mock Photo',
                     url: 'https://via.placeholder.com/500x500?text=Mock+Observation',
                     original_dimensions: { height: 500, width: 500 },
+                    flags: [],
                 },
             ],
         },
@@ -407,6 +419,7 @@ const mockObservationsResponse: INatObservationsResponse = {
             uuid: 'mock-uuid-2',
             species_guess: 'Mock Species 2',
             taxon: mockTaxa[1], // Blue Jay
+            user: mockUser,
             observed_on: '2024-01-02',
             time_observed_at: '2024-01-02T12:00:00Z',
             created_at: '2024-01-02T12:00:00Z',
@@ -431,6 +444,7 @@ const mockObservationsResponse: INatObservationsResponse = {
                     attribution: 'Mock Photo 2',
                     url: 'https://via.placeholder.com/500x500?text=Mock+Observation+2',
                     original_dimensions: { height: 500, width: 500 },
+                    flags: [],
                 },
             ],
         },
@@ -439,6 +453,7 @@ const mockObservationsResponse: INatObservationsResponse = {
             uuid: 'mock-uuid-3',
             species_guess: 'Mock Species 3',
             taxon: mockTaxa[2], // Black Bear
+            user: mockUser,
             observed_on: '2024-01-03',
             time_observed_at: '2024-01-03T12:00:00Z',
             created_at: '2024-01-03T12:00:00Z',
@@ -463,6 +478,7 @@ const mockObservationsResponse: INatObservationsResponse = {
                     attribution: 'Mock Photo 3',
                     url: 'https://via.placeholder.com/500x500?text=Mock+Observation+3',
                     original_dimensions: { height: 500, width: 500 },
+                    flags: [],
                 },
             ],
         },

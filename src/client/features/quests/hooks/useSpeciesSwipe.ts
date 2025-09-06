@@ -1,26 +1,6 @@
 import { useCallback, useState } from 'react'
 
-interface TaxonData {
-    default_photo?: {
-        id: number
-        license_code: string | null
-        attribution: string
-        url: string
-        original_dimensions: {
-            height: number
-            width: number
-        }
-        flags: unknown[]
-        attribution_name: string | null
-        square_url: string
-        medium_url: string
-    }
-    id: number
-    name: string
-    preferred_common_name: string
-    rank?: string
-    observations_count?: number
-}
+import type { TaxonData } from '@shared/types'
 
 interface SpeciesCountItem {
     taxon: TaxonData

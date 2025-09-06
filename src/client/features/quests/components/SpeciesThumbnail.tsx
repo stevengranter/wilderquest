@@ -1,24 +1,7 @@
 import React from 'react'
 import { X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-
-interface TaxonData {
-    id: number
-    name: string
-    preferred_common_name: string
-    rank?: string
-    default_photo?: {
-        id: number
-        license_code: string | null
-        attribution: string
-        url: string
-        original_dimensions: { height: number; width: number }
-        flags: unknown[]
-        attribution_name: string | null
-        square_url: string
-        medium_url: string
-    }
-}
+import type { TaxonData } from '@shared/types'
 
 interface SpeciesCountItem {
     taxon: TaxonData

@@ -15,15 +15,15 @@ import { useSpeciesSwipe } from '@/features/quests/hooks/useSpeciesSwipe'
 import {
     ResponsiveSpeciesGrid,
     ResponsiveSpeciesThumbnail,
-    type TaxonData,
     type SpeciesCountItem,
 } from '@/features/quests/components/ResponsiveSpeciesThumbnail'
+import type { TaxonData } from '@shared/types'
 
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { useSpeciesAddTrigger } from './SpeciesAnimationProvider'
 import api from '@/api/api'
 import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
-import { INatTaxon } from '@shared/types/iNatTypes'
+import { INatTaxon } from '@shared/types'
 
 interface SpeciesSwipeSelectorProps {
     questSpecies: Map<number, SpeciesCountItem>

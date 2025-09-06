@@ -1,5 +1,5 @@
 import { Quest } from '../../../server/models/quests'
-import { INatTaxon } from '@shared/types/iNatTypes'
+import { INatTaxon } from '@shared/types'
 
 export type QuestStatus = 'pending' | 'active' | 'paused' | 'ended'
 export type QuestMode = 'competitive' | 'cooperative'

@@ -32,37 +32,7 @@ import { SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeS
 import { SpeciesCountItem } from '@/features/quests/components/ResponsiveSpeciesThumbnail'
 import { SpeciesAnimationProvider } from '@/features/quests/components/SpeciesAnimationProvider'
 import { formSchema } from '@/features/quests/schemas/formSchema'
-
-interface _TaxonData {
-    default_photo: DefaultPhoto
-    id: number
-    name: string
-    preferred_common_name: string
-}
-
-interface DefaultPhoto {
-    id: number
-    license_code: string
-    attribution: string
-    url: string
-    original_dimensions: {
-        height: number
-        width: number
-    }
-    flags: {
-        id: number
-        flag: string
-        comment: string
-        user_id: number
-        resolver_id: number
-        resolved: boolean
-        created_at: string
-        updated_at: string
-    }[]
-    attribution_name: string | null
-    square_url: string
-    medium_url: string
-}
+import type { TaxonData } from '@shared/types'
 
 export function CreateQuest() {
     const { isAuthenticated } = useAuth()

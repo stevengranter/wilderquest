@@ -1,1 +1,1 @@
-export type { QuestSchema, Quest } from '../../shared/types/questTypes.js'
+export type { QuestSchema, Quest } from '../../shared/types/index.js'

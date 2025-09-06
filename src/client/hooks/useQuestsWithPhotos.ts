@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import api from '@/api/api'
-import { INatTaxon } from '../../shared/types/iNatTypes'
+import { INatTaxon } from '@shared/types'
 import { QuestWithTaxa } from '../../types/types'
 
 interface QuestWithPhoto extends QuestWithTaxa {

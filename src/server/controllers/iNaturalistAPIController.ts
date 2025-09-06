@@ -18,7 +18,7 @@ let consecutiveFailures = 0
 const MAX_CONSECUTIVE_FAILURES = 5 // Only activate after 5 consecutive failures
 import logger from '../config/logger.js'
 import { titleCase } from '../utils/titleCase.js'
-import { INatObservation, INatTaxon } from '@shared/types/iNatTypes.js'
+import { INatObservation, INatTaxon } from '../../shared/types/index.js'
 import { AppError } from '../middlewares/errorHandler.js'
 import { MockINatService } from '../services/mockINatService.js'
 
@@ -59,7 +59,7 @@ function processINaturalistData(data: ProcessableData): ProcessableData {
             }
         }
 
-        return processed as INatTaxon | INatObservation
+        return processed as unknown as INatTaxon | INatObservation
     }
 
     return data

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useSearchParams } from 'react-router'
 import { Input } from '@/components/ui/input'
-import { INatTaxon } from '../../../../../shared/types/iNatTypes'
+import { INatTaxon } from '@shared/types'
 
 function _TaxaSearch() {
     const { register } = useForm()

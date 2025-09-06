@@ -9,28 +9,7 @@ import {
 } from './SpeciesCardWithObservations'
 import { useAnimationTarget } from './SpeciesAnimationProvider'
 import { cn } from '@/lib/utils'
-import { INatTaxon } from '@shared/types/iNatTypes'
-
-export interface TaxonData {
-    id: number
-    name: string
-    preferred_common_name: string
-    rank?: string
-    default_photo?: {
-        id: number
-        license_code: string | null
-        attribution: string
-        url: string
-        original_dimensions: { height: number; width: number }
-        flags: unknown[]
-        attribution_name: string | null
-        square_url: string
-        medium_url: string
-    }
-    iconic_taxon_name?: string
-    observations_count?: number
-    wikipedia_url?: string
-}
+import { INatTaxon, TaxonData } from '@shared/types'
 
 export interface SpeciesCountItem {
     taxon: TaxonData

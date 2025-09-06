@@ -1,4 +1,4 @@
-import { INatTaxon } from '@shared/types/iNatTypes'
+import { INatTaxon } from '@shared/types'
 import { ReactNode } from 'react'
 import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
 import { Quest as ServerQuest } from '../../../../server/models/quests'

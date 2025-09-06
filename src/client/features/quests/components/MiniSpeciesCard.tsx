@@ -1,6 +1,6 @@
 'use client'
 
-import { INatTaxon } from '@shared/types/iNatTypes'
+import { INatTaxon, TaxonData } from '@shared/types'
 import { X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import React, { useState } from 'react'
@@ -15,27 +15,6 @@ import {
 } from './SpeciesCardWithObservations'
 import { useAnimationTarget } from './SpeciesAnimationProvider'
 import { cn } from '@/lib/utils'
-
-interface TaxonData {
-    id: number
-    name: string
-    preferred_common_name: string
-    rank?: string
-    default_photo?: {
-        id: number
-        license_code: string | null
-        attribution: string
-        url: string
-        original_dimensions: { height: number; width: number }
-        flags: unknown[]
-        attribution_name: string | null
-        square_url: string
-        medium_url: string
-    }
-    iconic_taxon_name?: string
-    observations_count?: number
-    wikipedia_url?: string
-}
 
 interface SpeciesCountItem {
     taxon: TaxonData

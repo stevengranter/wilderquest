@@ -9,23 +9,7 @@ import React, {
 } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { createPortal } from 'react-dom'
-
-interface TaxonData {
-    id: number
-    name: string
-    preferred_common_name: string
-    default_photo?: {
-        id: number
-        license_code: string | null
-        attribution: string
-        url: string
-        original_dimensions: { height: number; width: number }
-        flags: unknown[]
-        attribution_name: string | null
-        square_url: string
-        medium_url: string
-    }
-}
+import type { TaxonData } from '@shared/types'
 
 interface SpeciesCountItem {
     taxon: TaxonData

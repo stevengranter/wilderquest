@@ -13,7 +13,7 @@ import {
 import { ResponsiveSpeciesGrid } from '@/features/quests/components/ResponsiveSpeciesThumbnail'
 import { useSpeciesAddTrigger } from './SpeciesAnimationProvider'
 import api from '@/api/api'
-import type { INatTaxon } from '@shared/types/iNatTypes'
+import type { INatTaxon, TaxonData } from '@shared/types'
 
 interface SpeciesSelectorProps {
     selectedTaxa: INatTaxon[]
@@ -66,16 +66,20 @@ export function SpeciesSelector({
             {/* Left Column - Current Species */}
             <div className="flex flex-col lg:col-span-1">
                 <ResponsiveSpeciesGrid
-                    species={selectedTaxa.map((taxon) => ({
-                        id: taxon.id,
-                        name: taxon.name,
-                        preferred_common_name: taxon.preferred_common_name,
-                        rank: taxon.rank,
-                        default_photo: taxon.default_photo,
-                        iconic_taxon_name: taxon.iconic_taxon_name,
-                        observations_count: taxon.observations_count,
-                        wikipedia_url: taxon.wikipedia_url,
-                    }))}
+                    species={selectedTaxa.map(
+                        (taxon) =>
+                            ({
+                                id: taxon.id,
+                                name: taxon.name,
+                                preferred_common_name:
+                                    taxon.preferred_common_name,
+                                rank: taxon.rank,
+                                default_photo: taxon.default_photo,
+                                iconic_taxon_name: taxon.iconic_taxon_name,
+                                observations_count: taxon.observations_count,
+                                wikipedia_url: taxon.wikipedia_url,
+                            }) as TaxonData
+                    )}
                     onRemove={(species) => {
                         // Handle both TaxonData and SpeciesCountItem
                         const taxonId =
@@ -175,12 +179,12 @@ export function SpeciesSelector({
                                                 )
                                             if (cardElement) {
                                                 triggerAnimation(
-                                                    s.taxon,
+                                                    s.taxon as TaxonData,
                                                     cardElement
                                                 )
                                             }
                                         }
-                                        onToggleTaxon(s.taxon)
+                                        onToggleTaxon(s.taxon as INatTaxon)
                                     }}
                                     variant={isAdded ? 'neutral' : 'default'}
                                     disabled={isAdded}

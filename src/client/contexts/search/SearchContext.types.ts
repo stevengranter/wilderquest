@@ -1,22 +1,21 @@
-import { INatObservationsResponse, INatTaxaResponse } from '../../../shared/types/iNatTypes'
+import { INatObservationsResponse, INatTaxaResponse } from '@shared/types'
 
 export enum ViewMode {
     Grid = 'grid',
     List = 'list',
-    Map = 'map'
+    Map = 'map',
 }
 
-export type SearchResults = INatTaxaResponse | INatObservationsResponse;
+export type SearchResults = INatTaxaResponse | INatObservationsResponse
 
 interface SearchContextState {
-    viewMode: ViewMode;
-    results: SearchResults | undefined;
+    viewMode: ViewMode
+    results: SearchResults | undefined
 }
 
 interface SearchContextActions {
-    setViewMode: (mode: ViewMode) => void;
-    setResults: (results: SearchResults) => void;
+    setViewMode: (mode: ViewMode) => void
+    setResults: (results: SearchResults) => void
 }
 
-export type SearchContextType = SearchContextState & SearchContextActions;
-
+export type SearchContextType = SearchContextState & SearchContextActions

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { LocationIQResults } from '../../../shared/types/LocationIQPlace'
+import { LocationIQResults } from '@shared/types'
 
 function isValidLatLng(latitude: number, longitude: number) {
     const isLatValid = latitude >= -90 && latitude <= 90
@@ -7,11 +7,15 @@ function isValidLatLng(latitude: number, longitude: number) {
     return isLatValid && isLngValid
 }
 
-export async function getCitySuggestions(city: string): Promise<LocationIQResults | undefined> {
+export async function getCitySuggestions(
+    city: string
+): Promise<LocationIQResults | undefined> {
     console.log('Submitting city: ', city, '')
     try {
         const encodedCity = encodeURIComponent(city)
-        const results = await axios.get<LocationIQResults>(`/api/service/geo/forward?city=${encodedCity}`)
+        const results = await axios.get<LocationIQResults>(
+            `/api/service/geo/forward?city=${encodedCity}`
+        )
         if (results.data && results.data.length > 0) {
             console.log('Received results: ')
             console.table(results.data)
@@ -25,13 +29,19 @@ export async function getCitySuggestions(city: string): Promise<LocationIQResult
     }
 }
 
-export async function requestCityFromGeoLocation(latitude: number, longitude: number) {
-    if (!isValidLatLng(latitude, longitude)) throw new Error('Invalid latitude or longitude')
+export async function requestCityFromGeoLocation(
+    latitude: number,
+    longitude: number
+) {
+    if (!isValidLatLng(latitude, longitude))
+        throw new Error('Invalid latitude or longitude')
 
     try {
         const encodedLatitude = encodeURIComponent(latitude.toString())
         const encodedLongitude = encodeURIComponent(longitude.toString())
-        const results = await axios.get(`/api/service/geo/reverse?lat=${encodedLatitude}&lon=${encodedLongitude}`)
+        const results = await axios.get(
+            `/api/service/geo/reverse?lat=${encodedLatitude}&lon=${encodedLongitude}`
+        )
         console.log(results)
         if (results.data) {
             console.log(results.data.display_name)
@@ -47,14 +57,14 @@ export function getGeoLocationFromBrowser() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                return ({
+                return {
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude,
-                })
+                }
             },
             (error) => {
                 throw new Error(error.message)
-            },
+            }
         )
     } else {
         throw new Error('Geolocation is not supported by this browser.')

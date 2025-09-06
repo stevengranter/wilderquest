@@ -8,7 +8,7 @@ import type { LatLngBounds, LeafletEvent } from 'leaflet'
 import {
     INatObservation,
     INatObservationsResponse,
-} from '../../../shared/types/iNatTypes'
+} from '@shared/types'
 
 type MapViewProps = {
     taxonId?: number

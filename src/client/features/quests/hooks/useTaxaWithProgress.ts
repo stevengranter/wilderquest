@@ -1,4 +1,4 @@
-import { INatTaxon } from '@shared/types/iNatTypes'
+import { INatTaxon } from '@shared/types'
 import { useMemo } from 'react'
 import { AggregatedProgress, DetailedProgress, QuestMapping } from '@/features/quests/types'
 

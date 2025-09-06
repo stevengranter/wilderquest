@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { INatTaxaResponse } from '../../shared/types/iNatTypes.js'
+import { INatAutocompleteResponse } from '@shared/types'
 
 const API_URL = '/api/iNatAPI/taxa/autocomplete'
 
@@ -9,11 +9,11 @@ export default async function fetchSearchResults({
 }: {
     query: string
     pageParam?: number
-}): Promise<INatTaxaResponse> {
+}): Promise<INatAutocompleteResponse> {
     if (!query || query.length < 2) {
         return { results: [], page: 1, per_page: 20, total_results: 0 }
     }
-    const { data } = await axios.get<INatTaxaResponse>(API_URL, {
+    const { data } = await axios.get<INatAutocompleteResponse>(API_URL, {
         params: {
             q: query,
             page: pageParam,

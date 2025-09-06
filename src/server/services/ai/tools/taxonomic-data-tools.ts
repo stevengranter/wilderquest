@@ -1,10 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import axios from 'axios'
-import {
-    INatObservation,
-    INatTaxon,
-} from '../../../../shared/types/iNatTypes.js'
+import { INatObservation, INatTaxon } from '../../../../shared/types/index.js'
 
 export const displayTaxonomicData = tool({
     description:
