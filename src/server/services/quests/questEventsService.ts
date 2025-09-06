@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import { serverDebug } from '../../../shared/utils/debug.js'
 
 type Client = {
     id: string
@@ -15,10 +16,9 @@ export const subscribe = (req: Request, res: Response) => {
         res,
     }
 
-    console.log(
-        '🔌 SERVER: New EventSource client connecting to quest:',
+    serverDebug.events(
+        'New EventSource client connecting to quest %s, clientId: %s',
         questId,
-        'clientId:',
         clientId
     )
 
@@ -30,46 +30,43 @@ export const subscribe = (req: Request, res: Response) => {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Headers': 'Cache-Control',
         })
-        console.log('🔌 SERVER: EventSource headers sent successfully')
+        serverDebug.events('EventSource headers sent successfully')
 
         if (!clients[questId]) {
             clients[questId] = []
-            console.log(
-                '🔌 SERVER: Created new client array for quest:',
+            serverDebug.events(
+                'Created new client array for quest: %s',
                 questId
             )
         }
 
         clients[questId].push(newClient)
-        console.log(
-            '🔌 SERVER: Added client to quest',
+        serverDebug.events(
+            'Added client to quest %s - total clients: %s',
             questId,
-            '- total clients:',
             clients[questId].length
         )
 
         // Send a comment to keep the connection alive
         res.write(': EventSource connection established\n\n')
-        console.log('🔌 SERVER: Sent initial comment to keep connection alive')
-        console.log('🔌 SERVER: Connection headers sent, waiting for events...')
+        serverDebug.events('Sent initial comment to keep connection alive')
+        serverDebug.events('Connection headers sent, waiting for events...')
 
         req.on('close', () => {
-            console.log(
-                '🔌 SERVER: Client disconnected from quest:',
+            serverDebug.events(
+                'Client disconnected from quest %s, clientId: %s',
                 questId,
-                'clientId:',
                 clientId
             )
             clients[questId] = clients[questId].filter((c) => c.id !== clientId)
-            console.log(
-                '🔌 SERVER: Remaining clients for quest',
+            serverDebug.events(
+                'Remaining clients for quest %s: %s',
                 questId,
-                ':',
                 clients[questId].length
             )
         })
     } catch (error) {
-        console.error('🔌 SERVER: Error setting up EventSource:', error)
+        serverDebug.events('Error setting up EventSource: %o', error)
         if (!res.headersSent) {
             res.status(500).json({ error: 'Failed to setup EventSource' })
         }
@@ -77,12 +74,11 @@ export const subscribe = (req: Request, res: Response) => {
 }
 
 export const sendEvent = (questId: string, event: Record<string, unknown>) => {
-    console.log('📤 SERVER: Sending event to quest', questId, ':', event)
+    serverDebug.events('Sending event to quest %s: %o', questId, event)
     const questClients = clients[questId]
-    console.log(
-        '📤 SERVER: Found',
+    serverDebug.events(
+        'Found %s clients for quest %s',
         questClients?.length || 0,
-        'clients for quest',
         questId
     )
 
@@ -90,38 +86,36 @@ export const sendEvent = (questId: string, event: Record<string, unknown>) => {
         questClients.forEach((client, index) => {
             try {
                 const messageData = `data: ${JSON.stringify(event)}\n\n`
-                console.log(
-                    '📤 SERVER: Sending to client',
+                serverDebug.events(
+                    'Sending to client %s of %s',
                     index + 1,
-                    'of',
                     questClients.length
                 )
-                console.log('📤 SERVER: Message data:', messageData)
+                serverDebug.events('Message data: %s', messageData)
                 const writeResult = client.res.write(messageData)
-                console.log('📤 SERVER: Write result:', writeResult)
-                console.log('📤 SERVER: Successfully sent to client', index + 1)
-                console.log(
-                    '📤 SERVER: Client response writable:',
+                serverDebug.events('Write result: %s', writeResult)
+                serverDebug.events('Successfully sent to client %s', index + 1)
+                serverDebug.events(
+                    'Client response writable: %s',
                     client.res.writable
                 )
-                console.log(
-                    '📤 SERVER: Client response destroyed:',
+                serverDebug.events(
+                    'Client response destroyed: %s',
                     client.res.destroyed
                 )
             } catch (error) {
-                console.error(
-                    '📤 SERVER: Error sending to client',
+                serverDebug.events(
+                    'Error sending to client %s: %o',
                     index + 1,
-                    ':',
                     error
                 )
-                console.error(
-                    '📤 SERVER: Client response writable:',
+                serverDebug.events(
+                    'Client response writable: %s',
                     client.res.writable
                 )
             }
         })
     } else {
-        console.warn('📤 SERVER: No clients found for quest', questId)
+        serverDebug.events('No clients found for quest %s', questId)
     }
 }

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { toast } from 'sonner'
+import { clientDebug } from '@shared/utils/debug'
 
 export const handleError = (error: unknown) => {
     const isProduction = process.env.NODE_ENV === 'production'
@@ -10,7 +11,7 @@ export const handleError = (error: unknown) => {
         if (Array.isArray(err?.data.errors)) {
             for (const val of err.data.errors) {
                 if (!isProduction) {
-                    console.log('Axios validation error:', val.message)
+                    clientDebug.general('Axios validation error:', val.message)
                 }
                 toast.error(
                     val.description ||
@@ -23,19 +24,19 @@ export const handleError = (error: unknown) => {
                 const errorMessage = err.data.errors[e][0]
                 toast.error(errorMessage)
                 if (!isProduction) {
-                    console.log('Axios object error:', errorMessage)
+                    clientDebug.general('Axios object error:', errorMessage)
                 }
             }
         } else if (err?.data) {
             if (!isProduction) {
-                console.log('Axios data error:', err)
+                clientDebug.general('Axios data error:', err)
                 // Log rate limit source for debugging
                 if (err.status === 429) {
-                    console.log(
+                    clientDebug.general(
                         '🚨 429 Error Source:',
                         err.data.source || 'unknown'
                     )
-                    console.log('🚨 Rate limit headers:', err.headers)
+                    clientDebug.general('🚨 Rate limit headers:', err.headers)
                 }
             }
             // Special handling for 429 errors
@@ -48,14 +49,17 @@ export const handleError = (error: unknown) => {
             }
         } else if (err?.status === 401) {
             if (!isProduction) {
-                console.log('Axios 401 error: Please login')
+                clientDebug.general('Axios 401 error: Please login')
             }
             toast.error('Please login to continue.')
             window.history.pushState({}, 'LoginPage', '/login')
         } else {
             // Fallback for other Axios errors without specific data/status handling
             if (!isProduction) {
-                console.log('Generic Axios error:', error.message || error)
+                clientDebug.general(
+                    'Generic Axios error:',
+                    error.message || error
+                )
             }
             toast.error(error.message || 'An Axios error occurred.')
         }
@@ -63,7 +67,7 @@ export const handleError = (error: unknown) => {
     // Next, check if it's a standard JavaScript Error
     else if (error instanceof Error) {
         if (!isProduction) {
-            console.log('Standard Error:', error.message)
+            clientDebug.general('Standard Error:', error.message)
         }
         toast.error(error.message)
     }
@@ -72,7 +76,7 @@ export const handleError = (error: unknown) => {
         const errorMessage =
             typeof error === 'string' ? error : 'An unknown error occurred.'
         if (!isProduction) {
-            console.log('Unknown Error:', error)
+            clientDebug.general('Unknown Error:', error)
         }
         toast.error(errorMessage)
     }

@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { QuestProvider } from '@/features/quests/context/QuestContext'
 import { QuestView } from '@/features/quests/components/QuestView/QuestView'
 import api from '@/core/api/axios'
+import { clientDebug } from '@shared/utils/debug'
 
 export default function SharedQuestGuest() {
     const { token } = useParams()
@@ -14,7 +15,7 @@ export default function SharedQuestGuest() {
             api.post(`/quest-sharing/shares/token/${token}/accessed`).catch(
                 (err: unknown) => {
                     // Silently fail - access tracking is not critical
-                    console.log('Access tracking failed:', err)
+                    clientDebug.events('Access tracking failed:', err)
                 }
             )
         }

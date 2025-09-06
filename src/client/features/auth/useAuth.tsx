@@ -15,6 +15,7 @@ import type {
     RegisterResponseData,
 } from '@shared/types/authTypes'
 import { LoginRequestBody, RegisterRequestBody } from '@/types'
+import { clientDebug } from '@shared/utils/debug'
 
 type AuthContextType = {
     isAuthenticated: boolean
@@ -118,16 +119,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             })()
 
         if (!currentRefreshToken || !currentUser?.cuid) {
-            console.log(
+            clientDebug.auth(
                 '❌ Missing refresh token or user cuid for token refresh'
             )
-            console.log('Has refresh token:', !!currentRefreshToken)
-            console.log('Has user cuid:', !!currentUser?.cuid)
+            clientDebug.auth('Has refresh token:', !!currentRefreshToken)
+            clientDebug.auth('Has user cuid:', !!currentUser?.cuid)
             return null
         }
 
         try {
-            console.log(
+            clientDebug.auth(
                 '🔄 Attempting to refresh access token with cuid:',
                 currentUser.cuid
             )
@@ -137,7 +138,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 refresh_token: currentRefreshToken,
             })
 
-            console.log('📥 Refresh response:', response.data)
+            clientDebug.auth('📥 Refresh response:', response.data)
 
             // Handle your server's response format
             const newAccessToken =
@@ -148,11 +149,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 response.data.refresh_token || response.data.refreshToken
 
             if (!newAccessToken) {
-                console.error('❌ No access token in refresh response')
+                clientDebug.auth('❌ No access token in refresh response')
                 return null
             }
 
-            console.log('✅ Token refresh successful')
+            clientDebug.auth('✅ Token refresh successful')
 
             // Update the refresh token if a new one was provided
             if (newRefreshToken) {
@@ -162,7 +163,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             return newAccessToken
         } catch (error) {
-            console.error('❌ Token refresh failed:', error)
+            clientDebug.auth('❌ Token refresh failed:', error)
             return null
         }
     }
@@ -173,27 +174,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             accessToken || getFromStorage(STORAGE_KEYS.ACCESS_TOKEN)
 
         if (!currentToken) {
-            console.log('🔒 No access token available')
+            clientDebug.auth('🔒 No access token available')
             return null
         }
 
         if (verifyToken(currentToken) && !isTokenExpiringSoon(currentToken)) {
-            console.log('✅ Current token is valid and not expiring soon')
+            clientDebug.auth('✅ Current token is valid and not expiring soon')
             return currentToken
         }
 
-        console.log('🔄 Token expired or expiring soon, attempting refresh...')
+        clientDebug.auth(
+            '🔄 Token expired or expiring soon, attempting refresh...'
+        )
 
         try {
             const newToken = await refreshAccessToken()
 
             if (newToken && verifyToken(newToken)) {
-                console.log('✅ Token refresh successful, updating state')
+                clientDebug.auth('✅ Token refresh successful, updating state')
                 setAccessToken(newToken)
                 saveToStorage(STORAGE_KEYS.ACCESS_TOKEN, newToken)
                 return newToken
             } else {
-                console.error(
+                clientDebug.auth(
                     '❌ Token refresh failed or returned invalid token'
                 )
                 // Clear all auth data and force re-login
@@ -219,46 +222,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const login = async (
         credentials: LoginRequestBody
     ): Promise<LoginResponseData | undefined> => {
-        console.log('🔐 LOGIN FUNCTION CALLED')
-        console.log('🔐 Credentials received:', {
+        clientDebug.auth('🔐 LOGIN FUNCTION CALLED')
+        clientDebug.auth('🔐 Credentials received:', {
             ...credentials,
             password: '[HIDDEN]',
         })
 
         try {
-            console.log('🔐 Making login request to /api/auth/login')
+            clientDebug.auth('🔐 Making login request to /api/auth/login')
 
             const response = await axios.post('/api/auth/login', credentials)
             const responseData = response.data
 
-            console.log('📦 Raw login response received successfully!')
-            console.log('📦 Response type:', typeof response.data)
-            console.log(
+            clientDebug.auth('📦 Raw login response received successfully!')
+            clientDebug.auth('📦 Response type:', typeof response.data)
+            clientDebug.auth(
                 '📦 Response keys:',
                 response.data ? Object.keys(response.data) : 'No response'
             )
-            console.log(
+            clientDebug.auth(
                 '📦 Full response object:',
                 JSON.stringify(response.data, null, 2)
             )
 
             if (!response.data) {
-                console.error('❌ Response data is null/undefined')
+                clientDebug.auth('❌ Response data is null/undefined')
                 throw new Error('No response received from server')
             }
 
             // Log each expected property
-            console.log('🔍 Checking response properties:')
-            console.log('🔍 response.user:', response.data.user)
-            console.log('🔍 response.access_token:', response.data.access_token)
-            console.log(
+            clientDebug.auth('🔍 Checking response properties:')
+            clientDebug.auth('🔍 response.user:', response.data.user)
+            clientDebug.auth(
+                '🔍 response.access_token:',
+                response.data.access_token
+            )
+            clientDebug.auth(
                 '🔍 response.refresh_token:',
                 response.data.refresh_token
             )
 
             if (!response.data.user) {
-                console.error('❌ Response missing user property')
-                console.error(
+                clientDebug.auth('❌ Response missing user property')
+                clientDebug.auth(
                     '❌ Available properties:',
                     Object.keys(response.data)
                 )
@@ -267,7 +273,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             // Check if the login was successful (your server includes a success property)
             if (response.data.success !== true) {
-                console.error('❌ Server returned success: false')
+                clientDebug.auth('❌ Server returned success: false')
                 throw new Error('Login failed - server returned success: false')
             }
 
@@ -277,22 +283,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 responseData.accessToken ||
                 responseData.token
             if (!loginAccessToken) {
-                console.error('❌ Response missing access token')
-                console.error(
+                clientDebug.auth('❌ Response missing access token')
+                clientDebug.auth(
                     '❌ Available properties:',
                     Object.keys(responseData)
                 )
-                console.error('❌ Tried: access_token, accessToken, token')
+                clientDebug.auth('❌ Tried: access_token, accessToken, token')
                 throw new Error('Invalid login response - missing access token')
             }
 
-            console.log('✅ Valid login response, updating state...')
-            console.log('✅ User data:', response.data.user)
-            console.log(
+            clientDebug.auth('✅ Valid login response, updating state...')
+            clientDebug.auth('✅ User data:', response.data.user)
+            clientDebug.auth(
                 '✅ Access token found:',
                 loginAccessToken ? 'YES' : 'NO'
             )
-            console.log('✅ Access token length:', loginAccessToken?.length)
+            clientDebug.auth(
+                '✅ Access token length:',
+                loginAccessToken?.length
+            )
 
             // Update state - use the found access token
             setUser(response.data.user)
@@ -313,13 +322,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 saveToStorage(STORAGE_KEYS.REFRESH_TOKEN, storedRefreshToken)
             }
 
-            console.log('✅ Valid login response, updating state...')
-            console.log('✅ User data:', responseData.user)
-            console.log(
+            clientDebug.auth('✅ Valid login response, updating state...')
+            clientDebug.auth('✅ User data:', responseData.user)
+            clientDebug.auth(
                 '✅ Access token found:',
                 loginAccessToken ? 'YES' : 'NO'
             )
-            console.log('✅ Access token length:', loginAccessToken?.length)
+            clientDebug.auth(
+                '✅ Access token length:',
+                loginAccessToken?.length
+            )
 
             // Update state - use the found access token
             setUser(responseData.user)
@@ -339,17 +351,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
             // Log each expected property
-            console.log('🔍 Checking response properties:')
-            console.log('🔍 response.user:', responseData.user)
-            console.log('🔍 response.access_token:', responseData.access_token)
-            console.log(
+            clientDebug.auth('🔍 Checking response properties:')
+            clientDebug.auth('🔍 response.user:', responseData.user)
+            clientDebug.auth(
+                '🔍 response.access_token:',
+                responseData.access_token
+            )
+            clientDebug.auth(
                 '🔍 response.refresh_token:',
                 responseData.refresh_token
             )
 
             if (!responseData.user) {
-                console.error('❌ Response missing user property')
-                console.error(
+                clientDebug.auth('❌ Response missing user property')
+                clientDebug.auth(
                     '❌ Available properties:',
                     Object.keys(responseData)
                 )
@@ -358,27 +373,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             // Check if the login was successful (your server includes a success property)
             if (responseData.success !== true) {
-                console.error('❌ Server returned success: false')
+                clientDebug.auth('❌ Server returned success: false')
                 throw new Error('Login failed - server returned success: false')
             }
 
-            console.log('💾 Auth state saved successfully')
-            console.log('💾 Returning response to caller')
+            clientDebug.auth('💾 Auth state saved successfully')
+            clientDebug.auth('💾 Returning response to caller')
             return responseData
         } catch (error) {
-            console.error('❌❌❌ ERROR IN LOGIN FUNCTION ❌❌❌')
-            console.error('❌ Error type:', typeof error)
-            console.error('❌ Error constructor:', error?.constructor?.name)
-            console.error('❌ Error object:', error)
+            clientDebug.auth('❌❌❌ ERROR IN LOGIN FUNCTION ❌❌❌')
+            clientDebug.auth('❌ Error type:', typeof error)
+            clientDebug.auth('❌ Error constructor:', error?.constructor?.name)
+            clientDebug.auth('❌ Error object:', error)
 
             if (error instanceof Error) {
-                console.error('❌ Error name:', error.name)
-                console.error('❌ Error message:', error.message)
-                console.error('❌ Error stack:', error.stack)
+                clientDebug.auth('❌ Error name:', error.name)
+                clientDebug.auth('❌ Error message:', error.message)
+                clientDebug.auth('❌ Error stack:', error.stack)
             }
 
             setIsAuthenticated(false)
-            console.log('❌ Rethrowing error to caller')
+            clientDebug.auth('❌ Rethrowing error to caller')
             throw error
         }
     }
@@ -430,7 +445,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const initializeAuth = async () => {
             try {
-                console.log('🚀 Initializing auth state...')
+                clientDebug.auth('🚀 Initializing auth state...')
 
                 const storedUser = getFromStorage(STORAGE_KEYS.USER)
                 const storedAccessToken = getFromStorage(
@@ -440,14 +455,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     STORAGE_KEYS.REFRESH_TOKEN
                 )
 
-                console.log('📦 Stored data found:', {
+                clientDebug.auth('📦 Stored data found:', {
                     hasUser: !!storedUser,
                     hasAccessToken: !!storedAccessToken,
                     hasRefreshToken: !!storedRefreshToken,
                 })
 
                 if (!storedUser || !storedAccessToken) {
-                    console.log(
+                    clientDebug.auth(
                         '❌ Missing stored user or access token, skipping auth restoration'
                     )
                     setAuthLoading(false)
@@ -464,14 +479,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     verifyToken(storedAccessToken) &&
                     !isTokenExpiringSoon(storedAccessToken)
                 ) {
-                    console.log(
+                    clientDebug.auth(
                         '✅ Stored token is valid, restoring auth state'
                     )
                     setUser(parsedUser)
                     setAccessToken(storedAccessToken)
                     setIsAuthenticated(true)
                 } else if (storedRefreshToken) {
-                    console.log(
+                    clientDebug.auth(
                         '🔄 Stored token expired, attempting refresh...'
                     )
 
@@ -479,7 +494,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     const newToken = await refreshAccessToken()
 
                     if (newToken && verifyToken(newToken)) {
-                        console.log(
+                        clientDebug.auth(
                             '✅ Token refresh successful, restoring auth state'
                         )
                         setUser(parsedUser)
@@ -487,14 +502,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         setIsAuthenticated(true)
                         saveToStorage(STORAGE_KEYS.ACCESS_TOKEN, newToken)
                     } else {
-                        console.log(
+                        clientDebug.auth(
                             '❌ Token refresh failed, clearing auth state'
                         )
                         clearAllStorage()
                         setIsAuthenticated(false)
                     }
                 } else {
-                    console.log(
+                    clientDebug.auth(
                         '❌ No valid token and no refresh token, clearing auth state'
                     )
                     clearAllStorage()
@@ -523,15 +538,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             // Check if token expires within 5 minutes
             if (isTokenExpiringSoon(currentToken, 300)) {
-                console.log('🔄 Token expiring soon, proactively refreshing...')
+                clientDebug.auth(
+                    '🔄 Token expiring soon, proactively refreshing...'
+                )
                 try {
                     const newToken = await refreshAccessToken()
                     if (newToken && verifyToken(newToken)) {
-                        console.log('✅ Proactive token refresh successful')
+                        clientDebug.auth(
+                            '✅ Proactive token refresh successful'
+                        )
                         setAccessToken(newToken)
                         saveToStorage(STORAGE_KEYS.ACCESS_TOKEN, newToken)
                     } else {
-                        console.log('❌ Proactive token refresh failed')
+                        clientDebug.auth('❌ Proactive token refresh failed')
                         // Clear auth state to force re-login
                         setUser(null)
                         setAccessToken(null)

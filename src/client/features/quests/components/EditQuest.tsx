@@ -14,6 +14,7 @@ import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import api from '@/core/api/axios'
+import { clientDebug } from '@shared/utils/debug'
 import {
     Button,
     Checkbox,
@@ -265,7 +266,7 @@ export default function EditQuest() {
         try {
             const response = await api.patch(`/quests/${questId}`, payload)
 
-            console.log(response)
+            clientDebug.quests('Quest update response: %o', response)
 
             const numericQuestId = questId ? parseInt(questId, 10) : undefined
 
@@ -345,12 +346,18 @@ export default function EditQuest() {
     }
 
     const handleSpeciesAdded = (species: SpeciesCountItem) => {
-        console.log('Added species:', species.taxon.preferred_common_name)
+        clientDebug.data(
+            'Added species: %s',
+            species.taxon.preferred_common_name
+        )
         toast.success(`Added ${species.taxon.preferred_common_name}`)
     }
 
     const handleSpeciesRejected = (species: SpeciesCountItem) => {
-        console.log('Rejected species:', species.taxon.preferred_common_name)
+        clientDebug.data(
+            'Rejected species: %s',
+            species.taxon.preferred_common_name
+        )
     }
 
     return (

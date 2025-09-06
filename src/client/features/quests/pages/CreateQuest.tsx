@@ -9,6 +9,7 @@ import {
 import { useNavigate } from 'react-router'
 import { z } from 'zod'
 import api from '@/core/api/axios'
+import { clientDebug } from '@shared/utils/debug'
 import {
     Button,
     FormControl,
@@ -56,8 +57,8 @@ export function CreateQuest() {
 
     const onSubmit = useCallback(
         async (values: z.infer<typeof formSchema>) => {
-            console.log('Form submitted with values:', values)
-            console.log('Form errors:', form.formState.errors)
+            clientDebug.quests('Form submitted with values: %o', values)
+            clientDebug.quests('Form errors: %o', form.formState.errors)
             try {
                 const taxonIds = Array.from(questSpecies.keys())
                 const {
@@ -82,22 +83,24 @@ export function CreateQuest() {
                     ends_at: ends_at ? new Date(ends_at).toISOString() : null,
                 }
 
-                console.log('Submitting quest with:', payload)
+                clientDebug.quests('Submitting quest with: %o', payload)
 
                 const newQuest = await api.post('/quests', payload)
 
-                console.log('API Response:', newQuest)
+                clientDebug.quests('API Response: %o', newQuest)
                 if (!newQuest.data.id) {
-                    console.error('Failed to create quest - no ID in response')
+                    clientDebug.quests(
+                        'Failed to create quest - no ID in response'
+                    )
                     alert('Failed to create quest. Please try again.')
                     return
                 }
 
-                console.log('Created quest:', newQuest.data)
+                clientDebug.quests('Created quest: %o', newQuest.data)
 
                 navigate(`/quests/${newQuest.data.id}`)
             } catch (error) {
-                console.error('Error creating quest:', error)
+                clientDebug.quests('Error creating quest:', error)
                 alert(
                     `Failed to create quest: ${error instanceof Error ? error.message : 'Unknown error'}`
                 )
@@ -118,7 +121,10 @@ export function CreateQuest() {
                 <FormProvider {...form}>
                     <form
                         onSubmit={form.handleSubmit(onSubmit, (errors) => {
-                            console.log('Form validation failed:', errors)
+                            clientDebug.quests(
+                                'Form validation failed:',
+                                errors
+                            )
                         })}
                         className="space-y-8"
                     >
@@ -130,14 +136,14 @@ export function CreateQuest() {
                                         questSpecies={questSpecies}
                                         setQuestSpecies={setQuestSpecies}
                                         onSpeciesAdded={(species) => {
-                                            console.log(
+                                            clientDebug.quests(
                                                 'Added species:',
                                                 species.taxon
                                                     .preferred_common_name
                                             )
                                         }}
                                         onSpeciesRejected={(species) => {
-                                            console.log(
+                                            clientDebug.quests(
                                                 'Rejected species:',
                                                 species.taxon
                                                     .preferred_common_name

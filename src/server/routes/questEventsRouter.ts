@@ -7,6 +7,7 @@ import {
 import * as questEventsService from '../services/quests/questEventsService.js'
 import { QuestService } from '../services/quests/questService.js'
 import type { QuestShareService } from '../services/quests/questShareService.js'
+import { serverDebug } from '../../shared/utils/debug.js'
 
 export function createQuestEventsRouter(
     questService: QuestService,
@@ -22,37 +23,37 @@ export function createQuestEventsRouter(
             const userId = req.user?.id
             const token = req.query.token as string
 
-            console.log(
-                '🔌 SERVER: EventSource connection request for quest:',
+            serverDebug.events(
+                'EventSource connection request for quest: %s',
                 questId
             )
-            console.log('🔌 SERVER: Request headers:', req.headers)
-            console.log('🔌 SERVER: Request method:', req.method)
-            console.log('🔌 SERVER: Request URL:', req.url)
-            console.log('🔌 SERVER: User authenticated:', !!req.user)
-            console.log('🔌 SERVER: User ID:', userId)
-            console.log('🔌 SERVER: Token provided:', !!token)
+            serverDebug.events('Request headers: %o', req.headers)
+            serverDebug.events('Request method: %s', req.method)
+            serverDebug.events('Request URL: %s', req.url)
+            serverDebug.events('User authenticated: %s', !!req.user)
+            serverDebug.events('User ID: %s', userId)
+            serverDebug.events('Token provided: %s', !!token)
 
             try {
                 // Check access based on authentication method
                 if (userId) {
                     // Authenticated user - check ownership or public access
                     await questService.getAccessibleQuestById(questId, userId)
-                    console.log(
-                        '🔌 SERVER: Access check passed for authenticated user:',
+                    serverDebug.events(
+                        'Access check passed for authenticated user: %s',
                         userId
                     )
                 } else if (token) {
                     // Try guest access via share token first
                     try {
                         await questShareService.getShareDetailsByToken(token)
-                        console.log(
-                            '🔌 SERVER: Access check passed for share token'
+                        serverDebug.events(
+                            'Access check passed for share token'
                         )
                     } catch (_shareError) {
                         // If share token validation fails, try access token validation
-                        console.log(
-                            '🔌 SERVER: Share token validation failed, trying access token'
+                        serverDebug.events(
+                            'Share token validation failed, trying access token'
                         )
                         try {
                             const decoded = jwt.verify(
@@ -64,16 +65,16 @@ export function createQuestEventsRouter(
                                     questId,
                                     decoded.id
                                 )
-                                console.log(
-                                    '🔌 SERVER: Access check passed for access token, user:',
+                                serverDebug.events(
+                                    'Access check passed for access token, user: %s',
                                     decoded.id
                                 )
                             } else {
                                 throw new Error('Invalid access token')
                             }
                         } catch (_accessError) {
-                            console.error(
-                                '🔌 SERVER: Both share token and access token validation failed'
+                            serverDebug.events(
+                                'Both share token and access token validation failed'
                             )
                             throw new Error('Invalid authentication token')
                         }
@@ -83,9 +84,9 @@ export function createQuestEventsRouter(
                 }
 
                 questEventsService.subscribe(req, res)
-                console.log('🔌 SERVER: subscribe function called successfully')
+                serverDebug.events('subscribe function called successfully')
             } catch (error) {
-                console.error('🔌 SERVER: Access denied or error:', error)
+                serverDebug.events('Access denied or error: %o', error)
                 if (!res.headersSent) {
                     res.status(403).json({ error: 'Access denied' })
                 }

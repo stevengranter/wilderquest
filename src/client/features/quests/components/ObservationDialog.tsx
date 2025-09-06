@@ -4,6 +4,7 @@ import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import React, { ReactNode, useEffect, useState } from 'react'
 import api from '@/core/api/axios'
+import { clientDebug } from '@shared/utils/debug'
 import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
 import {
     Dialog,
@@ -130,8 +131,10 @@ export function ObservationDialog(props: ObservationDialogProps) {
         }
     }, [observations]) // Only depend on observations to avoid loops
 
-    console.log(
-        `ObservationDialog: Initialized for species ${species.id} (${species.name})`,
+    clientDebug.data(
+        'ObservationDialog: Initialized for species %s (%s): %o',
+        species.id,
+        species.name,
         {
             hasCoordinates: !!(latitude && longitude),
             coordinates:
@@ -144,8 +147,10 @@ export function ObservationDialog(props: ObservationDialogProps) {
     // preserve scroll when dialog opens/closes
     useEffect(() => {
         if (open) {
-            console.log(
-                `ObservationDialog: Opened for species ${species.id} (${species.name})`
+            clientDebug.ui(
+                'ObservationDialog: Opened for species %s (%s)',
+                species.id,
+                species.name
             )
             const unlock = lockScroll()
             return unlock
@@ -775,8 +780,10 @@ async function getObservationsFromINat(
             : lat !== undefined && lon !== undefined
               ? `at ${lat}, ${lon} (radius: ${radius}km)`
               : 'global'
-        console.log(
-            `Fetching observations for taxon ${taxonId} (${searchType})`
+        clientDebug.data(
+            'Fetching observations for taxon %s (%s)',
+            taxonId,
+            searchType
         )
         const response = await api.get(url)
 
@@ -786,8 +793,10 @@ async function getObservationsFromINat(
         }
 
         const results = response.data.results || []
-        console.log(
-            `Fetched ${results.length} observations for taxon ${taxonId}`
+        clientDebug.data(
+            'Fetched %d observations for taxon %s',
+            results.length,
+            taxonId
         )
         return results
     } catch (error) {
@@ -807,7 +816,7 @@ async function getCumulativeObservationsFromINat(
     globalSearch: boolean = false
 ) {
     try {
-        console.log(
+        clientDebug.quests(
             `Fetching cumulative observations for taxon ${taxonId} with radii: ${radii.join(', ')}km`
         )
 
@@ -839,7 +848,7 @@ async function getCumulativeObservationsFromINat(
             }
         }
 
-        console.log(
+        clientDebug.quests(
             `Combined ${combinedResults.length} unique observations from radii: ${radii.join(', ')}km`
         )
 

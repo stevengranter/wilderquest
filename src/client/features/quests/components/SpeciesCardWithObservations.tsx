@@ -3,6 +3,7 @@ import { ReactNode } from 'react'
 import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
 import { Quest as ServerQuest } from '@shared/types'
 import { ObservationDialog } from './ObservationDialog'
+import { clientDebug } from '@shared/utils/debug'
 
 export type ClientQuest = Omit<ServerQuest, 'user_id'> & {
     user_id: string
@@ -50,7 +51,7 @@ export function SpeciesCardWithObservations(
         />
     )
 
-    console.log(
+    clientDebug.quests(
         `SpeciesCardWithObservations: Rendering for species ${species.id} (${species.name})`,
         {
             hasLocation: !!(displayData?.latitude && displayData?.longitude),

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
 import { useAuth } from '@/features/auth/useAuth'
+import { clientDebug } from '@shared/utils/debug'
 
 interface ProtectedRouteProps {
     children: React.ReactNode
@@ -25,18 +26,25 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
             }
 
             try {
-                console.log('🔍 ProtectedRoute: Checking for valid token...')
+                clientDebug.auth(
+                    '🔍 ProtectedRoute: Checking for valid token...'
+                )
                 const validToken = await getValidToken()
 
                 if (validToken) {
-                    console.log('✅ ProtectedRoute: Valid token obtained')
+                    clientDebug.auth('✅ ProtectedRoute: Valid token obtained')
                     setHasValidToken(true)
                 } else {
-                    console.log('❌ ProtectedRoute: No valid token available')
+                    clientDebug.auth(
+                        '❌ ProtectedRoute: No valid token available'
+                    )
                     setHasValidToken(false)
                 }
             } catch (error) {
-                console.error('❌ ProtectedRoute: Token check failed:', error)
+                clientDebug.auth(
+                    '❌ ProtectedRoute: Token check failed:',
+                    error
+                )
                 setHasValidToken(false)
             } finally {
                 setTokenCheckLoading(false)
@@ -60,13 +68,13 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
     // Redirect to login if not authenticated or no valid token
     if (!isAuthenticated || !hasValidToken) {
-        console.log('🔒 ProtectedRoute: Redirecting to login', {
+        clientDebug.auth('🔒 ProtectedRoute: Redirecting to login', {
             isAuthenticated,
             hasValidToken,
         })
         return <Navigate to="/login" replace />
     }
 
-    console.log('✅ ProtectedRoute: Rendering protected content')
+    clientDebug.auth('✅ ProtectedRoute: Rendering protected content')
     return <>{children}</>
 }

@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router'
 import { useAuth } from '@/features/auth/useAuth'
 import { RegisterFormSchema } from './RegisterForm.schema.js'
 import { createNameId } from 'mnemonic-id'
+import { clientDebug } from '@shared/utils/debug'
 
 type Inputs = {
     email: string
@@ -41,7 +42,7 @@ const RegisterForm = React.forwardRef(() => {
 
     const onSubmit: SubmitHandler<Inputs> = async (data) => {
         const result = await register(data)
-        console.log(result)
+        clientDebug.auth('Registration result:', result)
     }
 
     const animalNameId = useMemo(() => {

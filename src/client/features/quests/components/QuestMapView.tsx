@@ -7,6 +7,7 @@ import api from '@/core/api/axios'
 import { Badge } from '@/components/ui'
 import { Calendar, MapPin } from 'lucide-react'
 import { useLeaflet } from '@/hooks/useLeaflet'
+import { clientDebug } from '@shared/utils/debug'
 
 // Add custom CSS for markers
 const markerStyles = `
@@ -341,7 +342,7 @@ function QuestMapViewInner({
 
                 // Skip if bounds are too large (entire world or continent)
                 if (latDiff > 50 || lngDiff > 50) {
-                    console.log(
+                    clientDebug.quests(
                         'Skipping observation fetch - bounds too large:',
                         { latDiff, lngDiff }
                     )

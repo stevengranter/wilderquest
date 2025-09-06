@@ -11,6 +11,7 @@ import { useState } from 'react'
 import api from '@/core/api/axios'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { clientDebug } from '@shared/utils/debug'
 import {
     Button,
     Dialog,
@@ -184,10 +185,9 @@ export const QuestLeaderboard = ({
 
             if (matchingShare) {
                 const shareUrl = `${window.location.origin}/share/${matchingShare.token}`
-                console.log(
-                    'Generated share URL:',
+                clientDebug.ui(
+                    'Generated share URL: %s for entry: %s',
                     shareUrl,
-                    'for entry:',
                     entry.display_name
                 )
                 return shareUrl
@@ -298,7 +298,7 @@ export const QuestLeaderboard = ({
         const isSecureContext = window.isSecureContext
         const hasClipboard = !!navigator.clipboard
 
-        console.log('Clipboard debug info:', {
+        clientDebug.ui('Clipboard debug info: %o', {
             isSecureContext,
             hasClipboard,
             protocol: window.location.protocol,
@@ -320,7 +320,7 @@ export const QuestLeaderboard = ({
         }
 
         // Fallback method using execCommand (works in non-secure contexts)
-        console.log('Using fallback copy method')
+        clientDebug.ui('Using fallback copy method')
         const textArea = document.createElement('textarea')
         textArea.value = url
         textArea.style.position = 'fixed'
@@ -353,7 +353,7 @@ export const QuestLeaderboard = ({
                         const _selection = window.getSelection()
                         const _range = document.createRange()
                         // This won't work perfectly but gives user feedback
-                        console.log('Manual copy needed:', url)
+                        clientDebug.ui('Manual copy needed: %s', url)
                     },
                 },
             })

@@ -3,6 +3,7 @@ import axios from 'axios'
 import chalk from 'chalk'
 import { NextFunction, type Request, type Response } from 'express'
 import { globalThunderForestRateLimiter } from '../utils/rateLimiterGlobal.js'
+import { serverDebug } from '../../shared/utils/debug.js'
 
 const MAP_TILES_API_KEY = process.env.MAP_TILES_API_KEY
 const TILE_PROVIDER_BASE_URL = 'https://tile.thunderforest.com/atlas/'
@@ -17,7 +18,7 @@ const mapTilesProxy = async (
     const tilePath = req.url
     const tileProviderUrl = `${TILE_PROVIDER_BASE_URL}/${tilePath}?apikey=${MAP_TILES_API_KEY}`
 
-    console.log(`Proxying tile request to: ${tileProviderUrl}`)
+    serverDebug.api('Proxying tile request to: %s', tileProviderUrl)
 
     try {
         await globalThunderForestRateLimiter.consume('global')
@@ -27,8 +28,9 @@ const mapTilesProxy = async (
         const msBeforeNext = status?.msBeforeNext ?? 2592000000 // Default to 30 days
         const retryAfterSeconds = Math.ceil(msBeforeNext / 1000)
 
-        console.warn(
-            `Global ThunderForest rate limit exceeded. Retry after: ${retryAfterSeconds}s`
+        serverDebug.api(
+            'Global ThunderForest rate limit exceeded. Retry after: %ss',
+            retryAfterSeconds
         )
 
         return res
@@ -50,14 +52,12 @@ const mapTilesProxy = async (
     }
 
     const status = await globalThunderForestRateLimiter.get('global')
-    console.log(
-        chalk.green(`Used: ${150_000 - (status?.remainingPoints ?? 0)}`) +
-            ', ' +
-            chalk.yellow(`Remaining: ${status?.remainingPoints ?? 0}`)
-    )
+    const used = 150_000 - (status?.remainingPoints ?? 0)
+    const remaining = status?.remainingPoints ?? 0
+    serverDebug.api('ThunderForest API: Used=%s, Remaining=%s', used, remaining)
     const ms = status?.msBeforeNext ?? 0
     const days = ms / 1000 / 60 / 60 / 24
-    console.log('Resets in:', days.toFixed(2), 'days')
+    serverDebug.api('ThunderForest API: Resets in %s days', days.toFixed(2))
 
     const response = await axios.get(tileProviderUrl, {
         responseType: 'arraybuffer',

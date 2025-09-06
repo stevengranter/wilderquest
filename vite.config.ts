@@ -89,6 +89,9 @@ export default defineConfig({
             '@': path.resolve(__dirname, './src/client'),
         },
     },
+    define: {
+        __DEBUG_ENABLED__: JSON.stringify(process.env.DEBUG || ''),
+    },
     server: {
         watch: {
             usePolling: true,

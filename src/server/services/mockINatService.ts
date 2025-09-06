@@ -4,6 +4,7 @@ import {
     INatObservationsResponse,
     INatTaxaResponse,
 } from '../../shared/types/index.js'
+import { serverDebug } from '../../shared/utils/debug.js'
 
 // Mock data for development - expanded with diverse taxa
 const mockTaxa: INatTaxon[] = [
@@ -544,10 +545,9 @@ export class MockINatService {
         query: string,
         params: Record<string, unknown> = {}
     ): INatTaxaResponse {
-        console.log(
-            'DEBUG: searchTaxa called with query:',
+        serverDebug.api(
+            'searchTaxa called with query: %s, mockTaxa length: %s',
             query,
-            'mockTaxa length:',
             mockTaxa.length
         )
 
@@ -569,7 +569,7 @@ export class MockINatService {
                     .includes(query.toLowerCase())
         )
 
-        console.log('DEBUG: filteredTaxa length:', filteredTaxa.length)
+        serverDebug.api('filteredTaxa length: %s', filteredTaxa.length)
 
         // Apply additional filters if provided
         if (params.rank) {

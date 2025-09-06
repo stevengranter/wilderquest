@@ -11,6 +11,7 @@ import React, { useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import api from '@/core/api/axios'
 import { useAuth } from '@/features/auth/useAuth'
+import { clientDebug } from '@shared/utils/debug'
 
 import {
     AggregatedProgress,
@@ -52,13 +53,13 @@ export const fetchQuest = async (
     questId?: string | number
 ): Promise<Quest | null> => {
     const { data } = await api.get(`/quests/${questId}`)
-    console.log(data)
+    clientDebug.quests('Fetched quest %s: %o', questId, data)
     return data
 }
 
 const fetchQuestByToken = async (token?: string) => {
     const { data } = await api.get(`/quest-sharing/shares/token/${token}`)
-    console.log(data)
+    clientDebug.quests('Fetched quest by token: %o', data)
     return data
 }
 
@@ -178,7 +179,7 @@ const fetchLeaderboard = async (questId: string | number) => {
     const { data } = await api.get(
         `/quest-sharing/quests/${questId}/progress/leaderboard`
     )
-    console.log('Leaderboard: ', data)
+    clientDebug.quests('Leaderboard: ', data)
     return data
 }
 
@@ -344,7 +345,7 @@ export const useQuestOwner = ({
         let eventSource: EventSource | null = null
 
         const setupEventSource = async () => {
-            console.log('🔌 Setting up EventSource for quest:', quest.id)
+            clientDebug.events('Setting up EventSource for quest: %s', quest.id)
 
             // Get auth token for owner authentication
             const token = await getValidToken()
@@ -353,9 +354,9 @@ export const useQuestOwner = ({
                 ? `/api/quests/${quest.id}/events?token=${encodeURIComponent(token)}`
                 : `/api/quests/${quest.id}/events`
 
-            console.log('🔌 EventSource URL:', eventSourceUrl)
-            console.log(
-                '🔌 Full EventSource URL:',
+            clientDebug.events('EventSource URL: %s', eventSourceUrl)
+            clientDebug.events(
+                'Full EventSource URL: %s',
                 window.location.origin + eventSourceUrl
             )
             eventSource = new EventSource(eventSourceUrl, {
@@ -364,34 +365,43 @@ export const useQuestOwner = ({
 
             if (eventSource) {
                 eventSource.onopen = () => {
-                    console.log('✅ EventSource connected successfully')
-                    console.log(
-                        '✅ EventSource readyState:',
+                    clientDebug.events('EventSource connected successfully')
+                    clientDebug.events(
+                        'EventSource readyState: %s',
                         eventSource!.readyState
                     )
-                    console.log('✅ EventSource URL:', eventSource!.url)
+                    clientDebug.events('✅ EventSource URL:', eventSource!.url)
                 }
 
                 eventSource.onmessage = (e) => {
-                    console.log('📨 Owner EventSource RAW message received:', e)
-                    console.log('📨 Owner EventSource message data:', e.data)
-                    console.log('📨 Owner EventSource message type:', e.type)
-                    console.log(
+                    clientDebug.events(
+                        '📨 Owner EventSource RAW message received:',
+                        e
+                    )
+                    clientDebug.events(
+                        '📨 Owner EventSource message data:',
+                        e.data
+                    )
+                    clientDebug.events(
+                        '📨 Owner EventSource message type:',
+                        e.type
+                    )
+                    clientDebug.quests(
                         '📨 Owner EventSource message origin:',
                         e.origin
                     )
-                    console.log(
+                    clientDebug.events(
                         '📨 Owner EventSource message lastEventId:',
                         e.lastEventId
                     )
 
                     // Log ALL messages, including comments and empty ones
                     if (!e.data || e.data.trim() === '') {
-                        console.log(
+                        clientDebug.events(
                             '📨 Owner EventSource received empty/comment message, data length:',
                             e.data ? e.data.length : 'null'
                         )
-                        console.log(
+                        clientDebug.events(
                             '📨 Owner EventSource empty message content:',
                             JSON.stringify(e.data)
                         )
@@ -400,12 +410,15 @@ export const useQuestOwner = ({
 
                     try {
                         const data = JSON.parse(e.data)
-                        console.log('📨 Owner parsed event data:', data)
-                        console.log('📨 Owner event type:', data.type)
-                        console.log('📨 Owner event payload:', data.payload)
+                        clientDebug.events('📨 Owner parsed event data:', data)
+                        clientDebug.events('📨 Owner event type:', data.type)
+                        clientDebug.events(
+                            '📨 Owner event payload:',
+                            data.payload
+                        )
 
                         if (data.type === 'QUEST_STATUS_UPDATED') {
-                            console.log(
+                            clientDebug.events(
                                 '📢 Owner quest status update event:',
                                 data.payload.status
                             )
@@ -416,7 +429,7 @@ export const useQuestOwner = ({
                                 queryKey: ['quest', questId],
                             })
                         } else if (data.type === 'QUEST_EDITING_STARTED') {
-                            console.log('📝 Quest editing started event')
+                            clientDebug.events('📝 Quest editing started event')
                             toast.info('Quest Editing in Progress', {
                                 description: data.payload.message,
                                 duration: 8000, // Show for 8 seconds
@@ -426,10 +439,10 @@ export const useQuestOwner = ({
                                 data.type
                             )
                         ) {
-                            console.log(
+                            clientDebug.events(
                                 '🐾 Owner species event received, calling handleSpeciesEvent'
                             )
-                            console.log(
+                            clientDebug.events(
                                 '🐾 Owner calling handleSpeciesEvent with:',
                                 {
                                     data,
@@ -443,21 +456,21 @@ export const useQuestOwner = ({
                                 queryClient
                             )
                         } else {
-                            console.log(
+                            clientDebug.events(
                                 '❓ Owner unknown event type:',
                                 data.type
                             )
                         }
                     } catch (error) {
-                        console.error(
+                        clientDebug.events(
                             '❌ Owner error parsing event data:',
                             error
                         )
-                        console.error(
+                        clientDebug.events(
                             '❌ Owner raw event data that failed to parse:',
                             e.data
                         )
-                        console.error('❌ Owner error details:', {
+                        clientDebug.events('❌ Owner error details:', {
                             message: (error as Error).message,
                             stack: (error as Error).stack,
                         })
@@ -465,15 +478,15 @@ export const useQuestOwner = ({
                 }
 
                 eventSource.onerror = (error) => {
-                    console.error('❌ EventSource error:', error)
-                    console.log(
+                    clientDebug.events('❌ EventSource error:', error)
+                    clientDebug.events(
                         'EventSource readyState:',
                         eventSource!.readyState
                     )
-                    console.log('EventSource URL:', eventSource!.url)
+                    clientDebug.events('EventSource URL:', eventSource!.url)
 
                     // Log additional error details
-                    console.log('EventSource error event:', {
+                    clientDebug.events('EventSource error event:', {
                         type: error.type,
                         target: error.target,
                         bubbles: error.bubbles,
@@ -482,11 +495,11 @@ export const useQuestOwner = ({
 
                     // Check if connection is closed and attempt reconnection
                     if (eventSource!.readyState === EventSource.CLOSED) {
-                        console.log(
+                        clientDebug.events(
                             'EventSource connection closed, will attempt reconnection on next render'
                         )
                     } else {
-                        console.log(
+                        clientDebug.events(
                             'EventSource attempting automatic reconnection...'
                         )
                     }
@@ -494,7 +507,7 @@ export const useQuestOwner = ({
 
                 // Add logging for when EventSource closes
                 eventSource.addEventListener('close', () => {
-                    console.log('🔌 EventSource connection closed')
+                    clientDebug.events('🔌 EventSource connection closed')
                 })
             }
         }
@@ -502,7 +515,7 @@ export const useQuestOwner = ({
         setupEventSource()
 
         return () => {
-            console.log('🔌 Cleaning up EventSource')
+            clientDebug.events('🔌 Cleaning up EventSource')
             // Note: eventSource is not accessible here due to async function scope
             // This cleanup will need to be handled differently
         }
@@ -663,10 +676,13 @@ export const useQuestGuest = ({ token }: { token: string }) => {
     useEffect(() => {
         if (!quest?.id) return
 
-        console.log('🔌 Setting up EventSource for guest quest:', quest.id)
+        clientDebug.events(
+            '🔌 Setting up EventSource for guest quest:',
+            quest.id
+        )
         const eventSourceUrl = `/api/quests/${quest.id}/events?token=${encodeURIComponent(token)}`
-        console.log('🔌 EventSource URL:', eventSourceUrl)
-        console.log(
+        clientDebug.events('🔌 EventSource URL:', eventSourceUrl)
+        clientDebug.events(
             '🔌 Full EventSource URL:',
             window.location.origin + eventSourceUrl
         )
@@ -675,31 +691,31 @@ export const useQuestGuest = ({ token }: { token: string }) => {
         })
 
         eventSource.onopen = () => {
-            console.log('✅ Guest EventSource connected successfully')
-            console.log(
+            clientDebug.events('✅ Guest EventSource connected successfully')
+            clientDebug.events(
                 '✅ Guest EventSource readyState:',
                 eventSource.readyState
             )
-            console.log('✅ Guest EventSource URL:', eventSource.url)
+            clientDebug.events('✅ Guest EventSource URL:', eventSource.url)
         }
 
         eventSource.onmessage = (e) => {
-            console.log('📨 Guest EventSource RAW message received:', e)
-            console.log('📨 Guest EventSource message data:', e.data)
-            console.log('📨 Guest EventSource message type:', e.type)
-            console.log('📨 Guest EventSource message origin:', e.origin)
-            console.log(
+            clientDebug.events('📨 Guest EventSource RAW message received:', e)
+            clientDebug.events('📨 Guest EventSource message data:', e.data)
+            clientDebug.events('📨 Guest EventSource message type:', e.type)
+            clientDebug.events('📨 Guest EventSource message origin:', e.origin)
+            clientDebug.events(
                 '📨 Guest EventSource message lastEventId:',
                 e.lastEventId
             )
 
             // Log ALL messages, including comments and empty ones
             if (!e.data || e.data.trim() === '') {
-                console.log(
+                clientDebug.events(
                     '📨 Guest EventSource received empty/comment message, data length:',
                     e.data ? e.data.length : 'null'
                 )
-                console.log(
+                clientDebug.events(
                     '📨 Guest EventSource empty message content:',
                     JSON.stringify(e.data)
                 )
@@ -708,12 +724,12 @@ export const useQuestGuest = ({ token }: { token: string }) => {
 
             try {
                 const data = JSON.parse(e.data)
-                console.log('📨 Guest parsed event data:', data)
-                console.log('📨 Guest event type:', data.type)
-                console.log('📨 Guest event payload:', data.payload)
+                clientDebug.events('📨 Guest parsed event data:', data)
+                clientDebug.events('📨 Guest event type:', data.type)
+                clientDebug.events('📨 Guest event payload:', data.payload)
 
                 if (data.type === 'QUEST_STATUS_UPDATED') {
-                    console.log(
+                    clientDebug.events(
                         '📢 Guest quest status update event:',
                         data.payload.status
                     )
@@ -722,7 +738,7 @@ export const useQuestGuest = ({ token }: { token: string }) => {
                         queryKey: ['sharedQuest', token],
                     })
                 } else if (data.type === 'QUEST_EDITING_STARTED') {
-                    console.log('📝 Guest quest editing started event')
+                    clientDebug.events('📝 Guest quest editing started event')
                     toast.info('Quest Editing in Progress', {
                         description: data.payload.message,
                         duration: 8000, // Show for 8 seconds
@@ -730,14 +746,17 @@ export const useQuestGuest = ({ token }: { token: string }) => {
                 } else if (
                     ['SPECIES_FOUND', 'SPECIES_UNFOUND'].includes(data.type)
                 ) {
-                    console.log(
+                    clientDebug.events(
                         '🐾 Guest species event received, calling handleSpeciesEvent'
                     )
-                    console.log('🐾 Guest calling handleSpeciesEvent with:', {
-                        data,
-                        questId: quest.id,
-                        hasToken: !!token,
-                    })
+                    clientDebug.events(
+                        '🐾 Guest calling handleSpeciesEvent with:',
+                        {
+                            data,
+                            questId: quest.id,
+                            hasToken: !!token,
+                        }
+                    )
                     handleSpeciesEvent(
                         data,
                         Number(quest.id),
@@ -745,15 +764,18 @@ export const useQuestGuest = ({ token }: { token: string }) => {
                         token
                     )
                 } else {
-                    console.log('❓ Guest unknown event type:', data.type)
+                    clientDebug.events(
+                        '❓ Guest unknown event type:',
+                        data.type
+                    )
                 }
             } catch (error) {
-                console.error('❌ Guest error parsing event data:', error)
-                console.error(
+                clientDebug.events('❌ Guest error parsing event data:', error)
+                clientDebug.events(
                     '❌ Guest raw event data that failed to parse:',
                     e.data
                 )
-                console.error('❌ Guest error details:', {
+                clientDebug.events('❌ Guest error details:', {
                     message: (error as Error).message,
                     stack: (error as Error).stack,
                 })
@@ -761,12 +783,15 @@ export const useQuestGuest = ({ token }: { token: string }) => {
         }
 
         eventSource.onerror = (error) => {
-            console.error('❌ Guest EventSource error:', error)
-            console.log('Guest EventSource readyState:', eventSource.readyState)
-            console.log('Guest EventSource URL:', eventSource.url)
+            clientDebug.events('❌ Guest EventSource error:', error)
+            clientDebug.events(
+                'Guest EventSource readyState:',
+                eventSource.readyState
+            )
+            clientDebug.events('Guest EventSource URL:', eventSource.url)
 
             // Log additional error details
-            console.log('Guest EventSource error event:', {
+            clientDebug.events('Guest EventSource error event:', {
                 type: error.type,
                 target: error.target,
                 bubbles: error.bubbles,
@@ -775,11 +800,11 @@ export const useQuestGuest = ({ token }: { token: string }) => {
 
             // Check if connection is closed and attempt reconnection
             if (eventSource.readyState === EventSource.CLOSED) {
-                console.log(
+                clientDebug.events(
                     'Guest EventSource connection closed, will attempt reconnection on next render'
                 )
             } else {
-                console.log(
+                clientDebug.events(
                     'Guest EventSource attempting automatic reconnection...'
                 )
             }
@@ -787,16 +812,16 @@ export const useQuestGuest = ({ token }: { token: string }) => {
 
         // Add logging for when Guest EventSource closes
         eventSource.addEventListener('close', () => {
-            console.log('🔌 Guest EventSource connection closed')
+            clientDebug.events('🔌 Guest EventSource connection closed')
         })
 
         // Add logging for when Guest EventSource closes
         eventSource.addEventListener('close', () => {
-            console.log('🔌 Guest EventSource connection closed')
+            clientDebug.events('🔌 Guest EventSource connection closed')
         })
 
         return () => {
-            console.log('🔌 Cleaning up guest EventSource')
+            clientDebug.events('🔌 Cleaning up guest EventSource')
             eventSource.close()
         }
     }, [quest?.id, queryClient, token])
@@ -841,7 +866,7 @@ const handleSpeciesEvent = (
     queryClient: QueryClient,
     token?: string
 ) => {
-    console.log('🔥 handleSpeciesEvent called:', {
+    clientDebug.events('🔥 handleSpeciesEvent called:', {
         type: data.type,
         mappingId: data.payload.mappingId,
         questId,
@@ -849,7 +874,7 @@ const handleSpeciesEvent = (
         guestName: data.payload.guestName,
     })
 
-    console.log('🔥 Processing species event:', {
+    clientDebug.events('🔥 Processing species event:', {
         eventType: data.type,
         isFound: data.type === 'SPECIES_FOUND',
         isUnfound: data.type === 'SPECIES_UNFOUND',
@@ -876,7 +901,7 @@ const handleSpeciesEvent = (
         questId,
     ])
 
-    console.log('📊 Data availability:', {
+    clientDebug.events('📊 Data availability:', {
         hasToken: !!token,
         hasProgressData: !!progressData,
         hasSharedQuestData: !!sharedQuestData,
@@ -887,7 +912,7 @@ const handleSpeciesEvent = (
 
     const guestName = data.payload.guestName || 'A guest'
 
-    console.log('🗺️ Mappings check:', {
+    clientDebug.events('🗺️ Mappings check:', {
         hasMappings: !!mappings,
         mappingsCount: mappings?.length,
         progressMappingsCount: progressData?.mappings?.length,
@@ -895,7 +920,7 @@ const handleSpeciesEvent = (
     })
 
     if (!mappings) {
-        console.warn('❌ No mappings found, returning early')
+        clientDebug.events('❌ No mappings found, returning early')
         return
     }
 
@@ -903,14 +928,14 @@ const handleSpeciesEvent = (
         (m: QuestMapping) => m.id === data.payload.mappingId
     )
 
-    console.log('🔍 Mapping lookup:', {
+    clientDebug.events('🔍 Mapping lookup:', {
         mappingId: data.payload.mappingId,
         foundMapping: !!mapping,
         mappingTaxonId: mapping?.taxon_id,
     })
 
     if (!mapping) {
-        console.warn('❌ Mapping not found, returning early')
+        clientDebug.events('❌ Mapping not found, returning early')
         return
     }
 
@@ -919,7 +944,7 @@ const handleSpeciesEvent = (
         ? species.preferred_common_name
         : species?.name || 'a species'
 
-    console.log('🐾 Species lookup:', {
+    clientDebug.events('🐾 Species lookup:', {
         taxonId: mapping.taxon_id,
         foundSpecies: !!species,
         speciesName,
@@ -928,7 +953,7 @@ const handleSpeciesEvent = (
 
     const action = data.type === 'SPECIES_FOUND' ? 'found' : 'unmarked'
 
-    console.log('🍞 Showing toast:', {
+    clientDebug.events('🍞 Showing toast:', {
         guestName,
         speciesName,
         action,
@@ -962,7 +987,7 @@ const handleSpeciesEvent = (
         // Guest context - invalidate guest-specific queries
         queryClient.invalidateQueries({ queryKey: ['guestProgress', token] })
         queryClient.invalidateQueries({ queryKey: ['leaderboard', token] })
-        console.log(
+        clientDebug.events(
             '🔥 Invalidated guest queries:',
             ['guestProgress', token],
             ['leaderboard', token]
@@ -971,14 +996,14 @@ const handleSpeciesEvent = (
         // Owner context - invalidate owner-specific queries
         queryClient.invalidateQueries({ queryKey: ['progress', questId] })
         queryClient.invalidateQueries({ queryKey: ['leaderboard', questId] })
-        console.log(
+        clientDebug.events(
             '🔥 Invalidated owner queries:',
             ['progress', questId],
             ['leaderboard', questId]
         )
     }
 
-    console.log('✅ handleSpeciesEvent completed successfully:', {
+    clientDebug.events('✅ handleSpeciesEvent completed successfully:', {
         type: data.type,
         mappingId: data.payload.mappingId,
         guestName,
@@ -1079,7 +1104,7 @@ export const useSpeciesProgress = ({
                         : `/quest-sharing/shares/token/${token}/progress/${mapping.id}`
 
                 await api.post(endpoint, { observed })
-                console.log('Progress updated')
+                clientDebug.quests('Progress updated')
 
                 // Invalidate relevant queries
                 queryClient.invalidateQueries({

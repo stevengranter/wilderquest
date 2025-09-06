@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { LocationIQResults } from '@shared/types'
+import { clientDebug } from '@shared/utils/debug'
 
 function isValidLatLng(latitude: number, longitude: number) {
     const isLatValid = latitude >= -90 && latitude <= 90
@@ -10,21 +11,21 @@ function isValidLatLng(latitude: number, longitude: number) {
 export async function getCitySuggestions(
     city: string
 ): Promise<LocationIQResults | undefined> {
-    console.log('Submitting city: ', city, '')
+    clientDebug.general('Submitting city: ', city, '')
     try {
         const encodedCity = encodeURIComponent(city)
         const results = await axios.get<LocationIQResults>(
             `/api/service/geo/forward?city=${encodedCity}`
         )
         if (results.data && results.data.length > 0) {
-            console.log('Received results: ')
-            console.table(results.data)
+            clientDebug.general('Received results: ')
+            clientDebug.general('Results data:', results.data)
             return results.data
         }
-        console.log('No results found for city:', city)
+        clientDebug.general('No results found for city:', city)
         return undefined
     } catch (err) {
-        console.error('Failed to fetch location:', err)
+        clientDebug.general('Failed to fetch location:', err)
         return undefined
     }
 }
@@ -42,13 +43,13 @@ export async function requestCityFromGeoLocation(
         const results = await axios.get(
             `/api/service/geo/reverse?lat=${encodedLatitude}&lon=${encodedLongitude}`
         )
-        console.log(results)
+        clientDebug.general('Reverse geocoding results:', results)
         if (results.data) {
-            console.log(results.data.display_name)
+            clientDebug.general('Display name:', results.data.display_name)
             return results.data.display_name
         }
     } catch (err) {
-        console.error('Failed to fetch location:', err)
+        clientDebug.general('Failed to fetch location:', err)
         throw new Error('Failed to fetch location')
     }
 }

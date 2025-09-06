@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
+import { serverDebug } from '../../shared/utils/debug.js'
 
 export interface AuthenticatedRequest extends Request {
     headers: {
@@ -21,15 +22,15 @@ const verifyJWT = (
     res: Response,
     next: NextFunction
 ) => {
-    console.log('req.body: ', req.body)
+    serverDebug.auth('JWT middleware: req.body=%o', req.body)
     if (!req.headers.authorization) {
-        console.error('Authorization header is missing')
+        serverDebug.auth('JWT middleware: Authorization header is missing')
     }
     const authHeader = req.headers.authorization
 
     if (!authHeader) {
+        serverDebug.auth('JWT middleware: No auth header')
         res.sendStatus(401)
-        console.log('No auth header')
         return
     }
 
@@ -39,7 +40,10 @@ const verifyJWT = (
         process.env.ACCESS_TOKEN_SECRET! as string,
         (err, decoded) => {
             if (err) {
-                console.log('Invalid token or token expired:', err)
+                serverDebug.auth(
+                    'JWT middleware: Invalid token or token expired: %o',
+                    err
+                )
                 return res.sendStatus(401) // ✅ Fixed: Send 401 instead of calling next()
             }
 
@@ -53,9 +57,7 @@ const verifyJWT = (
                 }
                 next()
             } else {
-                console.error(
-                    'Error in decoding token in verifyJWT middleware.'
-                )
+                serverDebug.auth('JWT middleware: Error in decoding token')
                 res.sendStatus(401) // ✅ Added: Send 401 for undefined decoded token
             }
         }

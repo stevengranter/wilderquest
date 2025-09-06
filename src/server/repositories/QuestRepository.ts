@@ -1,6 +1,7 @@
 import { Pool, RowDataPacket } from 'mysql2/promise'
 import { createBaseRepository } from './BaseRepository.js'
 import { Quest } from '../models/quests.js'
+import { serverDebug } from '../../shared/utils/debug.js'
 
 export type QuestWithTaxa = Quest & {
     taxon_ids: number[]
@@ -90,8 +91,11 @@ export function createQuestRepository(
         offset: number = 0
     ): Promise<Quest[]> {
         const isOwner = userId === viewerId
-        console.log('isOwner', isOwner)
-        console.log('userId', userId)
+        serverDebug.db(
+            'QuestRepository: isOwner=%s, userId=%s',
+            isOwner,
+            userId
+        )
 
         if (isOwner) {
             // return all quests (public and private)
@@ -102,7 +106,10 @@ export function createQuestRepository(
             return rows as Quest[]
         } else {
             // only return public quests
-            console.log('getting public quests')
+            serverDebug.db(
+                'QuestRepository: getting public quests for userId=%s',
+                userId
+            )
             const [rows] = await dbPool.query(
                 `SELECT * FROM quests WHERE user_id = ? AND is_private = false LIMIT ? OFFSET ?`,
                 [userId, limit, offset]

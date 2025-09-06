@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { clientDebug } from '@shared/utils/debug'
 
 const api = axios.create({
     baseURL: '/api',
@@ -23,7 +24,7 @@ api.interceptors.request.use(async (config) => {
                 config.headers.Authorization = `Bearer ${token}`
             }
         } catch (error) {
-            console.warn('Failed to get valid token for request:', error)
+            clientDebug.general('Failed to get valid token for request:', error)
             // Continue without token - the request might be public
         }
     }
@@ -38,7 +39,7 @@ api.interceptors.response.use(
         const originalRequest = error.config
 
         // Log more details about the error
-        console.log('Response error:', {
+        clientDebug.general('Response error:', {
             status: error.response?.status,
             isRetry: originalRequest._retry,
             url: originalRequest.url,
@@ -50,7 +51,7 @@ api.interceptors.response.use(
             originalRequest._retry = true
 
             try {
-                console.log('Attempting token refresh...')
+                clientDebug.general('Attempting token refresh...')
 
                 // Get a fresh token (this will handle refresh automatically)
                 if (getValidToken) {
@@ -59,7 +60,7 @@ api.interceptors.response.use(
                     if (newToken) {
                         originalRequest.headers.Authorization = `Bearer ${newToken}`
 
-                        console.log(
+                        clientDebug.general(
                             'Token refresh successful, retrying with new token:',
                             {
                                 newToken: newToken.substring(0, 10) + '...',
@@ -74,9 +75,9 @@ api.interceptors.response.use(
                 // If we get here, token refresh failed
                 throw new Error('Token refresh failed')
             } catch (refreshError) {
-                console.error('Token refresh failed:', refreshError)
+                clientDebug.general('Token refresh failed:', refreshError)
                 // Show user-friendly error message
-                console.log(
+                clientDebug.general(
                     '🔄 Token refresh failed - redirecting to login for re-authentication'
                 )
                 // Add a small delay to show the error state briefly
