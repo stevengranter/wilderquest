@@ -1,9 +1,20 @@
 import axios from 'axios'
 import { jwtDecode } from 'jwt-decode'
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react'
+import {
+    createContext,
+    ReactNode,
+    useCallback,
+    useContext,
+    useEffect,
+    useState,
+} from 'react'
 import { toast } from 'sonner'
-import type { LoggedInUser, LoginResponseData, RegisterResponseData } from '@shared/types/authTypes'
-import { LoginRequestBody, RegisterRequestBody } from '../../types/types.js'
+import type {
+    LoggedInUser,
+    LoginResponseData,
+    RegisterResponseData,
+} from '@shared/types/authTypes'
+import { LoginRequestBody, RegisterRequestBody } from '@/shared/types/types'
 
 type AuthContextType = {
     isAuthenticated: boolean

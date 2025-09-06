@@ -3,7 +3,7 @@ import {
     SearchContextType,
     SearchResults,
     ViewMode,
-} from '@/contexts/search/SearchContext.types'
+} from './SearchContext.types'
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined)
 

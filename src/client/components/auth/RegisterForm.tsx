@@ -15,8 +15,8 @@ import {
 import { Input } from '@/components/ui/input.js'
 import React, { useMemo } from 'react'
 import { useNavigate } from 'react-router'
-import { useAuth } from '@/hooks/useAuth.js'
-import { RegisterFormSchema } from '@/components/RegisterForm.schema.js'
+import { useAuth } from '@/core/auth/useAuth.js'
+import { RegisterFormSchema } from './RegisterForm.schema.js'
 import { createNameId } from 'mnemonic-id'
 
 type Inputs = {

@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext } from 'react'
-import { useQuestDisplay } from '@/hooks/useQuest'
+import { useQuestDisplay } from '../../shared/hooks/useQuest'
 import { INatTaxon } from '@shared/types'
 // Import QuestMapping type
 import {
@@ -9,7 +9,7 @@ import {
     QuestMapping,
     Share,
 } from '@/features/quests/types'
-import { Quest } from '../../server/models/quests'
+import { Quest } from '@/shared/types/types'
 
 interface QuestContextType {
     // Quest data

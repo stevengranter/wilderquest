@@ -21,7 +21,7 @@ import type { TaxonData } from '@shared/types'
 
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { useSpeciesAddTrigger } from './SpeciesAnimationProvider'
-import api from '@/api/api'
+import api from '@/core/api/axios'
 import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
 import { INatTaxon } from '@shared/types'
 

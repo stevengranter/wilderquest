@@ -1,8 +1,8 @@
 import { useParams } from 'react-router'
 import { useEffect } from 'react'
-import { QuestProvider } from '@/contexts/QuestContext'
+import { QuestProvider } from '@/core/auth/QuestContext'
 import { QuestView } from '@/features/quests/components/QuestView/QuestView'
-import api from '@/api/api'
+import api from '@/core/api/axios'
 
 export default function SharedQuestGuest() {
     const { token } = useParams()
@@ -12,7 +12,7 @@ export default function SharedQuestGuest() {
         if (token) {
             // Track that this user has accessed the shared quest page
             api.post(`/quest-sharing/shares/token/${token}/accessed`).catch(
-                (err) => {
+                (err: unknown) => {
                     // Silently fail - access tracking is not critical
                     console.log('Access tracking failed:', err)
                 }

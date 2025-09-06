@@ -11,7 +11,7 @@ import { QuestMapView } from '../../QuestMapView'
 import { AggregatedProgress, DetailedProgress, QuestMapping, QuestStatus, Share } from '@/features/quests/types'
 import { INatTaxon } from '@shared/types'
 import { LoggedInUser } from '@shared/types/authTypes'
-import { useSpeciesActions, useSpeciesProgress } from '@/hooks/useQuest'
+import { useSpeciesActions, useSpeciesProgress } from '@/shared/hooks/useQuest'
 
 // Use QuestMapping instead of defining TaxonMapping
 type TaxonMapping = QuestMapping

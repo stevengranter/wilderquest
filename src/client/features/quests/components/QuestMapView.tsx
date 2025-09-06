@@ -3,10 +3,10 @@ import { INatObservation, INatTaxon } from '@shared/types'
 import type { Map as LeafletMap, LatLngBounds, LeafletEvent } from 'leaflet'
 import { ClientQuest } from './SpeciesCardWithObservations'
 import { QuestMapping } from '../types'
-import api from '@/api/api'
+import api from '@/core/api/axios'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, MapPin } from 'lucide-react'
-import { useLeaflet } from '@/hooks/useLeaflet'
+import { useLeaflet } from '@/shared/hooks/useLeaflet'
 
 // Add custom CSS for markers
 const markerStyles = `

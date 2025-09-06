@@ -8,7 +8,7 @@ import {
     ClientQuest,
 } from './SpeciesCardWithObservations'
 import { useAnimationTarget } from './SpeciesAnimationProvider'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import { INatTaxon, TaxonData } from '@shared/types'
 
 export interface SpeciesCountItem {

@@ -1,11 +1,11 @@
 // src/routes/routes.tsx
 
 import { createBrowserRouter } from 'react-router'
-import { ProtectedRoute } from '@/components/ProtectedRoute'
-import { Home } from '@/routes/pages/Home'
-import Login from '@/routes/pages/Login'
-import Register from '@/routes/pages/Register'
-import UserProfile from '@/routes/pages/UserProfile'
+import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
+import { Home } from '@/core/routing/pages/Home'
+import Login from '@/features/auth/pages/Login'
+import Register from '@/features/auth/pages/Register'
+import UserProfile from '@/features/users/pages/UserProfile'
 import EditQuest from '@/features/quests/components/EditQuest'
 import QuestDetail from '@/features/quests/components/QuestDetail'
 import { CreateQuest } from '@/features/quests/pages/CreateQuest'

@@ -8,7 +8,7 @@ import {
 } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { z } from 'zod'
-import api from '@/api/api'
+import api from '@/core/api/axios'
 import { Button } from '@/components/ui/button'
 import {
     FormControl,
@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select'
 import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/core/auth/useAuth'
 import { SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeSelector'
 import { SpeciesCountItem } from '@/features/quests/components/ResponsiveSpeciesThumbnail'
 import { SpeciesAnimationProvider } from '@/features/quests/components/SpeciesAnimationProvider'

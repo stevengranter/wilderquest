@@ -1,5 +1,5 @@
 import { useLoaderData, useParams } from 'react-router'
-import { QuestProvider } from '@/contexts/QuestContext'
+import { QuestProvider } from '@/core/auth/QuestContext'
 import { QuestView } from './QuestView/QuestView'
 
 interface QuestProps {

@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { FaShareFromSquare, FaPlus } from 'react-icons/fa6'
 import { motion, AnimatePresence } from 'motion/react'
-import api from '@/api/api'
+import api from '@/core/api/axios'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/core/auth/useAuth'
 import { useQueryClient } from '@tanstack/react-query'
-import { UserSearch } from '@/components/UserSearch'
-import { type SafeUser } from '@/hooks/useUserSearch'
+import { UserSearch } from '@/components/shared/UserSearch'
+import { type SafeUser } from '@/shared/hooks/useUserSearch'
 
 type QuestShare = {
     id: number

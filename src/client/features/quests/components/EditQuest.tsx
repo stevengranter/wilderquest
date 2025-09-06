@@ -13,7 +13,7 @@ import {
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import api from '@/api/api'
+import api from '@/core/api/axios'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {

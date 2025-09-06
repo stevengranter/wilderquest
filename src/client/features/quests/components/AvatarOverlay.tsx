@@ -1,6 +1,6 @@
 import avatar from 'animal-avatar-generator'
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 
 interface AvatarOverlayProps {
     displayName?: string

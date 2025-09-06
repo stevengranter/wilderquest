@@ -1,8 +1,8 @@
 // src/providers/AppProviders.tsx
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { configureApiTokens } from '@/api/api'
-import { AuthProvider, useAuth } from '@/hooks/useAuth'
+import { configureApiTokens } from '@/core/api/axios'
+import { AuthProvider, useAuth } from '@/core/auth/useAuth'
 
 const queryClient = new QueryClient({
     defaultOptions: {

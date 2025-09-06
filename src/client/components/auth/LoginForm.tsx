@@ -16,8 +16,8 @@ import {
     FormMessage,
 } from '@/components/ui/form.js'
 import { Input } from '@/components/ui/input.js'
-import { useAuth } from '@/hooks/useAuth.js'
-import { LoginRequestSchema } from '../../shared/schemas/Auth'
+import { useAuth } from '@/core/auth/useAuth.js'
+import { LoginRequestSchema } from '@shared/schemas/Auth'
 
 const LoginForm = React.forwardRef(() => {
     const navigate = useNavigate()
@@ -53,17 +53,22 @@ const LoginForm = React.forwardRef(() => {
                 navigate(`/users/${response.user.username}`)
             } else if (response === undefined) {
                 // This might indicate a network error or parsing issue
-                console.error('❌ Login response is undefined - check network/parsing')
+                console.error(
+                    '❌ Login response is undefined - check network/parsing'
+                )
                 form.setError('root.serverError', {
                     type: 'server',
-                    message: 'Login failed - no response received. Check your network connection.',
+                    message:
+                        'Login failed - no response received. Check your network connection.',
                 })
             } else {
                 // Response exists but doesn't have user data
                 console.error('❌ Login response missing user data:', response)
                 form.setError('root.serverError', {
                     type: 'server',
-                    message: response?.message || 'Authentication failed - invalid credentials',
+                    message:
+                        response?.message ||
+                        'Authentication failed - invalid credentials',
                 })
             }
         } catch (error) {
@@ -82,7 +87,8 @@ const LoginForm = React.forwardRef(() => {
             }
 
             // More specific error handling
-            const errorMessage = error instanceof Error ? error.message : String(error)
+            const errorMessage =
+                error instanceof Error ? error.message : String(error)
             console.error('Error message string:', errorMessage)
 
             if (errorMessage.includes('fetch')) {

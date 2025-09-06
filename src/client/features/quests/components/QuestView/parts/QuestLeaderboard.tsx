@@ -9,7 +9,7 @@ import { LeaderboardEntry } from '@/features/quests/types'
 import { AvatarOverlay } from '../../AvatarOverlay'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
-import api from '@/api/api'
+import api from '@/core/api/axios'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {

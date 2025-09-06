@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import { useAuth } from './useAuth'
+import { useAuth } from '@/core/auth/useAuth'
 
 export interface SafeUser {
     id: number

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { motion } from 'motion/react'
-import { useLeaflet } from '@/hooks/useLeaflet'
+import { useLeaflet } from '@/shared/hooks/useLeaflet'
 import { PhotoModal } from '../PhotoModal'
 import { ObservationCard, type Observation } from '../ObservationCard'
 

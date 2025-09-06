@@ -7,11 +7,11 @@ import {
     MenubarTrigger,
 } from '@/components/ui/menubar'
 import { Link, useLocation, useNavigate } from 'react-router'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/core/auth/useAuth'
 import avatar from 'animal-avatar-generator'
 import { ReactSVG } from 'react-svg'
 import { Button } from '@/components/ui/button'
-import { paths } from '@/routes/paths'
+import { paths } from '@/core/routing/paths'
 
 export function MainMenu() {
     const { isAuthenticated, user, logout } = useAuth()

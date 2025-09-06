@@ -1,4 +1,4 @@
-import { Quest } from '../../../server/models/quests'
+import { Quest } from '@/shared/types/types'
 import { INatTaxon } from '@shared/types'
 
 export type QuestStatus = 'pending' | 'active' | 'paused' | 'ended'

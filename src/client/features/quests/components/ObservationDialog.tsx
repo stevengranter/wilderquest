@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import React, { ReactNode, useEffect, useState } from 'react'
-import api from '@/api/api'
+import api from '@/core/api/axios'
 import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
 import {
     Dialog,
@@ -31,7 +31,7 @@ import {
     ObservationMapView,
 } from './observation-views'
 import { MdOutlineLocationOn } from 'react-icons/md'
-import { usePrefetchTaxonPhoto } from '@/hooks/useTaxonPhotos'
+import { usePrefetchTaxonPhoto } from '@/shared/hooks/useTaxonPhotos'
 
 interface ObservationDialogProps {
     species: INatTaxon

@@ -9,8 +9,8 @@ import {
 import chunk from 'lodash/chunk'
 import React, { useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
-import api from '@/api/api'
-import { useAuth } from '@/hooks/useAuth'
+import api from '@/core/api/axios'
+import { useAuth } from '@/core/auth/useAuth'
 
 import {
     AggregatedProgress,
@@ -20,8 +20,8 @@ import {
     Share,
 } from '@/features/quests/types'
 import { INatTaxon } from '@shared/types'
-import { Quest } from '../../server/models/quests'
-import { QuestWithTaxa } from '../../types/types'
+import { Quest } from '@/shared/types/types'
+import { QuestWithTaxa } from '@/shared/types/types'
 
 type ProgressData = {
     mappings: QuestMapping[]

@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { DetailedProgress, QuestMapping, QuestStatus, Share } from '../types'
 import { LoggedInUser } from '@shared/types/authTypes'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 
 interface FoundButtonProps {
     // Core data

@@ -3,7 +3,7 @@ import {
     loadLeaflet,
     isLeafletLoaded,
     LeafletLoadOptions,
-} from '@/lib/leafletLoader'
+} from '@/shared/lib/leafletLoader'
 
 /**
  * React hook for dynamically loading Leaflet

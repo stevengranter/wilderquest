@@ -1,7 +1,7 @@
 // src/components/ProtectedRoute.tsx
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/core/auth/useAuth'
 
 interface ProtectedRouteProps {
     children: React.ReactNode
@@ -62,7 +62,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     if (!isAuthenticated || !hasValidToken) {
         console.log('🔒 ProtectedRoute: Redirecting to login', {
             isAuthenticated,
-            hasValidToken
+            hasValidToken,
         })
         return <Navigate to="/login" replace />
     }

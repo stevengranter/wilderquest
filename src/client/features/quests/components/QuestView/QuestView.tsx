@@ -7,7 +7,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion'
-import { useQuestContext } from '@/contexts/QuestContext'
+import { useQuestContext } from '@/core/auth/QuestContext'
 import { useTaxaWithProgress } from '../../hooks/useTaxaWithProgress'
 import { QuestHeader } from './parts/QuestHeader'
 import { QuestLeaderboard } from './parts/QuestLeaderboard'
@@ -16,7 +16,7 @@ import { QuestSpecies } from './parts/QuestSpecies'
 import { QuestControls } from './parts/QuestControls'
 import { QuestSummaryModal } from '../QuestSummaryModal'
 import { ClientQuest } from '../SpeciesCardWithObservations'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/core/auth/useAuth'
 import { useState, useEffect } from 'react'
 import { QuestStatusBadge } from '../QuestStatusBadge'
 

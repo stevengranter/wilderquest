@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import { MdOutlineLocationOn } from 'react-icons/md'
 import { ProgressiveObservationImage } from './ProgressiveObservationImage'
 
