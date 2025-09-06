@@ -423,11 +423,15 @@ describe('QuestService', () => {
             }
             mockQuestRepo.findById.mockResolvedValue(updatedQuest)
 
-            // Mock taxa retrieval to return the updated taxa
-            mockQuestToTaxaRepo.findMany.mockResolvedValue([
-                { id: 1, quest_id: existingQuestId, taxon_id: 111 },
-                { id: 2, quest_id: existingQuestId, taxon_id: 222 },
-            ])
+            // Mock taxa retrieval to return existing taxa (different from the ones being added)
+            mockQuestToTaxaRepo.findMany
+                .mockResolvedValueOnce([
+                    { id: 1, quest_id: existingQuestId, taxon_id: 123 },
+                ])
+                .mockResolvedValueOnce([
+                    { id: 2, quest_id: existingQuestId, taxon_id: 111 },
+                    { id: 3, quest_id: existingQuestId, taxon_id: 222 },
+                ])
 
             const result = await questService.updateQuest(
                 existingQuestId,
@@ -445,9 +449,7 @@ describe('QuestService', () => {
             })
 
             // Verify taxa operations
-            expect(mockQuestToTaxaRepo.deleteMany).toHaveBeenCalledWith({
-                quest_id: existingQuestId,
-            })
+            expect(mockQuestToTaxaRepo.delete).toHaveBeenCalledWith(1) // Delete existing mapping
             expect(mockQuestToTaxaRepo.create).toHaveBeenCalledTimes(2)
             expect(mockQuestToTaxaRepo.create).toHaveBeenCalledWith({
                 quest_id: existingQuestId,
@@ -513,10 +515,8 @@ describe('QuestService', () => {
 
             await questService.updateQuest(existingQuestId, taxaUpdate, ownerId)
 
-            // Should delete existing taxa
-            expect(mockQuestToTaxaRepo.deleteMany).toHaveBeenCalledWith({
-                quest_id: existingQuestId,
-            })
+            // Should not delete existing taxa (sharedQuestProgressRepo not provided)
+            expect(mockQuestToTaxaRepo.deleteMany).not.toHaveBeenCalled()
 
             // Should create new taxa
             expect(mockQuestToTaxaRepo.create).toHaveBeenCalledTimes(3)
@@ -579,10 +579,8 @@ describe('QuestService', () => {
                 ownerId
             )
 
-            // Should delete existing taxa but not create new ones
-            expect(mockQuestToTaxaRepo.deleteMany).toHaveBeenCalledWith({
-                quest_id: existingQuestId,
-            })
+            // Should not delete existing taxa (sharedQuestProgressRepo not provided)
+            expect(mockQuestToTaxaRepo.deleteMany).not.toHaveBeenCalled()
             expect(mockQuestToTaxaRepo.create).not.toHaveBeenCalled()
         })
     })
@@ -648,13 +646,13 @@ describe('QuestService', () => {
                 id: 1,
                 name: 'Public Quest 1',
                 taxon_ids: [123, 456],
-                photoUrl: 'https://example.com/photo.jpg',
+                photoUrl: null,
             })
             expect(result[1]).toMatchObject({
                 id: 2,
                 name: 'Public Quest 2',
                 taxon_ids: [789],
-                photoUrl: 'https://example.com/photo.jpg',
+                photoUrl: null,
             })
         })
 
@@ -681,10 +679,11 @@ describe('QuestService', () => {
                 new Error('API unavailable')
             )
 
-            // Currently the function throws when photo fetch fails
-            await expect(questService.getAllPublicQuests()).rejects.toThrow(
-                'Failed to retrieve public quests'
-            )
+            // Photo fetching is disabled, so function should succeed with null photo URLs
+            const result = await questService.getAllPublicQuests()
+            expect(result).toHaveLength(2)
+            expect(result[0].photoUrl).toBeNull()
+            expect(result[1].photoUrl).toBeNull()
         })
 
         it('should handle empty quest results', async () => {
@@ -718,12 +717,11 @@ describe('QuestService', () => {
             )
         })
 
-        it('should use first taxon ID for photo fetching', async () => {
+        it('should not fetch photos when disabled', async () => {
             const _result = await questService.getAllPublicQuests()
 
-            // Should fetch photo for first taxon of each quest
-            expect(mockINatService.getTaxonPhoto).toHaveBeenCalledWith(123) // First taxon of quest 1
-            expect(mockINatService.getTaxonPhoto).toHaveBeenCalledWith(789) // First taxon of quest 2
+            // Photo fetching is disabled to prevent 429 errors
+            expect(mockINatService.getTaxonPhoto).not.toHaveBeenCalled()
         })
 
         it('should handle quests with no valid taxa for photos', async () => {
@@ -815,14 +813,14 @@ describe('QuestService', () => {
                 name: 'Public Quest',
                 is_private: false,
                 taxon_ids: [123],
-                photoUrl: 'https://example.com/photo.jpg',
+                photoUrl: null,
             })
             expect(result[1]).toMatchObject({
                 id: 2,
                 name: 'Private Quest',
                 is_private: true,
                 taxon_ids: [456, 789],
-                photoUrl: 'https://example.com/photo.jpg',
+                photoUrl: null,
             })
         })
 
@@ -946,10 +944,14 @@ describe('QuestService', () => {
                 new Error('API unavailable')
             )
 
-            // This should throw because of Promise.all failure (same as getAllPublicQuests)
-            await expect(
-                questService.getUserQuests(targetUserId, targetUserId)
-            ).rejects.toThrow('Failed to retrieve user quests')
+            // Photo fetching is disabled, so function should succeed with null photo URLs
+            const result = await questService.getUserQuests(
+                targetUserId,
+                targetUserId
+            )
+            expect(result).toHaveLength(2)
+            expect(result[0].photoUrl).toBeNull()
+            expect(result[1].photoUrl).toBeNull()
         })
 
         it('should handle repository errors', async () => {
@@ -972,9 +974,8 @@ describe('QuestService', () => {
             expect(result[0].taxon_ids).toEqual([123])
             expect(result[1].taxon_ids).toEqual([456, 789])
 
-            // Should have fetched photos for first taxon of each quest
-            expect(mockINatService.getTaxonPhoto).toHaveBeenCalledWith(123)
-            expect(mockINatService.getTaxonPhoto).toHaveBeenCalledWith(456)
+            // Photo fetching is disabled to prevent 429 errors
+            expect(mockINatService.getTaxonPhoto).not.toHaveBeenCalled()
         })
     })
 
@@ -1297,9 +1298,10 @@ describe('QuestService', () => {
                 new Error('API timeout')
             )
 
-            await expect(questService.getAllPublicQuests()).rejects.toThrow(
-                'Failed to retrieve public quests'
-            )
+            // Photo fetching is disabled, so function should succeed despite API errors
+            const result = await questService.getAllPublicQuests()
+            expect(result).toHaveLength(1)
+            expect(result[0].photoUrl).toBeNull()
         })
 
         it('should handle taxa creation failures', async () => {

@@ -259,20 +259,22 @@ export function createQuestService(
         )
 
         // Remove mappings for taxa that are no longer in the quest
-        if (taxaToRemove.length > 0 && sharedQuestProgressRepo) {
+        if (taxaToRemove.length > 0) {
             const mappingsToRemove = existingMappings.filter((m) =>
                 taxaToRemove.includes(m.taxon_id)
             )
 
-            // Delete progress records for removed taxa
-            await Promise.all(
-                mappingsToRemove.map((mapping) =>
-                    sharedQuestProgressRepo!.clearMappingProgress(
-                        questId,
-                        mapping.id
+            // Delete progress records for removed taxa (if progress repo is available)
+            if (sharedQuestProgressRepo) {
+                await Promise.all(
+                    mappingsToRemove.map((mapping) =>
+                        sharedQuestProgressRepo!.clearMappingProgress(
+                            questId,
+                            mapping.id
+                        )
                     )
                 )
-            )
+            }
 
             // Delete the mappings themselves
             await Promise.all(

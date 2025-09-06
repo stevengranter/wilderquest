@@ -57,8 +57,8 @@ describe('MockINatService', () => {
         it('should return mock observations', () => {
             const result = MockINatService.getObservations()
 
-            expect(result.results).toHaveLength(1)
-            expect(result.total_results).toBe(2)
+            expect(result.results).toHaveLength(3)
+            expect(result.total_results).toBe(3)
             expect(result.results[0].species_guess).toBe('Mock Species 1')
         })
     })

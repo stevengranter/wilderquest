@@ -271,8 +271,8 @@ describe('AuthService', () => {
                 role: 1,
                 cuid: 'test-cuid-123',
             })
-            expect(result.accessToken).toBe('mock-jwt-token')
-            expect(result.refreshToken).toBe('mock-jwt-token')
+            expect(result.access_token).toBe('mock-jwt-token')
+            expect(result.refresh_token).toBe('mock-jwt-token')
 
             // Verify repository calls
             expect(mockUserRepo.findRowByColumnAndValue).toHaveBeenCalledWith(
@@ -402,8 +402,8 @@ describe('AuthService', () => {
 
             expect(result.success).toBe(true)
             expect(result.user.username).toBe('testuser')
-            expect(result.accessToken).toBe('mock-jwt-token')
-            expect(result.refreshToken).toBe('mock-jwt-token')
+            expect(result.access_token).toBe('mock-jwt-token')
+            expect(result.refresh_token).toBe('mock-jwt-token')
         })
 
         it('should propagate registration errors', async () => {
@@ -485,10 +485,10 @@ describe('AuthService', () => {
                 validRefreshToken
             )
 
-            expect(result.accessToken).toBe('mock-jwt-token')
-            expect(result.refreshToken).toBe('mock-jwt-token')
-            expect(result.accessToken).not.toBe(validRefreshToken)
-            expect(result.refreshToken).not.toBe(validRefreshToken)
+            expect(result.access_token).toBe('mock-jwt-token')
+            expect(result.refresh_token).toBe('mock-jwt-token')
+            expect(result.access_token).not.toBe(validRefreshToken)
+            expect(result.refresh_token).not.toBe(validRefreshToken)
 
             expect(mockUserRepo.update).toHaveBeenCalledWith(1, {
                 refresh_token: 'mock-jwt-token',
@@ -571,7 +571,7 @@ describe('AuthService', () => {
                 validRefreshToken
             )
 
-            expect(result.accessToken).toBe('mock-jwt-token')
+            expect(result.access_token).toBe('mock-jwt-token')
             expect(mockUserRepo.update).toHaveBeenCalledWith(1, {
                 refresh_token: 'mock-jwt-token',
             })
