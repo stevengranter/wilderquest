@@ -39,7 +39,7 @@ function UserQuests({
 
     if (isLoading) {
         return (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 overflow-hidden p-1">
                 {[1, 2, 3].map((i) => (
                     <QuestCardSkeleton key={i} />
                 ))}
@@ -80,7 +80,7 @@ function UserQuests({
     }
 
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 overflow-hidden p-1">
             {quests.map((quest: QuestWithTaxa) => {
                 const questPhotos = questToPhotosMap.get(quest.id) || []
                 return (
@@ -144,7 +144,7 @@ const UserProfile = () => {
     const isOwnProfile = authUser?.username === user.username
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 overflow-hidden">
             <div className="mb-8">
                 <div className="flex items-start gap-6">
                     <div className="flex-shrink-0">

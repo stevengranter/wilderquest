@@ -115,7 +115,7 @@ export function Home() {
 
                 {isLoading ? (
                     <div
-                        className="grid gap-4 auto-rows-fr"
+                        className="grid gap-8 auto-rows-fr overflow-hidden p-1"
                         style={{
                             gridTemplateColumns:
                                 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -127,7 +127,7 @@ export function Home() {
                     </div>
                 ) : recentQuests.length > 0 ? (
                     <div
-                        className="grid gap-4 auto-rows-fr"
+                        className="grid gap-8 auto-rows-fr overflow-hidden p-1"
                         style={{
                             gridTemplateColumns:
                                 'repeat(auto-fit, minmax(280px, 1fr))',

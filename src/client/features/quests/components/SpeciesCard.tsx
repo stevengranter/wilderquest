@@ -15,7 +15,7 @@ import {
     Skeleton,
 } from '@/components/ui'
 import { useSelectionContext } from '@/core/contexts/SelectionContext'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/lib/utils'
 import { useLazyImage } from '@/hooks/useLazyImage'
 import { BiWorld } from 'react-icons/bi'
 import { AvatarOverlay } from './AvatarOverlay'

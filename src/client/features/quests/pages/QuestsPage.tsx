@@ -141,7 +141,7 @@ function QuestsList({
 }) {
     if (loading && quests.length === 0) {
         return (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 overflow-hidden p-1">
                 {Array.from({ length: 6 }).map((_, i) => (
                     <QuestCardSkeleton key={i} />
                 ))}
@@ -160,7 +160,7 @@ function QuestsList({
     }
 
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 overflow-hidden p-1">
             <AnimatePresence>
                 {quests.map((quest, index) => {
                     const questPhotos = questToPhotosMap.get(quest.id) || []

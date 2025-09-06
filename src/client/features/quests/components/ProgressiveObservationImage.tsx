@@ -1,5 +1,5 @@
 import { useProgressiveImage } from '@/hooks/useProgressiveImage'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/lib/utils'
 
 interface ObservationPhoto {
     id: number

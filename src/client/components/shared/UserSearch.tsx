@@ -2,7 +2,7 @@ import * as React from 'react'
 import { useState } from 'react'
 import { Check, Search, X } from 'lucide-react'
 
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/lib/utils'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useUserSearch, type SafeUser } from '@/hooks/useUserSearch'
 import { useAuth } from '@/features/auth/useAuth'
