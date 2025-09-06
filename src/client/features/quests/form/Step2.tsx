@@ -1,5 +1,6 @@
 // Step2.tsx
 import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router'
 import { useQuestForm } from './QuestFormContext'
 
 type FormValues = {
@@ -8,6 +9,7 @@ type FormValues = {
 
 export default function Step2() {
     const { data, update } = useQuestForm()
+    const navigate = useNavigate()
 
     const {
         register,
@@ -19,7 +21,7 @@ export default function Step2() {
 
     const onSubmit = (values: FormValues) => {
         update(values)
-        next()
+        navigate('/quests/create/step3')
     }
 
     return (
@@ -36,7 +38,10 @@ export default function Step2() {
             />
             {errors.description && <p>{errors.description.message}</p>}
 
-            <button type="button" onClick={back}>
+            <button
+                type="button"
+                onClick={() => navigate('/quests/create/step1')}
+            >
                 Back
             </button>
             <button type="submit">Next</button>

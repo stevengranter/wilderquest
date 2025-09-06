@@ -6,6 +6,13 @@ interface SpeciesCountItem {
         name: string
         preferred_common_name: string
         default_photo?: {
+            id: number
+            license_code: string | null
+            attribution: string
+            url: string
+            original_dimensions: { height: number; width: number }
+            flags: unknown[]
+            attribution_name: string | null
             square_url: string
             medium_url: string
         }
@@ -31,52 +38,57 @@ interface AnimationInstance {
 }
 
 export function useSpeciesAddAnimation() {
-    const [activeAnimations, setActiveAnimations] = useState<AnimationInstance[]>([])
+    const [activeAnimations, setActiveAnimations] = useState<
+        AnimationInstance[]
+    >([])
     const animationCounter = useRef(0)
 
-    const triggerAddAnimation = useCallback((
-        species: SpeciesCountItem | TaxonData,
-        fromElement: HTMLElement,
-        toElement: HTMLElement
-    ) => {
-        // Get positions relative to viewport
-        const fromRect = fromElement.getBoundingClientRect()
-        const toRect = toElement.getBoundingClientRect()
+    const triggerAddAnimation = useCallback(
+        (
+            species: SpeciesCountItem | TaxonData,
+            fromElement: HTMLElement,
+            toElement: HTMLElement
+        ) => {
+            // Get positions relative to viewport
+            const fromRect = fromElement.getBoundingClientRect()
+            const toRect = toElement.getBoundingClientRect()
 
-        const fromPosition = {
-            x: fromRect.left + fromRect.width / 2,
-            y: fromRect.top + fromRect.height / 2
-        }
+            const fromPosition = {
+                x: fromRect.left + fromRect.width / 2,
+                y: fromRect.top + fromRect.height / 2,
+            }
 
-        const toPosition = {
-            x: toRect.left + toRect.width / 2,
-            y: toRect.top + toRect.height / 2
-        }
+            const toPosition = {
+                x: toRect.left + toRect.width / 2,
+                y: toRect.top + toRect.height / 2,
+            }
 
-        const animationId = `animation-${animationCounter.current++}`
+            const animationId = `animation-${animationCounter.current++}`
 
-        const newAnimation: AnimationInstance = {
-            id: animationId,
-            species,
-            fromPosition,
-            toPosition
-        }
+            const newAnimation: AnimationInstance = {
+                id: animationId,
+                species,
+                fromPosition,
+                toPosition,
+            }
 
-        setActiveAnimations(prev => [...prev, newAnimation])
+            setActiveAnimations((prev) => [...prev, newAnimation])
 
-        // Auto-cleanup after animation completes
-        setTimeout(() => {
-            setActiveAnimations(prev =>
-                prev.filter(anim => anim.id !== animationId)
-            )
-        }, 800) // Match animation duration + buffer
+            // Auto-cleanup after animation completes
+            setTimeout(() => {
+                setActiveAnimations((prev) =>
+                    prev.filter((anim) => anim.id !== animationId)
+                )
+            }, 800) // Match animation duration + buffer
 
-        return animationId
-    }, [])
+            return animationId
+        },
+        []
+    )
 
     const cancelAnimation = useCallback((animationId: string) => {
-        setActiveAnimations(prev =>
-            prev.filter(anim => anim.id !== animationId)
+        setActiveAnimations((prev) =>
+            prev.filter((anim) => anim.id !== animationId)
         )
     }, [])
 
@@ -91,54 +103,67 @@ export function useSpeciesAddAnimation() {
         const rect = element.getBoundingClientRect()
         return {
             x: rect.left + rect.width / 2,
-            y: rect.top + rect.height / 2
+            y: rect.top + rect.height / 2,
         }
     }, [])
 
     // Enhanced trigger that automatically finds common source/target elements
-    const triggerAddAnimationFromCard = useCallback((
-        species: SpeciesCountItem | TaxonData,
-        sourceCardElement?: HTMLElement
-    ) => {
-        // Find the source element (swipe card or list item)
-        const sourceElement = sourceCardElement ||
-            document.querySelector('[data-species-card]') as HTMLElement
+    const triggerAddAnimationFromCard = useCallback(
+        (
+            species: SpeciesCountItem | TaxonData,
+            sourceCardElement?: HTMLElement
+        ) => {
+            // Find the source element (swipe card or list item)
+            const sourceElement =
+                sourceCardElement ||
+                (document.querySelector('[data-species-card]') as HTMLElement)
 
-        // Find the target element (current species list)
-        const targetElement = document.querySelector('[data-current-species-list]') as HTMLElement
+            // Find the target element (current species list)
+            const targetElement = document.querySelector(
+                '[data-current-species-list]'
+            ) as HTMLElement
 
-        if (sourceElement && targetElement) {
-            return triggerAddAnimation(species, sourceElement, targetElement)
-        }
+            if (sourceElement && targetElement) {
+                return triggerAddAnimation(
+                    species,
+                    sourceElement,
+                    targetElement
+                )
+            }
 
-        return null
-    }, [triggerAddAnimation])
+            return null
+        },
+        [triggerAddAnimation]
+    )
 
     // Trigger animation with custom positions
-    const triggerAddAnimationWithPositions = useCallback((
-        species: SpeciesCountItem | TaxonData,
-        fromPosition: { x: number; y: number },
-        toPosition: { x: number; y: number }
-    ) => {
-        const animationId = `animation-${animationCounter.current++}`
+    const triggerAddAnimationWithPositions = useCallback(
+        (
+            species: SpeciesCountItem | TaxonData,
+            fromPosition: { x: number; y: number },
+            toPosition: { x: number; y: number }
+        ) => {
+            const animationId = `animation-${animationCounter.current++}`
 
-        const newAnimation: AnimationInstance = {
-            id: animationId,
-            species,
-            fromPosition,
-            toPosition
-        }
+            const newAnimation: AnimationInstance = {
+                id: animationId,
+                species,
+                fromPosition,
+                toPosition,
+            }
 
-        setActiveAnimations(prev => [...prev, newAnimation])
+            setActiveAnimations((prev) => [...prev, newAnimation])
 
-        setTimeout(() => {
-            setActiveAnimations(prev =>
-                prev.filter(anim => anim.id !== animationId)
-            )
-        }, 800)
+            setTimeout(() => {
+                setActiveAnimations((prev) =>
+                    prev.filter((anim) => anim.id !== animationId)
+                )
+            }, 800)
 
-        return animationId
-    }, [])
+            return animationId
+        },
+        []
+    )
 
     return {
         activeAnimations,
@@ -148,7 +173,7 @@ export function useSpeciesAddAnimation() {
         cancelAnimation,
         cancelAllAnimations,
         getElementPosition,
-        hasActiveAnimations: activeAnimations.length > 0
+        hasActiveAnimations: activeAnimations.length > 0,
     }
 }
 
@@ -159,21 +184,24 @@ export function useSpeciesAddTrigger(
     const { triggerAddAnimationFromCard } = useSpeciesAddAnimation()
     const cardRef = useRef<HTMLElement>(null)
 
-    const handleAddSpecies = useCallback((species: SpeciesCountItem | TaxonData) => {
-        // Trigger animation
-        if (cardRef.current) {
-            triggerAddAnimationFromCard(species, cardRef.current)
-        }
+    const handleAddSpecies = useCallback(
+        (species: SpeciesCountItem | TaxonData) => {
+            // Trigger animation
+            if (cardRef.current) {
+                triggerAddAnimationFromCard(species, cardRef.current)
+            }
 
-        // Call original handler after a small delay to let animation start
-        setTimeout(() => {
-            onSpeciesAdded?.(species)
-        }, 100)
-    }, [onSpeciesAdded, triggerAddAnimationFromCard])
+            // Call original handler after a small delay to let animation start
+            setTimeout(() => {
+                onSpeciesAdded?.(species)
+            }, 100)
+        },
+        [onSpeciesAdded, triggerAddAnimationFromCard]
+    )
 
     return {
         cardRef,
-        handleAddSpecies
+        handleAddSpecies,
     }
 }
 
@@ -184,7 +212,7 @@ export function getAnimationConfig(
 ) {
     const distance = Math.sqrt(
         Math.pow(toPosition.x - fromPosition.x, 2) +
-        Math.pow(toPosition.y - fromPosition.y, 2)
+            Math.pow(toPosition.y - fromPosition.y, 2)
     )
 
     // Adjust duration based on distance (min 0.4s, max 1.2s)
@@ -198,6 +226,6 @@ export function getAnimationConfig(
         duration,
         ease,
         // Add slight curve to the animation path
-        pathOffset: distance > 200 ? 50 : 20
+        pathOffset: distance > 200 ? 50 : 20,
     }
 }

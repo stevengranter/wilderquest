@@ -15,38 +15,15 @@ import { useSpeciesSwipe } from '@/features/quests/hooks/useSpeciesSwipe'
 import {
     ResponsiveSpeciesGrid,
     ResponsiveSpeciesThumbnail,
+    type TaxonData,
+    type SpeciesCountItem,
 } from '@/features/quests/components/ResponsiveSpeciesThumbnail'
+
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { useSpeciesAddTrigger } from './SpeciesAnimationProvider'
 import api from '@/api/api'
 import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
 import { INatTaxon } from '@shared/types/iNatTypes'
-
-interface TaxonData {
-    id: number
-    name: string
-    preferred_common_name: string
-    rank?: string
-    default_photo?: {
-        id: number
-        license_code: string
-        attribution: string
-        url: string
-        original_dimensions: { height: number; width: number }
-        flags: unknown[]
-        attribution_name: string | null
-        square_url: string
-        medium_url: string
-    }
-    iconic_taxon_name?: string
-    observations_count?: number
-    wikipedia_url?: string
-}
-
-export interface SpeciesCountItem {
-    taxon: TaxonData
-    count: number
-}
 
 interface SpeciesSwipeSelectorProps {
     questSpecies: Map<number, SpeciesCountItem>

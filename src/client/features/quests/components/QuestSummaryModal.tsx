@@ -1,11 +1,26 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { Calendar, Download, Share2, Target, TrendingUp, Trophy, Users, X, Zap } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+    Calendar,
+    Download,
+    Share2,
+    Target,
+    TrendingUp,
+    Trophy,
+    Users,
+    X,
+    Zap,
+} from 'lucide-react'
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { LeaderboardEntry } from '@/features/quests/types'
 import { AvatarOverlay } from './AvatarOverlay'
-import { Quest } from '../../../../types/types'
+import { Quest } from '../../../../shared/types/questTypes'
 import { INatTaxon } from '../../../../shared/types/iNatTypes'
 import { DetailedProgress, QuestMapping } from '../types'
 import { useEffect, useState } from 'react'
@@ -97,7 +112,7 @@ export function QuestSummaryModal({
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[80%] h-[80%] max-h-[90%] overflow-y-auto bg-yellow-100 border border-black rounded-md p-0">
-            <div className="bg-gradient-to-br from-yellow-100 via-pink-100 to-blue-100 p-8">
+                <div className="bg-gradient-to-br from-yellow-100 via-pink-100 to-blue-100 p-8">
                     <DialogHeader className="relative mb-8">
                         <motion.div
                             initial={{ opacity: 0, y: -30, rotate: -5 }}
@@ -133,7 +148,7 @@ export function QuestSummaryModal({
                         </motion.div>
 
                         <Button
-                            variant="outline"
+                            variant="default"
                             size="sm"
                             onClick={onClose}
                             className="absolute right-4 top-4 bg-red-400 hover:bg-red-500 border border-black rounded-md font-bold"
@@ -460,7 +475,7 @@ export function QuestSummaryModal({
                                 SHARE RESULTS
                             </Button>
                             <Button
-                                variant="outline"
+                                variant="default"
                                 onClick={onClose}
                                 className="flex items-center gap-3 bg-blue-400 hover:bg-blue-500 border border-black rounded-md text-black font-black text-xl py-6 px-8 uppercase tracking-wider transition-all duration-150"
                             >

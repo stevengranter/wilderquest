@@ -25,6 +25,7 @@ const mockTaxa: INatTaxon[] = [
             url: 'https://via.placeholder.com/500x500?text=Raven',
             original_dimensions: { height: 500, width: 500 },
             flags: [],
+            attribution_name: null,
             square_url: 'https://via.placeholder.com/100x100?text=Raven',
             medium_url: 'https://via.placeholder.com/300x300?text=Raven',
         },
@@ -58,6 +59,7 @@ const mockTaxa: INatTaxon[] = [
             url: 'https://via.placeholder.com/500x500?text=Blue+Jay',
             original_dimensions: { height: 500, width: 500 },
             flags: [],
+            attribution_name: null,
             square_url: 'https://via.placeholder.com/100x100?text=Blue+Jay',
             medium_url: 'https://via.placeholder.com/300x300?text=Blue+Jay',
         },
@@ -92,6 +94,7 @@ const mockTaxa: INatTaxon[] = [
             url: 'https://via.placeholder.com/500x500?text=Black+Bear',
             original_dimensions: { height: 500, width: 500 },
             flags: [],
+            attribution_name: null,
             square_url: 'https://via.placeholder.com/100x100?text=Black+Bear',
             medium_url: 'https://via.placeholder.com/300x300?text=Black+Bear',
         },
@@ -125,6 +128,7 @@ const mockTaxa: INatTaxon[] = [
             url: 'https://via.placeholder.com/500x500?text=Gray+Squirrel',
             original_dimensions: { height: 500, width: 500 },
             flags: [],
+            attribution_name: null,
             square_url:
                 'https://via.placeholder.com/100x100?text=Gray+Squirrel',
             medium_url:
@@ -161,6 +165,7 @@ const mockTaxa: INatTaxon[] = [
             url: 'https://via.placeholder.com/500x500?text=Monarch+Butterfly',
             original_dimensions: { height: 500, width: 500 },
             flags: [],
+            attribution_name: null,
             square_url:
                 'https://via.placeholder.com/100x100?text=Monarch+Butterfly',
             medium_url:
@@ -197,6 +202,7 @@ const mockTaxa: INatTaxon[] = [
             url: 'https://via.placeholder.com/500x500?text=Northern+Red+Oak',
             original_dimensions: { height: 500, width: 500 },
             flags: [],
+            attribution_name: null,
             square_url:
                 'https://via.placeholder.com/100x100?text=Northern+Red+Oak',
             medium_url:
@@ -233,6 +239,7 @@ const mockTaxa: INatTaxon[] = [
             url: 'https://via.placeholder.com/500x500?text=American+Toad',
             original_dimensions: { height: 500, width: 500 },
             flags: [],
+            attribution_name: null,
             square_url:
                 'https://via.placeholder.com/100x100?text=American+Toad',
             medium_url:
@@ -269,6 +276,7 @@ const mockTaxa: INatTaxon[] = [
             url: 'https://via.placeholder.com/500x500?text=Fly+Agaric',
             original_dimensions: { height: 500, width: 500 },
             flags: [],
+            attribution_name: null,
             square_url: 'https://via.placeholder.com/100x100?text=Fly+Agaric',
             medium_url: 'https://via.placeholder.com/300x300?text=Fly+Agaric',
         },
@@ -303,6 +311,7 @@ const mockTaxa: INatTaxon[] = [
             url: 'https://via.placeholder.com/500x500?text=Crow+Genus',
             original_dimensions: { height: 500, width: 500 },
             flags: [],
+            attribution_name: null,
             square_url: 'https://via.placeholder.com/100x100?text=Crow+Genus',
             medium_url: 'https://via.placeholder.com/300x300?text=Crow+Genus',
         },
@@ -336,6 +345,7 @@ const mockTaxa: INatTaxon[] = [
             url: 'https://via.placeholder.com/500x500?text=Corvidae+Family',
             original_dimensions: { height: 500, width: 500 },
             flags: [],
+            attribution_name: null,
             square_url:
                 'https://via.placeholder.com/100x100?text=Corvidae+Family',
             medium_url:

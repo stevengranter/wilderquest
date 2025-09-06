@@ -35,6 +35,7 @@ export default function UserQuestsPage() {
         queryKey: ['userQuests', userId],
         queryFn: ({ pageParam }) => fetchUserQuests({ pageParam, userId }),
         getNextPageParam: (lastPage) => lastPage.nextPage,
+        initialPageParam: 1,
     })
 
     const observer = useRef<IntersectionObserver | null>(null)
@@ -60,7 +61,7 @@ export default function UserQuestsPage() {
         <div className="container mx-auto px-4 py-6">
             <h1 className="text-3xl font-bold mb-4">User Quests</h1>
             <QuestsList
-                quests={data.pages.flatMap((page) => page.quests)}
+                quests={data?.pages.flatMap((page) => page.quests) || []}
                 lastQuestElementRef={lastQuestElementRef}
             />
             {isFetchingNextPage && <p>Loading...</p>}

@@ -3,6 +3,11 @@ import { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { useDebounce } from '@/hooks/useDebounce'
 
+interface Place {
+    id: number
+    name: string
+}
+
 async function fetchPlacesAutocomplete(query: string) {
     if (query.length < 3) {
         console.log('too short')
@@ -23,7 +28,7 @@ async function fetchPlacesAutocomplete(query: string) {
 export function PlaceFinder() {
     const [query, setQuery] = useState('')
     const debouncedQuery = useDebounce(query, 500)
-    const [places, setPlaces] = useState([])
+    const [places, setPlaces] = useState<Place[]>([])
 
     useEffect(() => {
         if (debouncedQuery) {
@@ -48,10 +53,10 @@ export function PlaceFinder() {
     )
 }
 
-function PlaceSelector({ places }) {
+function PlaceSelector({ places }: { places: Place[] }) {
     return (
         <ul>
-            {places.map((place) => (
+            {places.map((place: Place) => (
                 <li key={place.id}>{place.name}</li>
             ))}
         </ul>

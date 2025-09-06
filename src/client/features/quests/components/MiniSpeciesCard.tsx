@@ -9,7 +9,10 @@ import getKingdomIcon from '@/components/search/getKingdomIcon'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import { SpeciesCardWithObservations } from './SpeciesCardWithObservations'
+import {
+    SpeciesCardWithObservations,
+    ClientQuest,
+} from './SpeciesCardWithObservations'
 import { useAnimationTarget } from './SpeciesAnimationProvider'
 import { cn } from '@/lib/utils'
 
@@ -20,7 +23,7 @@ interface TaxonData {
     rank?: string
     default_photo?: {
         id: number
-        license_code: string
+        license_code: string | null
         attribution: string
         url: string
         original_dimensions: { height: number; width: number }
@@ -43,19 +46,7 @@ interface MiniSpeciesCardProps {
     species: SpeciesCountItem | TaxonData
     onRemove?: (species: SpeciesCountItem | TaxonData) => void
     className?: string
-    questData?: {
-        id: string | number
-        name: string
-        description?: string
-        taxon_ids?: number[]
-        is_private: boolean
-        user_id: string
-        created_at: string
-        updated_at: string
-        location_name?: string
-        latitude?: number
-        longitude?: number
-    }
+    questData?: ClientQuest
     locationData?: {
         location_name?: string
         latitude?: number
@@ -249,19 +240,7 @@ interface MiniSpeciesCardGridProps {
     title?: string
     emptyMessage?: string
     className?: string
-    questData?: {
-        id: string | number
-        name: string
-        description?: string
-        taxon_ids?: number[]
-        is_private: boolean
-        user_id: string
-        created_at: string
-        updated_at: string
-        location_name?: string
-        latitude?: number
-        longitude?: number
-    }
+    questData?: ClientQuest
     locationData?: {
         location_name?: string
         latitude?: number

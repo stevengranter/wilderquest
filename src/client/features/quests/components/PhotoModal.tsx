@@ -27,7 +27,7 @@ export function PhotoModal({
     )
     const [currentPhotoIndex, setCurrentPhotoIndex] =
         useState(initialPhotoIndex)
-    const [direction, setDirection] = useState<'left' | 'right'>('right')
+    const [_direction, setDirection] = useState<'left' | 'right'>('right')
     const [touchStart, setTouchStart] = useState<number | null>(null)
     const [touchEnd, setTouchEnd] = useState<number | null>(null)
     const [mouseDown, setMouseDown] = useState(false)

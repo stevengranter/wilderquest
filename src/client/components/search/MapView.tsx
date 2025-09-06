@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import type { ComponentType } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { useLeaflet } from '@/hooks/useLeaflet'
@@ -16,7 +16,8 @@ type MapViewProps = {
 }
 
 function createKingdomIcon(L: typeof import('leaflet'), kingdom: string) {
-    const iconJSX = getKingdomIcon(kingdom) // React component like <FaLeaf />
+    const IconComponent = getKingdomIcon(kingdom)
+    const iconJSX = <IconComponent />
     const svgString = renderToStaticMarkup(iconJSX)
 
     return new L.DivIcon({

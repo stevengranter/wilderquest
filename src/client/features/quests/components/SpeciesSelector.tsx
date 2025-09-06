@@ -3,7 +3,13 @@ import React, { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { SpeciesCardWithObservations } from '@/features/quests/components/SpeciesCardWithObservations'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 import { ResponsiveSpeciesGrid } from '@/features/quests/components/ResponsiveSpeciesThumbnail'
 import { useSpeciesAddTrigger } from './SpeciesAnimationProvider'
 import api from '@/api/api'
@@ -60,8 +66,27 @@ export function SpeciesSelector({
             {/* Left Column - Current Species */}
             <div className="flex flex-col lg:col-span-1">
                 <ResponsiveSpeciesGrid
-                    species={selectedTaxa}
-                    onRemove={(species) => onToggleTaxon(species)}
+                    species={selectedTaxa.map((taxon) => ({
+                        id: taxon.id,
+                        name: taxon.name,
+                        preferred_common_name: taxon.preferred_common_name,
+                        rank: taxon.rank,
+                        default_photo: taxon.default_photo,
+                        iconic_taxon_name: taxon.iconic_taxon_name,
+                        observations_count: taxon.observations_count,
+                        wikipedia_url: taxon.wikipedia_url,
+                    }))}
+                    onRemove={(species) => {
+                        // Handle both TaxonData and SpeciesCountItem
+                        const taxonId =
+                            'taxon' in species ? species.taxon.id : species.id
+                        const originalTaxon = selectedTaxa.find(
+                            (t) => t.id === taxonId
+                        )
+                        if (originalTaxon) {
+                            onToggleTaxon(originalTaxon)
+                        }
+                    }}
                     locationData={{
                         latitude: lat,
                         longitude: lon,

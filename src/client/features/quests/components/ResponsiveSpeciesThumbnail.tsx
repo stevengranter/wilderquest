@@ -3,19 +3,22 @@
 import React, { useState } from 'react'
 import { X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { SpeciesCardWithObservations } from './SpeciesCardWithObservations'
+import {
+    SpeciesCardWithObservations,
+    ClientQuest,
+} from './SpeciesCardWithObservations'
 import { useAnimationTarget } from './SpeciesAnimationProvider'
 import { cn } from '@/lib/utils'
 import { INatTaxon } from '@shared/types/iNatTypes'
 
-interface TaxonData {
+export interface TaxonData {
     id: number
     name: string
     preferred_common_name: string
     rank?: string
     default_photo?: {
         id: number
-        license_code: string
+        license_code: string | null
         attribution: string
         url: string
         original_dimensions: { height: number; width: number }
@@ -29,7 +32,7 @@ interface TaxonData {
     wikipedia_url?: string
 }
 
-interface SpeciesCountItem {
+export interface SpeciesCountItem {
     taxon: TaxonData
     count: number
 }
@@ -39,19 +42,7 @@ interface ResponsiveSpeciesThumbnailProps {
     size: number // Size in pixels
     onRemove?: (species: SpeciesCountItem | TaxonData) => void
     className?: string
-    questData?: {
-        id: string | number
-        name: string
-        description?: string
-        taxon_ids?: number[]
-        is_private: boolean
-        user_id: string
-        created_at: string
-        updated_at: string
-        location_name?: string
-        latitude?: number
-        longitude?: number
-    }
+    questData?: ClientQuest
     locationData?: {
         location_name?: string
         latitude?: number
@@ -174,19 +165,7 @@ interface ResponsiveSpeciesGridProps {
     species: (SpeciesCountItem | TaxonData)[]
     onRemove?: (species: SpeciesCountItem | TaxonData) => void
     className?: string
-    questData?: {
-        id: string | number
-        name: string
-        description?: string
-        taxon_ids?: number[]
-        is_private: boolean
-        user_id: string
-        created_at: string
-        updated_at: string
-        location_name?: string
-        latitude?: number
-        longitude?: number
-    }
+    questData?: ClientQuest
     locationData?: {
         location_name?: string
         latitude?: number

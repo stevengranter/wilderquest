@@ -1,6 +1,14 @@
 import { useEffect } from 'react'
 
-export default function LocationPrompt({ onLocationRetrieved }) {
+interface LocationPromptProps {
+    onLocationRetrieved: (
+        coords: { latitude: number; longitude: number } | { error: string }
+    ) => void
+}
+
+export default function LocationPrompt({
+    onLocationRetrieved,
+}: LocationPromptProps) {
     useEffect(() => {
         navigator.geolocation.getCurrentPosition(
             (position) => {
@@ -12,7 +20,7 @@ export default function LocationPrompt({ onLocationRetrieved }) {
             },
             (error) => {
                 onLocationRetrieved({ error: error.message })
-            },
+            }
         )
     }, [onLocationRetrieved])
 

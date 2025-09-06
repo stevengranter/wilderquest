@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react'
 interface TaxonData {
     default_photo?: {
         id: number
-        license_code: string
+        license_code: string | null
         attribution: string
         url: string
         original_dimensions: {

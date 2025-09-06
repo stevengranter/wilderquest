@@ -16,7 +16,7 @@ export default function UserToolbar() {
     const { isAuthenticated, user } = useAuth()
 
     // Function to call when login is successful
-    const handleLoginSuccess = () => {
+    const _handleLoginSuccess = () => {
         setIsDialogOpen(false) // Close the sheet
         // You might also want to do other things here, like redirecting
         // or updating user context.
@@ -43,7 +43,7 @@ export default function UserToolbar() {
                     </DialogHeader>
                     <div className="grid flex-1 auto-rows-min gap-6 px-4">
                         {/* Pass the handleLoginSuccess function to LoginForm */}
-                        <LoginForm onLoginSuccess={handleLoginSuccess} />
+                        <LoginForm />
                     </div>
                 </DialogContent>
             </Dialog>

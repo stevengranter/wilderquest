@@ -9,7 +9,7 @@ interface TaxonData {
     rank?: string
     default_photo?: {
         id: number
-        license_code: string
+        license_code: string | null
         attribution: string
         url: string
         original_dimensions: { height: number; width: number }

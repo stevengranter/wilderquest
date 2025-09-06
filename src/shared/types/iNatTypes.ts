@@ -23,7 +23,8 @@ export type INatTaxon = {
         attribution: string
         url: string
         original_dimensions: { height: number; width: number }
-        flags: []
+        flags: unknown[]
+        attribution_name: string | null
         square_url: string
         medium_url: string
     }

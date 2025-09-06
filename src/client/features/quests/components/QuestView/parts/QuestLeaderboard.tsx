@@ -267,7 +267,7 @@ export const QuestLeaderboard = ({
                     })
                 } catch (shareError) {
                     // User cancelled share or share failed, fall back to clipboard
-                    if (shareError.name !== 'AbortError') {
+                    if ((shareError as Error).name !== 'AbortError') {
                         console.warn(
                             'Native share failed, falling back to clipboard:',
                             shareError
@@ -350,8 +350,8 @@ export const QuestLeaderboard = ({
                     label: 'Select All',
                     onClick: () => {
                         // Try to select the text in the toast if possible
-                        const selection = window.getSelection()
-                        const range = document.createRange()
+                        const _selection = window.getSelection()
+                        const _range = document.createRange()
                         // This won't work perfectly but gives user feedback
                         console.log('Manual copy needed:', url)
                     },

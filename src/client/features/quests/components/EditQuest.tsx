@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { INatTaxon } from '@shared/types/iNatTypes'
+import { SpeciesCountItem } from '@/features/quests/components/ResponsiveSpeciesThumbnail'
 import chunk from 'lodash/chunk'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AxiosError } from 'axios'
@@ -39,27 +40,6 @@ import { formSchema } from '@/features/quests/schemas/formSchema'
 import { useQueryClient } from '@tanstack/react-query'
 
 type QuestFormValues = z.infer<typeof formSchema>
-
-interface SpeciesCountItem {
-    taxon: {
-        id: number
-        name: string
-        preferred_common_name: string
-        rank?: string
-        default_photo?: {
-            id: number
-            license_code: string
-            attribution: string
-            url: string
-            original_dimensions: { height: number; width: number }
-            flags: unknown[]
-            attribution_name: string | null
-            square_url: string
-            medium_url: string
-        }
-    }
-    count: number
-}
 
 export default function EditQuest() {
     const { questId } = useParams<{ questId: string }>()
