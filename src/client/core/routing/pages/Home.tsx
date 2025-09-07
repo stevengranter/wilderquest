@@ -5,6 +5,8 @@ import { useQuery } from '@tanstack/react-query'
 import api from '@/core/api/axios'
 import { QuestCard } from '@/features/quests/components/QuestCard'
 import { QuestCardSkeleton } from '@/features/quests/components/QuestCardSkeleton'
+import { QuestProvider } from '@/features/quests/context/QuestContext'
+import { QuestView } from '@/features/quests/components/QuestView/QuestView'
 import { Button } from '@/components/ui'
 import { Card, CardContent } from '@/components/ui'
 import { useAuth } from '@/features/auth/useAuth'
@@ -61,6 +63,9 @@ export function Home() {
         gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
     })
 
+    // Get the first quest for the demo
+    const demoQuest = recentQuests[0]
+
     // Basic stats - will be enhanced with a dedicated stats endpoint later
     // const stats = {
     //     totalQuests: 0,
@@ -88,7 +93,24 @@ export function Home() {
                 </div>
 
                 <div className="flex flex-row justify-center">
-                    <PhoneDemo className="-rotate-5">Hello there</PhoneDemo>
+                    <PhoneDemo className="-rotate-5">
+                        Hello World
+                        {/*{demoQuest ? (
+                            <div className="w-full h-full overflow-hidden bg-white">
+                                <QuestProvider questId={demoQuest.id}>
+                                    <div className="h-full scale-[0.4] origin-top-left w-[250%]">
+
+                                        <div
+                                            className="mx-5 my-4">
+                                            <QuestView />
+                                        </div>
+                                    </div>
+                                </QuestProvider>
+                            </div>
+                        ) : (
+                            <QuestCardSkeleton />
+                        )}*/}
+                    </PhoneDemo>
 
                     <Link to={paths.quests()} viewTransition>
                         <Button
