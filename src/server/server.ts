@@ -13,27 +13,32 @@ import { SCRIPT_DIR } from './constants.js'
 import env from './config/app.config.js'
 import { initApp } from './init.js'
 import { buildApp } from './app.js'
+import { serverDebug } from '../shared/utils/debug.js'
 
-const DEFAULT_PORT = env.PORT || 3000;
+const DEFAULT_PORT = env.PORT || 3000
 
 // command line port override
-const portArg = process.argv.find(arg => arg.startsWith('--port='));
-const PORT = portArg ? parseInt(portArg.split('=')[1], 10) : DEFAULT_PORT;
-
+const portArg = process.argv.find((arg) => arg.startsWith('--port='))
+const PORT = portArg ? parseInt(portArg.split('=')[1], 10) : DEFAULT_PORT
 
 async function startServer() {
     try {
+        serverDebug.api('🚀 Server startup initiated')
         // 🛢️ Initialise database pool and repositories via initApp()
         const deps = await initApp()
 
         // ☕️ Initialize routes and controllers via buildApp()
         const app = buildApp(deps)
+        serverDebug.api('📦 App built successfully')
 
         //  Server setup  //
         if (process.env.NODE_ENV !== 'production') {
             // Error Handler
             app.use(errorHandler)
             ViteExpress.listen(app, PORT, () => {
+                serverDebug.api(
+                    `🌐 Server listening on ${env.PROTOCOL}://${env.HOST}:${PORT}`
+                )
                 logger.info(
                     `Server running on ${env.PROTOCOL}://${env.HOST}:${PORT} ✅ `
                 )
@@ -53,9 +58,7 @@ async function startServer() {
             app.use(errorHandler)
 
             app.listen(DEFAULT_PORT, () => {
-                logger.info(
-                    `Server running on ${DEFAULT_PORT} ✅ `
-                ) //Log the actual port
+                logger.info(`Server running on ${DEFAULT_PORT} ✅ `) //Log the actual port
             })
         }
         const shutdownHandler = () => {

@@ -21,12 +21,33 @@ if (typeof window !== 'undefined' && isDebugEnabled) {
     console.log('🔧 Debug logging enabled:', isDebugEnabled)
 }
 
+// Create server debug instances
 export const serverDebug = {
     auth: debug('app:server:auth'),
     db: debug('app:server:db'),
     cache: debug('app:server:cache'),
     api: debug('app:server:api'),
     events: debug('app:server:events'),
+}
+
+// Enable debug logging in server if DEBUG environment variable is set
+if (typeof window === 'undefined') {
+    const debugEnv = process.env.DEBUG
+    console.log('🔍 Debug environment check - DEBUG:', debugEnv)
+    if (debugEnv) {
+        // Enable debug for server environment
+        debug.enable(debugEnv)
+        console.log('🔧 Server debug logging enabled:', debugEnv)
+
+        // Test debug call to verify it's working
+        setTimeout(() => {
+            serverDebug.api(
+                '🧪 Test debug message - if you see this, debug is working!'
+            )
+        }, 100)
+    } else {
+        console.log('🔍 No DEBUG environment variable set')
+    }
 }
 
 // Create client debug function

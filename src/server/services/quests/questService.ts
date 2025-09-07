@@ -11,6 +11,7 @@ import { iNatService } from '../iNatService.js'
 import { sendEvent } from './questEventsService.js'
 import { Quest } from '../../models/quests.js'
 import { AppError } from '../../middlewares/errorHandler.js'
+import { QuestShareService } from './questShareService.js'
 
 export type QuestService = ReturnType<typeof createQuestService>
 
@@ -19,12 +20,13 @@ export function createQuestService(
     questsToTaxaRepo: QuestToTaxaRepository,
     questShareRepo: QuestShareRepository,
     sharedQuestProgressRepo?: SharedQuestProgressRepository,
-    questShareService?: any // Will be injected after creation to avoid circular dependency
+    questShareService?: QuestShareService // Will be injected after creation to avoid circular dependency
 ) {
-    let injectedQuestShareService: any = questShareService
+    let injectedQuestShareService: QuestShareService | undefined =
+        questShareService
 
     // Method to inject questShareService after creation (to avoid circular dependency)
-    function setQuestShareService(service: any) {
+    function setQuestShareService(service: QuestShareService) {
         injectedQuestShareService = service
     }
 

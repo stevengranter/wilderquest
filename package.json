@@ -29,10 +29,11 @@
         "test:client": "jest --testPathPatterns=src/client",
         "mock-inat": "./scripts/enable-mock-mode.sh",
         "seed:mock": "tsx src/server/scripts/seed-quests-mock.ts",
-        "dev:debug": "DEBUG=app:* NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts --",
+        "dev:debug": "DEBUG=app:server:*,app:client:* NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts --",
         "dev:server": "DEBUG=app:server:* NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts --",
         "dev:client": "DEBUG=app:client:* NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts --",
-        "dev:events": "DEBUG=app:client:events NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts --"
+        "dev:events": "DEBUG=app:client:events NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts --",
+        "dev:full-debug": "DEBUG=app:server:*,app:client:* NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts --"
     },
     "dependencies": {
         "@hookform/resolvers": "^4.1.3",
@@ -130,10 +131,7 @@
     },
     "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b",
     "pnpm": {
-        "hoistPattern": [
-            "@types/*",
-            "typescript"
-        ],
+        "hoistPattern": ["@types/*", "typescript"],
         "onlyBuiltDependencies": [
             "@firebase/util",
             "@swc/core",
