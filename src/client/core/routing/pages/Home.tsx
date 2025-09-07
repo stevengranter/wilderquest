@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronRight, Compass } from 'lucide-react'
+import { ArrowRight, ChevronRight, Compass, Phone } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -11,6 +11,10 @@ import { useAuth } from '@/features/auth/useAuth'
 import { paths } from '@/core/routing/paths'
 import { QuestWithTaxa } from '@/types'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
+import DemoPanel from '@/components/layout/DemoPanel'
+
+import FrameSetSSOne from '/screenshot_test.png'
+import PhoneDemo from '@/components/layout/PhoneDemo'
 
 function _StatsCard({
     icon: Icon,
@@ -83,15 +87,21 @@ export function Home() {
                     </p>
                 </div>
 
-                <Link to={paths.quests()} viewTransition>
-                    <Button
-                        size="lg"
-                        className="w-70 h-18 text-2xl cursor-pointer"
-                    >
-                        <Compass />
-                        Explore Quests
-                    </Button>
-                </Link>
+                <div className="flex flex-row justify-center">
+                    <PhoneDemo className="-rotate-5">Hello there</PhoneDemo>
+
+                    <Link to={paths.quests()} viewTransition>
+                        <Button
+                            size="lg"
+                            className="w-70 h-18 text-2xl cursor-pointer"
+                        >
+                            <Compass />
+                            Explore Quests
+                        </Button>
+                    </Link>
+
+                    <PhoneDemo className="rotate-5">Oh hi!</PhoneDemo>
+                </div>
             </section>
 
             {/* Recent Quests Section */}

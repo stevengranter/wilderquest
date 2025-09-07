@@ -82,6 +82,7 @@
         "node-emoji": "^2.2.0",
         "rate-limiter-flexible": "^7.2.0",
         "react": "^19.1.1",
+        "react-device-frameset": "^1.3.4",
         "react-dom": "^19.1.1",
         "react-hook-form": "^7.62.0",
         "react-icons": "^5.5.0",
@@ -132,6 +133,23 @@
         "hoistPattern": [
             "@types/*",
             "typescript"
+        ],
+        "onlyBuiltDependencies": [
+            "@firebase/util",
+            "@swc/core",
+            "@tailwindcss/oxide",
+            "bufferutil",
+            "core-js",
+            "core-js-pure",
+            "cwebp-bin",
+            "esbuild",
+            "gifsicle",
+            "mozjpeg",
+            "msw",
+            "optipng-bin",
+            "pngquant-bin",
+            "protobufjs",
+            "unrs-resolver"
         ]
     }
 }
