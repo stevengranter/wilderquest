@@ -7,7 +7,6 @@ import {
     TrendingUp,
     Trophy,
     Users,
-    X,
     Zap,
 } from 'lucide-react'
 import {
@@ -127,7 +126,7 @@ export function QuestSummaryModal({
                             <div className="bg-yellow-300 border border-black p-6 rounded-md transform  mb-6 relative overflow-hidden">
                                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-orange-300 opacity-50"></div>
                                 <DialogTitle className="text-5xl font-black text-black mb-2 relative z-10">
-                                    <h1>Quest Complete!</h1>
+                                    Quest Complete!
                                 </DialogTitle>
                                 {/*<motion.div
                                     className="absolute top-2 right-2 text-6xl opacity-20"
