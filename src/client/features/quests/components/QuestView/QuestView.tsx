@@ -62,6 +62,7 @@ export const QuestView = () => {
     const [prevQuestStatus, setPrevQuestStatus] = useState<string | undefined>()
     const [showInviteDrawer, setShowInviteDrawer] = useState(false)
     const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid')
+    const [explorersExpanded, setExplorersExpanded] = useState(false)
 
     // Show summary modal when quest ends (only for quest owner)
     useEffect(() => {
@@ -118,9 +119,9 @@ export const QuestView = () => {
                     />
                 )}
 
-                <div className="xl:flex xl:gap-12 mb-8">
-                    {/* Quest Explorers - appears first on small screens, auto width on xl */}
-                    <div className="order-1 xl:w-auto xl:min-w-80 xl:max-w-sm mb-8 xl:mb-0">
+                <div className="mb-8">
+                    {/* Quest Explorers - appears first on small screens */}
+                    <div className="mb-8">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-xl font-semibold flex items-center gap-2">
                                 Explorers
@@ -169,6 +170,38 @@ export const QuestView = () => {
                                         Retry
                                     </button>
                                 </div>
+                            ) : leaderboard && leaderboard.length > 3 ? (
+                                <Accordion
+                                    type="single"
+                                    collapsible
+                                    value={explorersExpanded ? 'explorers' : ''}
+                                    onValueChange={(value) =>
+                                        setExplorersExpanded(
+                                            value === 'explorers'
+                                        )
+                                    }
+                                    className="shadow-0"
+                                >
+                                    <AccordionItem
+                                        value="explorers"
+                                        className="border-1 shadow-0"
+                                    >
+                                        <AccordionTrigger className="shadow-0 bg-background">
+                                            Show all {leaderboard.length}{' '}
+                                            explorers
+                                        </AccordionTrigger>
+                                        <AccordionContent className="pb-0 shadow-0">
+                                            <QuestLeaderboard
+                                                leaderboard={leaderboard}
+                                                questStatus={questData?.status}
+                                                questId={questData?.id}
+                                                ownerUserId={questData?.user_id}
+                                                questName={questData?.name}
+                                                isOwner={isOwner}
+                                            />
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                </Accordion>
                             ) : (
                                 <QuestLeaderboard
                                     leaderboard={leaderboard}
@@ -182,8 +215,8 @@ export const QuestView = () => {
                         </div>
                     </div>
 
-                    {/* Species Cards - appears second on small screens, flex-1 on xl */}
-                    <div className="order-2 xl:flex-1">
+                    {/* Species Cards - appears second on small screens */}
+                    <div>
                         <div className="flex items-center justify-between mb-6 ">
                             <h2 className="text-xl font-semibold flex items-center gap-2">
                                 Species

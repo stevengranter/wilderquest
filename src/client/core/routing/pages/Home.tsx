@@ -64,7 +64,7 @@ export function Home() {
     })
 
     // Get the first quest for the demo
-    const demoQuest = recentQuests[0]
+    const _demoQuest = recentQuests[0]
 
     // Basic stats - will be enhanced with a dedicated stats endpoint later
     // const stats = {
