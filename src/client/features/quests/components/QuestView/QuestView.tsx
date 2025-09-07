@@ -15,7 +15,7 @@ import { QuestHeader } from './parts/QuestHeader'
 import { QuestLeaderboard } from './parts/QuestLeaderboard'
 import { TaxaPieChart } from './parts/TaxaPieChart'
 import { QuestSpecies } from './parts/QuestSpecies'
-import { QuestControls } from './parts/QuestControls'
+
 import { QuestSummaryModal } from '../QuestSummaryModal'
 import { ClientQuest } from '../SpeciesCardWithObservations'
 import { ShareQuest } from '../ShareQuest'
@@ -116,6 +116,8 @@ export const QuestView = () => {
                         aggregatedProgress={aggregatedProgress}
                         isProgressError={isProgressError}
                         isTaxaError={isTaxaError}
+                        canEdit={canEdit}
+                        updateStatus={updateStatus}
                     />
                 )}
 
@@ -298,17 +300,6 @@ export const QuestView = () => {
                         </div>
                     </div>
                 </div>
-
-                {canEdit && updateStatus && (
-                    <div className="py-4">
-                        <QuestControls
-                            handleActive={() => updateStatus('active')}
-                            status={questData.status}
-                            handlePaused={() => updateStatus('paused')}
-                            handleEnded={() => updateStatus('ended')}
-                        />
-                    </div>
-                )}
 
                 {/* Quest Summary Modal */}
                 <QuestSummaryModal

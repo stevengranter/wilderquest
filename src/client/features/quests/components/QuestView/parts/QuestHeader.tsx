@@ -10,9 +10,11 @@ import {
     Share,
     QuestMapping,
     AggregatedProgress,
+    QuestStatus,
 } from '@/features/quests/types'
 import { QuestStatusBadge } from '../../QuestStatusBadge'
 import { TaxaPieChart } from './TaxaPieChart'
+import { QuestControls } from './QuestControls'
 
 type QuestHeaderProps = {
     questData: ClientQuest
@@ -22,6 +24,8 @@ type QuestHeaderProps = {
     aggregatedProgress?: AggregatedProgress[]
     isProgressError?: boolean
     isTaxaError?: boolean
+    canEdit?: boolean
+    updateStatus?: (status: QuestStatus) => void
 }
 
 export const QuestHeader = ({
@@ -32,6 +36,8 @@ export const QuestHeader = ({
     aggregatedProgress,
     isProgressError,
     isTaxaError,
+    canEdit,
+    updateStatus,
 }: QuestHeaderProps) => {
     return (
         <div className="relative">
@@ -49,6 +55,18 @@ export const QuestHeader = ({
                             Edit Quest
                         </Link>
                     </Button>
+                </div>
+            )}
+
+            {/* Quest Controls - Below Edit Quest button */}
+            {canEdit && updateStatus && (
+                <div className="absolute top-12 right-0 z-10">
+                    <QuestControls
+                        handleActive={() => updateStatus('active')}
+                        status={questData.status}
+                        handlePaused={() => updateStatus('paused')}
+                        handleEnded={() => updateStatus('ended')}
+                    />
                 </div>
             )}
 

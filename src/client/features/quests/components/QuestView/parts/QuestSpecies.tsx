@@ -240,7 +240,7 @@ export const QuestSpecies = ({
                 <div className="space-y-8">
                     {/* Combined section for all species */}
                     <div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5 auto-rows-fr">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5 auto-rows-fr">
                             <AnimatePresence mode="popLayout">
                                 {isTaxaLoading
                                     ? renderSkeletons(
