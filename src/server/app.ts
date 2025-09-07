@@ -111,6 +111,9 @@ export function buildApp({
         sharedQuestProgressRepository,
         userRepository
     )
+
+    // Inject questShareService into questService to avoid circular dependency
+    questService.setQuestShareService(questShareService)
     const questShareController = createQuestShareController(questShareService)
     const questShareRouter = createQuestShareRouter(questShareController)
     apiRouter.use('/quest-sharing', questShareRouter)

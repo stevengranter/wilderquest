@@ -41,32 +41,35 @@ export const QuestHeader = ({
 }: QuestHeaderProps) => {
     return (
         <div className="relative">
-            {/* Edit Quest Button - Always in upper right */}
-            {isOwner && (
-                <div className="absolute top-0 right-0 z-10">
-                    <Button
-                        variant="reverse"
-                        size="sm"
-                        className="bg-background"
-                        asChild
-                    >
-                        <Link to={paths.editQuest(questData.id)}>
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Edit Quest
-                        </Link>
-                    </Button>
-                </div>
-            )}
+            {/* Header Controls - Responsive layout */}
+            {(isOwner || (canEdit && updateStatus)) && (
+                <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:justify-end sm:items-center sm:gap-2 sm:absolute sm:top-0 sm:right-0 sm:z-10">
+                    {/* Edit Quest Button */}
+                    {isOwner && (
+                        <Button
+                            variant="reverse"
+                            size="sm"
+                            className="bg-background w-full sm:w-auto"
+                            asChild
+                        >
+                            <Link to={paths.editQuest(questData.id)}>
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Edit Quest
+                            </Link>
+                        </Button>
+                    )}
 
-            {/* Quest Controls - Below Edit Quest button */}
-            {canEdit && updateStatus && (
-                <div className="absolute top-12 right-0 z-10">
-                    <QuestControls
-                        handleActive={() => updateStatus('active')}
-                        status={questData.status}
-                        handlePaused={() => updateStatus('paused')}
-                        handleEnded={() => updateStatus('ended')}
-                    />
+                    {/* Quest Controls */}
+                    {canEdit && updateStatus && (
+                        <div className="w-full sm:w-auto">
+                            <QuestControls
+                                handleActive={() => updateStatus('active')}
+                                status={questData.status}
+                                handlePaused={() => updateStatus('paused')}
+                                handleEnded={() => updateStatus('ended')}
+                            />
+                        </div>
+                    )}
                 </div>
             )}
 

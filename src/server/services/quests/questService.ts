@@ -18,8 +18,16 @@ export function createQuestService(
     questsRepo: QuestRepository,
     questsToTaxaRepo: QuestToTaxaRepository,
     questShareRepo: QuestShareRepository,
-    sharedQuestProgressRepo?: SharedQuestProgressRepository
+    sharedQuestProgressRepo?: SharedQuestProgressRepository,
+    questShareService?: any // Will be injected after creation to avoid circular dependency
 ) {
+    let injectedQuestShareService: any = questShareService
+
+    // Method to inject questShareService after creation (to avoid circular dependency)
+    function setQuestShareService(service: any) {
+        injectedQuestShareService = service
+    }
+
     // 1. Get all public quests
     async function getAllPublicQuests(
         page: number = 1,
@@ -140,12 +148,21 @@ export function createQuestService(
                 )
             }
 
-            await questShareRepo.createShare({
-                quest_id: questId,
-                created_by_user_id: userId,
-                guest_name: null,
-                expires_at: null,
-            })
+            // Create primary share for the owner using the service (which sets is_primary correctly)
+            if (injectedQuestShareService) {
+                await injectedQuestShareService.createShare(questId, userId, {
+                    guest_name: null,
+                    expires_at: null,
+                })
+            } else {
+                // Fallback to repository if service not available (shouldn't happen in normal operation)
+                await questShareRepo.createShare({
+                    quest_id: questId,
+                    created_by_user_id: userId,
+                    guest_name: null,
+                    expires_at: null,
+                })
+            }
 
             return getQuestWithTaxaById(questId)
         } catch (error) {
@@ -309,5 +326,6 @@ export function createQuestService(
         getQuestWithTaxaById,
         updateQuest,
         updateQuestStatus,
+        setQuestShareService,
     }
 }
