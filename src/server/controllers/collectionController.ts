@@ -7,7 +7,7 @@ import {
     CollectionSchema,
     CreateCollectionSchema,
 } from '../repositories/index.js'
-import { createCollectionService } from '../services/index.js'
+import { createCollectionService } from '../services/collectionService.js'
 import { serverDebug } from '../../shared/utils/debug.js'
 
 export function createCollectionController(

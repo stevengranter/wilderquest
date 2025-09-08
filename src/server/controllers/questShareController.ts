@@ -1,7 +1,7 @@
 // src/controllers/questShareController.ts
 import { Request, Response } from 'express'
 import type { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
-import type { QuestShareService } from '../services/quests/questShareService.js'
+import type { QuestShareService } from '../services/questShareService.js'
 import { AppError } from '../middlewares/errorHandler.js'
 
 export function createQuestShareController(service: QuestShareService) {

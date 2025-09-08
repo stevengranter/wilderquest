@@ -2,16 +2,16 @@ import {
     QuestRepository,
     QuestToTaxa,
     QuestToTaxaRepository,
-} from '../../repositories/QuestRepository.js'
+} from '../repositories/QuestRepository.js'
 import type {
     QuestShare,
     QuestShareRepository,
     SharedQuestProgressRepository,
-} from '../../repositories/QuestShareRepository.js'
+} from '../repositories/QuestShareRepository.js'
 import { sendEvent } from './questEventsService.js'
-import { UserRepository } from '../../repositories/UserRepository.js'
-import { AppError } from '../../middlewares/errorHandler.js'
-import { serverDebug } from '../../../shared/utils/debug.js'
+import { UserRepository } from '../repositories/UserRepository.js'
+import { AppError } from '../middlewares/errorHandler.js'
+import { serverDebug } from '@shared/utils/debug.js'
 
 export type QuestShareService = ReturnType<typeof createQuestShareService>
 

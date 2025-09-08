@@ -4,9 +4,9 @@ import {
     optionalAuthMiddleware,
     AuthenticatedRequest,
 } from '../middlewares/verifyJWT.js'
-import * as questEventsService from '../services/quests/questEventsService.js'
-import { QuestService } from '../services/quests/questService.js'
-import type { QuestShareService } from '../services/quests/questShareService.js'
+import * as questEventsService from '../services/questEventsService.js'
+import { QuestService } from '../services/questService.js'
+import type { QuestShareService } from '../services/questShareService.js'
 import { serverDebug } from '../../shared/utils/debug.js'
 
 export function createQuestEventsRouter(

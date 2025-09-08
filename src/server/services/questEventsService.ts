@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { serverDebug } from '../../../shared/utils/debug.js'
+import { serverDebug } from '@shared/utils/debug.js'
 
 type Client = {
     id: string

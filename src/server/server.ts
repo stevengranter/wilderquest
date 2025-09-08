@@ -26,7 +26,11 @@ import {
     UserRepository,
 } from './repositories/index.js'
 import { rateSlowDown, requestLogger } from './middlewares/index.js'
-import { createAuthService, createQuestService, createQuestShareService, createUserService } from './services/index.js'
+import { createAuthService} from './services/authService.js'
+import { createQuestService } from './services/questService.js'
+import { createQuestShareService } from './services/questShareService.js'
+import { createUserService } from './services/userService.js'
+
 import {
     createAuthController,
     createCollectionController,

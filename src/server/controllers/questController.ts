@@ -1,7 +1,7 @@
 // src/controllers/questController.ts
 import { Request, Response } from 'express'
 import type { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
-import { QuestService } from '../services/quests/questService.js'
+import { QuestService } from '../services/questService.js'
 import { AppError } from '../middlewares/errorHandler.js' // make sure AppError is exported
 
 export function createQuestController(questService: QuestService) {

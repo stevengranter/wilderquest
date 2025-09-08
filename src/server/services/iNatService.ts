@@ -1,4 +1,4 @@
-import { cacheService } from './cache/cacheService.js'
+import { cacheService } from './cacheService.js'
 import { INatTaxon } from '../../shared/types/index.js'
 import { BATCH_SIZE, iNatAPI } from '../utils/iNatAPI.js'
 
