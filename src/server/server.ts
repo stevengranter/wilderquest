@@ -9,7 +9,6 @@ import path from 'path'
 // Internal imports
 import errorHandler from './middlewares/errorHandler.js'
 import logger from './config/logger.js'
-import env from './config/app.config.js'
 import { serverDebug } from '../shared/utils/debug.js'
 import {
     CollectionRepository,
@@ -26,7 +25,7 @@ import {
     UserRepository,
 } from './repositories/index.js'
 import { rateSlowDown, requestLogger } from './middlewares/index.js'
-import { createAuthService} from './services/authService.js'
+import { createAuthService } from './services/authService.js'
 import { createQuestService } from './services/questService.js'
 import { createQuestShareService } from './services/questShareService.js'
 import { createUserService } from './services/userService.js'
@@ -54,19 +53,23 @@ import corsConfig from './config/cors.config.js'
 import { initializeDb } from './config/db.js'
 import { getTableColumns } from './utils/index.js'
 
-
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
-
-const DEFAULT_PORT = env.PORT || 3000
-
-// command line port override
-const portArg = process.argv.find((arg) => arg.startsWith('--port='))
-const PORT = portArg ? parseInt(portArg.split('=')[1], 10) : DEFAULT_PORT
-
 
 async function startServer() {
     try {
         serverDebug.api('🚀 Server startup initiated')
+
+        // Validate environment variables
+        const env = await import('./config/app.config.js').then(
+            (m) => m.default
+        )
+
+        // Setup port configuration
+        const DEFAULT_PORT = env.PORT || 3000
+        const portArg = process.argv.find((arg) => arg.startsWith('--port='))
+        const PORT = portArg
+            ? parseInt(portArg.split('=')[1], 10)
+            : DEFAULT_PORT
 
         // 🛢️ Initialise database pool and repositories via initApp()
         const deps = await initApp()
@@ -114,7 +117,19 @@ async function startServer() {
         process.on('SIGINT', shutdownHandler)
         return true
     } catch (error) {
-        logger.error('⛔️ Failed to start server:', error)
+        if (
+            error instanceof Error &&
+            error.message === 'Invalid environment configuration'
+        ) {
+            logger.error(
+                '⛔️ Server startup failed due to invalid environment configuration'
+            )
+            logger.error(
+                'Please check your environment variables and try again'
+            )
+        } else {
+            logger.error('⛔️ Failed to start server:', error)
+        }
         process.exit(1)
     }
 }
@@ -123,15 +138,14 @@ startServer().then(
     (result) => result && logger.info('Server setup complete ✅ ')
 )
 
-
 function buildApp({
-                             userRepository,
-                             collectionRepository,
-                             questRepository,
-                             questToTaxaRepository,
-                             questShareRepository,
-                             sharedQuestProgressRepository,
-                         }: {
+    userRepository,
+    collectionRepository,
+    questRepository,
+    questToTaxaRepository,
+    questShareRepository,
+    sharedQuestProgressRepository,
+}: {
     userRepository: UserRepository
     collectionRepository: CollectionRepository
     questRepository: QuestRepository
@@ -159,7 +173,7 @@ function buildApp({
                 // Use compression filter function
                 return compression.filter(req, res)
             },
-        }),
+        })
     )
 
     app.use(express.json())
@@ -182,7 +196,7 @@ function buildApp({
         questRepository,
         questToTaxaRepository,
         questShareRepository,
-        sharedQuestProgressRepository,
+        sharedQuestProgressRepository
     )
     const questController = createQuestController(questService)
     const questRouter = createQuestRouter(questController)
@@ -192,7 +206,7 @@ function buildApp({
         questToTaxaRepository,
         questShareRepository,
         sharedQuestProgressRepository,
-        userRepository,
+        userRepository
     )
 
     // Inject questShareService into questService to avoid circular dependency
@@ -202,7 +216,7 @@ function buildApp({
     apiRouter.use('/quest-sharing', questShareRouter)
     const questEventsRouter = createQuestEventsRouter(
         questService,
-        questShareService,
+        questShareService
     )
     apiRouter.use('/quests', questEventsRouter)
 
@@ -216,7 +230,7 @@ function buildApp({
         '/iNatAPI',
         rateSlowDown,
         // rateLimiter(60 * 1000, 120), // TEMPORARILY DISABLED for debugging
-        iNatController,
+        iNatController
     )
     apiRouter.use('/tiles', mapTilesProxyRouter)
     apiRouter.use('/wikipedia', wikipediaProxyRouter)
@@ -251,21 +265,21 @@ export async function initApp() {
     const collectionRepository = createCollectionRepository(
         'collections',
         dbPool,
-        collectionColumns,
+        collectionColumns
     )
 
     const questToTaxaColumns = await getTableColumns(dbPool, 'quests_to_taxa')
     const questToTaxaRepository = createQuestToTaxaRepository(
         'quests_to_taxa',
         dbPool,
-        questToTaxaColumns,
+        questToTaxaColumns
     )
     const questTableColumns = await getTableColumns(dbPool, 'quests')
     const questRepository = createQuestRepository(
         'quests',
         dbPool,
         questTableColumns,
-        questToTaxaRepository,
+        questToTaxaRepository
     )
 
     // Quest shares + progress
@@ -273,16 +287,16 @@ export async function initApp() {
     const questShareRepository = createQuestShareRepository(
         'quest_shares',
         dbPool,
-        questShareColumns,
+        questShareColumns
     )
     const progressColumns = await getTableColumns(
         dbPool,
-        'shared_quest_progress',
+        'shared_quest_progress'
     )
     const sharedQuestProgressRepository = createSharedQuestProgressRepository(
         'shared_quest_progress',
         dbPool,
-        progressColumns,
+        progressColumns
     )
 
     return {
