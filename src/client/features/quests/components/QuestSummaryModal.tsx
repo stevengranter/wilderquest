@@ -19,8 +19,8 @@ import {
 } from '@/components/ui'
 import { LeaderboardEntry } from '@/features/quests/types'
 import { AvatarOverlay } from './AvatarOverlay'
-import { Quest } from '../../../../shared/types/questTypes'
-import { INatTaxon } from '@shared/types'
+import { Quest } from '../../../types/questTypes'
+import { INatTaxon } from '@shared/types/iNaturalist'
 import { DetailedProgress, QuestMapping } from '../types'
 import { useEffect, useState } from 'react'
 

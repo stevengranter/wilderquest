@@ -1,5 +1,5 @@
 import { cacheService } from './cacheService.js'
-import { INatTaxon } from '../../shared/types/index.js'
+import { INatTaxon } from '../../shared/types/iNaturalist.js'
 import { BATCH_SIZE, iNatAPI } from '../utils/iNatAPI.js'
 
 async function fetchTaxaByIds(taxonIds: number[]): Promise<INatTaxon[]> {

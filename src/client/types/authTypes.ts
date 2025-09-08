@@ -2,38 +2,26 @@
 
 import { AxiosResponse } from 'axios'
 
-export interface RegisterResponseData {
-    userCuid: string
-    message: string
-}
-
-export interface RegisterResponse extends AxiosResponse {
-    data: RegisterResponseData
-}
-
-export interface LoginRequest {
-    username: string
-    password: string
-}
-
-export type LoggedInUser = {
+export interface LoggedInUser {
     id: number
     username: string
-    email: string
+    email: string | undefined
     role: number
     cuid: string
 }
 
 export interface LoginResponseData {
     success: boolean
-    message?: string
     user: LoggedInUser
     access_token: string
     refresh_token: string
 }
 
-export interface LoginResponse extends AxiosResponse {
-    data: LoginResponseData
+export interface RegisterResponseData {
+    success: boolean
+    user: LoggedInUser
+    access_token: string
+    refresh_token: string
 }
 
 export interface RefreshTokenRequest {

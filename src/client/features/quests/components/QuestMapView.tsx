@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { INatObservation, INatTaxon } from '@shared/types'
+import { INatObservation, INatTaxon } from '@shared/types/iNaturalist'
 import type { Map as LeafletMap, LatLngBounds, LeafletEvent } from 'leaflet'
 import { ClientQuest } from './SpeciesCardWithObservations'
 import { QuestMapping } from '../types'

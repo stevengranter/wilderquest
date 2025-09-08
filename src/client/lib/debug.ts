@@ -1,8 +1,16 @@
 import debug from 'debug'
 
+// Extend debug interface to include colors property
+declare module 'debug' {
+    interface Debug {
+        colors: string[]
+    }
+}
+
 // Check if we're in development mode
 const isDevelopment =
-    typeof window !== 'undefined' && (globalThis as any).__IS_DEVELOPMENT__
+    typeof window !== 'undefined' &&
+    (globalThis as { __IS_DEVELOPMENT__?: boolean }).__IS_DEVELOPMENT__
 
 // Enable debug logging only in development
 if (isDevelopment) {
@@ -12,7 +20,7 @@ if (isDevelopment) {
     // Enable all client debug namespaces
     debug.enable('*')
 
-    ;(debug as any).colors = [
+    debug.colors = [
         '#FF4444', // Red - auth
         '#00FF88', // Green - quests
         '#0088FF', // Blue - events
@@ -26,7 +34,7 @@ if (isDevelopment) {
 
 const createClientDebug = (namespace: string) => {
     const debugInstance = debug(namespace)
-    return (message: string, ...args: any[]) => {
+    return (message: string, ...args: unknown[]) => {
         debugInstance(message, ...args)
     }
 }

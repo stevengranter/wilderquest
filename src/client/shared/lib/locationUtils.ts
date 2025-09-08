@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { LocationIQResults } from '@shared/types'
+import { LocationIQResults } from '@shared/types/locationIQ'
 import { clientDebug } from '../../lib/debug'
 
 function isValidLatLng(latitude: number, longitude: number) {

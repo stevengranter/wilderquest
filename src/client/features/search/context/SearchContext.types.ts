@@ -1,4 +1,7 @@
-import { INatObservationsResponse, INatTaxaResponse } from '@shared/types'
+import {
+    INatObservationsResponse,
+    INatTaxaResponse,
+} from '@shared/types/iNaturalist'
 
 export enum ViewMode {
     Grid = 'grid',

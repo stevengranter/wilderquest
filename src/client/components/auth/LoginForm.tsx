@@ -17,7 +17,7 @@ import {
     Input,
 } from '@/components/ui'
 import { useAuth } from '@/features/auth/useAuth'
-import { clientDebug } from '../../lib/debug'
+import { clientDebug } from '@/lib/debug'
 
 export const UserSchema = z.object({
     id: z.number().int().min(1),
@@ -35,6 +35,7 @@ export const LoginRequestSchema = UserSchema.pick({
     username: true,
     password: true,
 })
+export type LoginRequestBody = z.infer<typeof LoginRequestSchema>
 
 const LoginForm = React.forwardRef(() => {
     const navigate = useNavigate()
@@ -86,9 +87,7 @@ const LoginForm = React.forwardRef(() => {
                 )
                 form.setError('root.serverError', {
                     type: 'server',
-                    message:
-                        response?.message ||
-                        'Authentication failed - invalid credentials',
+                    message: 'Authentication failed - invalid credentials',
                 })
             }
         } catch (error) {

@@ -8,7 +8,7 @@ import { getDeduplicatedRequest } from '../utils/iNatAPI.js'
 
 import logger from '../config/logger.js'
 import { titleCase } from '../utils/titleCase.js'
-import { INatObservation, INatTaxon } from '../../shared/types/index.js'
+import { INatObservation, INatTaxon } from '../../shared/types/iNaturalist.js'
 import { AppError } from '../middlewares/errorHandler.js'
 
 const INATURALIST_API_BASE_URL = 'https://api.inaturalist.org/v1'

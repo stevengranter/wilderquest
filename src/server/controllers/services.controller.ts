@@ -7,8 +7,8 @@ import {
 import {
     LocationIQResults,
     LocationIQPlace,
-} from '../../shared/types/api/locationIQ.js'
-import { INatPlacesAutocompleteResponse } from '../../shared/types/api/iNaturalist.js'
+} from '../../shared/types/locationIQ.js'
+import { INatPlacesAutocompleteResponse } from '../../shared/types/iNaturalist.js'
 
 interface INatPlaceAutocompleteResult {
     id: number

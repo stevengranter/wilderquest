@@ -1,5 +1,4 @@
 import { ArrowRight, ChevronRight, Compass, Phone } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import api from '@/core/api/axios'
@@ -11,12 +10,12 @@ import { Button } from '@/components/ui'
 import { Card, CardContent } from '@/components/ui'
 import { useAuth } from '@/features/auth/useAuth'
 import { paths } from '@/core/routing/paths'
-import { QuestWithTaxa } from '@/types'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 import DemoPanel from '@/components/layout/DemoPanel'
 
 import FrameSetSSOne from '/screenshot_test.png'
 import PhoneDemo from '@/components/layout/PhoneDemo'
+import { QuestWithTaxa } from '@/hooks/useQuest'
 
 function _StatsCard({
     icon: Icon,

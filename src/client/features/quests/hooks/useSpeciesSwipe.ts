@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 
-import type { TaxonData } from '@shared/types'
+import type { TaxonData } from '../../../types/questTypes'
 
 interface SpeciesCountItem {
     taxon: TaxonData

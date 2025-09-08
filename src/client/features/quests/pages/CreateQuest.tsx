@@ -31,7 +31,7 @@ import { SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeS
 import { SpeciesCountItem } from '@/features/quests/components/ResponsiveSpeciesThumbnail'
 import { SpeciesAnimationProvider } from '@/features/quests/components/SpeciesAnimationProvider'
 import { formSchema } from '@/features/quests/schemas/formSchema'
-import type { TaxonData } from '@shared/types'
+import type { TaxonData } from '../../../types/questTypes'
 
 export function CreateQuest() {
     const { isAuthenticated } = useAuth()

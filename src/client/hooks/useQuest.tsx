@@ -20,7 +20,7 @@ import {
     QuestMapping,
     Share,
 } from '@/features/quests/types'
-import { INatTaxon } from '@shared/types'
+import { INatTaxon } from '@shared/types/iNaturalist'
 import { z } from 'zod'
 
 const QuestSchema = z.object({

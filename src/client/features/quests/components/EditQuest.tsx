@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { INatTaxon } from '@shared/types'
+import { INatTaxon } from '@shared/types/iNaturalist'
 import { SpeciesCountItem } from '@/features/quests/components/ResponsiveSpeciesThumbnail'
 import chunk from 'lodash/chunk'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'

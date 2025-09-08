@@ -13,9 +13,10 @@ import type {
     LoggedInUser,
     LoginResponseData,
     RegisterResponseData,
-} from '@shared/types/authTypes'
-import { LoginRequestBody, RegisterRequestBody } from '@/types'
-import { clientDebug } from '../../lib/debug'
+} from '@/types/authTypes'
+import {  RegisterRequestBody } from '@/components/auth/RegisterForm'
+import { clientDebug } from '@/lib/debug'
+import {LoginRequestBody} from '@/components/auth/LoginForm'
 
 type AuthContextType = {
     isAuthenticated: boolean
@@ -34,6 +35,7 @@ type AuthContextType = {
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
+
 
 // Storage keys
 const STORAGE_KEYS = {

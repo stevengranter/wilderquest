@@ -1,4 +1,4 @@
-import { INatTaxon } from '@shared/types'
+import { INatTaxon } from '@shared/types/iNaturalist'
 import { useQuery } from '@tanstack/react-query'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'

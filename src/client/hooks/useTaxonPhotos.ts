@@ -4,9 +4,9 @@ import {
     useQueryClient,
 } from '@tanstack/react-query'
 import api from '@/core/api/axios'
-import { INatTaxon } from '@shared/types'
+import { INatTaxon } from '@shared/types/iNaturalist'
 import { useCallback, useMemo } from 'react'
-import { QuestWithTaxa } from '@shared/types'
+import { QuestWithTaxa } from '../types/questTypes'
 
 const BATCH_SIZE = 150 // Reduced from 200 to 150 to be more conservative with rate limits
 
