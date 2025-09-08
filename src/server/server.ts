@@ -13,45 +13,50 @@ import { serverDebug } from '../shared/utils/debug.js'
 import {
     CollectionRepository,
     createCollectionRepository,
+} from './repositories/CollectionRepository.js'
+import {
     createQuestRepository,
-    createQuestShareRepository,
-    createQuestToTaxaRepository,
-    createSharedQuestProgressRepository,
-    createUserRepository,
     QuestRepository,
-    QuestShareRepository,
+    createQuestToTaxaRepository,
     QuestToTaxaRepository,
+} from './repositories/QuestRepository.js'
+import {
+    createQuestShareRepository,
+    QuestShareRepository,
+    createSharedQuestProgressRepository,
     SharedQuestProgressRepository,
+} from './repositories/QuestShareRepository.js'
+import {
+    createUserRepository,
     UserRepository,
-} from './repositories/index.js'
-import { rateSlowDown, requestLogger } from './middlewares/index.js'
+} from './repositories/UserRepository.js'
+import { rateSlowDown } from './middlewares/rateSlowDown.js'
+import { default as requestLogger } from './middlewares/requestLogger.js'
 import { createAuthService } from './services/authService.js'
 import { createQuestService } from './services/questService.js'
 import { createQuestShareService } from './services/questShareService.js'
 import { createUserService } from './services/userService.js'
 
+import { createAuthController } from './controllers/authController.js'
+import { createCollectionController } from './controllers/collectionController.js'
+import { createINaturalistAPIController } from './controllers/iNaturalistAPIController.js'
+import { createQuestController } from './controllers/questController.js'
+import { createQuestShareController } from './controllers/questShareController.js'
+import { createUserController } from './controllers/userController.js'
+import { createAuthRouter } from './routes/authRouter.js'
+import { createCollectionRouter } from './routes/collectionRouter.js'
+import { createQuestEventsRouter } from './routes/questEventsRouter.js'
+import { createQuestRouter } from './routes/questRouter.js'
+import { createQuestShareRouter } from './routes/questShareRouter.js'
+import { createUserRouter } from './routes/userRouter.js'
 import {
-    createAuthController,
-    createCollectionController,
-    createINaturalistAPIController,
-    createQuestController,
-    createQuestShareController,
-    createUserController,
-} from './controllers/index.js'
-import {
-    createAuthRouter,
-    createCollectionRouter,
-    createQuestEventsRouter,
-    createQuestRouter,
-    createQuestShareRouter,
-    createUserRouter,
     mapTilesProxyRouter,
-    serviceRouter,
     wikipediaProxyRouter,
-} from './routes/index.js'
+} from './routes/api/proxies.routes.js'
+import { serviceRouter } from './routes/api/services.routes.js'
 import corsConfig from './config/cors.config.js'
 import { initializeDb } from './config/db.js'
-import { getTableColumns } from './utils/index.js'
+import { getTableColumns } from './utils/getTableColumns.js'
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 

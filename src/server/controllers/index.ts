@@ -1,6 +1,0 @@
-export * from './authController.js'
-export * from './collectionController.js'
-export * from './questController.js'
-export * from './questShareController.js'
-export * from './iNaturalistAPIController.js'
-export * from './userController.js'

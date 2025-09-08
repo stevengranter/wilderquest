@@ -1,12 +1,12 @@
 import { Request, Response } from 'express'
 import { z } from 'zod'
-import { AuthenticatedRequest } from '../middlewares/index.js'
+import type { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
 import {
     Collection,
     type CollectionRepository,
     CollectionSchema,
     CreateCollectionSchema,
-} from '../repositories/index.js'
+} from '../repositories/CollectionRepository.js'
 import { createCollectionService } from '../services/collectionService.js'
 import { serverDebug } from '../../shared/utils/debug.js'
 

@@ -25,7 +25,6 @@ if (process.env.NODE_ENV === 'development') {
   );
 } else {
   // In production, log to the console.
-  // The hosting environment (e.g., Fly.io, Heroku, Docker) will handle log streams.
   logger.add(new winston.transports.Console());
 }
 

@@ -4,7 +4,7 @@ import {
     type CollectionRepository,
     CollectionsToTaxa,
     CreateCollectionSchema,
-} from '../repositories/index.js'
+} from '../repositories/CollectionRepository.js'
 
 type CreateCollectionInput = z.infer<typeof CreateCollectionSchema>
 type UpdateCollectionInput = Partial<CreateCollectionInput>

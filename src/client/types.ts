@@ -1,7 +1,10 @@
 import { z } from 'zod'
 import { UserSchema } from '@shared/schemas/UserSchema'
 import { Quest, QuestWithTaxa } from '@shared/types/questTypes'
-import { LoginRequestSchema, RegisterRequestSchema } from '../server/controllers'
+import {
+    LoginRequestSchema,
+    RegisterRequestSchema,
+} from '../server/controllers/authController.js'
 
 export interface UserData extends z.infer<typeof UserSchema> {}
 

@@ -2,7 +2,7 @@ import { CorsOptions } from 'cors'
 
 const allowedOrigins = [
     'https://wildernest.fly.dev',
-    // you can add more full domains here
+    'https://wilderquest.fly.dev'
 ]
 
 const corsConfig: CorsOptions = {

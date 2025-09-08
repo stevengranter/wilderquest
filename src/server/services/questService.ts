@@ -10,8 +10,8 @@ import {
 import { iNatService } from './iNatService.js'
 import { sendEvent } from './questEventsService.js'
 import { AppError } from '../middlewares/errorHandler.js'
-import { QuestShareService } from './questShareService.js'
-import {Quest} from '../repositories/QuestRepository.js'
+import type { QuestShareService } from './questShareService.js'
+import { Quest } from '../repositories/QuestRepository.js'
 
 export type QuestService = ReturnType<typeof createQuestService>
 
