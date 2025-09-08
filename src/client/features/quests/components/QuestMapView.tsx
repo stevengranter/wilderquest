@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui'
 import { Calendar } from 'lucide-react'
 import { MdLocationPin } from 'react-icons/md'
 import { useLeaflet } from '@/hooks/useLeaflet'
-import { clientDebug } from '@shared/utils/debug'
+import { clientDebug } from '../../../lib/debug'
 
 // Add custom CSS for markers
 const markerStyles = `

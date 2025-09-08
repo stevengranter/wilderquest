@@ -9,7 +9,7 @@ import {
 import { useNavigate } from 'react-router'
 import { z } from 'zod'
 import api from '@/core/api/axios'
-import { clientDebug } from '@shared/utils/debug'
+import { clientDebug } from '../../../lib/debug'
 import {
     Button,
     FormControl,

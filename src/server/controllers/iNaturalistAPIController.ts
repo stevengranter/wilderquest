@@ -11,8 +11,6 @@ import { titleCase } from '../utils/titleCase.js'
 import { INatObservation, INatTaxon } from '../../shared/types/index.js'
 import { AppError } from '../middlewares/errorHandler.js'
 
-import { serverDebug } from '../../shared/utils/debug.js'
-
 const INATURALIST_API_BASE_URL = 'https://api.inaturalist.org/v1'
 
 type ProcessableData =
@@ -57,7 +55,7 @@ function processINaturalistData(data: ProcessableData): ProcessableData {
 }
 
 export const iNaturalistAPIController = async (req: Request, res: Response) => {
-    serverDebug.api('iNaturalistAPIController called')
+    console.log('API:', 'iNaturalistAPIController called')
     const path = req.path
 
     // Special endpoint to clear cache

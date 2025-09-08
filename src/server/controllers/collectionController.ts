@@ -8,7 +8,6 @@ import {
     CreateCollectionSchema,
 } from '../repositories/index.js'
 import { createCollectionService } from '../services/collectionService.js'
-import { serverDebug } from '../../shared/utils/debug.js'
 
 export function createCollectionController(
     collectionRepo: CollectionRepository
@@ -109,8 +108,8 @@ export function createCollectionController(
                 const service = createCollectionService(collectionRepo, userId)
                 const collections =
                     await service.findCollectionsByUserId(userId)
-                serverDebug.db(
-                    'Retrieved collections for user %s: %o',
+                console.log(
+                    'DB: Retrieved collections for user %s: %o',
                     userId,
                     collections
                 )
@@ -129,8 +128,8 @@ export function createCollectionController(
         ): Promise<void> {
             try {
                 const userId = req.user?.id
-                serverDebug.db('Creating collection for user: %s', userId)
-                serverDebug.db('Request body: %o', req.body)
+                console.log('DB: Creating collection for user: %s', userId)
+                console.log('DB: Request body: %o', req.body)
 
                 if (!userId) {
                     res.status(401).json({ message: 'Unauthorized' })
@@ -148,7 +147,7 @@ export function createCollectionController(
                     return
                 }
 
-                serverDebug.db('Parsed collection data: %o', parsedBody.data)
+                console.log('DB: Parsed collection data: %o', parsedBody.data)
 
                 const service = createCollectionService(collectionRepo, userId)
                 const newCollection = await service.createCollection(
@@ -172,11 +171,11 @@ export function createCollectionController(
             res: Response
         ): Promise<void> {
             try {
-                serverDebug.db(
-                    'Updating collection - request body: %o',
+                console.log(
+                    'DB: Updating collection - request body: %o',
                     req.body
                 )
-                serverDebug.db('User: %o', req.user)
+                console.log('DB: User: %o', req.user)
                 const userId = req.user?.id
                 if (!userId) {
                     res.status(401).json({ message: 'Unauthorized' })
@@ -196,7 +195,7 @@ export function createCollectionController(
                     res.status(400).send(parsedBody.error.issues)
                     return
                 }
-                serverDebug.db('Parsed update data: %o', parsedBody.data)
+                console.log('DB: Parsed update data: %o', parsedBody.data)
                 const service = createCollectionService(collectionRepo, userId)
                 const updatedCollection = await service.updateCollection(
                     collectionId,

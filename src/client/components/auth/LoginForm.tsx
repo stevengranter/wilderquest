@@ -17,7 +17,7 @@ import {
     Input,
 } from '@/components/ui'
 import { useAuth } from '@/features/auth/useAuth'
-import { clientDebug } from '@shared/utils/debug'
+import { clientDebug } from '../../lib/debug'
 
 export const UserSchema = z.object({
     id: z.number().int().min(1),
@@ -30,7 +30,6 @@ export const UserSchema = z.object({
     role_id: z.number().int().min(1),
     refresh_token: z.string().jwt().nullish(),
 })
-
 
 export const LoginRequestSchema = UserSchema.pick({
     username: true,

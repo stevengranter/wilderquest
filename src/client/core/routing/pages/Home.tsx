@@ -93,24 +93,6 @@ export function Home() {
                 </div>
 
                 <div className="flex flex-row justify-center">
-                    <PhoneDemo className="-rotate-5">
-                        Hello World
-                        {/*{demoQuest ? (
-                            <div className="w-full h-full overflow-hidden bg-white">
-                                <QuestProvider questId={demoQuest.id}>
-                                    <div className="h-full scale-[0.4] origin-top-left w-[250%]">
-
-                                        <div
-                                            className="mx-5 my-4">
-                                            <QuestView />
-                                        </div>
-                                    </div>
-                                </QuestProvider>
-                            </div>
-                        ) : (
-                            <QuestCardSkeleton />
-                        )}*/}
-                    </PhoneDemo>
 
                     <Link to={paths.quests()} viewTransition>
                         <Button
@@ -122,7 +104,7 @@ export function Home() {
                         </Button>
                     </Link>
 
-                    <PhoneDemo className="rotate-5">Oh hi!</PhoneDemo>
+
                 </div>
             </section>
 

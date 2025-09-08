@@ -7,7 +7,6 @@ import {
 import * as questEventsService from '../services/questEventsService.js'
 import { QuestService } from '../services/questService.js'
 import type { QuestShareService } from '../services/questShareService.js'
-import { serverDebug } from '../../shared/utils/debug.js'
 
 export function createQuestEventsRouter(
     questService: QuestService,
@@ -23,23 +22,23 @@ export function createQuestEventsRouter(
             const userId = req.user?.id
             const token = req.query.token as string
 
-            serverDebug.events(
+            console.log('EVENTS:', 
                 'EventSource connection request for quest: %s',
                 questId
             )
-            serverDebug.events('Request headers: %o', req.headers)
-            serverDebug.events('Request method: %s', req.method)
-            serverDebug.events('Request URL: %s', req.url)
-            serverDebug.events('User authenticated: %s', !!req.user)
-            serverDebug.events('User ID: %s', userId)
-            serverDebug.events('Token provided: %s', !!token)
+            console.log('EVENTS:', 'Request headers: %o', req.headers)
+            console.log('EVENTS:', 'Request method: %s', req.method)
+            console.log('EVENTS:', 'Request URL: %s', req.url)
+            console.log('EVENTS:', 'User authenticated: %s', !!req.user)
+            console.log('EVENTS:', 'User ID: %s', userId)
+            console.log('EVENTS:', 'Token provided: %s', !!token)
 
             try {
                 // Check access based on authentication method
                 if (userId) {
                     // Authenticated user - check ownership or public access
                     await questService.getAccessibleQuestById(questId, userId)
-                    serverDebug.events(
+                    console.log('EVENTS:', 
                         'Access check passed for authenticated user: %s',
                         userId
                     )
@@ -47,12 +46,12 @@ export function createQuestEventsRouter(
                     // Try guest access via share token first
                     try {
                         await questShareService.getShareDetailsByToken(token)
-                        serverDebug.events(
+                        console.log('EVENTS:', 
                             'Access check passed for share token'
                         )
                     } catch (_shareError) {
                         // If share token validation fails, try access token validation
-                        serverDebug.events(
+                        console.log('EVENTS:', 
                             'Share token validation failed, trying access token'
                         )
                         try {
@@ -65,7 +64,7 @@ export function createQuestEventsRouter(
                                     questId,
                                     decoded.id
                                 )
-                                serverDebug.events(
+                                console.log('EVENTS:', 
                                     'Access check passed for access token, user: %s',
                                     decoded.id
                                 )
@@ -73,7 +72,7 @@ export function createQuestEventsRouter(
                                 throw new Error('Invalid access token')
                             }
                         } catch (_accessError) {
-                            serverDebug.events(
+                            console.log('EVENTS:', 
                                 'Both share token and access token validation failed'
                             )
                             throw new Error('Invalid authentication token')
@@ -84,9 +83,9 @@ export function createQuestEventsRouter(
                 }
 
                 questEventsService.subscribe(req, res)
-                serverDebug.events('subscribe function called successfully')
+                console.log('EVENTS:', 'subscribe function called successfully')
             } catch (error) {
-                serverDebug.events('Access denied or error: %o', error)
+                console.log('EVENTS:', 'Access denied or error: %o', error)
                 if (!res.headersSent) {
                     res.status(403).json({ error: 'Access denied' })
                 }

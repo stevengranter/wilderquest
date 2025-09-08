@@ -3,7 +3,7 @@ import { ReactNode } from 'react'
 import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
 import { Quest as ServerQuest } from '@shared/types'
 import { ObservationDialog } from './ObservationDialog'
-import { clientDebug } from '@shared/utils/debug'
+import { clientDebug } from '../../../lib/debug'
 
 export type ClientQuest = Omit<ServerQuest, 'user_id'> & {
     user_id: string

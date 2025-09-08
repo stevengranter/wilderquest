@@ -11,7 +11,7 @@ import React, { useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import api from '@/core/api/axios'
 import { useAuth } from '@/features/auth/useAuth'
-import { clientDebug } from '@shared/utils/debug'
+import { clientDebug } from '../lib/debug'
 
 import {
     AggregatedProgress,
@@ -48,7 +48,6 @@ export type QuestWithTaxa = Quest & {
     photoUrl?: string | null
     username?: string
 }
-
 
 type ProgressData = {
     mappings: QuestMapping[]

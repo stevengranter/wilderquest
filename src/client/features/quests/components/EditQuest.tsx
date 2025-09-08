@@ -14,7 +14,7 @@ import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import api from '@/core/api/axios'
-import { clientDebug } from '@shared/utils/debug'
+import { clientDebug } from '../../../lib/debug'
 import {
     Button,
     Checkbox,

@@ -11,7 +11,7 @@ import { useState } from 'react'
 import api from '@/core/api/axios'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { clientDebug } from '@shared/utils/debug'
+import { clientDebug } from '../../../../../lib/debug'
 import {
     Button,
     Dialog,

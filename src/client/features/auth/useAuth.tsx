@@ -15,7 +15,7 @@ import type {
     RegisterResponseData,
 } from '@shared/types/authTypes'
 import { LoginRequestBody, RegisterRequestBody } from '@/types'
-import { clientDebug } from '@shared/utils/debug'
+import { clientDebug } from '../../lib/debug'
 
 type AuthContextType = {
     isAuthenticated: boolean

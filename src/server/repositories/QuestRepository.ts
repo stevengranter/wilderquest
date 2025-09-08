@@ -1,6 +1,6 @@
 import { Pool, RowDataPacket } from 'mysql2/promise'
 import { createBaseRepository } from './BaseRepository.js'
-import { serverDebug } from '../../shared/utils/debug.js'
+
 import { z } from 'zod'
 
 const QuestSchema = z.object({
@@ -111,7 +111,7 @@ export function createQuestRepository(
         offset: number = 0
     ): Promise<Quest[]> {
         const isOwner = userId === viewerId
-        serverDebug.db(
+        console.log('DB:', 
             'QuestRepository: isOwner=%s, userId=%s',
             isOwner,
             userId
@@ -126,7 +126,7 @@ export function createQuestRepository(
             return rows as Quest[]
         } else {
             // only return public quests
-            serverDebug.db(
+            console.log('DB:', 
                 'QuestRepository: getting public quests for userId=%s',
                 userId
             )
