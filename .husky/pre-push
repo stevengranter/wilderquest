@@ -1,13 +1,5 @@
 echo "🧪 Running pre-push checks..."
 
-# Run typecheck
-echo "🔍 Running typecheck..."
-pnpm run typecheck
-
-# Run lint
-echo "🧹 Running lint..."
-pnpm run lint
-
 # Run build
 echo "🔨 Running build..."
 pnpm run build

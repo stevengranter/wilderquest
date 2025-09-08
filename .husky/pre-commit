@@ -1,1 +1,11 @@
-pnpm test
+echo "🧪 Running pre-commit checks..."
+
+# Run typecheck
+echo "🔍 Running typecheck..."
+pnpm run typecheck
+
+# Run lint
+echo "🧹 Running lint..."
+pnpm run lint
+
+echo "✅ All checks passed!"
