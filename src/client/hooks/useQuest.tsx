@@ -9,7 +9,7 @@ import {
 import chunk from 'lodash/chunk'
 import React, { useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
-import api from '@/core/api/axios'
+import axiosInstance from '@/lib/axios'
 import { useAuth } from '@/features/auth/useAuth'
 import { clientDebug } from '../lib/debug'
 
@@ -66,7 +66,7 @@ export const fetchQuests = async ({
     pageParam?: number
     questId?: string | number
 }): Promise<{ quests: Quest[]; nextPage: number | undefined }> => {
-    const { data } = await api.get(
+    const { data } = await axiosInstance.get(
         `/quests/${questId}?page=${pageParam}&limit=10`
     )
     return {
@@ -78,13 +78,13 @@ export const fetchQuests = async ({
 export const fetchQuest = async (
     questId?: string | number
 ): Promise<Quest | null> => {
-    const { data } = await api.get(`/quests/${questId}`)
+    const { data } = await axiosInstance.get(`/quests/${questId}`)
     clientDebug.quests('Fetched quest %s: %o', questId, data)
     return data
 }
 
 const fetchQuestByToken = async (token?: string) => {
-    const { data } = await api.get(`/quest-sharing/shares/token/${token}`)
+    const { data } = await axiosInstance.get(`/quest-sharing/shares/token/${token}`)
     clientDebug.quests('Fetched quest by token: %o', data)
     return data
 }
@@ -108,7 +108,7 @@ export const fetchTaxa = async (taxonIds: number[]) => {
         taxonIdChunks.map(async (ids) => {
             const fields =
                 'id,name,preferred_common_name,default_photo,iconic_taxon_name,rank,observations_count,wikipedia_url'
-            const { data } = await api.get(
+            const { data } = await axiosInstance.get(
                 `/iNatAPI/taxa/${ids.join(',')}?fields=${fields}`
             )
             return data.results || []
@@ -159,7 +159,7 @@ export const fetchTaxaPaginated = async ({
         taxonIdChunks.map(async (ids) => {
             const fields =
                 'id,name,preferred_common_name,default_photo,iconic_taxon_name,rank,observations_count,wikipedia_url'
-            const { data } = await api.get(
+            const { data } = await axiosInstance.get(
                 `/iNatAPI/taxa/${ids.join(',')}?fields=${fields}`
             )
             return data.results || []
@@ -180,9 +180,9 @@ const fetchMappingsAndProgress = async (
     qid: string | number
 ): Promise<ProgressData> => {
     const [m, a, d] = await Promise.all([
-        api.get(`/quest-sharing/quests/${qid}/mappings`),
-        api.get(`/quest-sharing/quests/${qid}/progress/aggregate`),
-        api.get(`/quest-sharing/quests/${qid}/progress/detailed`),
+        axiosInstance.get(`/quest-sharing/quests/${qid}/mappings`),
+        axiosInstance.get(`/quest-sharing/quests/${qid}/progress/aggregate`),
+        axiosInstance.get(`/quest-sharing/quests/${qid}/progress/detailed`),
     ])
     return {
         mappings: m.data || [],
@@ -195,14 +195,14 @@ const fetchGuestProgress = async (
     token: string
 ): Promise<GuestProgressData> => {
     const [p, a] = await Promise.all([
-        api.get(`/quest-sharing/shares/token/${token}/progress`),
-        api.get(`/quest-sharing/shares/token/${token}/progress/aggregate`),
+        axiosInstance.get(`/quest-sharing/shares/token/${token}/progress`),
+        axiosInstance.get(`/quest-sharing/shares/token/${token}/progress/aggregate`),
     ])
     return { aggregatedProgress: a.data || [], detailedProgress: p.data || [] }
 }
 
 const fetchLeaderboard = async (questId: string | number) => {
-    const { data } = await api.get(
+    const { data } = await axiosInstance.get(
         `/quest-sharing/quests/${questId}/progress/leaderboard`
     )
     clientDebug.quests('Leaderboard: ', data)
@@ -210,7 +210,7 @@ const fetchLeaderboard = async (questId: string | number) => {
 }
 
 const fetchLeaderboardByToken = async (token: string) => {
-    const { data } = await api.get(
+    const { data } = await axiosInstance.get(
         `/quest-sharing/shares/token/${token}/progress/leaderboard`
     )
     return data
@@ -357,7 +357,7 @@ export const useQuestOwner = ({
 
     const updateStatus = useMutation({
         mutationFn: (status: 'pending' | 'active' | 'paused' | 'ended') =>
-            api.patch(`/quests/${quest!.id}/status`, { status }),
+            axiosInstance.patch(`/quests/${quest!.id}/status`, { status }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['quest', questId] })
         },
@@ -1129,7 +1129,7 @@ export const useSpeciesProgress = ({
                         ? `/quest-sharing/quests/${questData.id}/progress/${mapping.id}`
                         : `/quest-sharing/shares/token/${token}/progress/${mapping.id}`
 
-                await api.post(endpoint, { observed })
+                await axiosInstance.post(endpoint, { observed })
                 clientDebug.quests('Progress updated')
 
                 // Invalidate relevant queries

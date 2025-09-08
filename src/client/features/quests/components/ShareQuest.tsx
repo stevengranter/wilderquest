@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { FaShareFromSquare, FaPlus } from 'react-icons/fa6'
 import { motion, AnimatePresence } from 'motion/react'
-import api from '@/core/api/axios'
+import api from '@/lib/axios'
 import { Button, Input, Label } from '@/components/ui'
 import { useAuth } from '@/features/auth/useAuth'
 import { useQueryClient } from '@tanstack/react-query'

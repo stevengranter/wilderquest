@@ -8,7 +8,7 @@ import {
 import { LeaderboardEntry } from '@/features/quests/types'
 import { AvatarOverlay } from '../../AvatarOverlay'
 import { useState } from 'react'
-import api from '@/core/api/axios'
+import api from '@/lib/axios'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { clientDebug } from '../../../../../lib/debug'

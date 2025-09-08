@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router'
-import api from '@/core/api/axios'
+import api from '@/lib/axios'
 import { QuestCard } from '@/features/quests/components/QuestCard'
 import { QuestWithTaxa } from '../../../types/questTypes'
 import { useCallback, useRef } from 'react'

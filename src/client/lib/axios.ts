@@ -1,7 +1,7 @@
 import axios from 'axios'
-import { clientDebug } from '../../lib/debug'
+import { clientDebug } from './debug'
 
-const api = axios.create({
+const axiosInstance = axios.create({
     baseURL: '/api',
 })
 
@@ -15,7 +15,7 @@ export const configureApiTokens = (
 }
 
 // Request interceptor
-api.interceptors.request.use(async (config) => {
+axiosInstance.interceptors.request.use(async (config) => {
     // Get a valid token (will refresh if needed)
     if (getValidToken) {
         try {
@@ -33,7 +33,7 @@ api.interceptors.request.use(async (config) => {
 })
 
 // Response interceptor
-api.interceptors.response.use(
+axiosInstance.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config
@@ -68,7 +68,7 @@ api.interceptors.response.use(
                         )
 
                         // Retry the original request with the new token
-                        return api(originalRequest)
+                        return axiosInstance(originalRequest)
                     }
                 }
 
@@ -93,4 +93,4 @@ api.interceptors.response.use(
     }
 )
 
-export default api
+export default axiosInstance

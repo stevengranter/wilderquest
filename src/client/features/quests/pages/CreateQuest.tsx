@@ -8,7 +8,7 @@ import {
 } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { z } from 'zod'
-import api from '@/core/api/axios'
+import api from '@/lib/axios'
 import { clientDebug } from '../../../lib/debug'
 import {
     Button,

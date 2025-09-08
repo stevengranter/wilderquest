@@ -13,7 +13,7 @@ import {
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import api from '@/core/api/axios'
+import axiosInstance from '@/lib/axios'
 import { clientDebug } from '../../../lib/debug'
 import {
     Button,
@@ -76,13 +76,13 @@ export default function EditQuest() {
     useEffect(() => {
         const fetchQuest = async () => {
             try {
-                const response = await api.get(`/quests/${questId}`)
+                const response = await axiosInstance.get(`/quests/${questId}`)
                 const quest = response.data
 
                 // Auto-pause active quest when editing starts
                 if (quest.status === 'active') {
                     try {
-                        await api.patch(`/quests/${questId}/status`, {
+                        await axiosInstance.patch(`/quests/${questId}/status`, {
                             status: 'paused',
                         })
                         toast.info('Quest has been paused for editing', {
@@ -125,7 +125,7 @@ export default function EditQuest() {
 
                     for (const chunk of taxaIdsChunks) {
                         const chunkIds = chunk.join(',')
-                        const taxaResponse = await api.get(
+                        const taxaResponse = await axiosInstance.get(
                             `/iNatApi/taxa/${chunkIds}`
                         )
                         if (taxaResponse.data.results) {
@@ -271,7 +271,7 @@ export default function EditQuest() {
             taxon_ids,
         }
         try {
-            const response = await api.patch(`/quests/${questId}`, payload)
+            const response = await axiosInstance.patch(`/quests/${questId}`, payload)
 
             clientDebug.quests('Quest update response: %o', response)
 

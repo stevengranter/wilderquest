@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import React, { ReactNode, useEffect, useState } from 'react'
-import api from '@/core/api/axios'
+import api from '@/lib/axios'
 import { clientDebug } from '../../../lib/debug'
 import { SpeciesCard } from '@/features/quests/components/SpeciesCard'
 import {

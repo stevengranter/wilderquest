@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useParams, useNavigate } from 'react-router'
 import { ReactSVG } from 'react-svg'
 import avatar from 'animal-avatar-generator'
-import api from '@/core/api/axios'
+import api from '@/lib/axios'
 import { Button, Card, CardContent } from '@/components/ui'
 import { useAuth } from '@/features/auth/useAuth'
 import { QuestCard } from '@/features/quests/components/QuestCard'
@@ -13,7 +13,6 @@ import { useUserStats } from '@/features/users/hooks/useUserStats'
 import { UserSearch } from '@/components/shared/UserSearch'
 import { type SafeUser } from '@/hooks/useUserSearch'
 import { QuestWithTaxa } from '@/hooks/useQuest'
-
 
 function UserQuests({
     userId,
@@ -97,8 +96,6 @@ function UserQuests({
         </div>
     )
 }
-
-
 
 function offsetAvatarSvg(svg: string, x: number, y: number): string {
     // Extract the SVG contents inside the <svg>...</svg>
