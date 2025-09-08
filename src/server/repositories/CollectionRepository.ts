@@ -1,8 +1,36 @@
 import { Pool, RowDataPacket } from 'mysql2/promise'
-import { Collection, CollectionsToTaxa } from '../models/index.js'
 import { createBaseRepository } from './BaseRepository.js'
+import { z } from 'zod'
 
-export type CollectionRepository = ReturnType<typeof createCollectionRepository>
+export const CollectionSchema = z.object({
+    id: z.number(),
+    user_id: z.number(),
+    name: z.string(),
+    description: z.string().optional(),
+    is_private: z.boolean().default(false),
+    emoji: z.string().optional(),
+    location_name: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+    created_at: z.instanceof(Date).optional(),
+    updated_at: z.instanceof(Date).optional(),
+})
+
+export const CreateCollectionSchema = CollectionSchema.extend({
+    taxon_ids: z.array(z.number()).optional(),
+}).omit({ id: true })
+
+
+export interface Collection extends z.infer<typeof CollectionSchema> {
+}
+export const CollectionToTaxaSchema = z.object({
+    id: z.number(),
+    collection_id: z.number(),
+    taxon_id: z.number(),
+})
+
+export interface CollectionsToTaxa extends z.infer<typeof CollectionToTaxaSchema> {
+}
 
 export function createCollectionRepository(
     tableName: string,
@@ -114,3 +142,5 @@ export function createCollectionRepository(
         updateCollectionItems,
     }
 }
+
+export type CollectionRepository = ReturnType<typeof createCollectionRepository>

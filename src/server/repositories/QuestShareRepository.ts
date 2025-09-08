@@ -1,12 +1,24 @@
 import { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import { createBaseRepository } from './BaseRepository.js'
-import { QuestShare } from '../models/quest_shares.js'
-import {
-    AggregatedProgress,
-    DetailedProgress,
-    LeaderboardEntry,
-    SharedQuestProgress,
-} from '../models/shared_quest_progress.js'
+import { z } from 'zod'
+
+export const QuestShareSchema = z.object({
+    id: z.number().int(),
+    token: z.string(),
+    quest_id: z.number().int(),
+    created_by_user_id: z.number().int(),
+    guest_name: z.string().nullable().optional(), // string | null | undefined
+    shared_with_user_id: z.number().int().nullable().optional(), // number | null | undefined
+    expires_at: z.date().nullable().optional(), // Date | null | undefined
+    is_primary: z.boolean().optional(), // boolean | undefined
+    first_accessed_at: z.date().nullable().optional(), // Date | null | undefined
+    last_accessed_at: z.date().nullable().optional(), // Date | null | undefined
+    created_at: z.date(),
+    updated_at: z.date(),
+})
+
+export interface QuestShare extends z.infer<typeof QuestShareSchema> {
+}
 
 export function createQuestShareRepository(
     tableName: string,
@@ -72,6 +84,38 @@ export function createQuestShareRepository(
         createShare,
         deleteShare,
     }
+}
+
+export const SharedQuestProgressSchema = z.object({
+    id: z.number().int(),
+    quest_share_id: z.number().int(),
+    taxon_id: z.number().int(), // refers to quests_to_taxa.id
+    observed_at: z.date(),
+})
+
+export interface SharedQuestProgress
+    extends z.infer<typeof SharedQuestProgressSchema> {
+}
+
+export type AggregatedProgress = {
+    mapping_id: number // p.taxon_id
+    count: number // COUNT(*)
+    last_observed_at: Date // p_last.observed_at
+    last_display_name: string | null // Complex logic: guest_name if set, username for owner's direct share, 'Guest' otherwise
+}
+export type DetailedProgress = {
+    progress_id: number // p.id
+    mapping_id: number // p.taxon_id
+    observed_at: Date // p.observed_at
+    quest_share_id: number // s.id
+    display_name: string | null // Complex logic: guest_name if set, username for owner's direct share, 'Guest' otherwise
+}
+export type LeaderboardEntry = {
+    display_name: string | null
+    observation_count: number
+    has_accessed_page?: boolean
+    last_progress_at?: Date | null
+    invited_at?: Date
 }
 
 export function createSharedQuestProgressRepository(

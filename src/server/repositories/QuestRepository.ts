@@ -1,7 +1,27 @@
 import { Pool, RowDataPacket } from 'mysql2/promise'
 import { createBaseRepository } from './BaseRepository.js'
-import { Quest } from '../models/quests.js'
 import { serverDebug } from '../../shared/utils/debug.js'
+import { z } from 'zod'
+
+const QuestSchema = z.object({
+    id: z.number().int(),
+    name: z.string(),
+    created_at: z.date(),
+    updated_at: z.date(),
+    starts_at: z.date().nullable(), // Date | null
+    ends_at: z.date().nullable(),
+    description: z.string().optional(),
+    is_private: z.boolean(),
+    user_id: z.number().int(),
+    username: z.string().optional(),
+    status: z.enum(['pending', 'active', 'paused', 'ended']),
+    location_name: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+    mode: z.enum(['competitive', 'cooperative']),
+})
+
+export interface Quest extends z.infer<typeof QuestSchema> {}
 
 export type QuestWithTaxa = Quest & {
     taxon_ids: number[]

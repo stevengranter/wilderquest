@@ -1,10 +1,27 @@
 // src/controllers/authController.ts
 import { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
-import { LoginRequestSchema, RefreshReqBodySchema, RegisterRequestSchema } from '@shared/schemas/Auth.js'
 import type { AuthenticatedRequest } from '../middlewares/verifyJWT.js'
 import { AuthService } from '../services/authService.js'
-import { AppError } from '../middlewares/errorHandler.js' // make sure to export AppError
+import { AppError } from '../middlewares/errorHandler.js'
+import { UserSchema } from '../repositories/UserRepository.js'
+import { z } from 'zod' // make sure to export AppError
+
+export const RegisterRequestSchema = UserSchema.pick({
+    username: true,
+    email: true,
+    password: true,
+})
+
+export const LoginRequestSchema = UserSchema.pick({
+    username: true,
+    password: true,
+})
+
+export const RefreshReqBodySchema = z.object({
+    user_cuid: z.string().cuid2(),
+    refresh_token: z.string(),
+})
 
 export function createAuthController(authService: AuthService) {
     return {

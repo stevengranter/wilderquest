@@ -17,8 +17,25 @@ import {
     Input,
 } from '@/components/ui'
 import { useAuth } from '@/features/auth/useAuth'
-import { LoginRequestSchema } from '@shared/schemas/Auth'
 import { clientDebug } from '@shared/utils/debug'
+
+export const UserSchema = z.object({
+    id: z.number().int().min(1),
+    username: z.string().min(2).max(30),
+    email: z.string().email(),
+    password: z.string().min(8),
+    user_cuid: z.string().cuid2(),
+    created_at: z.string().datetime(),
+    updated_at: z.string().datetime(),
+    role_id: z.number().int().min(1),
+    refresh_token: z.string().jwt().nullish(),
+})
+
+
+export const LoginRequestSchema = UserSchema.pick({
+    username: true,
+    password: true,
+})
 
 const LoginForm = React.forwardRef(() => {
     const navigate = useNavigate()

@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import { z } from 'zod'
-
+import z from 'zod'
 import {
     Button,
     Form,
@@ -14,24 +13,33 @@ import {
     Input,
 } from '@/components/ui'
 import React, { useMemo } from 'react'
-import { useNavigate } from 'react-router'
 import { useAuth } from '@/features/auth/useAuth'
-import { RegisterFormSchema } from './RegisterForm.schema.js'
 import { createNameId } from 'mnemonic-id'
 import { clientDebug } from '@shared/utils/debug'
 
-type Inputs = {
-    email: string
-    username: string
-    password: string
-    confirmPassword: string
-}
+export const RegisterFormInputSchema = z
+    .object({
+        email: z.string().email(),
+        username: z.string().min(2).max(30),
+        password: z.string().min(8, {
+            message: 'Password must be at least 8 characters.',
+        }),
+        confirmPassword: z.string().min(8, {
+            message: 'Password must be at least 8 characters.',
+        }),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        message: 'Passwords don\'t match',
+        path: ['confirmPassword'],
+    })
+
+type RegisterFormInput = z.infer<typeof RegisterFormInputSchema>
 
 const RegisterForm = React.forwardRef(() => {
     const { register } = useAuth()
 
-    const form = useForm<z.infer<typeof RegisterFormSchema>>({
-        resolver: zodResolver(RegisterFormSchema),
+    const form = useForm<z.infer<typeof RegisterFormInputSchema>>({
+        resolver: zodResolver(RegisterFormInputSchema),
         defaultValues: {
             email: '',
             username: '',
@@ -40,7 +48,7 @@ const RegisterForm = React.forwardRef(() => {
         },
     })
 
-    const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    const onSubmit: SubmitHandler<RegisterFormInput> = async (data) => {
         const result = await register(data)
         clientDebug.auth('Registration result:', result)
     }

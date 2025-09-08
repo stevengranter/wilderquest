@@ -4,11 +4,11 @@ import {
     QuestToTaxaRepository,
 } from '../../repositories/QuestRepository.js'
 import type {
+    QuestShare,
     QuestShareRepository,
     SharedQuestProgressRepository,
 } from '../../repositories/QuestShareRepository.js'
 import { sendEvent } from './questEventsService.js'
-import { QuestShare } from '../../models/quest_shares.js'
 import { UserRepository } from '../../repositories/UserRepository.js'
 import { AppError } from '../../middlewares/errorHandler.js'
 import { serverDebug } from '../../../shared/utils/debug.js'

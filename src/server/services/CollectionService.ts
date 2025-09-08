@@ -1,10 +1,10 @@
 import { z } from 'zod'
-import { type CollectionRepository } from '../repositories/index.js'
 import {
     Collection,
+    type CollectionRepository,
     CollectionsToTaxa,
     CreateCollectionSchema,
-} from '../models/index.js'
+} from '../repositories/index.js'
 
 type CreateCollectionInput = z.infer<typeof CreateCollectionSchema>
 type UpdateCollectionInput = Partial<CreateCollectionInput>

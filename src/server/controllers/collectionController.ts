@@ -1,13 +1,13 @@
 import { Request, Response } from 'express'
 import { z } from 'zod'
 import { AuthenticatedRequest } from '../middlewares/index.js'
-import { type CollectionRepository } from '../repositories/index.js'
-import { createCollectionService } from '../services/index.js'
 import {
     Collection,
+    type CollectionRepository,
     CollectionSchema,
     CreateCollectionSchema,
-} from '../models/index.js'
+} from '../repositories/index.js'
+import { createCollectionService } from '../services/index.js'
 import { serverDebug } from '../../shared/utils/debug.js'
 
 export function createCollectionController(
