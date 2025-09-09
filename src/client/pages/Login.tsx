@@ -1,7 +1,7 @@
 import LoginForm from '@/components/auth/LoginForm'
-import { Card } from '@/components/ui'
+import { Card } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
-import { Button } from '@/components/ui'
+import { Button } from '@/components/ui/button'
 import React from 'react'
 import { useSearchParams } from 'react-router'
 

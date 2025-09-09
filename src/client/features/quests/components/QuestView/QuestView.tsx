@@ -1,13 +1,13 @@
-import { Card } from '@/components/ui'
+import { Card } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 import {
-    Skeleton,
-    Button,
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
-    Badge,
-} from '@/components/ui'
+} from '@/components/ui/accordion'
+import { Badge } from '@/components/ui/badge'
 
 import { useQuestContext } from '@/features/quests/context/QuestContext'
 import { useTaxaWithProgress } from '../../hooks/useTaxaWithProgress'
@@ -23,7 +23,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useState, useEffect } from 'react'
 import { QuestStatusBadge } from '../QuestStatusBadge'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 export const QuestView = () => {
     const { user } = useAuth()

@@ -1,4 +1,4 @@
-import { Badge } from '@/components/ui'
+import { Badge } from '@/components/ui/badge'
 import { QuestStatus } from '../types'
 import { Clock, Play, Pause, Square } from 'lucide-react'
 

@@ -14,22 +14,21 @@ import {
     DialogPortal,
     DialogTitle,
     DialogTrigger,
-    ToggleGroup,
-    ToggleGroupItem,
+} from '@/components/ui/dialog'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import {
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
-} from '@/components/ui'
+} from '@/components/ui/accordion'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 // Grid View Component
 import { Observation } from './ObservationCard'
-import {
-    ObservationGridView,
-    ObservationListView,
-    ObservationMapView,
-} from './observation-views'
+import { ObservationGridView } from './observation-views/ObservationGridView'
+import { ObservationListView } from './observation-views/ObservationListView'
+import { ObservationMapView } from './observation-views/ObservationMapView'
 import { MdOutlineLocationOn } from 'react-icons/md'
 import { usePrefetchTaxonPhoto } from '@/hooks/useTaxonPhotos'
 

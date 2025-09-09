@@ -1,12 +1,11 @@
-import { Card, CardContent, CardFooter } from '@/components/ui'
-import { Skeleton } from '@/components/ui'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { IoMdCompass } from 'react-icons/io'
 import { MdLocationPin } from 'react-icons/md'
 
 export function QuestCardSkeleton() {
     return (
         <Card className="m-0 p-0 shadow-0  overflow-hidden border rounded-xl gap-2 relative group bg-orange-100 border-1 border-orange-300">
-
             <CardContent className="p-0 m-0 border-0 rounded-sm ">
                 <div className="relative w-full h-40 overflow-hidden border-0 bg-white">
                     <Skeleton className="w-full h-full border-0 bg-orange-200" />

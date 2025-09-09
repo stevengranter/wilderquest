@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { Card } from '@/components/ui'
+import { Card } from '@/components/ui/card'
 import { PhotoModal } from '../PhotoModal'
 import { ObservationCard, type Observation } from '../ObservationCard'
 

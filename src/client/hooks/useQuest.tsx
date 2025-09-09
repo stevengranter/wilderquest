@@ -1,4 +1,4 @@
-import { QuestEventToast } from '@/features/quests/components'
+import QuestEventToast from '@/features/quests/components/QuestEventToast'
 import {
     QueryClient,
     useMutation,
@@ -84,7 +84,9 @@ export const fetchQuest = async (
 }
 
 const fetchQuestByToken = async (token?: string) => {
-    const { data } = await axiosInstance.get(`/quest-sharing/shares/token/${token}`)
+    const { data } = await axiosInstance.get(
+        `/quest-sharing/shares/token/${token}`
+    )
     clientDebug.quests('Fetched quest by token: %o', data)
     return data
 }
@@ -196,7 +198,9 @@ const fetchGuestProgress = async (
 ): Promise<GuestProgressData> => {
     const [p, a] = await Promise.all([
         axiosInstance.get(`/quest-sharing/shares/token/${token}/progress`),
-        axiosInstance.get(`/quest-sharing/shares/token/${token}/progress/aggregate`),
+        axiosInstance.get(
+            `/quest-sharing/shares/token/${token}/progress/aggregate`
+        ),
     ])
     return { aggregatedProgress: a.data || [], detailedProgress: p.data || [] }
 }

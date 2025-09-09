@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui'
+import { Button } from '@/components/ui/button'
 import { Pause, Play, StopCircle } from 'lucide-react'
 import { QuestStatus as QuestStatusType } from '@/features/quests/types'
 

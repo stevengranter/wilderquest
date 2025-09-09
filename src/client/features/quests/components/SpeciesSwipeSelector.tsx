@@ -3,14 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { motion, useMotionValue, useTransform } from 'motion/react'
 import { Heart, RotateCcw, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
-    Button,
-    Badge,
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-} from '@/components/ui'
+} from '@/components/ui/tooltip'
 import { useSpeciesSwipe } from '@/features/quests/hooks/useSpeciesSwipe'
 import {
     ResponsiveSpeciesGrid,

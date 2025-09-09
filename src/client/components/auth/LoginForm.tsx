@@ -6,7 +6,6 @@ import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import {
-    Button,
     Form,
     FormControl,
     FormDescription,
@@ -14,8 +13,9 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-    Input,
-} from '@/components/ui'
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import { clientDebug } from '@/lib/debug'
 

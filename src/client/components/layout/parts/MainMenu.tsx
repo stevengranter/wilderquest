@@ -9,8 +9,8 @@ import {
     MenubarMenu,
     MenubarSeparator,
     MenubarTrigger,
-    Button,
-} from '@/components/ui'
+} from '@/components/ui/menubar'
+import { Button } from '@/components/ui/button'
 
 export function MainMenu() {
     const { isAuthenticated, user, logout } = useAuth()

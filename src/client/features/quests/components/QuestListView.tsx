@@ -1,5 +1,5 @@
-import { Card } from '@/components/ui'
-import { Badge } from '@/components/ui'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Calendar, Camera } from 'lucide-react'
 import { ClientQuest } from './SpeciesCardWithObservations'
 import { FoundButton } from './FoundButton'

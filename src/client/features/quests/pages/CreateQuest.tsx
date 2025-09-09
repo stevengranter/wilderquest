@@ -10,20 +10,22 @@ import { useNavigate } from 'react-router'
 import { z } from 'zod'
 import api from '@/lib/axios'
 import { clientDebug } from '../../../lib/debug'
+import { Button } from '@/components/ui/button'
 import {
-    Button,
     FormControl,
     FormField,
     FormItem,
     FormLabel,
     FormMessage,
-    Input,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui'
+} from '@/components/ui/select'
 import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { useAuth } from '@/hooks/useAuth'

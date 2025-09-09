@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import { Lock, LockOpen, Pencil } from 'lucide-react'
 import { MdLocationPin } from 'react-icons/md'
-import { Badge } from '@/components/ui'
-import { Button } from '@/components/ui'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { ClientQuest } from '@/features/quests/components/SpeciesCardWithObservations'
 import { QuestTimestamps } from '@/features/quests/components/QuestView/parts/QuestTimestamps'
 import {

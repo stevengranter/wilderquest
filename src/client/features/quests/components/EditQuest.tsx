@@ -15,25 +15,25 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import axiosInstance from '@/lib/axios'
 import { clientDebug } from '../../../lib/debug'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
-    Button,
-    Checkbox,
     FormControl,
     FormDescription,
     FormField,
     FormItem,
     FormLabel,
     FormMessage,
-    Input,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-    Alert,
-    AlertTitle,
-    AlertDescription,
-} from '@/components/ui'
+} from '@/components/ui/select'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { LocationInput } from '@/features/quests/components/LocationInput'
 import { QuestMapView } from '@/features/quests/components/QuestMapView'
 import { SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeSelector'
@@ -271,7 +271,10 @@ export default function EditQuest() {
             taxon_ids,
         }
         try {
-            const response = await axiosInstance.patch(`/quests/${questId}`, payload)
+            const response = await axiosInstance.patch(
+                `/quests/${questId}`,
+                payload
+            )
 
             clientDebug.quests('Quest update response: %o', response)
 

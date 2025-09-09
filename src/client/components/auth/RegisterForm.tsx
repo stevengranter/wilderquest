@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import z from 'zod'
 import {
-    Button,
     Form,
     FormControl,
     FormDescription,
@@ -10,8 +9,9 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-    Input,
-} from '@/components/ui'
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import React, { useMemo } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { createNameId } from 'mnemonic-id'
@@ -30,7 +30,7 @@ export const RegisterFormInputSchema = z
     })
     .refine((data) => data.password === data.confirmPassword, {
         message: "Passwords don't match",
-        path: ['confirmPassword']
+        path: ['confirmPassword'],
     })
 
 export type RegisterRequestBody = z.infer<typeof RegisterFormInputSchema>

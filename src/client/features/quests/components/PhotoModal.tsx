@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Observation } from './ObservationCard'
 import { ProgressiveObservationImage } from './ProgressiveObservationImage'
-import { Dialog, DialogContent } from '@/components/ui'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { MdOutlineLocationOn } from 'react-icons/md'
 
 interface PhotoModalProps {

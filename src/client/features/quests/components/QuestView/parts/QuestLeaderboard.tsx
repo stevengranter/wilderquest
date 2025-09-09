@@ -12,15 +12,15 @@ import api from '@/lib/axios'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { clientDebug } from '../../../../../lib/debug'
+import { Button } from '@/components/ui/button'
 import {
-    Button,
     Dialog,
     DialogContent,
     DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui'
+} from '@/components/ui/dialog'
 
 type QuestShare = {
     id: number

@@ -1,7 +1,7 @@
 'use client'
 
 import { Outlet, ScrollRestoration } from 'react-router'
-import { Toaster } from '@/components/ui'
+import { Toaster } from '@/components/ui/sonner'
 import { SearchProvider } from '@/features/search/context/SearchContext'
 import { SelectionProvider } from '@/components/contexts/SelectionContext'
 import { MainMenu } from '@/components/layout/parts/MainMenu'
@@ -12,16 +12,16 @@ export function AppLayout() {
         <>
             {/*<ScrollToTop />*/}
             {/*<SearchProvider>*/}
-                <SelectionProvider>
-                    <div className="min-h-screen flex flex-col m-4">
-                        <MainMenu />
+            <SelectionProvider>
+                <div className="min-h-screen flex flex-col m-4">
+                    <MainMenu />
 
-                        {/*<UserToolbar />*/}
-                        <Outlet />
-                        <ScrollRestoration />
-                    </div>
-                    <Footer />
-                </SelectionProvider>
+                    {/*<UserToolbar />*/}
+                    <Outlet />
+                    <ScrollRestoration />
+                </div>
+                <Footer />
+            </SelectionProvider>
             {/*</SearchProvider>*/}
             <Toaster />
         </>

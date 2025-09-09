@@ -18,9 +18,9 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-    Input,
-    Button,
-} from '@/components/ui'
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { MdLocationPin } from 'react-icons/md'
 
 import { formSchema } from '@/features/quests/schemas/formSchema'

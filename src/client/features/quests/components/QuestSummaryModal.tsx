@@ -14,9 +14,9 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    Button,
-    Badge,
-} from '@/components/ui'
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { LeaderboardEntry } from '@/features/quests/types'
 import { AvatarOverlay } from './AvatarOverlay'
 import { Quest } from '../../../types/questTypes'
