@@ -38,7 +38,7 @@ axiosInstance.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config
 
-        // Log more details about the error
+
         clientDebug.general('Response error:', {
             status: error.response?.status,
             isRetry: originalRequest._retry,

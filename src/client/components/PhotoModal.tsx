@@ -21,7 +21,6 @@ export function PhotoModal({
     initialPhotoIndex,
     initialObservationIndex,
 }: PhotoModalProps) {
-    // All state variables declared at the top
     const [currentObservationIndex, setCurrentObservationIndex] = useState(
         initialObservationIndex
     )

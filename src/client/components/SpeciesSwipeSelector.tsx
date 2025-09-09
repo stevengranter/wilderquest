@@ -395,40 +395,8 @@ export function SpeciesSwipeSelector({
                         onThumbnailClick={jumpToSpecies}
                     />
 
-                    {/* Stats */}
-                    {/*<div className="flex justify-center gap-2 text-xs">*/}
-                    {/*    <Badge variant="neutral">*/}
-                    {/*        {stats.totalRemaining} remaining*/}
-                    {/*    </Badge>*/}
-                    {/*    <Badge variant="neutral" className="text-green-600">*/}
-                    {/*        {questSpecies.size} selected*/}
-                    {/*    </Badge>*/}
-                    {/*    {stats.totalAdded > 0 && (*/}
-                    {/*        <Badge variant="neutral" className="text-blue-600">*/}
-                    {/*            <TrendingUp className="w-3 h-3 mr-1" />*/}
-                    {/*            {stats.totalAdded} added today*/}
-                    {/*        </Badge>*/}
-                    {/*    )}*/}
-                    {/*</div>*/}
                 </div>
 
-                {/*{lastAction && (*/}
-                {/*    <motion.div*/}
-                {/*        className="mt-4 p-3 bg-gray-50 rounded-lg text-center"*/}
-                {/*        initial={{ opacity: 0, y: 20 }}*/}
-                {/*        animate={{ opacity: 1, y: 0 }}*/}
-                {/*        transition={{ duration: 0.3 }}*/}
-                {/*    >*/}
-                {/*        <p className="text-sm text-gray-600">*/}
-                {/*            {lastAction.type === 'add'*/}
-                {/*                ? '✅ Added'*/}
-                {/*                : '❌ Skipped'}{' '}*/}
-                {/*            <strong>*/}
-                {/*                {lastAction.species.taxon.preferred_common_name}*/}
-                {/*            </strong>*/}
-                {/*        </p>*/}
-                {/*    </motion.div>*/}
-                {/*)}*/}
             </div>
             {/* Right Column - Current Quest Species */}
             <div className="flex flex-col lg:col-span-2 order-1 lg:order-2 overflow-y-auto lg:max-h-[70vh] max-h-[60vh]">

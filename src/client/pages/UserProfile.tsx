@@ -13,7 +13,7 @@ import { UserStats } from '@/components/UserStats'
 import { useUserStats } from '@/hooks/useUserStats'
 import { UserSearch } from '@/components/UserSearch'
 import { type SafeUser } from '@/hooks/useUserSearch'
-import { QuestWithTaxa } from '@/hooks/useQuest'
+import { QuestWithTaxa } from '@/types/questTypes'
 
 function UserQuests({
     userId,

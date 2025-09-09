@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
-import { QuestWithTaxa } from '@/hooks/useQuest'
 import { ComponentType } from 'react'
+import { QuestWithTaxa } from '@/types/questTypes'
 
 function _StatsCard({
     icon: Icon,

@@ -21,8 +21,7 @@ export const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
             {
-                index: true, // Match the root path exactly
-                // element: <Navigate to="/explore" replace />, // Redirect to /explore
+                index: true,
                 element: <Home />,
             },
             {
@@ -41,30 +40,17 @@ export const router = createBrowserRouter([
                 path: 'users/:username',
                 element: <UserProfile />,
             },
-            // {
-            //     path: 'collections',
-            //     children: [
-            //         {
-            //             index: true, // For /collection (no ID)
-            //             element: <UserCollectionsManager />, // Or a component that shows all collections
-            //         },
-            //         {
-            //             path: ':collectionId',
-            //             element: <CollectionDetail />,
-            //         },
-            //     ],
-            // },
             {
                 path: 'quests',
                 children: [
                     {
-                        index: true, // For /quests (no ID)
+                        index: true,
                         element: <QuestsPage />,
                     },
                     {
                         path: ':questId',
                         element: <QuestDetail />,
-                        // loader: questLoader(queryClient),
+
                     },
                     {
                         path: ':questId/edit',

@@ -17,8 +17,7 @@ export const QuestShareSchema = z.object({
     updated_at: z.date(),
 })
 
-export interface QuestShare extends z.infer<typeof QuestShareSchema> {
-}
+export interface QuestShare extends z.infer<typeof QuestShareSchema> {}
 
 export function createQuestShareRepository(
     tableName: string,
@@ -94,8 +93,7 @@ export const SharedQuestProgressSchema = z.object({
 })
 
 export interface SharedQuestProgress
-    extends z.infer<typeof SharedQuestProgressSchema> {
-}
+    extends z.infer<typeof SharedQuestProgressSchema> {}
 
 export type AggregatedProgress = {
     mapping_id: number // p.taxon_id
@@ -224,6 +222,32 @@ export function createSharedQuestProgressRepository(
         return rows as DetailedProgress[]
     }
 
+    async function getDetailedProgressByShareId(
+        shareId: number
+    ): Promise<DetailedProgress[]> {
+        const [rows] = await dbPool.query(
+            `SELECT
+                  p.id AS progress_id,
+                  p.taxon_id AS mapping_id,
+                  p.observed_at,
+                  s.id AS quest_share_id,
+                   CASE
+                     WHEN s.guest_name IS NOT NULL THEN s.guest_name
+                     WHEN s.shared_with_user_id IS NOT NULL THEN u_invited.username
+                     WHEN s.is_primary = TRUE THEN u.username
+                     ELSE 'Guest'
+                   END AS display_name
+               FROM shared_quest_progress p
+               INNER JOIN quest_shares s ON s.id = p.quest_share_id
+               LEFT JOIN users u ON u.id = s.created_by_user_id
+               LEFT JOIN users u_invited ON u_invited.id = s.shared_with_user_id
+               WHERE s.id = ?
+               ORDER BY p.observed_at DESC`,
+            [shareId]
+        )
+        return rows as DetailedProgress[]
+    }
+
     async function getLeaderboardProgress(
         questId: number
     ): Promise<LeaderboardEntry[]> {
@@ -308,6 +332,7 @@ export function createSharedQuestProgressRepository(
         removeProgress,
         getAggregatedProgress,
         getDetailedProgress,
+        getDetailedProgressByShareId,
         getLeaderboardProgress,
         deleteProgressEntry,
         clearMappingProgress,

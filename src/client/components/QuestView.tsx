@@ -13,7 +13,6 @@ import { useQuestContext } from '@/components/QuestContext'
 import { useTaxaWithProgress } from '../hooks/useTaxaWithProgress'
 import { QuestHeader } from './QuestHeader'
 import { QuestLeaderboard } from './QuestLeaderboard'
-import { TaxaPieChart } from './TaxaPieChart'
 import { QuestSpecies } from './QuestSpecies'
 
 import { QuestSummaryModal } from './QuestSummaryModal'

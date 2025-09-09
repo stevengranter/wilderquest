@@ -1,19 +1,8 @@
 import axios from 'axios'
 import { jwtDecode } from 'jwt-decode'
-import {
-    createContext,
-    ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useState,
-} from 'react'
+import { createContext, ReactNode, useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import type {
-    LoggedInUser,
-    LoginResponseData,
-    RegisterResponseData,
-} from '@/types/authTypes'
+import type { LoggedInUser, LoginResponseData, RegisterResponseData } from '@/types/authTypes'
 import { RegisterRequestBody } from '@/components/RegisterForm'
 import { clientDebug } from '@/lib/debug'
 import { LoginRequestBody } from '@/components/LoginForm'
@@ -35,7 +24,7 @@ type AuthContextType = {
     getValidToken: () => Promise<string | null>
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType)
+export const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -615,10 +604,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     )
 }
 
-export const useAuth = () => {
-    const context = useContext(AuthContext)
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider')
-    }
-    return context
-}

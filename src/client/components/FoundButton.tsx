@@ -4,7 +4,12 @@ import { Button } from '@/components/ui/button'
 import { LoggedInUser } from '@/types/authTypes'
 import { cn } from '@/lib/utils'
 import { MouseEvent } from 'react'
-import { DetailedProgress, QuestMapping, QuestStatus, Share } from '@/types/questTypes'
+import {
+    DetailedProgress,
+    QuestMapping,
+    QuestStatus,
+    Share,
+} from '@/types/questTypes'
 
 interface FoundButtonProps {
     // Core data

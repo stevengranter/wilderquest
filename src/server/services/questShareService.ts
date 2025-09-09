@@ -113,7 +113,7 @@ export function createQuestShareService(
         const owner = await userRepo.findUserForDisplay({ id: quest.user_id })
 
         const taxaMappings = await questToTaxaRepo.findByQuestId(share.quest_id)
-        const progress = await progressRepo.findByShareId(share.id)
+        const progress = await progressRepo.getDetailedProgress(share.quest_id)
 
         // Filter out invalid taxon IDs
         const validTaxonIds = taxaMappings
@@ -135,7 +135,7 @@ export function createQuestShareService(
     async function getProgressByToken(token: string) {
         const share = await questShareRepo.findActiveByToken(token)
         if (!share) throw new AppError('Share not found or expired', 404)
-        return progressRepo.findByShareId(share.id)
+        return progressRepo.getDetailedProgress(share.quest_id)
     }
 
     async function setObservedByToken(

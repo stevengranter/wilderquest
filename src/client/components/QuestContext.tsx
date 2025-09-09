@@ -1,7 +1,7 @@
 import React, { createContext, ReactNode, useContext } from 'react'
-import { Quest, useQuestDisplay } from '@/hooks/useQuest'
+import { useQuest } from '@/hooks/useQuest'
 import { INatTaxon } from '@shared/types/iNaturalist'
-import { AggregatedProgress, DetailedProgress, LeaderboardEntry, QuestMapping, Share } from '@/types/questTypes'
+import { AggregatedProgress, DetailedProgress, LeaderboardEntry, Quest, QuestMapping, Share } from '@/types/questTypes'
 
 interface QuestContextType {
     // Quest data
@@ -48,7 +48,7 @@ export const QuestProvider: React.FC<QuestProviderProps> = ({
     initialData,
     children,
 }) => {
-    const questData = useQuestDisplay({ questId, token, initialData })
+    const questData = useQuest({ questId, token, initialData })
 
     const contextValue: QuestContextType = {
         // Quest data

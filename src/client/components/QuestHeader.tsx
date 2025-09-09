@@ -69,7 +69,7 @@ export const QuestHeader = ({
 
             <div className="flex flex-row justify-between items-start">
                 <div className="flex flex-nowrap gap-4 md:flex-row md:items-start md:gap-6 w-full">
-                    {/* Progress Chart - Left column on xl+ screens */}
+                    {/* Progress Chart */}
                     <div className="flex flex-col items-end gap-4 flex-shrink-0 w-40 sm:w-auto xl:order-1">
                         {/* Quest Progress Chart */}
                         {mappings &&
@@ -99,7 +99,7 @@ export const QuestHeader = ({
                             )}
                     </div>
 
-                    {/* Quest Info - Right column on xl+ screens */}
+                    {/* Quest Info  */}
                     <div className="flex flex-col flex-1 min-w-0 xl:order-2">
                         <h2 className="text-3xl font-bold text-primary">
                             {questData.name}

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useEffect } from 'react'
+import { useCallback, useRef } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 
 import {
@@ -11,8 +11,15 @@ import { QuestListView } from './QuestListView'
 import { QuestMapView } from './QuestMapView'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import { LoggedInUser } from '@/types/authTypes'
-import { useSpeciesActions, useSpeciesProgress } from '@/hooks/useQuest'
-import { AggregatedProgress, DetailedProgress, QuestMapping, QuestStatus, Share } from '@/types/questTypes'
+import {
+    AggregatedProgress,
+    DetailedProgress,
+    QuestMapping,
+    QuestStatus,
+    Share,
+} from '@/types/questTypes'
+import { useSpeciesActions } from '@/hooks/useSpeciesActions'
+import { useSpeciesProgress } from '@/hooks/useSpeciesProgress'
 
 // Use QuestMapping instead of defining TaxonMapping
 type TaxonMapping = QuestMapping
@@ -57,14 +64,10 @@ export const QuestSpecies = ({
     fetchNextTaxaPage,
     taxa,
     mappings,
-    updateStatus,
     isTaxaLoading,
     user,
     viewMode,
-    setViewMode,
 }: QuestSpeciesProps) => {
-    // Removed auto-switching behavior to respect user's manual view mode selection
-    // Users can now choose their preferred view mode regardless of screen size
 
     const observer = useRef<IntersectionObserver | null>(null)
 
@@ -222,7 +225,6 @@ export const QuestSpecies = ({
         ]
     )
 
-    // No need to reset anything when taxa data changes - we show all loaded taxa
 
     return (
         <div>

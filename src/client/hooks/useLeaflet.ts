@@ -5,11 +5,6 @@ import {
     LeafletLoadOptions,
 } from '@/lib/leafletLoader'
 
-/**
- * React hook for dynamically loading Leaflet
- * @param options - Optional configuration for Leaflet loading
- * @returns Object with loading state, error state, and Leaflet instance
- */
 export function useLeaflet(options: LeafletLoadOptions = {}) {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<Error | null>(null)

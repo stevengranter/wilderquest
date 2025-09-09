@@ -49,7 +49,7 @@ export type QuestMapping = {
     taxon_id: number
     created_at: string
 }
-export type AggregatedProgress = {
+export interface AggregatedProgress {
     mapping_id: number
     count: number
     last_observed_at: string
@@ -71,7 +71,7 @@ export type LeaderboardEntry = {
     last_progress_at?: Date | null
     invited_at?: Date
 }
-export type SpeciesCardWithObservationsProps = {
+export interface SpeciesCardWithObservationsProps {
     species: INatTaxon & {
         mapping?: QuestMapping
         progressCount: number
@@ -79,4 +79,35 @@ export type SpeciesCardWithObservationsProps = {
     }
     questData: ClientQuest
     found: boolean
+}
+
+// Common interface for quest data
+export interface QuestDataResult {
+    questData: Quest | null | undefined
+    taxa: INatTaxon[]
+    mappings?: QuestMapping[]
+    aggregatedProgress?: AggregatedProgress[]
+    detailedProgress?: DetailedProgress[]
+    leaderboard?: LeaderboardEntry[]
+    share?: Share
+    isLoading: boolean
+    isTaxaLoading: boolean
+    isTaxaFetchingNextPage: boolean
+    taxaHasNextPage: boolean
+    isError: boolean
+    isProgressError?: boolean
+    isLeaderboardError?: boolean
+    isTaxaError?: boolean
+    updateStatus?: (status: 'pending' | 'active' | 'paused' | 'ended') => void
+    fetchNextTaxaPage: () => void
+}
+
+export type ProgressData = {
+    mappings: QuestMapping[]
+    aggregatedProgress: AggregatedProgress[]
+    detailedProgress: DetailedProgress[]
+}
+export type GuestProgressData = {
+    aggregatedProgress: AggregatedProgress[]
+    detailedProgress: DetailedProgress[]
 }
