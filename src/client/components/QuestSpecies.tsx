@@ -18,8 +18,9 @@ import {
     QuestStatus,
     Share,
 } from '@/types/questTypes'
-import { useSpeciesActions } from '@/hooks/useSpeciesActions'
 import { useSpeciesProgress } from '@/hooks/useSpeciesProgress'
+import { useSpeciesActions } from '@/hooks/useSpeciesActions'
+
 
 // Use QuestMapping instead of defining TaxonMapping
 type TaxonMapping = QuestMapping

@@ -1,7 +1,7 @@
 import React, { createContext, ReactNode, useContext } from 'react'
-import { useQuest } from '@/hooks/useQuest'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import { AggregatedProgress, DetailedProgress, LeaderboardEntry, Quest, QuestMapping, Share } from '@/types/questTypes'
+import { useQuest } from '@/hooks/useQuest'
 
 interface QuestContextType {
     // Quest data
