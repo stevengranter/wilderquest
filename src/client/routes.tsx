@@ -13,9 +13,7 @@ import { QuestsPage } from '@/features/quests/pages/QuestsPage'
 import UserQuestsPage from '@/features/quests/pages/UserQuestsPage'
 import SharedQuestGuest from '@/features/quests/pages/SharedQuestGuest'
 import { AppLayout } from '@/core/layouts/AppLayout'
-import { QueryClient } from '@tanstack/react-query'
 
-export const queryClient = new QueryClient()
 
 export const router = createBrowserRouter([
     {

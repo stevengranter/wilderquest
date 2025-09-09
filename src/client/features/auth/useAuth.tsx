@@ -14,9 +14,10 @@ import type {
     LoginResponseData,
     RegisterResponseData,
 } from '@/types/authTypes'
-import {  RegisterRequestBody } from '@/components/auth/RegisterForm'
+import { RegisterRequestBody } from '@/components/auth/RegisterForm'
 import { clientDebug } from '@/lib/debug'
-import {LoginRequestBody} from '@/components/auth/LoginForm'
+import { LoginRequestBody } from '@/components/auth/LoginForm'
+import { configureApiTokens } from '@/lib/axios'
 
 type AuthContextType = {
     isAuthenticated: boolean
@@ -35,7 +36,6 @@ type AuthContextType = {
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
-
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -442,6 +442,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             throw error
         }
     }
+
+    // Configure API tokens for axios
+    useEffect(() => {
+        configureApiTokens(getValidToken)
+    }, [getValidToken])
 
     // Initialize auth state on mount
     useEffect(() => {

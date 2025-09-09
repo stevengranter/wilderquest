@@ -11,7 +11,7 @@ export function AppLayout() {
     return (
         <>
             {/*<ScrollToTop />*/}
-            <SearchProvider>
+            {/*<SearchProvider>*/}
                 <SelectionProvider>
                     <div className="min-h-screen flex flex-col m-4">
                         <MainMenu />
@@ -22,7 +22,7 @@ export function AppLayout() {
                     </div>
                     <Footer />
                 </SelectionProvider>
-            </SearchProvider>
+            {/*</SearchProvider>*/}
             <Toaster />
         </>
     )

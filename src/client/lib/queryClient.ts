@@ -1,8 +1,4 @@
-// src/providers/AppProviders.tsx
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useEffect } from 'react'
-import { configureApiTokens } from '@/lib/axios'
-import { AuthProvider, useAuth } from '@/features/auth/useAuth'
+import { QueryClient } from '@tanstack/react-query'
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -44,25 +40,4 @@ const queryClient = new QueryClient({
     },
 })
 
-// Component to configure API tokens with useAuth context
-function ApiTokenConfigurator() {
-    const { getValidToken } = useAuth()
-
-    useEffect(() => {
-        // Configure the axios instance to use the auth context's token getter
-        configureApiTokens(getValidToken)
-    }, [getValidToken])
-
-    return null // This component doesn't render anything
-}
-
-export function AppProviders({ children }: { children: React.ReactNode }) {
-    return (
-        <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-                <ApiTokenConfigurator />
-                {children}
-            </AuthProvider>
-        </QueryClientProvider>
-    )
-}
+export default queryClient
