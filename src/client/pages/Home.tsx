@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
-import { ComponentType } from 'react'
+import { ComponentType, useMemo } from 'react'
 import { QuestWithTaxa } from '@/types/questTypes'
 
 function _StatsCard({
@@ -71,21 +71,23 @@ export function Home() {
         recentQuests || []
     )
 
+
+
     return (
         <div className="min-h-screen bg-background animate-in fade-in duration-500">
             {/* Hero Section */}
-            <section className="relative px-4 pt-20 pb-16 text-center animate-in fade-in duration-700">
-                <div className="max-w-4xl mx-auto">
+            <section className="relative pt-20 pb-16 text-center bg-main animate-in fade-in duration-700 -mx-4 overflow-hidden">
+                <div className="relative z-10 max-w-4xl mx-auto px-4">
                     <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
                         wilderQuest
                     </h1>
 
-                    <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+                    <p className="text-xl md:text-2xl text-foreground mb-8 max-w-2xl mx-auto">
                         Join a community of explorers
                     </p>
                 </div>
 
-                <div className="flex flex-row justify-center">
+                <div className="relative z-10 flex flex-row justify-center">
                     <Link to="/quests" viewTransition>
                         <Button
                             size="lg"

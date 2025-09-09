@@ -4,6 +4,7 @@ import { type INatTaxon } from '@shared/types/iNaturalist'
 import { ExternalLink } from 'lucide-react'
 import { motion } from 'motion/react'
 import React, { useRef } from 'react'
+import { MdOutlinePhotoSizeSelectActual } from 'react-icons/md'
 import getKingdomIcon from '@/lib/getKingdomIcon'
 
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
@@ -85,47 +86,37 @@ interface SpeciesCardSkeletonProps {
 export function SpeciesCardSkeleton({
     phase = 'data',
 }: SpeciesCardSkeletonProps) {
-    const getSkeletonColor = () => {
-        switch (phase) {
-            case 'data':
-                return 'bg-gradient-to-b from-gray-200 via-gray-100 to-gray-200'
-            case 'image':
-                return 'bg-gradient-to-b from-blue-100 via-blue-50 to-blue-100'
-            case 'complete':
-                return 'bg-gradient-to-b from-green-100 via-green-50 to-green-100'
-            default:
-                return 'bg-gradient-to-b from-gray-200 via-gray-100 to-gray-200'
-        }
-    }
-
     return (
-        <Card
-            className={`aspect-2.5/3.5 overflow-hidden ${getSkeletonColor()} shadow-0 py-0 gap-0 border-3 rounded-xl border-gray-300 animate-pulse`}
-        >
+        <Card className="aspect-2.5/3.5 overflow-hidden shadow-0 py-0 gap-0 border rounded-xl border-gray-300 bg-gray-100 animate-pulse">
             <CardHeader className="gap-0 pt-2 pb-2">
-                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-6 w-3/4 bg-gray-200 border-0 rounded-xl" />
             </CardHeader>
             <CardContent className="relative px-0 mx-6">
-                <Skeleton className="w-full aspect-square rounded-sm" />
+                <Skeleton className="w-full aspect-square rounded-sm bg-gray-300 border-0 flex items-center justify-center">
+                    <MdOutlinePhotoSizeSelectActual
+                        className="text-gray-200"
+                        size={50}
+                    />
+                </Skeleton>
                 {phase === 'image' && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-xs text-blue-600 font-medium">
+                        <div className="text-xs text-gray-400 font-medium">
                             Loading image...
                         </div>
                     </div>
                 )}
             </CardContent>
             <CardContent className="block sm:hidden md:block">
-                <div className="h-full bg-gray-200 text-xs content-start text-left p-2 outline-2 rounded-sm">
-                    <Skeleton className="h-3 w-full mb-1" />
-                    <Skeleton className="h-3 w-2/3" />
+                <div className="h-full bg-gray-200 text-xs content-start text-left p-2 rounded-sm">
+                    <Skeleton className="h-3 w-full mb-1 bg-gray-300 border-0 rounded-xl" />
+                    <Skeleton className="h-3 w-2/3 bg-gray-300 border-0 rounded-xl" />
                 </div>
             </CardContent>
             <CardFooter className="py-4 gap-2">
-                <Skeleton className="h-6 w-1/4" />
+                <Skeleton className="h-6 w-1/4 bg-gray-200 border-0 rounded-xl" />
                 {phase === 'complete' && (
                     <div className="absolute bottom-2 right-2">
-                        <div className="text-xs text-green-600 font-medium">
+                        <div className="text-xs text-gray-400 font-medium">
                             ✓ Ready
                         </div>
                     </div>
