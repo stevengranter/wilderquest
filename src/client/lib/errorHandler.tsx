@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { toast } from 'sonner'
-import { clientDebug } from '../../lib/debug'
+import { clientDebug } from './debug'
 
 export const handleError = (error: unknown) => {
     const isProduction = process.env.NODE_ENV === 'production'

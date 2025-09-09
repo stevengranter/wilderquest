@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { LocationIQResults } from '@shared/types/locationIQ'
-import { clientDebug } from '../../lib/debug'
+import { clientDebug } from './debug'
 
 function isValidLatLng(latitude: number, longitude: number) {
     const isLatValid = latitude >= -90 && latitude <= 90

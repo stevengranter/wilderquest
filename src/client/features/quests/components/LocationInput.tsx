@@ -11,7 +11,7 @@ import {
     getCitySuggestions,
     getNearbyLocations,
     CombinedLocationResult,
-} from '@/shared/lib/locationUtils'
+} from '@/lib/locationUtils'
 import {
     FormControl,
     FormDescription,
