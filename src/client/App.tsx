@@ -1,7 +1,7 @@
 // src/App.tsx
 import { AppProviders } from '@/core/providers/AppProviders'
 import { RouterProvider } from 'react-router'
-import { router } from '@/core/routing/routes'
+import { router } from '@/routes'
 import { clientDebug } from './lib/debug'
 
 export default function App() {

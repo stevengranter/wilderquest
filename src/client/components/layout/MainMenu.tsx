@@ -11,8 +11,6 @@ import {
     MenubarTrigger,
     Button,
 } from '@/components/ui'
-import { paths } from '@/core/routing/paths'
-
 
 export function MainMenu() {
     const { isAuthenticated, user, logout } = useAuth()
@@ -48,9 +46,7 @@ export function MainMenu() {
                     </MenubarTrigger>
                     <MenubarContent>
                         <MenubarItem asChild>
-                            <Link to={paths.userProfile(user.username)}>
-                                Profile
-                            </Link>
+                            <Link to={`/users/${user.username}`}>Profile</Link>
                         </MenubarItem>
                         <MenubarSeparator />
                         <MenubarItem onSelect={handleLogout}>

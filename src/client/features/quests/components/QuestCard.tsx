@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
 import { Card, CardContent, CardFooter } from '@/components/ui'
 import { QuestWithTaxa } from '../../../types/questTypes'
-import { paths } from '@/core/routing/paths'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -105,7 +104,7 @@ function QuestCardContent({
     }
 
     return (
-        <Link to={paths.questDetail(quest.id)} className="block">
+        <Link to={`/quests/${quest.id}`} className="block">
             <Card
                 className={cn(
                     'm-0 p-0 shadow-0 overflow-hidden border rounded-xl gap-2 hover:bg-orange-50 relative group bg-white',

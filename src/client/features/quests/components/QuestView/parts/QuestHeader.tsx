@@ -3,7 +3,6 @@ import { Lock, LockOpen, Pencil } from 'lucide-react'
 import { MdLocationPin } from 'react-icons/md'
 import { Badge } from '@/components/ui'
 import { Button } from '@/components/ui'
-import { paths } from '@/core/routing/paths'
 import { ClientQuest } from '@/features/quests/components/SpeciesCardWithObservations'
 import { QuestTimestamps } from '@/features/quests/components/QuestView/parts/QuestTimestamps'
 import {
@@ -52,7 +51,7 @@ export const QuestHeader = ({
                             className="bg-background w-full sm:w-auto"
                             asChild
                         >
-                            <Link to={paths.editQuest(questData.id)}>
+                            <Link to={`/quests/${questData.id}/edit`}>
                                 <Pencil className="h-4 w-4 mr-2" />
                                 Edit Quest
                             </Link>
