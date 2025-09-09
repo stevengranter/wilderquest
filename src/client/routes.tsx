@@ -1,18 +1,18 @@
 // src/routes/routes.tsx
 
 import { createBrowserRouter } from 'react-router'
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { Home } from '@/pages/Home'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
-import UserProfile from '@/features/users/pages/UserProfile'
-import EditQuest from '@/features/quests/components/EditQuest'
-import QuestDetail from '@/features/quests/components/QuestDetail'
-import { CreateQuest } from '@/features/quests/pages/CreateQuest'
-import { QuestsPage } from '@/features/quests/pages/QuestsPage'
-import UserQuestsPage from '@/features/quests/pages/UserQuestsPage'
-import SharedQuestGuest from '@/features/quests/pages/SharedQuestGuest'
-import { AppLayout } from '@/components/layout/AppLayout'
+import UserProfile from '@/pages/UserProfile'
+import EditQuest from '@/components/EditQuest'
+import QuestDetail from '@/components/QuestDetail'
+import { CreateQuest } from '@/pages/CreateQuest'
+import { QuestsPage } from '@/pages/QuestsPage'
+import UserQuestsPage from '@/pages/UserQuestsPage'
+import SharedQuestGuest from '@/pages/SharedQuestGuest'
+import { AppLayout } from '@/components/AppLayout'
 
 
 export const router = createBrowserRouter([

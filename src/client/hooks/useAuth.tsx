@@ -14,9 +14,9 @@ import type {
     LoginResponseData,
     RegisterResponseData,
 } from '@/types/authTypes'
-import { RegisterRequestBody } from '@/components/auth/RegisterForm'
+import { RegisterRequestBody } from '@/components/RegisterForm'
 import { clientDebug } from '@/lib/debug'
-import { LoginRequestBody } from '@/components/auth/LoginForm'
+import { LoginRequestBody } from '@/components/LoginForm'
 import { configureApiTokens } from '@/lib/axios'
 
 type AuthContextType = {

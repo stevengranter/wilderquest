@@ -1,4 +1,4 @@
-import QuestEventToast from '@/features/quests/components/QuestEventToast'
+import QuestEventToast from '@/components/QuestEventToast'
 import {
     QueryClient,
     useMutation,
@@ -13,15 +13,9 @@ import axiosInstance from '@/lib/axios'
 import { useAuth } from '@/hooks/useAuth'
 import { clientDebug } from '../lib/debug'
 
-import {
-    AggregatedProgress,
-    DetailedProgress,
-    LeaderboardEntry,
-    QuestMapping,
-    Share,
-} from '@/features/quests/types'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import { z } from 'zod'
+import { AggregatedProgress, DetailedProgress, LeaderboardEntry, QuestMapping, Share } from '@/types/questTypes'
 
 const QuestSchema = z.object({
     id: z.number().int(),

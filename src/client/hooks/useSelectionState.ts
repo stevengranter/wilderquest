@@ -5,14 +5,21 @@ export const useSelectionState = () => {
     const [isSelectionMode, setIsSelectionMode] = useState(false)
 
     const addIdToSelection = (id: number | string) => {
-        setSelectedIds(prev => [...prev, id])
+        setSelectedIds((prev) => [...prev, id])
     }
 
     const removeIdFromSelection = (id: number | string) => {
-        setSelectedIds(prev => prev.filter(item => item !== id))
+        setSelectedIds((prev) => prev.filter((item) => item !== id))
     }
 
-    return { isSelectionMode, setIsSelectionMode, selectedIds, setSelectedIds, addIdToSelection, removeIdFromSelection }
+    return {
+        isSelectionMode,
+        setIsSelectionMode,
+        selectedIds,
+        setSelectedIds,
+        addIdToSelection,
+        removeIdFromSelection,
+    }
 }
 
-export type SelectionStae = ReturnType<typeof useSelectionState>
+export type SelectionState = ReturnType<typeof useSelectionState>

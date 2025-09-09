@@ -1,4 +1,4 @@
-import LoginForm from '@/components/auth/LoginForm'
+import LoginForm from '@/components/LoginForm'
 import { Card } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
