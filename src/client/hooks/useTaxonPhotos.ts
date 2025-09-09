@@ -3,10 +3,10 @@ import {
     useQuery,
     useQueryClient,
 } from '@tanstack/react-query'
-import api from '@/core/api/axios'
-import { INatTaxon } from '@shared/types'
+import axiosInstance from '@/lib/axios'
+import { INatTaxon } from '@shared/types/iNaturalist'
 import { useCallback, useMemo } from 'react'
-import { QuestWithTaxa } from '@shared/types'
+import { QuestWithTaxa } from '../types/questTypes'
 
 const BATCH_SIZE = 150 // Reduced from 200 to 150 to be more conservative with rate limits
 
@@ -23,7 +23,7 @@ const fetchTaxaInBatches = async (taxonIds: number[]) => {
 
     const batchPromises = batches.map(async (batch) => {
         try {
-            const response = await api.get(`/iNatAPI/taxa/${batch.join(',')}`)
+            const response = await axiosInstance.get(`/iNatAPI/taxa/${batch.join(',')}`)
             return response.data.results as INatTaxon[]
         } catch (error: unknown) {
             // For errors, return empty array to not break everything

@@ -9,7 +9,7 @@ import path from 'path'
 // Internal imports
 import errorHandler from './middlewares/errorHandler.js'
 import logger from './config/logger.js'
-import { serverDebug } from '../shared/utils/debug.js'
+
 import {
     CollectionRepository,
     createCollectionRepository,
@@ -62,7 +62,7 @@ const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 
 async function startServer() {
     try {
-        serverDebug.api('🚀 Server startup initiated')
+        console.log('API: 🚀 Server startup initiated')
 
         // Validate environment variables
         const env = await import('./config/app.config.js').then(
@@ -81,15 +81,15 @@ async function startServer() {
 
         // ☕️ Initialize routes and controllers via buildApp()
         const app = buildApp(deps)
-        serverDebug.api('📦 App built successfully')
+        console.log('API: 📦 App built successfully')
 
         //  Server setup  //
         if (process.env.NODE_ENV !== 'production') {
             // Error Handler
             app.use(errorHandler)
             ViteExpress.listen(app, PORT, () => {
-                serverDebug.api(
-                    `🌐 Server listening on ${env.PROTOCOL}://${env.HOST}:${PORT}`
+                console.log(
+                    `API: 🌐 Server listening on ${env.PROTOCOL}://${env.HOST}:${PORT}`
                 )
                 logger.info(
                     `Server running on ${env.PROTOCOL}://${env.HOST}:${PORT} ✅ `

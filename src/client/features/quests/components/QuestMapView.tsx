@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { INatObservation, INatTaxon } from '@shared/types'
+import { INatObservation, INatTaxon } from '@shared/types/iNaturalist'
 import type { Map as LeafletMap, LatLngBounds, LeafletEvent } from 'leaflet'
 import { ClientQuest } from './SpeciesCardWithObservations'
 import { QuestMapping } from '../types'
-import api from '@/core/api/axios'
+import api from '@/lib/axios'
 import { Badge } from '@/components/ui'
 import { Calendar } from 'lucide-react'
 import { MdLocationPin } from 'react-icons/md'
 import { useLeaflet } from '@/hooks/useLeaflet'
-import { clientDebug } from '@shared/utils/debug'
+import { clientDebug } from '../../../lib/debug'
 
 // Add custom CSS for markers
 const markerStyles = `

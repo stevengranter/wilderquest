@@ -9,7 +9,6 @@
         "start:preview": "NODE_ENV=production tsx src/server/server.ts",
         "start:bg": "nohup pnpm start > start.log 2>&1 & echo $! > .start.pid",
         "dev": "NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec \"tsx src/server/server.ts\" --",
-        "dev:debug": "DEBUG=app:server:*,app:client:* NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec tsx src/server/server.ts --",
         "dev:bg": "nohup pnpm dev > dev.log 2>&1 & echo $! > .dev.pid",
         "check": "pnpm run typecheck && pnpm run lint",
         "typecheck:client": "tsc --noEmit -p src/client/tsconfig.json",
@@ -118,10 +117,7 @@
     },
     "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b",
     "pnpm": {
-        "hoistPattern": [
-            "@types/*",
-            "typescript"
-        ],
+        "hoistPattern": ["@types/*", "typescript"],
         "onlyBuiltDependencies": [
             "@firebase/util",
             "@swc/core",

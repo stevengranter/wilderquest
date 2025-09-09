@@ -90,7 +90,13 @@ export default defineConfig({
         },
     },
     define: {
-        __DEBUG_ENABLED__: JSON.stringify(process.env.DEBUG || ''),
+        __IS_DEVELOPMENT__: JSON.stringify(
+            process.env.NODE_ENV === 'development'
+        ),
+        // Also define the NODE_ENV directly for debugging
+        'process.env.NODE_ENV': JSON.stringify(
+            process.env.NODE_ENV || 'production'
+        ),
     },
     server: {
         watch: {

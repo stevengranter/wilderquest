@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import api from '@/core/api/axios'
+import api from '@/lib/axios'
 
 export interface UserStats {
     totalQuestsParticipated: number

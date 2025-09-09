@@ -15,7 +15,7 @@ import {
 import React, { useMemo } from 'react'
 import { useAuth } from '@/features/auth/useAuth'
 import { createNameId } from 'mnemonic-id'
-import { clientDebug } from '@shared/utils/debug'
+import { clientDebug } from '../../lib/debug'
 
 export const RegisterFormInputSchema = z
     .object({
@@ -29,11 +29,11 @@ export const RegisterFormInputSchema = z
         }),
     })
     .refine((data) => data.password === data.confirmPassword, {
-        message: 'Passwords don\'t match',
-        path: ['confirmPassword'],
+        message: "Passwords don't match",
+        path: ['confirmPassword']
     })
 
-type RegisterFormInput = z.infer<typeof RegisterFormInputSchema>
+export type RegisterRequestBody = z.infer<typeof RegisterFormInputSchema>
 
 const RegisterForm = React.forwardRef(() => {
     const { register } = useAuth()
@@ -48,7 +48,7 @@ const RegisterForm = React.forwardRef(() => {
         },
     })
 
-    const onSubmit: SubmitHandler<RegisterFormInput> = async (data) => {
+    const onSubmit: SubmitHandler<RegisterRequestBody> = async (data) => {
         const result = await register(data)
         clientDebug.auth('Registration result:', result)
     }

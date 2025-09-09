@@ -9,7 +9,8 @@ import {
 } from './SpeciesCardWithObservations'
 import { useAnimationTarget } from './SpeciesAnimationProvider'
 import { cn } from '@/lib/utils'
-import { INatTaxon, TaxonData } from '@shared/types'
+import { INatTaxon } from '@shared/types/iNaturalist'
+import { TaxonData } from '../../../types/questTypes'
 
 export interface SpeciesCountItem {
     taxon: TaxonData

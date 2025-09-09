@@ -11,7 +11,6 @@ import type {
 import { sendEvent } from './questEventsService.js'
 import { UserRepository } from '../repositories/UserRepository.js'
 import { AppError } from '../middlewares/errorHandler.js'
-import { serverDebug } from '@shared/utils/debug.js'
 
 export type QuestShareService = ReturnType<typeof createQuestShareService>
 
@@ -183,8 +182,8 @@ export function createQuestShareService(
                 await progressRepo.addProgress(share.id, mappingId)
             } catch (_err) {
                 // ignore duplicates because of unique constraint
-                serverDebug.db(
-                    'QuestShareService: Duplicate progress entry, ignoring'
+                console.log(
+                    'DB: QuestShareService: Duplicate progress entry, ignoring'
                 )
             }
             sendEvent(String(questId), {

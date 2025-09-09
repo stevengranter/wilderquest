@@ -9,7 +9,7 @@ import React, {
 } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { createPortal } from 'react-dom'
-import type { TaxonData } from '@shared/types'
+import type { TaxonData } from '../../../types/questTypes'
 
 interface SpeciesCountItem {
     taxon: TaxonData

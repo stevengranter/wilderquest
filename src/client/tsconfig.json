@@ -17,12 +17,13 @@
         "jsx": "react-jsx",
         "emitDeclarationOnly": false,
         "declaration": true,
-        "baseUrl": ".",
+        "baseUrl": "../..",
         "paths": {
-            "@shared/*": ["../shared/*"],
-            "@/*": ["./*"]
+            "@shared/*": ["./src/shared/*"],
+            "@/*": ["./src/client/*"],
+            "@server/*": ["./src/server/*"]
         }
     },
-    "include": ["./**/*.ts", "./**/*.tsx", "../shared/**/*.ts"],
+    "include": ["./**/*.ts", "./**/*.tsx"],
     "exclude": ["./**/__tests__/**/*", "./**/*.test.ts", "./**/*.spec.ts"]
 }

@@ -2,8 +2,8 @@ import { useParams } from 'react-router'
 import { useEffect } from 'react'
 import { QuestProvider } from '@/features/quests/context/QuestContext'
 import { QuestView } from '@/features/quests/components/QuestView/QuestView'
-import api from '@/core/api/axios'
-import { clientDebug } from '@shared/utils/debug'
+import api from '@/lib/axios'
+import { clientDebug } from '../../../lib/debug'
 
 export default function SharedQuestGuest() {
     const { token } = useParams()

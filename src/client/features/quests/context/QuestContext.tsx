@@ -1,7 +1,6 @@
 import React, { createContext, ReactNode, useContext } from 'react'
-import { useQuestDisplay } from '@/hooks/useQuest'
-import { INatTaxon } from '@shared/types'
-// Import QuestMapping type
+import { Quest, useQuestDisplay } from '@/hooks/useQuest'
+import { INatTaxon } from '@shared/types/iNaturalist'
 import {
     AggregatedProgress,
     DetailedProgress,
@@ -9,7 +8,6 @@ import {
     QuestMapping,
     Share,
 } from '@/features/quests/types'
-import { Quest } from '@/types'
 
 interface QuestContextType {
     // Quest data

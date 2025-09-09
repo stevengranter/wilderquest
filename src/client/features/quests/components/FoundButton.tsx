@@ -2,8 +2,9 @@
 
 import { Button } from '@/components/ui'
 import { DetailedProgress, QuestMapping, QuestStatus, Share } from '../types'
-import { LoggedInUser } from '@shared/types/authTypes'
+import { LoggedInUser } from '@/types/authTypes'
 import { cn } from '@/lib/utils'
+import { MouseEvent } from 'react'
 
 interface FoundButtonProps {
     // Core data
@@ -22,7 +23,7 @@ interface FoundButtonProps {
     questMode?: 'cooperative' | 'competitive'
 
     // Interaction
-    onClick?: (e: React.MouseEvent) => void | Promise<void>
+    onClick?: (e: MouseEvent) => void | Promise<void>
 
     // Styling
     variant?: 'default' | 'neutral'

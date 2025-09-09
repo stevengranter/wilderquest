@@ -1,5 +1,5 @@
-import { Quest } from '@shared/types'
-import { INatTaxon } from '@shared/types'
+import { Quest } from '@/types/questTypes'
+import { INatTaxon } from '@shared/types/iNaturalist'
 
 export type QuestStatus = 'pending' | 'active' | 'paused' | 'ended'
 export type QuestMode = 'competitive' | 'cooperative'

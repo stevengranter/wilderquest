@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { INatTaxon } from '@shared/types/iNaturalist'
 
 export const QuestSchema = z.object({
     id: z.number().int(),
@@ -24,4 +25,15 @@ export interface QuestWithTaxa extends Quest {
     taxon_ids: number[]
     photoUrl?: string | null
     username?: string
+}
+
+export interface TaxonData {
+    id: number
+    name: string
+    preferred_common_name: string
+    rank?: INatTaxon['rank']
+    default_photo?: INatTaxon['default_photo']
+    iconic_taxon_name?: string
+    observations_count?: number
+    wikipedia_url?: string
 }

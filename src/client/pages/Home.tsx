@@ -1,22 +1,16 @@
 import { ArrowRight, ChevronRight, Compass, Phone } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import api from '@/core/api/axios'
+import api from '@/lib/axios'
 import { QuestCard } from '@/features/quests/components/QuestCard'
 import { QuestCardSkeleton } from '@/features/quests/components/QuestCardSkeleton'
-import { QuestProvider } from '@/features/quests/context/QuestContext'
-import { QuestView } from '@/features/quests/components/QuestView/QuestView'
 import { Button } from '@/components/ui'
 import { Card, CardContent } from '@/components/ui'
 import { useAuth } from '@/features/auth/useAuth'
 import { paths } from '@/core/routing/paths'
-import { QuestWithTaxa } from '@/types'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
-import DemoPanel from '@/components/layout/DemoPanel'
-
-import FrameSetSSOne from '/screenshot_test.png'
-import PhoneDemo from '@/components/layout/PhoneDemo'
+import { QuestWithTaxa } from '@/hooks/useQuest'
+import { ComponentType } from 'react'
 
 function _StatsCard({
     icon: Icon,
@@ -24,7 +18,7 @@ function _StatsCard({
     value,
     description,
 }: {
-    icon: React.ComponentType<{ className?: string }>
+    icon: ComponentType<{ className?: string }>
     label: string
     value: string
     description: string
@@ -93,25 +87,6 @@ export function Home() {
                 </div>
 
                 <div className="flex flex-row justify-center">
-                    <PhoneDemo className="-rotate-5">
-                        Hello World
-                        {/*{demoQuest ? (
-                            <div className="w-full h-full overflow-hidden bg-white">
-                                <QuestProvider questId={demoQuest.id}>
-                                    <div className="h-full scale-[0.4] origin-top-left w-[250%]">
-
-                                        <div
-                                            className="mx-5 my-4">
-                                            <QuestView />
-                                        </div>
-                                    </div>
-                                </QuestProvider>
-                            </div>
-                        ) : (
-                            <QuestCardSkeleton />
-                        )}*/}
-                    </PhoneDemo>
-
                     <Link to={paths.quests()} viewTransition>
                         <Button
                             size="lg"
@@ -121,8 +96,6 @@ export function Home() {
                             Explore Quests
                         </Button>
                     </Link>
-
-                    <PhoneDemo className="rotate-5">Oh hi!</PhoneDemo>
                 </div>
             </section>
 

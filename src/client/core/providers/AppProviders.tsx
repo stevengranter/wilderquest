@@ -1,7 +1,7 @@
 // src/providers/AppProviders.tsx
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { configureApiTokens } from '@/core/api/axios'
+import { configureApiTokens } from '@/lib/axios'
 import { AuthProvider, useAuth } from '@/features/auth/useAuth'
 
 const queryClient = new QueryClient({
@@ -61,11 +61,6 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
             <AuthProvider>
                 <ApiTokenConfigurator />
-                {/*<GeoLocationProvider>*/}
-                {/*    <ThemeProvider attribute="class" disableTransitionOnChange>*/}
-                {/*        {children}*/}
-                {/*    </ThemeProvider>*/}
-                {/*</GeoLocationProvider>*/}
                 {children}
             </AuthProvider>
         </QueryClientProvider>

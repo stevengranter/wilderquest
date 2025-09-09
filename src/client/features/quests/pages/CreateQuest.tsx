@@ -8,8 +8,8 @@ import {
 } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { z } from 'zod'
-import api from '@/core/api/axios'
-import { clientDebug } from '@shared/utils/debug'
+import api from '@/lib/axios'
+import { clientDebug } from '../../../lib/debug'
 import {
     Button,
     FormControl,
@@ -31,7 +31,7 @@ import { SpeciesSwipeSelector } from '@/features/quests/components/SpeciesSwipeS
 import { SpeciesCountItem } from '@/features/quests/components/ResponsiveSpeciesThumbnail'
 import { SpeciesAnimationProvider } from '@/features/quests/components/SpeciesAnimationProvider'
 import { formSchema } from '@/features/quests/schemas/formSchema'
-import type { TaxonData } from '@shared/types'
+import type { TaxonData } from '../../../types/questTypes'
 
 export function CreateQuest() {
     const { isAuthenticated } = useAuth()

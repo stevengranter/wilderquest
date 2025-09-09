@@ -2,7 +2,7 @@
 import { AppProviders } from '@/core/providers/AppProviders'
 import { RouterProvider } from 'react-router'
 import { router } from '@/core/routing/routes'
-import { clientDebug } from '@shared/utils/debug'
+import { clientDebug } from './lib/debug'
 
 export default function App() {
     // Test debug message on app load
