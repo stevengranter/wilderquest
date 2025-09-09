@@ -3,9 +3,9 @@
 import { Outlet, ScrollRestoration } from 'react-router'
 import { Toaster } from '@/components/ui'
 import { SearchProvider } from '@/features/search/context/SearchContext'
-import { SelectionProvider } from '@/core/contexts/SelectionContext'
-import { MainMenu } from '@/components/layout/MainMenu'
-import { Footer } from '@/components/layout/Footer'
+import { SelectionProvider } from '@/components/contexts/SelectionContext'
+import { MainMenu } from '@/components/layout/parts/MainMenu'
+import { Footer } from '@/components/layout/parts/Footer'
 
 export function AppLayout() {
     return (

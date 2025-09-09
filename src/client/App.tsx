@@ -2,7 +2,7 @@ import { RouterProvider } from 'react-router'
 import { router } from '@/routes'
 import { clientDebug } from './lib/debug'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider } from '@/features/auth/useAuth'
+import { AuthProvider } from '@/hooks/useAuth'
 import queryClient from '@/lib/queryClient'
 
 export default function App() {

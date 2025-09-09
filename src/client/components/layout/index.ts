@@ -1,3 +1,3 @@
-export { MainMenu } from './MainMenu'
-export { ProtectedRoute } from './ProtectedRoute'
-export { Footer } from './Footer'
+export { MainMenu } from './parts/MainMenu'
+export { ProtectedRoute } from '../auth/ProtectedRoute'
+export { Footer } from './parts/Footer'

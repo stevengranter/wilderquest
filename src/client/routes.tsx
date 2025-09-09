@@ -1,7 +1,7 @@
 // src/routes/routes.tsx
 
 import { createBrowserRouter } from 'react-router'
-import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Home } from '@/pages/Home'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
@@ -12,7 +12,7 @@ import { CreateQuest } from '@/features/quests/pages/CreateQuest'
 import { QuestsPage } from '@/features/quests/pages/QuestsPage'
 import UserQuestsPage from '@/features/quests/pages/UserQuestsPage'
 import SharedQuestGuest from '@/features/quests/pages/SharedQuestGuest'
-import { AppLayout } from '@/core/layouts/AppLayout'
+import { AppLayout } from '@/components/layout/AppLayout'
 
 
 export const router = createBrowserRouter([

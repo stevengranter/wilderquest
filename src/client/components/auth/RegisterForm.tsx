@@ -13,7 +13,7 @@ import {
     Input,
 } from '@/components/ui'
 import React, { useMemo } from 'react'
-import { useAuth } from '@/features/auth/useAuth'
+import { useAuth } from '@/hooks/useAuth'
 import { createNameId } from 'mnemonic-id'
 import { clientDebug } from '../../lib/debug'
 

@@ -7,7 +7,7 @@ import { QuestCard } from '@/features/quests/components/QuestCard'
 import { QuestCardSkeleton } from '@/features/quests/components/QuestCardSkeleton'
 import { Button, Label, Switch } from '@/components/ui'
 import { QuestWithTaxa } from '../../../types/questTypes'
-import { useAuth } from '@/features/auth/useAuth'
+import { useAuth } from '@/hooks/useAuth'
 import { useQuestPhotoCollage } from '@/hooks/useTaxonPhotos'
 import { useDebounce } from '@/hooks/useDebounce'
 

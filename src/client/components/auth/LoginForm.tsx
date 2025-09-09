@@ -16,7 +16,7 @@ import {
     FormMessage,
     Input,
 } from '@/components/ui'
-import { useAuth } from '@/features/auth/useAuth'
+import { useAuth } from '@/hooks/useAuth'
 import { clientDebug } from '@/lib/debug'
 
 export const UserSchema = z.object({

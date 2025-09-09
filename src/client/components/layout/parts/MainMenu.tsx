@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router'
-import { useAuth } from '@/features/auth/useAuth'
+import { useAuth } from '@/hooks/useAuth'
 import avatar from 'animal-avatar-generator'
 import { ReactSVG } from 'react-svg'
 import {

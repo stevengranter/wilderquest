@@ -1,7 +1,7 @@
 // src/components/ProtectedRoute.tsx
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
-import { useAuth } from '@/features/auth/useAuth'
+import { useAuth } from '@/hooks/useAuth'
 import { clientDebug } from '../../lib/debug'
 
 interface ProtectedRouteProps {

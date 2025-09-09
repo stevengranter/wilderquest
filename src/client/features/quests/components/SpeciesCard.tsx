@@ -14,7 +14,7 @@ import {
     CardHeader,
     Skeleton,
 } from '@/components/ui'
-import { useSelectionContext } from '@/core/contexts/SelectionContext'
+import { useSelectionContext } from '@/components/contexts/SelectionContext'
 import { cn } from '@/lib/utils'
 import { useLazyImage } from '@/hooks/useLazyImage'
 import { BiWorld } from 'react-icons/bi'

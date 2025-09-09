@@ -10,7 +10,7 @@ import chunk from 'lodash/chunk'
 import React, { useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import axiosInstance from '@/lib/axios'
-import { useAuth } from '@/features/auth/useAuth'
+import { useAuth } from '@/hooks/useAuth'
 import { clientDebug } from '../lib/debug'
 
 import {

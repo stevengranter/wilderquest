@@ -5,7 +5,7 @@ import { Check, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useUserSearch, type SafeUser } from '@/hooks/useUserSearch'
-import { useAuth } from '@/features/auth/useAuth'
+import { useAuth } from '@/hooks/useAuth'
 import { AvatarOverlay } from '@/features/quests/components/AvatarOverlay'
 import { Button } from '@/components/ui'
 import {
