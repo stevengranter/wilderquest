@@ -14,6 +14,11 @@ const envSchema = z.object({
     MYSQL_USER: z.string(),
     MYSQL_PASSWORD: z.string(),
 
+    // Admin User Variables
+    ADMIN_USERNAME: z.string(),
+    ADMIN_EMAIL: z.string(),
+    ADMIN_PASSWORD: z.string(),
+
     // Redis variables
     REDIS_URL: z.string(),
 
@@ -44,6 +49,9 @@ if (!result.success) {
             MYSQL_DATABASE: 'Your MySQL database name (e.g., wilderquest_db)',
             MYSQL_USER: 'Your MySQL database user (e.g., wilderquest_user)',
             MYSQL_PASSWORD: 'Your MySQL database password',
+            ADMIN_USERNAME: 'Admin username (e.g., admin)',
+            ADMIN_PASSWORD: 'Admin password',
+            ADMIN_EMAIL: 'Admin email address',
             REDIS_URL: 'Redis connection URL (e.g., redis://localhost:6379)',
             ACCESS_TOKEN_SECRET:
                 'JWT access token secret (use a strong random string)',

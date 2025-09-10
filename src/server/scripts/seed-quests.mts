@@ -231,9 +231,9 @@ const generateLocation = () => {
 }
 
 const adminUser = {
-    username: 'admin',
-    password: 'mypassword',
-    email: 'adminUser555@example.com',
+    username: env.ADMIN_USERNAME,
+    password: env.ADMIN_PASSWORD,
+    email: env.ADMIN_EMAIL,
     user_cuid: createId(),
     created_at: new Date(),
     updated_at: new Date(),
@@ -324,21 +324,29 @@ const createFakeUser = () => {
     }
 }
 
-const addGuestsToQuest = async (quest_id: number, creator_user_id: number, allUserIds: number[], questsToTaxaIds: number[]) => {
-    const availableGuests = allUserIds.filter(id => id !== creator_user_id)
-    const numGuests = getRandomInt(0, 6)
-    const selectedGuests = faker.helpers.arrayElements(availableGuests, numGuests)
+const addUsersToQuest = async (
+    quest_id: number,
+    creator_user_id: number,
+    allUserIds: number[],
+    questsToTaxaIds: number[]
+) => {
+    const availableUsers = allUserIds.filter((id) => id !== creator_user_id)
+    const numUsers = getRandomInt(0, 6)
+    const selectedUsers = faker.helpers.arrayElements(availableUsers, numUsers)
 
-    for (const guest_id of selectedGuests) {
+    for (const user_id of selectedUsers) {
         const shareResult = await addRowToTable('quest_shares', {
             quest_id,
             created_by_user_id: creator_user_id,
-            shared_with_user_id: guest_id,
+            shared_with_user_id: user_id,
         })
 
-        // Add some progress for this guest
+        // Add some progress for this user
         const numProgress = getRandomInt(0, Math.min(5, questsToTaxaIds.length)) // Up to 5 taxa found
-        const selectedQuestsToTaxaIds = faker.helpers.arrayElements(questsToTaxaIds, numProgress)
+        const selectedQuestsToTaxaIds = faker.helpers.arrayElements(
+            questsToTaxaIds,
+            numProgress
+        )
 
         for (const questsToTaxaId of selectedQuestsToTaxaIds) {
             await addRowToTable('shared_quest_progress', {
@@ -351,6 +359,42 @@ const addGuestsToQuest = async (quest_id: number, creator_user_id: number, allUs
             })
         }
     }
+}
+
+const addGuestToQuest = async (
+    quest_id: number,
+    creator_user_id: number,
+    guest_name: string,
+    questsToTaxaIds: number[],
+    expires_at?: Date
+) => {
+    const shareResult = await addRowToTable('quest_shares', {
+        quest_id,
+        created_by_user_id: creator_user_id,
+        guest_name,
+        expires_at: expires_at || null,
+        shared_with_user_id: null,
+    })
+
+    // Add some progress for this guest
+    const numProgress = getRandomInt(0, Math.min(5, questsToTaxaIds.length)) // Up to 5 taxa found
+    const selectedQuestsToTaxaIds = faker.helpers.arrayElements(
+        questsToTaxaIds,
+        numProgress
+    )
+
+    for (const questsToTaxaId of selectedQuestsToTaxaIds) {
+        await addRowToTable('shared_quest_progress', {
+            quest_share_id: shareResult,
+            taxon_id: questsToTaxaId,
+            observed_at: faker.date.between({
+                from: '2024-01-01',
+                to: Date.now(),
+            }),
+        })
+    }
+
+    return shareResult
 }
 
 const createFakeQuest = async (animal = faker.animal.type()) => {
@@ -483,7 +527,16 @@ const createUsers = async (quantity: number, allUserIds: number[]) => {
             }
 
             // Add guests to the quest
-            await addGuestsToQuest(quest_id, user_id, userIds, questsToTaxaIds)
+            const numGuests = getRandomInt(0, 6)
+            for (let i = 0; i < numGuests; i++) {
+                const guestName = faker.person.firstName()
+                await addGuestToQuest(
+                    quest_id,
+                    user_id,
+                    guestName,
+                    questsToTaxaIds
+                )
+            }
 
             // Add small delay to avoid rate limiting
             await new Promise((resolve) => setTimeout(resolve, 100))
@@ -620,7 +673,16 @@ for (const questData of sampleQuests) {
     )
 
     // Add guests to the quest
-    await addGuestsToQuest(quest_id, quest.user_id, users, questsToTaxaIds)
+    const numGuests = getRandomInt(0, 6)
+    for (let i = 0; i < numGuests; i++) {
+        const guestName = faker.person.firstName()
+        await addGuestToQuest(
+            quest_id,
+            quest.user_id,
+            guestName,
+            questsToTaxaIds
+        )
+    }
 
     // Add delay to avoid rate limiting
     await new Promise((resolve) => setTimeout(resolve, 200))
