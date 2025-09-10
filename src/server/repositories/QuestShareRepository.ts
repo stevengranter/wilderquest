@@ -114,6 +114,7 @@ export type LeaderboardEntry = {
     has_accessed_page?: boolean
     last_progress_at?: Date | null
     invited_at?: Date
+    is_primary?: boolean
 }
 
 export function createSharedQuestProgressRepository(
@@ -200,23 +201,24 @@ export function createSharedQuestProgressRepository(
     ): Promise<DetailedProgress[]> {
         const [rows] = await dbPool.query(
             `SELECT
-                  p.id AS progress_id,
-                  p.taxon_id AS mapping_id,
-                  p.observed_at,
-                  s.id AS quest_share_id,
-                   CASE
-                     WHEN s.guest_name IS NOT NULL THEN s.guest_name
-                     WHEN s.shared_with_user_id IS NOT NULL THEN u_invited.username
-                     WHEN s.is_primary = TRUE THEN u.username
-                     ELSE 'Guest'
-                   END AS display_name
-               FROM shared_quest_progress p
-               INNER JOIN quest_shares s ON s.id = p.quest_share_id
-               LEFT JOIN users u ON u.id = s.created_by_user_id
-               LEFT JOIN users u_invited ON u_invited.id = s.shared_with_user_id
-               INNER JOIN quests q ON q.id = s.quest_id
-               WHERE s.quest_id = ?
-               ORDER BY p.observed_at DESC`,
+                   p.id AS progress_id,
+                   p.taxon_id AS mapping_id,
+                   p.observed_at,
+                   s.id AS quest_share_id,
+                    CASE
+                      WHEN s.guest_name IS NOT NULL THEN s.guest_name
+                      WHEN s.shared_with_user_id IS NOT NULL THEN u_invited.username
+                      WHEN s.is_primary = TRUE THEN u.username
+                      ELSE 'Guest'
+                    END AS display_name,
+                    (s.shared_with_user_id IS NOT NULL OR s.is_primary = TRUE) AS is_registered_user
+                FROM shared_quest_progress p
+                INNER JOIN quest_shares s ON s.id = p.quest_share_id
+                LEFT JOIN users u ON u.id = s.created_by_user_id
+                LEFT JOIN users u_invited ON u_invited.id = s.shared_with_user_id
+                INNER JOIN quests q ON q.id = s.quest_id
+                WHERE s.quest_id = ?
+                ORDER BY p.observed_at DESC`,
             [questId]
         )
         return rows as DetailedProgress[]
@@ -262,7 +264,9 @@ export function createSharedQuestProgressRepository(
                        COUNT(p.id) AS observation_count,
                        s.first_accessed_at IS NOT NULL AS has_accessed_page,
                        MAX(p.observed_at) AS last_progress_at,
-                       s.created_at AS invited_at
+                       s.created_at AS invited_at,
+                       s.is_primary AS is_primary,
+                       (s.shared_with_user_id IS NOT NULL OR s.is_primary = TRUE) AS is_registered_user
                        FROM quest_shares s
                        LEFT JOIN users u ON u.id = s.created_by_user_id
                        LEFT JOIN users u_invited ON u_invited.id = s.shared_with_user_id

@@ -324,7 +324,7 @@ const createFakeUser = () => {
     }
 }
 
-const addUsersToQuest = async (
+const _addUsersToQuest = async (
     quest_id: number,
     creator_user_id: number,
     allUserIds: number[],

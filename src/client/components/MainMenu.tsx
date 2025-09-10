@@ -1,7 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '@/hooks/useAuth'
-import avatar from 'animal-avatar-generator'
-import { ReactSVG } from 'react-svg'
+import { SingleAvatar } from './SingleAvatar'
 import {
     Menubar,
     MenubarContent,
@@ -17,14 +16,6 @@ export function MainMenu() {
     const navigate = useNavigate()
     const location = useLocation()
 
-    const userAvatar = user ? avatar(user.username, { size: 40 }) : null
-    const offsetSvg = userAvatar
-        ? userAvatar.replace(
-              '<svg',
-              '<svg transform="translate(8, 8) scale(1.3)"'
-          )
-        : null
-
     const handleLogout = async () => {
         await logout()
         navigate('/') // Redirect to home after logout
@@ -33,12 +24,14 @@ export function MainMenu() {
     // Right-side menu (login/avatar)
     const renderUserMenu = () => (
         <MenubarMenu>
-            {isAuthenticated && user && userAvatar ? (
+            {isAuthenticated && user ? (
                 <>
                     <MenubarTrigger className="cursor-pointer">
                         <div className="flex items-center gap-2">
-                            <ReactSVG
-                                src={`data:image/svg+xml;utf8,${encodeURIComponent(offsetSvg || userAvatar)}`}
+                            <SingleAvatar
+                                username={user.username}
+                                isRegistered={true}
+                                size={40}
                                 className="w-6 h-6 rounded-full overflow-hidden border-2 border-border"
                             />
                             <span>{user.username}</span>

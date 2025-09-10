@@ -69,7 +69,7 @@ export function AvatarOverlay({
                     </Avatar>
                 )
 
-                return linkToProfile && name !== 'Guest' ? (
+                return linkToProfile ? (
                     <Link key={name} to={`/users/${name}`}>
                         {avatarElement}
                     </Link>
@@ -112,10 +112,8 @@ export function AvatarOverlay({
         </Avatar>
     )
 
-    return linkToProfile && names[0] !== 'Guest' ? (
-        <Link to={`/users/${names[0]}`}>
-            {avatarElement}
-        </Link>
+    return linkToProfile ? (
+        <Link to={`/users/${names[0]}`}>{avatarElement}</Link>
     ) : (
         avatarElement
     )

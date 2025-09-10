@@ -21,8 +21,14 @@ interface SpeciesCardWithObservationsProps {
     found?: boolean
     actionArea?: ReactNode
     avatarOverlay?: {
-        displayName?: string
-        displayNames?: string[]
+        // For competitive mode (single user)
+        username?: string
+        isRegistered?: boolean
+        // For cooperative mode (multiple users)
+        users?: Array<{
+            username: string
+            isRegistered?: boolean
+        }>
         firstFinder?: string
     } | null
 }

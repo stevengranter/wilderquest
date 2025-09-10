@@ -1,7 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams, useNavigate } from 'react-router'
-import { ReactSVG } from 'react-svg'
-import avatar from 'animal-avatar-generator'
 import api from '@/lib/axios'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -14,6 +12,7 @@ import { useUserStats } from '@/hooks/useUserStats'
 import { UserSearch } from '@/components/UserSearch'
 import { type SafeUser } from '@/hooks/useUserSearch'
 import { QuestWithTaxa } from '@/types/questTypes'
+import { SingleAvatar } from '@/components/SingleAvatar'
 
 function UserQuests({
     userId,
@@ -98,17 +97,6 @@ function UserQuests({
     )
 }
 
-function offsetAvatarSvg(svg: string, x: number, y: number): string {
-    // Extract the SVG contents inside the <svg>...</svg>
-    const svgContentMatch = svg.match(/<svg[^>]*>([\s\S]*?)<\/svg>/)
-    if (!svgContentMatch) return svg
-
-    const innerContent = svgContentMatch[1]
-    const wrappedContent = `<g transform="translate(${x}, ${y})">${innerContent}</g>`
-
-    // Replace original inner content with transformed group
-    return svg.replace(innerContent, wrappedContent)
-}
 const UserProfile = () => {
     const { username } = useParams<{ username: string }>()
     const { user: authUser } = useAuth()
@@ -138,10 +126,6 @@ const UserProfile = () => {
         return <div>User not found</div>
     }
 
-    const avatarSvg = avatar(user.username, {
-        size: 140,
-    })
-    const offsetSvg = offsetAvatarSvg(avatarSvg, -20, -25)
     const isOwnProfile = authUser?.username === user.username
 
     return (
@@ -149,11 +133,9 @@ const UserProfile = () => {
             <div className="mb-8">
                 <div className="flex items-start gap-6">
                     <div className="flex-shrink-0">
-                        <ReactSVG
-                            src={`data:image/svg+xml;utf8,${encodeURIComponent(
-                                offsetSvg
-                            )}`}
-                            className="w-24 h-24 rounded-full overflow-hidden border-2 border-border"
+                        <SingleAvatar
+                            username={user.username}
+                            className="w-24 h-24 border-2 border-foreground"
                         />
                     </div>
                     <div className="flex-1">

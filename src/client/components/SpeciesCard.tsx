@@ -14,7 +14,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { useLazyImage } from '@/hooks/useLazyImage'
 import { BiWorld } from 'react-icons/bi'
-import { AvatarOverlay } from './AvatarOverlay'
+import { SingleAvatar } from './SingleAvatar'
+import { AvatarGroup } from './AvatarGroup'
 import { Link } from 'react-router-dom'
 
 interface SpeciesCardProps {
@@ -30,10 +31,44 @@ interface SpeciesCardProps {
     hasShadow?: boolean
     actionArea?: React.ReactNode
     avatarOverlay?: {
-        displayName?: string
-        displayNames?: string[]
+        // For competitive mode (single user)
+        username?: string
+        isRegistered?: boolean
+        // For cooperative mode (multiple users)
+        users?: Array<{
+            username: string
+            isRegistered?: boolean
+        }>
         firstFinder?: string
     } | null
+}
+
+// Type guards for runtime type checking
+type AvatarOverlayType = {
+    username?: string
+    isRegistered?: boolean
+    users?: Array<{ username: string; isRegistered?: boolean }>
+    firstFinder?: string
+}
+
+function isMultiUserOverlay(
+    overlay: AvatarOverlayType | null | undefined
+): overlay is {
+    users: Array<{ username: string; isRegistered?: boolean }>
+    firstFinder?: string
+} {
+    return overlay !== null && overlay !== undefined && 'users' in overlay
+}
+
+function isSingleUserOverlay(
+    overlay: AvatarOverlayType | null | undefined
+): overlay is { username: string; isRegistered?: boolean } {
+    return (
+        overlay !== null &&
+        overlay !== undefined &&
+        'username' in overlay &&
+        !('users' in overlay)
+    )
 }
 
 export function SpeciesCard({
@@ -211,7 +246,9 @@ function SpeciesGridItem({
             >
                 <CardHeader className="gap-0 text-left justify-start pb-1 pt-3 relative text-foreground tracking-normal font-bold sm:text-md md:text-md lg:text-xl line-clamp-1 font-barlow">
                     {species.preferred_common_name && (
-                        <h3>{species.preferred_common_name}</h3>
+                        <h3 className="text-md xl:text-lg">
+                            {species.preferred_common_name}
+                        </h3>
                     )}
                 </CardHeader>
 
@@ -279,13 +316,24 @@ function SpeciesGridItem({
             </Card>
             {avatarOverlay && (
                 <div className="absolute bottom-4 right-8 z-40">
-                    <AvatarOverlay
-                        displayName={avatarOverlay.displayName}
-                        displayNames={avatarOverlay.displayNames}
-                        firstFinder={avatarOverlay.firstFinder}
-                        className="w-12 h-12 transform translate-x-1/2 translate-y-1/2"
-                        linkToProfile={true}
-                    />
+                    {isMultiUserOverlay(avatarOverlay) ? (
+                        // Multiple users (cooperative mode)
+                        <AvatarGroup
+                            users={avatarOverlay.users}
+                            firstFinder={avatarOverlay.firstFinder}
+                            maxAvatars={3}
+                            size={32}
+                            className="transform translate-x-1/2 translate-y-1/2"
+                        />
+                    ) : isSingleUserOverlay(avatarOverlay) ? (
+                        // Single user (competitive mode)
+                        <SingleAvatar
+                            username={avatarOverlay.username}
+                            isRegistered={avatarOverlay.isRegistered}
+                            size={48}
+                            className="w-12 h-12 transform translate-x-1/2 translate-y-1/2"
+                        />
+                    ) : null}
                 </div>
             )}
         </div>

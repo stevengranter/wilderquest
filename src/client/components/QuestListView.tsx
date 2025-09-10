@@ -11,7 +11,8 @@ import { Observation } from './ObservationCard'
 import { cn } from '@/lib/utils'
 import { LoggedInUser } from '@/types/authTypes'
 import { JSX, useState } from 'react'
-import { AvatarOverlay } from './AvatarOverlay'
+import { SingleAvatar } from './SingleAvatar'
+import { AvatarGroup } from './AvatarGroup'
 import { Link } from 'react-router-dom'
 import { DetailedProgress, QuestMapping, Share } from '@/types/questTypes'
 
@@ -64,15 +65,17 @@ function SpeciesListCard(props: {
                     new Date(a.observed_at).getTime()
             )[0]
             avatarOverlay = {
-                displayName: mostRecentEntry.display_name,
+                username: mostRecentEntry.display_name,
+                isRegistered: mostRecentEntry.is_registered_user,
             }
         } else if (props.questMode === 'cooperative') {
             // For cooperative mode, show all users who found it
-            const uniqueDisplayNames = [
-                ...new Set(
-                    props.taxon.recentEntries.map((entry) => entry.display_name)
-                ),
-            ]
+            const uniqueEntries = props.taxon.recentEntries.filter(
+                (entry, index, arr) =>
+                    arr.findIndex(
+                        (e) => e.display_name === entry.display_name
+                    ) === index
+            )
 
             // Find the first finder (earliest observation)
             const firstFinderEntry = props.taxon.recentEntries.sort(
@@ -82,7 +85,10 @@ function SpeciesListCard(props: {
             )[0]
 
             avatarOverlay = {
-                displayNames: uniqueDisplayNames,
+                users: uniqueEntries.map((entry) => ({
+                    username: entry.display_name,
+                    isRegistered: entry.is_registered_user,
+                })),
                 firstFinder: firstFinderEntry.display_name,
             }
         }
@@ -109,16 +115,25 @@ function SpeciesListCard(props: {
                             <Camera className="h-8 w-8 text-gray-400" />
                         </div>
                     )}
-                    {avatarOverlay && (
-                        <AvatarOverlay
-                            displayName={avatarOverlay.displayName}
-                            displayNames={avatarOverlay.displayNames}
-                            firstFinder={avatarOverlay.firstFinder}
-                            size={24}
-                            className="w-6 h-6 border-0"
-                            linkToProfile={true}
-                        />
-                    )}
+                    {avatarOverlay &&
+                        ('users' in avatarOverlay ? (
+                            // Multiple users (cooperative mode)
+                            <AvatarGroup
+                                users={avatarOverlay.users}
+                                firstFinder={avatarOverlay.firstFinder}
+                                maxAvatars={3}
+                                size={24}
+                                className="border-0"
+                            />
+                        ) : (
+                            // Single user (competitive mode)
+                            <SingleAvatar
+                                username={avatarOverlay.username}
+                                isRegistered={avatarOverlay.isRegistered}
+                                size={24}
+                                className="w-6 h-6 border-0"
+                            />
+                        ))}
                 </div>
 
                 {/* Taxon Info */}

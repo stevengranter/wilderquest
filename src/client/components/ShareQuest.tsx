@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/hooks/useAuth'
 import { useQueryClient } from '@tanstack/react-query'
-import { UserSearch } from '@/components/UserSearch'
-import { type SafeUser } from '@/hooks/useUserSearch'
+// User invitations are disabled - UserSearch and SafeUser no longer needed
+// import { UserSearch } from '@/components/UserSearch'
+// import { type SafeUser } from '@/hooks/useUserSearch'
 
 type QuestShare = {
     id: number
@@ -53,11 +54,12 @@ export function ShareQuest({
     const [_shares, setShares] = useState<QuestShare[]>([])
     const [_loading, setLoading] = useState(false)
     const [creating, setCreating] = useState(false)
-    const [invitationMode, setInvitationMode] = useState<'guest' | 'user'>(
+    const [invitationMode, _setInvitationMode] = useState<'guest' | 'user'>(
         'guest'
     )
     const [guestName, setGuestName] = useState('')
-    const [selectedUser, setSelectedUser] = useState<SafeUser | null>(null)
+    // User invitations are disabled - selectedUser state no longer needed
+    //     // const [selectedUser, setSelectedUser] = useState<SafeUser | null>(null)
     const [expiresAt, setExpiresAt] = useState<string>('')
 
     useEffect(() => {
@@ -89,9 +91,11 @@ export function ShareQuest({
 
             if (invitationMode === 'guest') {
                 if (guestName) payload.guest_name = guestName
-            } else if (invitationMode === 'user' && selectedUser) {
-                payload.shared_with_user_id = selectedUser.id
             }
+            // User invitations are disabled
+            // else if (invitationMode === 'user' && selectedUser) {
+            //     payload.shared_with_user_id = selectedUser.id
+            // }
 
             if (expiresAt)
                 payload.expires_at = new Date(expiresAt).toISOString()
@@ -105,9 +109,11 @@ export function ShareQuest({
             // Reset form
             if (invitationMode === 'guest') {
                 setGuestName('')
-            } else {
-                setSelectedUser(null)
             }
+            // User invitations are disabled
+            // else {
+            //     setSelectedUser(null)
+            // }
             setExpiresAt('')
 
             // Invalidate leaderboard queries so they update immediately
@@ -180,40 +186,39 @@ export function ShareQuest({
                         className="overflow-hidden bg-background border border-slate-400 rounded-xl shadow-sm p-3"
                     >
                         <div className="space-y-4">
-                            {/* Invitation Mode Toggle */}
-                            <div className="space-y-2">
-                                <Label>Invitation type</Label>
-                                <div className="flex gap-2">
-                                    <Button
-                                        type="button"
-                                        variant={
-                                            invitationMode === 'guest'
-                                                ? 'default'
-                                                : 'neutral'
-                                        }
-                                        size="sm"
-                                        onClick={() =>
-                                            setInvitationMode('guest')
-                                        }
-                                    >
-                                        Invite Guest
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant={
-                                            invitationMode === 'user'
-                                                ? 'default'
-                                                : 'neutral'
-                                        }
-                                        size="sm"
-                                        onClick={() =>
-                                            setInvitationMode('user')
-                                        }
-                                    >
-                                        Invite User
-                                    </Button>
-                                </div>
-                            </div>
+                            {/* Invitation Mode Toggle - Only guest invitations allowed */}
+                            {/* <div className="space-y-2">
+                                 <Label>Invitation type</Label>
+                                 <div className="flex gap-2"> */}
+                            {/*<Button*/}
+                            {/*    type="button"*/}
+                            {/*    variant={*/}
+                            {/*        invitationMode === 'guest'*/}
+                            {/*            ? 'default'*/}
+                            {/*            : 'neutral'*/}
+                            {/*    }*/}
+                            {/*    size="sm"*/}
+                            {/*    onClick={() => setInvitationMode('guest')}*/}
+                            {/*>*/}
+                            {/*    Invite Guest*/}
+                            {/*</Button>*/}
+                            {/* User invitations are disabled - only guest invitations allowed */}
+                            {/* <Button
+                                         type="button"
+                                         variant={
+                                             invitationMode === 'user'
+                                                 ? 'default'
+                                                 : 'neutral'
+                                         }
+                                         size="sm"
+                                         onClick={() =>
+                                             setInvitationMode('user')
+                                         }
+                                     >
+                                         Invite User
+                                     </Button> */}
+                            {/* </div>
+                                 </div> */}
 
                             {/* Guest Invitation Form */}
                             {invitationMode === 'guest' && (
@@ -232,25 +237,25 @@ export function ShareQuest({
                                 </div>
                             )}
 
-                            {/* User Invitation Form */}
-                            {invitationMode === 'user' && (
-                                <div className="space-y-2">
-                                    <Label>Search for user to invite</Label>
-                                    <UserSearch
-                                        onUserSelect={setSelectedUser}
-                                        placeholder="Search users..."
-                                        className="w-full"
-                                    />
-                                    {selectedUser && (
-                                        <div className="text-sm text-muted-foreground">
-                                            Selected:{' '}
-                                            <span className="font-medium">
-                                                {selectedUser.username}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                            {/* User Invitation Form - DISABLED */}
+                            {/* {invitationMode === 'user' && (
+                                 <div className="space-y-2">
+                                     <Label>Search for user to invite</Label>
+                                     <UserSearch
+                                         onUserSelect={setSelectedUser}
+                                         placeholder="Search users..."
+                                         className="w-full"
+                                     />
+                                     {selectedUser && (
+                                         <div className="text-sm text-muted-foreground">
+                                             Selected:{' '}
+                                             <span className="font-medium">
+                                                 {selectedUser.username}
+                                             </span>
+                                         </div>
+                                     )}
+                                 </div>
+                             )} */}
 
                             <div className="grid gap-2">
                                 <Label htmlFor="expiresAt">
@@ -269,9 +274,10 @@ export function ShareQuest({
                                 <Button
                                     onClick={createShare}
                                     disabled={
-                                        creating ||
-                                        (invitationMode === 'user' &&
-                                            !selectedUser)
+                                        creating
+                                        // User invitations are disabled
+                                        // || (invitationMode === 'user' &&
+                                        //     !selectedUser)
                                     }
                                     size="sm"
                                 >

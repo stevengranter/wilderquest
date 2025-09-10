@@ -60,6 +60,7 @@ export type DetailedProgress = {
     mapping_id: number
     observed_at: string
     display_name: string | 'Guest'
+    is_registered_user?: boolean
 }
 export type Share = {
     guest_name: string
@@ -70,6 +71,8 @@ export type LeaderboardEntry = {
     has_accessed_page?: boolean
     last_progress_at?: Date | null
     invited_at?: Date
+    is_primary?: boolean
+    is_registered_user?: boolean
 }
 export interface SpeciesCardWithObservationsProps {
     species: INatTaxon & {

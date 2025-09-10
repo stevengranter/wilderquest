@@ -6,7 +6,8 @@ import {
     FaTrash,
 } from 'react-icons/fa6'
 import { AvatarOverlay } from './AvatarOverlay'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useCopyToClipboard } from 'usehooks-ts'
 import api from '@/lib/axios'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -85,6 +86,66 @@ const getBadgeStyles = (badgeType: string) => {
     }
 }
 
+function ActionFooter(props: {
+    expanded: boolean
+    onCopyLink: (e: React.MouseEvent) => void
+    onShare: (e: React.MouseEvent) => void
+    onRemove: (e: React.MouseEvent) => void
+    copyingLink: string | null
+    entry: LeaderboardEntry
+}) {
+    return (
+        <div
+            className={`overflow-hidden transition-all duration-300 ease-out border-t border-gray-200 ${
+                props.expanded
+                    ? 'max-h-20 opacity-100 pt-2'
+                    : 'max-h-0 opacity-0 pt-0'
+            }`}
+        >
+            <div className="flex justify-end">
+                <div className="flex gap-2">
+                    <Button
+                        size="sm"
+                        variant="noShadow"
+                        className="h-7 px-2 text-xs text-green-700 shadow-none border-0 bg-transparent hover:bg-gray-100"
+                        onClick={props.onCopyLink}
+                        disabled={
+                            props.copyingLink ===
+                            `${props.entry.display_name}-${props.entry.invited_at}`
+                        }
+                    >
+                        <FaLink className="h-3 w-3 mr-1" />
+                        {props.copyingLink ===
+                        `${props.entry.display_name}-${props.entry.invited_at}`
+                            ? 'Copying...'
+                            : 'Copy Link'}
+                    </Button>
+
+                    <Button
+                        size="sm"
+                        variant="noShadow"
+                        className="h-7 px-2 text-xs text-green-700 shadow-none border-0 bg-transparent hover:bg-gray-100"
+                        onClick={props.onShare}
+                    >
+                        <FaShareFromSquare className="h-3 w-3 mr-1" />
+                        Share
+                    </Button>
+
+                    <Button
+                        size="sm"
+                        variant="noShadow"
+                        className="h-7 px-2 text-xs text-green-700 shadow-none border-0 bg-transparent hover:bg-gray-100"
+                        onClick={props.onRemove}
+                    >
+                        <FaTrash className="h-3 w-3 mr-1" />
+                        Remove
+                    </Button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 export const QuestLeaderboard = ({
     leaderboard,
     questStatus,
@@ -98,8 +159,72 @@ export const QuestLeaderboard = ({
         useState<LeaderboardEntry | null>(null)
     const [deleting, setDeleting] = useState(false)
     const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
+    const [shareLinks, setShareLinks] = useState<Record<string, string>>({})
+    const [copyingLink, setCopyingLink] = useState<string | null>(null)
+
+    const [_copiedText, copyToClipboard] = useCopyToClipboard()
 
     const queryClient = useQueryClient()
+
+    const handleCopyShareLink = async (entry: LeaderboardEntry) => {
+        const entryKey = `${entry.display_name}-${entry.invited_at}`
+        setCopyingLink(entryKey)
+
+        const shareUrl = shareLinks[entryKey]
+
+        if (shareUrl) {
+            try {
+                await copyToClipboard(shareUrl)
+                toast.success('Link Copied!', {
+                    description: `The share link for ${entry.display_name || 'Guest'} has been copied to your clipboard.`,
+                })
+            } catch (error) {
+                console.error('Failed to copy link:', error)
+                toast.error('Failed to copy link', {
+                    description: 'An error occurred while copying the link.',
+                })
+            }
+        } else {
+            toast.error('Link not available', {
+                description:
+                    'The share link is not ready yet. Please try again.',
+            })
+        }
+
+        setCopyingLink(null)
+    }
+
+    // Fetch share links for all entries
+    useEffect(() => {
+        const fetchShareLinks = async () => {
+            if (!leaderboard || !questId || !isOwner) return
+
+            const links: Record<string, string> = {}
+
+            for (const entry of leaderboard) {
+                if (!entry.is_primary) {
+                    // Only fetch links for non-primary entries
+                    const entryKey = `${entry.display_name}-${entry.invited_at}`
+                    try {
+                        const shareUrl = await buildShareLink(entry)
+                        if (shareUrl) {
+                            links[entryKey] = shareUrl
+                        }
+                    } catch (error) {
+                        console.error(
+                            'Failed to fetch share link for entry:',
+                            entry.display_name,
+                            error
+                        )
+                    }
+                }
+            }
+
+            setShareLinks(links)
+        }
+
+        fetchShareLinks()
+    }, [leaderboard, questId, isOwner])
 
     const handleDeleteClick = (entry: LeaderboardEntry) => {
         setParticipantToDelete(entry)
@@ -204,35 +329,6 @@ export const QuestLeaderboard = ({
         }
     }
 
-    const handleCopyLink = async (
-        entry: LeaderboardEntry,
-        e: React.MouseEvent
-    ) => {
-        e.stopPropagation()
-        try {
-            const shareUrl = await buildShareLink(entry)
-            if (shareUrl) {
-                await navigator.clipboard.writeText(shareUrl)
-                toast.success('Link Copied!', {
-                    description: `The share link for ${
-                        entry.display_name || 'Guest'
-                    } has been copied to your clipboard.`,
-                })
-            } else {
-                toast.error('Failed to generate share link', {
-                    description:
-                        'Could not find a valid share link for this participant.',
-                })
-            }
-        } catch (error) {
-            console.error('Error copying link:', error)
-            toast.error('Failed to copy link', {
-                description:
-                    'An error occurred while copying the link to your clipboard.',
-            })
-        }
-    }
-
     const handleShare = async (
         entry: LeaderboardEntry,
         e: React.MouseEvent
@@ -266,23 +362,20 @@ export const QuestLeaderboard = ({
                         url: shareUrl,
                     })
                 } catch (shareError) {
-                    // User cancelled share or share failed, fall back to clipboard
+                    // User cancelled share or share failed
                     if ((shareError as Error).name !== 'AbortError') {
-                        console.warn(
-                            'Native share failed, falling back to clipboard:',
-                            shareError
-                        )
-                        await handleClipboardCopy(
-                            shareUrl,
-                            entry.display_name || 'Guest'
-                        )
+                        console.warn('Native share failed:', shareError)
+                        toast.error('Failed to share link', {
+                            description:
+                                'The share link is displayed above for manual sharing.',
+                        })
                     }
                 }
             } else {
-                await handleClipboardCopy(
-                    shareUrl,
-                    entry.display_name || 'Guest'
-                )
+                toast.info('Share Link Available', {
+                    description:
+                        'The share link is displayed above. Copy it manually to share.',
+                })
             }
         } catch (error) {
             toast.dismiss(loadingToast)
@@ -290,75 +383,6 @@ export const QuestLeaderboard = ({
             toast.error('Failed to share link', {
                 description: 'An error occurred while sharing the link.',
             })
-        }
-    }
-
-    const handleClipboardCopy = async (url: string, displayName: string) => {
-        // Check if we're in a secure context
-        const isSecureContext = window.isSecureContext
-        const hasClipboard = !!navigator.clipboard
-
-        clientDebug.ui('Clipboard debug info: %o', {
-            isSecureContext,
-            hasClipboard,
-            protocol: window.location.protocol,
-            hostname: window.location.hostname,
-        })
-
-        // Try modern clipboard API first (only in secure contexts)
-        if (isSecureContext && hasClipboard) {
-            try {
-                await navigator.clipboard.writeText(url)
-                toast.success('Link Copied!', {
-                    description: `The share link for ${displayName} has been copied to your clipboard.`,
-                })
-                return
-            } catch (clipboardError) {
-                console.warn('Clipboard API failed:', clipboardError)
-                // Continue to fallback method
-            }
-        }
-
-        // Fallback method using execCommand (works in non-secure contexts)
-        clientDebug.ui('Using fallback copy method')
-        const textArea = document.createElement('textarea')
-        textArea.value = url
-        textArea.style.position = 'fixed'
-        textArea.style.left = '-999999px'
-        textArea.style.top = '-999999px'
-        textArea.style.opacity = '0'
-        document.body.appendChild(textArea)
-        textArea.focus()
-        textArea.select()
-
-        try {
-            const successful = document.execCommand('copy')
-            if (successful) {
-                toast.success('Link Copied!', {
-                    description: `The share link for ${displayName} has been copied to your clipboard.`,
-                })
-            } else {
-                throw new Error('Copy command failed')
-            }
-        } catch (fallbackError) {
-            console.error('All copy methods failed:', fallbackError)
-            // Last resort: show the URL for manual copying
-            toast.info('Manual Copy Required', {
-                description: `Copy this link: ${url}`,
-                duration: 15000,
-                action: {
-                    label: 'Select All',
-                    onClick: () => {
-                        // Try to select the text in the toast if possible
-                        const _selection = window.getSelection()
-                        const _range = document.createRange()
-                        // This won't work perfectly but gives user feedback
-                        clientDebug.ui('Manual copy needed: %s', url)
-                    },
-                },
-            })
-        } finally {
-            document.body.removeChild(textArea)
         }
     }
 
@@ -448,47 +472,42 @@ export const QuestLeaderboard = ({
                                                         {index + 1}
                                                     </motion.span>
                                                 </motion.div>
-                                                {entry.display_name && entry.display_name !== 'Guest' ? (
-                                                    <Link to={`/users/${entry.display_name}`} className="flex items-center gap-3">
-                                                        <AvatarOverlay
-                                                            displayName={entry.display_name}
-                                                            className="w-14 h-14 border-0"
-                                                            linkToProfile={true}
-                                                        />
-                                                        <div className="flex flex-col">
-                                                            <motion.span className="font-medium">
-                                                                {entry.display_name}
-                                                            </motion.span>
-                                                            <motion.span
-                                                                className={`text-xs px-2 py-0.5 rounded-full w-fit ${badgeStyles}`}
+                                                <div className="flex items-center gap-3">
+                                                    <AvatarOverlay
+                                                        displayName={
+                                                            entry.display_name ||
+                                                            'Guest'
+                                                        }
+                                                        className="w-14 h-14 border-0"
+                                                        linkToProfile={
+                                                            entry.is_registered_user
+                                                        }
+                                                    />
+                                                    <div className="flex flex-col">
+                                                        {entry.is_registered_user ? (
+                                                            <Link
+                                                                to={`/users/${entry.display_name}`}
+                                                                className="hover:underline"
                                                             >
-                                                                {badgeType}
-                                                            </motion.span>
-                                                        </div>
-                                                    </Link>
-                                                ) : (
-                                                    <>
-                                                        <AvatarOverlay
-                                                            displayName={
-                                                                entry.display_name ||
-                                                                'Guest'
-                                                            }
-                                                            className="w-14 h-14 border-0"
-                                                            linkToProfile={!!(entry.display_name && entry.display_name !== 'Guest')}
-                                                        />
-                                                        <div className="flex flex-col">
+                                                                <motion.span className="font-medium">
+                                                                    {
+                                                                        entry.display_name
+                                                                    }
+                                                                </motion.span>
+                                                            </Link>
+                                                        ) : (
                                                             <motion.span className="font-medium">
                                                                 {entry.display_name ||
                                                                     'Guest'}
                                                             </motion.span>
-                                                            <motion.span
-                                                                className={`text-xs px-2 py-0.5 rounded-full w-fit ${badgeStyles}`}
-                                                            >
-                                                                {badgeType}
-                                                            </motion.span>
-                                                        </div>
-                                                    </>
-                                                )}
+                                                        )}
+                                                        <motion.span
+                                                            className={`text-xs px-2 py-0.5 rounded-full w-fit ${badgeStyles}`}
+                                                        >
+                                                            {badgeType}
+                                                        </motion.span>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <div className="text-right">
@@ -516,72 +535,46 @@ export const QuestLeaderboard = ({
                                                             </div>
                                                         )}
                                                 </div>
-                                                {questId && isOwner && (
-                                                    <div className="flex items-center justify-center w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors">
-                                                        <FaChevronDown className="h-3 w-3" />
-                                                    </div>
-                                                )}
+                                                {questId &&
+                                                    isOwner &&
+                                                    !entry.is_primary && (
+                                                        <div className="flex items-center justify-center w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors">
+                                                            <FaChevronDown className="h-3 w-3" />
+                                                        </div>
+                                                    )}
                                             </div>
                                         </div>
 
                                         {/* Footer row: Action buttons */}
-                                        {questId && isOwner && (
-                                            <div
-                                                className={`overflow-hidden transition-all duration-300 ease-out border-t border-gray-200 ${
-                                                    isExpanded
-                                                        ? 'max-h-20 opacity-100 pt-2'
-                                                        : 'max-h-0 opacity-0 pt-0'
-                                                }`}
-                                            >
-                                                <div className="flex justify-end">
-                                                    <div className="flex gap-2">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="noShadow"
-                                                            className="h-7 px-2 text-xs text-green-700 shadow-none border-0 bg-transparent hover:bg-gray-100"
-                                                            onClick={(e) =>
-                                                                handleCopyLink(
-                                                                    entry,
-                                                                    e
-                                                                )
-                                                            }
-                                                        >
-                                                            <FaLink className="h-3 w-3 mr-1" />
-                                                            Copy Link
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="noShadow"
-                                                            className="h-7 px-2 text-xs text-green-700 shadow-none border-0 bg-transparent hover:bg-gray-100"
-                                                            onClick={(e) =>
-                                                                handleShare(
-                                                                    entry,
-                                                                    e
-                                                                )
-                                                            }
-                                                        >
-                                                            <FaShareFromSquare className="h-3 w-3 mr-1" />
-                                                            Share
-                                                        </Button>
-
-                                                        <Button
-                                                            size="sm"
-                                                            variant="noShadow"
-                                                            className="h-7 px-2 text-xs text-green-700 shadow-none border-0 bg-transparent hover:bg-gray-100"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                handleDeleteClick(
-                                                                    entry
-                                                                )
-                                                            }}
-                                                        >
-                                                            <FaTrash className="h-3 w-3 mr-1" />
-                                                            Remove
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
+                                        {questId &&
+                                            isOwner &&
+                                            !entry.is_primary && (
+                                                <ActionFooter
+                                                    expanded={isExpanded}
+                                                    onCopyLink={(
+                                                        e: React.MouseEvent
+                                                    ) => {
+                                                        e.stopPropagation()
+                                                        handleCopyShareLink(
+                                                            entry
+                                                        )
+                                                    }}
+                                                    onShare={(
+                                                        e: React.MouseEvent
+                                                    ) => {
+                                                        e.stopPropagation()
+                                                        handleShare(entry, e)
+                                                    }}
+                                                    onRemove={(
+                                                        e: React.MouseEvent
+                                                    ) => {
+                                                        e.stopPropagation()
+                                                        handleDeleteClick(entry)
+                                                    }}
+                                                    copyingLink={copyingLink}
+                                                    entry={entry}
+                                                />
+                                            )}
                                     </motion.div>
                                 )
                             }
