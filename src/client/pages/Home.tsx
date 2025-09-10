@@ -101,7 +101,7 @@ export function Home() {
             </section>
 
             {/* Recent Quests Section */}
-            <section className="px-4 py-16 max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+            <section className="px-4 pt-8 pb-4 max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h2 className="text-3xl font-bold text-foreground mb-2">

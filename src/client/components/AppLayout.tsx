@@ -5,14 +5,12 @@ import { Footer } from './Footer'
 
 export function AppLayout() {
     return (
-        <>
-            <div className="min-h-screen flex flex-col m-4">
-                <MainMenu />
-                <Outlet />
-                <ScrollRestoration />
-            </div>
-            <Footer />
+        <div className="mx-2 md:mx-4">
+            <ScrollRestoration />
+            <MainMenu />
+            <Outlet />
             <Toaster />
-        </>
+            <Footer />
+        </div>
     )
 }

@@ -70,7 +70,7 @@ export function MainMenu() {
     return (
         !isLogin && (
             <Menubar
-                className={`flex w-full items-center border-0 mb-2 ${
+                className={`flex w-full items-center border-0 my-3 ${
                     isHome
                         ? 'justify-end bg-transparent'
                         : 'justify-between bg-transparent'

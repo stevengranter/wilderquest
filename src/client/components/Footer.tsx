@@ -6,7 +6,7 @@ export function Footer() {
     const isOnHomepage = location.pathname === '/'
 
     return (
-        <footer className="relative mt-12 py-4 text-center text-sm text-muted-foreground bg-main">
+        <footer className="relative mt-16 -mx-4 py-4  text-center text-sm text-muted-foreground bg-main">
             {/* Badge positioned to overlap the content above */}
             {!isOnHomepage ? (
                 <Link to="/">
