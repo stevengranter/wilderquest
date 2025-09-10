@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 import { LoggedInUser } from '@/types/authTypes'
 import { JSX, useState } from 'react'
 import { AvatarOverlay } from './AvatarOverlay'
+import { Link } from 'react-router-dom'
 import { DetailedProgress, QuestMapping, Share } from '@/types/questTypes'
 
 type TaxaWithProgress = INatTaxon & {
@@ -115,6 +116,7 @@ function SpeciesListCard(props: {
                             firstFinder={avatarOverlay.firstFinder}
                             size={24}
                             className="w-6 h-6 border-0"
+                            linkToProfile={true}
                         />
                     )}
                 </div>

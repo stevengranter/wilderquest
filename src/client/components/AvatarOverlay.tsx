@@ -1,6 +1,7 @@
 import avatar from 'animal-avatar-generator'
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
+import { Link } from 'react-router-dom'
 
 interface AvatarOverlayProps {
     displayName?: string
@@ -8,6 +9,7 @@ interface AvatarOverlayProps {
     firstFinder?: string
     size?: number
     className: string
+    linkToProfile?: boolean
 }
 
 export function AvatarOverlay({
@@ -16,6 +18,7 @@ export function AvatarOverlay({
     firstFinder,
     size = 32,
     className,
+    linkToProfile = false,
 }: AvatarOverlayProps) {
     // Support both single displayName (backward compatibility) and multiple displayNames
     const names = displayNames || (displayName ? [displayName] : [])
@@ -44,7 +47,7 @@ export function AvatarOverlay({
                 )
                 const isFirstFinder = firstFinder && name === firstFinder
 
-                return (
+                const avatarElement = (
                     <Avatar
                         key={name}
                         className={cn(
@@ -64,6 +67,14 @@ export function AvatarOverlay({
                             }}
                         />
                     </Avatar>
+                )
+
+                return linkToProfile && name !== 'Guest' ? (
+                    <Link key={name} to={`/users/${name}`}>
+                        {avatarElement}
+                    </Link>
+                ) : (
+                    avatarElement
                 )
             })
 
@@ -87,7 +98,7 @@ export function AvatarOverlay({
     )
     const isFirstFinder = firstFinder && names[0] === firstFinder
 
-    return (
+    const avatarElement = (
         <Avatar
             className={cn(
                 className,
@@ -99,5 +110,13 @@ export function AvatarOverlay({
                 src={`data:image/svg+xml;utf8,${encodeURIComponent(offsetSvg)}`}
             />
         </Avatar>
+    )
+
+    return linkToProfile && names[0] !== 'Guest' ? (
+        <Link to={`/users/${names[0]}`}>
+            {avatarElement}
+        </Link>
+    ) : (
+        avatarElement
     )
 }

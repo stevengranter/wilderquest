@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 import { useLazyImage } from '@/hooks/useLazyImage'
 import { BiWorld } from 'react-icons/bi'
 import { AvatarOverlay } from './AvatarOverlay'
+import { Link } from 'react-router-dom'
 
 interface SpeciesCardProps {
     species: INatTaxon
@@ -283,6 +284,7 @@ function SpeciesGridItem({
                         displayNames={avatarOverlay.displayNames}
                         firstFinder={avatarOverlay.firstFinder}
                         className="w-12 h-12 transform translate-x-1/2 translate-y-1/2"
+                        linkToProfile={true}
                     />
                 </div>
             )}

@@ -21,6 +21,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Link } from 'react-router-dom'
 
 interface UserSearchProps {
     onUserSelect?: (user: SafeUser) => void

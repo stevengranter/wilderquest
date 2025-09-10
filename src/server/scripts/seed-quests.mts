@@ -324,6 +324,35 @@ const createFakeUser = () => {
     }
 }
 
+const addGuestsToQuest = async (quest_id: number, creator_user_id: number, allUserIds: number[], questsToTaxaIds: number[]) => {
+    const availableGuests = allUserIds.filter(id => id !== creator_user_id)
+    const numGuests = getRandomInt(0, 6)
+    const selectedGuests = faker.helpers.arrayElements(availableGuests, numGuests)
+
+    for (const guest_id of selectedGuests) {
+        const shareResult = await addRowToTable('quest_shares', {
+            quest_id,
+            created_by_user_id: creator_user_id,
+            shared_with_user_id: guest_id,
+        })
+
+        // Add some progress for this guest
+        const numProgress = getRandomInt(0, Math.min(5, questsToTaxaIds.length)) // Up to 5 taxa found
+        const selectedQuestsToTaxaIds = faker.helpers.arrayElements(questsToTaxaIds, numProgress)
+
+        for (const questsToTaxaId of selectedQuestsToTaxaIds) {
+            await addRowToTable('shared_quest_progress', {
+                quest_share_id: shareResult,
+                taxon_id: questsToTaxaId,
+                observed_at: faker.date.between({
+                    from: '2024-01-01',
+                    to: Date.now(),
+                }),
+            })
+        }
+    }
+}
+
 const createFakeQuest = async (animal = faker.animal.type()) => {
     const user_id = getRandomInt(1, 12)
     const animalEmoji = emoji.find(animal)
@@ -412,7 +441,7 @@ const createFakeQuest = async (animal = faker.animal.type()) => {
     }
 }
 
-const createUsers = async (quantity: number) => {
+const createUsers = async (quantity: number, allUserIds: number[]) => {
     const userIds = []
     for (let i = 0; i < quantity; i++) {
         const user = createFakeUser()
@@ -424,7 +453,11 @@ const createUsers = async (quantity: number) => {
             return
         }
 
-        // Generate quests for this user
+        userIds.push(user_id)
+    }
+
+    // Now create quests for each user
+    for (const user_id of userIds) {
         const numberOfQuests = getRandomInt(0, 4)
         for (let j = 0; j < numberOfQuests; j++) {
             const animal = faker.animal.type()
@@ -440,17 +473,21 @@ const createUsers = async (quantity: number) => {
                 numberOfTaxa
             )
 
+            const questsToTaxaIds = []
             for (const taxon_id of taxaArray) {
-                await addRowToTable('quests_to_taxa', {
+                const id = await addRowToTable('quests_to_taxa', {
                     quest_id,
                     taxon_id,
                 })
+                questsToTaxaIds.push(id)
             }
+
+            // Add guests to the quest
+            await addGuestsToQuest(quest_id, user_id, userIds, questsToTaxaIds)
 
             // Add small delay to avoid rate limiting
             await new Promise((resolve) => setTimeout(resolve, 100))
         }
-        userIds.push(user_id)
     }
     return userIds
 }
@@ -483,7 +520,7 @@ async function addRowToTable<T extends object>(tableName: string, data: T) {
     }
 }
 
-const users = await createUsers(12)
+const users = await createUsers(12, [])
 let _admin
 try {
     _admin = await addUserToDatabase(adminUser)
@@ -569,16 +606,21 @@ for (const questData of sampleQuests) {
         quest.longitude,
         numberOfTaxa
     )
+    const questsToTaxaIds = []
     for (const taxon_id of taxaArray) {
-        await addRowToTable('quests_to_taxa', {
+        const id = await addRowToTable('quests_to_taxa', {
             quest_id,
             taxon_id,
         })
+        questsToTaxaIds.push(id)
     }
 
     console.log(
         `Created sample quest: ${quest.name} with ${taxaArray.length} location-based taxa`
     )
+
+    // Add guests to the quest
+    await addGuestsToQuest(quest_id, quest.user_id, users, questsToTaxaIds)
 
     // Add delay to avoid rate limiting
     await new Promise((resolve) => setTimeout(resolve, 200))

@@ -21,6 +21,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { LeaderboardEntry } from '@/types/questTypes'
+import { Link } from 'react-router-dom'
 
 type QuestShare = {
     id: number
@@ -447,24 +448,47 @@ export const QuestLeaderboard = ({
                                                         {index + 1}
                                                     </motion.span>
                                                 </motion.div>
-                                                <AvatarOverlay
-                                                    displayName={
-                                                        entry.display_name ||
-                                                        'Guest'
-                                                    }
-                                                    className="w-14 h-14 border-0"
-                                                />
-                                                <div className="flex flex-col">
-                                                    <motion.span className="font-medium">
-                                                        {entry.display_name ||
-                                                            'Guest'}
-                                                    </motion.span>
-                                                    <motion.span
-                                                        className={`text-xs px-2 py-0.5 rounded-full w-fit ${badgeStyles}`}
-                                                    >
-                                                        {badgeType}
-                                                    </motion.span>
-                                                </div>
+                                                {entry.display_name && entry.display_name !== 'Guest' ? (
+                                                    <Link to={`/users/${entry.display_name}`} className="flex items-center gap-3">
+                                                        <AvatarOverlay
+                                                            displayName={entry.display_name}
+                                                            className="w-14 h-14 border-0"
+                                                            linkToProfile={true}
+                                                        />
+                                                        <div className="flex flex-col">
+                                                            <motion.span className="font-medium">
+                                                                {entry.display_name}
+                                                            </motion.span>
+                                                            <motion.span
+                                                                className={`text-xs px-2 py-0.5 rounded-full w-fit ${badgeStyles}`}
+                                                            >
+                                                                {badgeType}
+                                                            </motion.span>
+                                                        </div>
+                                                    </Link>
+                                                ) : (
+                                                    <>
+                                                        <AvatarOverlay
+                                                            displayName={
+                                                                entry.display_name ||
+                                                                'Guest'
+                                                            }
+                                                            className="w-14 h-14 border-0"
+                                                            linkToProfile={!!(entry.display_name && entry.display_name !== 'Guest')}
+                                                        />
+                                                        <div className="flex flex-col">
+                                                            <motion.span className="font-medium">
+                                                                {entry.display_name ||
+                                                                    'Guest'}
+                                                            </motion.span>
+                                                            <motion.span
+                                                                className={`text-xs px-2 py-0.5 rounded-full w-fit ${badgeStyles}`}
+                                                            >
+                                                                {badgeType}
+                                                            </motion.span>
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <div className="text-right">
