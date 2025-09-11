@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'motion/react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Camera } from 'lucide-react'
@@ -246,93 +247,119 @@ export const QuestListView = ({
     detailedProgress,
 }: QuestListViewProps) => {
     return (
-        <div className="space-y-3">
-            {taxaWithProgress.map((taxon) => (
-                <SpeciesListCard
-                    key={taxon.id}
-                    taxon={taxon}
-                    owner={isOwner}
-                    token={token}
-                    status={questData.status}
-                    latitude={questData.latitude}
-                    longitude={questData.longitude}
-                    locationName={questData.location_name}
-                    hoverEffect="lift"
-                    questMode={questData.mode}
-                    detailedProgress={detailedProgress}
-                    user={user}
-                    share={share}
-                    onClick={async (e) => {
-                        e.stopPropagation()
-                        e.preventDefault()
-                        try {
-                            let progress
-                            if (!taxon.mapping) return
+        <AnimatePresence mode="popLayout">
+            <motion.div className="space-y-3" layout>
+                {taxaWithProgress.map((taxon, index) => (
+                    <motion.div
+                        key={taxon.id}
+                        layout
+                        layoutId={`species-${taxon.id}`}
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        transition={{
+                            delay: index * 0.05,
+                            layout: {
+                                duration: 0.4,
+                                type: 'spring',
+                                damping: 25,
+                                stiffness: 200,
+                            },
+                            default: { duration: 0.3 },
+                        }}
+                    >
+                        <SpeciesListCard
+                            key={taxon.id}
+                            taxon={taxon}
+                            owner={isOwner}
+                            token={token}
+                            status={questData.status}
+                            latitude={questData.latitude}
+                            longitude={questData.longitude}
+                            locationName={questData.location_name}
+                            hoverEffect="lift"
+                            questMode={questData.mode}
+                            detailedProgress={detailedProgress}
+                            user={user}
+                            share={share}
+                            onClick={async (e) => {
+                                e.stopPropagation()
+                                e.preventDefault()
+                                try {
+                                    let progress
+                                    if (!taxon.mapping) return
 
-                            if (isOwner) {
-                                progress = detailedProgress?.find(
-                                    (p) =>
-                                        p.display_name === user?.username &&
-                                        p.mapping_id === taxon.mapping!.id
-                                )
-                            } else if (token) {
-                                progress = detailedProgress?.find(
-                                    (p) =>
-                                        p.display_name === share?.guest_name &&
-                                        p.mapping_id === taxon.mapping!.id
-                                )
-                            }
-                            const next = !progress
+                                    if (isOwner) {
+                                        progress = detailedProgress?.find(
+                                            (p) =>
+                                                p.display_name ===
+                                                    user?.username &&
+                                                p.mapping_id ===
+                                                    taxon.mapping!.id
+                                        )
+                                    } else if (token) {
+                                        progress = detailedProgress?.find(
+                                            (p) =>
+                                                p.display_name ===
+                                                    share?.guest_name &&
+                                                p.mapping_id ===
+                                                    taxon.mapping!.id
+                                        )
+                                    }
+                                    const next = !progress
 
-                            if (isOwner) {
-                                await api.post(
-                                    `/quest-sharing/quests/${questData.id}/progress/${taxon.mapping!.id}`,
-                                    { observed: next }
-                                )
-                            } else if (token) {
-                                await api.post(
-                                    `/quest-sharing/shares/token/${token}/progress/${taxon.mapping!.id}`,
-                                    { observed: next }
-                                )
-                            }
+                                    if (isOwner) {
+                                        await api.post(
+                                            `/quest-sharing/quests/${questData.id}/progress/${taxon.mapping!.id}`,
+                                            { observed: next }
+                                        )
+                                    } else if (token) {
+                                        await api.post(
+                                            `/quest-sharing/shares/token/${token}/progress/${taxon.mapping!.id}`,
+                                            { observed: next }
+                                        )
+                                    }
 
-                            // Toast will be shown via real-time events
-                        } catch (error: unknown) {
-                            // Handle specific competitive mode conflict
-                            const axiosError = error as {
-                                response?: {
-                                    status?: number
-                                    data?: { message?: string }
+                                    // Toast will be shown via real-time events
+                                } catch (error: unknown) {
+                                    // Handle specific competitive mode conflict
+                                    const axiosError = error as {
+                                        response?: {
+                                            status?: number
+                                            data?: { message?: string }
+                                        }
+                                    }
+                                    if (axiosError?.response?.status === 409) {
+                                        toast.error(
+                                            axiosError?.response?.data
+                                                ?.message ||
+                                                'This species has already been found by another participant in competitive mode'
+                                        )
+                                    } else {
+                                        toast.error('Failed to update progress')
+                                    }
                                 }
-                            }
-                            if (axiosError?.response?.status === 409) {
-                                toast.error(
-                                    axiosError?.response?.data?.message ||
-                                        'This species has already been found by another participant in competitive mode'
-                                )
-                            } else {
-                                toast.error('Failed to update progress')
-                            }
-                        }
-                    }}
-                    callbackfn={(entry: DetailedProgress) => (
-                        <div
-                            key={entry.progress_id}
-                            className="text-xs text-gray-600"
-                        >
-                            <span className="font-medium">
-                                {entry.display_name || 'Someone'}
-                            </span>
-                            {' found this species on '}
-                            <span>
-                                {new Date(
-                                    entry.observed_at
-                                ).toLocaleDateString()}
-                            </span>
-                        </div>
-                    )}
-                />
-            ))}
-        </div>
+                            }}
+                            callbackfn={(entry: DetailedProgress) => (
+                                <div
+                                    key={entry.progress_id}
+                                    className="text-xs text-gray-600"
+                                >
+                                    <span className="font-medium">
+                                        {entry.display_name || 'Someone'}
+                                    </span>
+                                    {' found this species on '}
+                                    <span>
+                                        {new Date(
+                                            entry.observed_at
+                                        ).toLocaleDateString()}
+                                    </span>
+                                </div>
+                            )}
+                        />
+                    </motion.div>
+                ))}
+            </motion.div>
+        </AnimatePresence>
     )
 }

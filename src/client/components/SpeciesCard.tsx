@@ -43,7 +43,6 @@ interface SpeciesCardProps {
     } | null
 }
 
-// Type guards for runtime type checking
 type AvatarOverlayType = {
     username?: string
     isRegistered?: boolean
@@ -211,134 +210,142 @@ function SpeciesGridItem({
     }
 
     return (
-        // <AnimatePresence mode="wait">
-        //     <motion.div
-        //         key={species.id}
-        //         layout
-        //         initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        //         animate={{ opacity: 1, y: 0, scale: 1 }}
-        //         exit={{ opacity: 0, y: -20, scale: 0.95 }}
-        //         transition={{
-        //             layout: {
-        //                 duration: 0.4,
-        //                 type: 'spring',
-        //                 damping: 20,
-        //                 stiffness: 200,
-        //             },
-        //             default: { duration: 0.3 },
-        //         }}
-        //         whileTap={{ scale: 0.98 }}
-        //         className={cn('w-full cursor-pointer', className)}
-        //         onClick={handleClick}
-        //         ref={cardRef}
-        //     >
-        <div className="relative">
-            <Card
-                className={cn(
-                    'aspect-2.5/3.5 overflow-hidden duration-250 transition-all shadow-0 py-0 gap-0 border-1 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
-                    hoverClasses[hoverEffect || 'lift'],
-                    found ? 'bg-green-100' : 'bg-background',
-                    hasShadow
-                        ? hasShadowClasses['true']
-                        : hasShadowClasses['false'],
-                    className
-                )}
-            >
-                <CardHeader className="gap-0 text-left justify-start pb-1 pt-3 relative text-foreground tracking-normal font-bold sm:text-md md:text-md lg:text-xl line-clamp-1 font-barlow">
-                    {species.preferred_common_name && (
-                        <h3 className="text-md xl:text-lg">
-                            {species.preferred_common_name}
-                        </h3>
-                    )}
-                </CardHeader>
-
-                <CardContent className="relative px-0 mx-6">
-                    <div className="absolute -top-1 -right-1">
-                        {species.iconic_taxon_name && (
-                            <div className="bg-yellow-300 rounded-full text-bg-main-foreground p-2 rotate-15 border-2">
-                                <KingdomIcon size={16} />
-                            </div>
+        <motion.div
+            key={species.id}
+            layout
+            layoutId={`species-card-${species.id}`}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+            }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{
+                layout: {
+                    duration: 0.4,
+                    type: 'spring',
+                    damping: 25,
+                    stiffness: 200,
+                },
+                default: { duration: 0.3 },
+            }}
+            whileTap={{ scale: 0.98 }}
+            className={cn('w-full cursor-pointer', className)}
+            ref={cardRef}
+        >
+            <div className="relative">
+                <motion.div>
+                    <Card
+                        className={cn(
+                            'aspect-2.5/3.5 overflow-hidden duration-250 transition-all shadow-0 py-0 gap-0 border-1 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
+                            hoverClasses[hoverEffect || 'lift'],
+                            hasShadow
+                                ? hasShadowClasses['true']
+                                : hasShadowClasses['false']
                         )}
-                    </div>
-
-                    {src ? (
-                        <div className="overflow-hidden w-full h-full aspect-square rounded-sm">
-                            <img
-                                ref={imgRef}
-                                src={src}
-                                alt={species.name}
-                                className={cn(
-                                    'w-full h-full object-cover border-2 border-white outline-black outline-2',
-                                    found && 'bg-teal-300',
-                                    isBlurred &&
-                                        'filter blur-sm scale-110 transition-all duration-500'
-                                )}
-                                draggable={false}
-                            />
-                        </div>
-                    ) : (
-                        <Skeleton className="w-full aspect-square rounded-sm" />
-                    )}
-
-                    <div className="space-y-1 text-right self-end mt-1 mb-2">
-                        {species.preferred_common_name && (
-                            <p className="text-[11px] text-foreground italic leading-tight line-clamp-1">
-                                {species.name}
-                            </p>
-                        )}
-                    </div>
-                </CardContent>
-
-                <CardFooter className="flex flex-row justify-start items-center py-2 pb-4">
-                    <Badge>
-                        <BiWorld size={15} />
-                        {(
-                            geoObservationsCount ?? species.observations_count
-                        )?.toLocaleString()}
-                    </Badge>
-
-                    {rarity && (
-                        <Badge
-                            className={cn(
-                                'text-xs font-semibold border-0',
-                                rarity === 'common'
-                                    ? 'bg-green-100 text-green-800'
-                                    : rarity === 'uncommon'
-                                      ? 'bg-yellow-100 text-yellow-800'
-                                      : 'bg-red-100 text-red-800'
+                    >
+                        <CardHeader className="gap-0 text-left justify-start pb-1 pt-3 relative text-foreground tracking-normal font-bold sm:text-md md:text-md lg:text-xl line-clamp-1 font-barlow">
+                            {species.preferred_common_name && (
+                                <h3 className="text-md xl:text-lg">
+                                    {species.preferred_common_name}
+                                </h3>
                             )}
-                        >
-                            {rarity.toUpperCase()}
-                        </Badge>
-                    )}
-                </CardFooter>
-                {actionArea}
-            </Card>
-            {avatarOverlay && (
-                <div className="absolute bottom-4 right-8 z-40">
-                    {isMultiUserOverlay(avatarOverlay) ? (
-                        // Multiple users (cooperative mode)
-                        <AvatarGroup
-                            users={avatarOverlay.users}
-                            firstFinder={avatarOverlay.firstFinder}
-                            maxAvatars={3}
-                            size={32}
-                            className="transform translate-x-1/2 translate-y-1/2"
-                        />
-                    ) : isSingleUserOverlay(avatarOverlay) ? (
-                        // Single user (competitive mode)
-                        <SingleAvatar
-                            username={avatarOverlay.username}
-                            isRegistered={avatarOverlay.isRegistered}
-                            size={48}
-                            className="w-12 h-12 transform translate-x-1/2 translate-y-1/2"
-                        />
-                    ) : null}
-                </div>
-            )}
-        </div>
-        //     </motion.div>
-        // </AnimatePresence>
+                        </CardHeader>
+
+                        <CardContent className="relative px-0 mx-6">
+                            <div className="absolute -top-1 -right-1">
+                                {species.iconic_taxon_name && (
+                                    <div className="bg-yellow-300 rounded-full text-bg-main-foreground p-2 rotate-15 border-2">
+                                        <KingdomIcon size={16} />
+                                    </div>
+                                )}
+                            </div>
+
+                            {src ? (
+                                <div className="overflow-hidden w-full h-full aspect-square rounded-sm">
+                                    <motion.img
+                                        ref={imgRef}
+                                        src={src}
+                                        alt={species.name}
+                                        className={cn(
+                                            'w-full h-full object-cover border-2 border-white outline-black outline-2',
+                                            isBlurred &&
+                                                'filter blur-sm scale-110 transition-all duration-500'
+                                        )}
+                                        animate={{
+                                            backgroundColor: found
+                                                ? '#5eead4'
+                                                : 'transparent',
+                                        }}
+                                        transition={{ duration: 0.3 }}
+                                        draggable={false}
+                                    />
+                                </div>
+                            ) : (
+                                <Skeleton className="w-full aspect-square rounded-sm" />
+                            )}
+
+                            <div className="space-y-1 text-right self-end mt-1 mb-2">
+                                {species.preferred_common_name && (
+                                    <p className="text-[11px] text-foreground italic leading-tight line-clamp-1">
+                                        {species.name}
+                                    </p>
+                                )}
+                            </div>
+                        </CardContent>
+
+                        <CardFooter className="flex flex-row justify-start items-center py-2 pb-4">
+                            <Badge>
+                                <BiWorld size={15} />
+                                {(
+                                    geoObservationsCount ??
+                                    species.observations_count
+                                )?.toLocaleString()}
+                            </Badge>
+
+                            {rarity && (
+                                <Badge
+                                    className={cn(
+                                        'text-xs font-semibold border-0',
+                                        rarity === 'common'
+                                            ? 'bg-green-100 text-green-800'
+                                            : rarity === 'uncommon'
+                                              ? 'bg-yellow-100 text-yellow-800'
+                                              : 'bg-red-100 text-red-800'
+                                    )}
+                                >
+                                    {rarity.toUpperCase()}
+                                </Badge>
+                            )}
+                        </CardFooter>
+                        {actionArea}
+                    </Card>
+                </motion.div>
+                {avatarOverlay && (
+                    <div className="absolute bottom-4 right-8 z-40">
+                        {isMultiUserOverlay(avatarOverlay) ? (
+                            // Multiple users (cooperative mode)
+                            <AvatarGroup
+                                users={avatarOverlay.users}
+                                firstFinder={avatarOverlay.firstFinder}
+                                maxAvatars={3}
+                                size={32}
+                                className="transform translate-x-1/2 translate-y-1/2"
+                            />
+                        ) : isSingleUserOverlay(avatarOverlay) ? (
+                            // Single user (competitive mode)
+                            <SingleAvatar
+                                username={avatarOverlay.username}
+                                isRegistered={avatarOverlay.isRegistered}
+                                size={48}
+                                className="w-12 h-12 transform translate-x-1/2 translate-y-1/2"
+                            />
+                        ) : null}
+                    </div>
+                )}
+            </div>
+        </motion.div>
     )
 }
 
@@ -371,23 +378,39 @@ function SpeciesListItem({
 
     return (
         <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ default: { duration: 0.5 } }}
+            key={species.id}
+            layout
+            layoutId={`species-list-${species.id}`}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{
+                opacity: 1,
+                x: 0,
+                backgroundColor: found ? '#dcfce7' : '#f3f4f6',
+            }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{
+                layout: {
+                    duration: 0.4,
+                    type: 'spring',
+                    damping: 25,
+                    stiffness: 200,
+                },
+                backgroundColor: { duration: 0.3 },
+                default: { duration: 0.3 },
+            }}
+            whileHover={{
+                backgroundColor: found ? '#bbf7d0' : '#e5e7eb',
+            }}
             className={cn(
                 'flex items-center gap-4 p-2 rounded-md transition-all duration-200',
                 hoverClasses[hoverEffect || 'lift'],
-                found
-                    ? 'bg-green-100 hover:bg-green-200'
-                    : 'bg-gray-100 hover:bg-gray-200',
                 className
             )}
             ref={cardRef}
         >
             {src && (
                 <div className="overflow-hidden h-16 w-16 rounded-sm flex-shrink-0">
-                    <img
+                    <motion.img
                         ref={imgRef}
                         src={src}
                         alt={species.name}
@@ -396,6 +419,10 @@ function SpeciesListItem({
                             isBlurred &&
                                 'filter blur-sm scale-110 transition-all duration-500'
                         )}
+                        animate={{
+                            backgroundColor: found ? '#5eead4' : 'transparent',
+                        }}
+                        transition={{ duration: 0.3 }}
                     />
                 </div>
             )}

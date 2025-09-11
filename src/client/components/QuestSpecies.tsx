@@ -21,7 +21,6 @@ import {
 import { useSpeciesProgress } from '@/hooks/useSpeciesProgress'
 import { useSpeciesActions } from '@/hooks/useSpeciesActions'
 
-
 // Use QuestMapping instead of defining TaxonMapping
 type TaxonMapping = QuestMapping
 
@@ -69,7 +68,6 @@ export const QuestSpecies = ({
     user,
     viewMode,
 }: QuestSpeciesProps) => {
-
     const observer = useRef<IntersectionObserver | null>(null)
 
     // Use the hooks from useQuest
@@ -184,10 +182,19 @@ export const QuestSpecies = ({
                 <motion.div
                     key={`skeleton-${keyPrefix}-${i}`}
                     className="relative"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ delay: i * 0.05 }} // Stagger animation
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{
+                        delay: i * 0.05, // Stagger animation
+                        layout: {
+                            duration: 0.4,
+                            type: 'spring',
+                            damping: 25,
+                            stiffness: 200,
+                        },
+                    }}
                 >
                     <SpeciesCardSkeleton phase={phase} />
                 </motion.div>
@@ -204,9 +211,20 @@ export const QuestSpecies = ({
                     key={taxon.id}
                     ref={isLast ? lastTaxonElementRef : undefined}
                     className="relative"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    layout
+                    layoutId={`species-${taxon.id}`}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                    transition={{
+                        layout: {
+                            duration: 0.4,
+                            type: 'spring',
+                            damping: 25,
+                            stiffness: 200,
+                        },
+                        default: { duration: 0.3 },
+                    }}
                 >
                     <SpeciesCardWithObservations
                         species={taxon}
@@ -226,7 +244,6 @@ export const QuestSpecies = ({
         ]
     )
 
-
     return (
         <div>
             {/* View Content */}
@@ -234,7 +251,10 @@ export const QuestSpecies = ({
                 <div className="space-y-8">
                     {/* Combined section for all species */}
                     <div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5 auto-rows-fr">
+                        <motion.div
+                            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5 auto-rows-fr"
+                            layout
+                        >
                             <AnimatePresence mode="popLayout">
                                 {isTaxaLoading
                                     ? renderSkeletons(
@@ -258,6 +278,7 @@ export const QuestSpecies = ({
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
+                                    layout
                                 >
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                         <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
@@ -265,7 +286,7 @@ export const QuestSpecies = ({
                                     </div>
                                 </motion.div>
                             )}
-                        </div>
+                        </motion.div>
                     </div>
                 </div>
             )}
