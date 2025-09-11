@@ -55,10 +55,11 @@ export const useQuestEvents = ({
             try {
                 // Build EventSource URL based on context
                 let eventSourceUrl: string
-                if (isOwner && getValidToken) {
-                    const authToken = await getValidToken()
-                    eventSourceUrl = authToken
-                        ? `/api/quests/${questId}/events?token=${encodeURIComponent(authToken)}`
+                if (isOwner) {
+                    // For owners, get the current access token synchronously from localStorage
+                    const accessToken = localStorage.getItem('access_token')
+                    eventSourceUrl = accessToken
+                        ? `/api/quests/${questId}/events?token=${encodeURIComponent(accessToken)}`
                         : `/api/quests/${questId}/events`
                 } else if (token) {
                     eventSourceUrl = `/api/quests/${questId}/events?token=${encodeURIComponent(token)}`
