@@ -2,7 +2,7 @@ import { INatTaxon } from '@shared/types/iNaturalist'
 import { useQuery } from '@tanstack/react-query'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import React, { ReactNode, useEffect, useState } from 'react'
+import React, { ReactNode,  useState } from 'react'
 import api from '@/lib/axios'
 import { clientDebug } from '../lib/debug'
 import { SpeciesCard } from '@/components/SpeciesCard'
@@ -147,20 +147,6 @@ export function ObservationDialog(props: ObservationDialogProps) {
         }
     )
 
-    // preserve scroll when dialog opens/closes
-    useEffect(() => {
-        if (open) {
-            clientDebug.ui(
-                'ObservationDialog: Opened for species %s (%s)',
-                species.id,
-                species.name
-            )
-            const unlock = lockScroll()
-            return unlock
-        }
-    }, [open, species.id, species.name])
-
-    // Always render the dialog, but pass location info if available
 
     return (
         <Dialog open={open} onOpenChange={setOpen} modal={false}>
@@ -250,23 +236,6 @@ export function ObservationDialog(props: ObservationDialogProps) {
     )
 }
 
-// --- Scroll lock helper ---
-function lockScroll() {
-    const scrollY = window.scrollY
-    document.body.style.position = 'fixed'
-    document.body.style.top = `-${scrollY}px`
-    document.body.style.left = '0'
-    document.body.style.right = '0'
-    document.body.style.width = '100%'
-    return () => {
-        document.body.style.position = ''
-        document.body.style.top = ''
-        document.body.style.left = ''
-        document.body.style.right = ''
-        document.body.style.width = ''
-        window.scrollTo(0, scrollY)
-    }
-}
 
 type ViewMode = 'grid' | 'list' | 'map'
 
