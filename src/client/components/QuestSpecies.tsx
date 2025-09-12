@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 
 import {
@@ -20,6 +20,7 @@ import {
 } from '@/types/questTypes'
 import { useSpeciesProgress } from '@/hooks/useSpeciesProgress'
 import { useSpeciesActions } from '@/hooks/useSpeciesActions'
+import { useTaxaWithProgress } from '../hooks/useTaxaWithProgress'
 
 // Use QuestMapping instead of defining TaxonMapping
 type TaxonMapping = QuestMapping
@@ -32,19 +33,15 @@ type TaxonWithProgress = INatTaxon & {
 }
 
 type QuestSpeciesProps = {
-    taxaWithProgress: TaxonWithProgress[]
     questData: ClientQuest
     isOwner: boolean
     token: string | undefined
     share: Share | undefined
     detailedProgress: DetailedProgress[] | undefined
     aggregatedProgress: AggregatedProgress[] | undefined
-    isTaxaFetchingNextPage: boolean
-    taxaHasNextPage: boolean
-    fetchNextTaxaPage: () => void
     taxa: INatTaxon[] | undefined
     mappings: TaxonMapping[] | undefined
-    updateStatus: (status: QuestStatus) => void
+    updateStatus?: (status: QuestStatus) => void
     isTaxaLoading: boolean
     user?: LoggedInUser
     viewMode: 'grid' | 'list' | 'map'
@@ -52,24 +49,24 @@ type QuestSpeciesProps = {
 }
 
 export const QuestSpecies = ({
-    taxaWithProgress,
     questData,
     isOwner,
     token,
     share,
     detailedProgress,
     aggregatedProgress,
-    isTaxaFetchingNextPage,
-    taxaHasNextPage,
-    fetchNextTaxaPage,
     taxa,
     mappings,
     isTaxaLoading,
     user,
     viewMode,
 }: QuestSpeciesProps) => {
-    const observer = useRef<IntersectionObserver | null>(null)
-
+    const taxaWithProgress = useTaxaWithProgress(
+        taxa,
+        mappings,
+        aggregatedProgress,
+        detailedProgress
+    )
     // Use the hooks from useQuest
     const { handleProgressUpdate, getAvatarOverlay } = useSpeciesProgress({
         mappings,
@@ -85,26 +82,6 @@ export const QuestSpecies = ({
         user,
         share,
     })
-
-    // Load more species from server when available
-    const loadMoreSpecies = useCallback(async () => {
-        if (taxaHasNextPage && !isTaxaFetchingNextPage) {
-            fetchNextTaxaPage()
-        }
-    }, [taxaHasNextPage, isTaxaFetchingNextPage, fetchNextTaxaPage])
-
-    const lastTaxonElementRef = useCallback(
-        (node: HTMLDivElement) => {
-            if (observer.current) observer.current.disconnect()
-            observer.current = new IntersectionObserver((entries) => {
-                if (entries[0].isIntersecting) {
-                    loadMoreSpecies()
-                }
-            })
-            if (node) observer.current.observe(node)
-        },
-        [loadMoreSpecies]
-    )
 
     // Create wrapper functions for the hook functions
     const handleProgressUpdateWrapper = useCallback(
@@ -205,11 +182,10 @@ export const QuestSpecies = ({
 
     // Extract species card rendering
     const renderSpeciesCard = useCallback(
-        (taxon: TaxonWithProgress, index?: number, isLast?: boolean) => {
+        (taxon: TaxonWithProgress) => {
             return (
                 <motion.div
                     key={taxon.id}
-                    ref={isLast ? lastTaxonElementRef : undefined}
                     className="relative"
                     layout
                     layoutId={`species-${taxon.id}`}
@@ -236,12 +212,7 @@ export const QuestSpecies = ({
                 </motion.div>
             )
         },
-        [
-            questData,
-            getAvatarOverlayWrapper,
-            renderActionButton,
-            lastTaxonElementRef,
-        ]
+        [questData, getAvatarOverlayWrapper, renderActionButton]
     )
 
     return (
@@ -261,31 +232,10 @@ export const QuestSpecies = ({
                                           'all-species',
                                           mappings?.length || 6
                                       )
-                                    : taxaWithProgress.map(
-                                          (taxon, index, arr) =>
-                                              renderSpeciesCard(
-                                                  taxon,
-                                                  index,
-                                                  index === arr.length - 1
-                                              )
+                                    : taxaWithProgress.map((taxon) =>
+                                          renderSpeciesCard(taxon)
                                       )}
                             </AnimatePresence>
-
-                            {/* Loading indicator for server-side pagination */}
-                            {isTaxaFetchingNextPage && (
-                                <motion.div
-                                    className="col-span-full flex justify-center py-4"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    layout
-                                >
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
-                                        Loading more species...
-                                    </div>
-                                </motion.div>
-                            )}
                         </motion.div>
                     </div>
                 </div>

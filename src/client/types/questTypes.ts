@@ -95,14 +95,11 @@ export interface QuestDataResult {
     share?: Share
     isLoading: boolean
     isTaxaLoading: boolean
-    isTaxaFetchingNextPage: boolean
-    taxaHasNextPage: boolean
     isError: boolean
     isProgressError?: boolean
     isLeaderboardError?: boolean
     isTaxaError?: boolean
     updateStatus?: (status: 'pending' | 'active' | 'paused' | 'ended') => void
-    fetchNextTaxaPage: () => void
 }
 
 export type ProgressData = {

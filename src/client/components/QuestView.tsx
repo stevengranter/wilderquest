@@ -20,9 +20,10 @@ import { ClientQuest } from './SpeciesCardWithObservations'
 import { ShareQuest } from './ShareQuest'
 import { useAuth } from '@/hooks/useAuth'
 import { useState, useEffect } from 'react'
-import { QuestStatusBadge } from './QuestStatusBadge'
+
 import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { useViewMode } from '@/hooks/useViewMode'
 
 export const QuestView = () => {
     const { user } = useAuth()
@@ -37,13 +38,8 @@ export const QuestView = () => {
         token,
         isLoading,
         isTaxaLoading,
-        isTaxaFetchingNextPage,
-        taxaHasNextPage,
-        fetchNextTaxaPage,
         isError,
-        isProgressError,
         isLeaderboardError,
-        isTaxaError,
         updateStatus,
         isOwner,
         canEdit,
@@ -60,7 +56,7 @@ export const QuestView = () => {
     const [showSummaryModal, setShowSummaryModal] = useState(false)
     const [prevQuestStatus, setPrevQuestStatus] = useState<string | undefined>()
     const [showInviteDrawer, setShowInviteDrawer] = useState(false)
-    const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid')
+    const { viewMode, setViewMode } = useViewMode()
     const [explorersExpanded, setExplorersExpanded] = useState(false)
 
     // Show summary modal when quest ends (only for quest owner)
@@ -111,10 +107,6 @@ export const QuestView = () => {
                         }
                         isOwner={isOwner}
                         share={share}
-                        mappings={mappings}
-                        aggregatedProgress={aggregatedProgress}
-                        isProgressError={isProgressError}
-                        isTaxaError={isTaxaError}
                         canEdit={canEdit}
                         updateStatus={updateStatus}
                     />
@@ -194,10 +186,6 @@ export const QuestView = () => {
                                         <AccordionContent className="pb-0 shadow-0">
                                             <QuestLeaderboard
                                                 leaderboard={leaderboard}
-                                                questStatus={questData?.status}
-                                                questId={questData?.id}
-                                                ownerUserId={questData?.user_id}
-                                                questName={questData?.name}
                                                 isOwner={isOwner}
                                             />
                                         </AccordionContent>
@@ -206,10 +194,6 @@ export const QuestView = () => {
                             ) : (
                                 <QuestLeaderboard
                                     leaderboard={leaderboard}
-                                    questStatus={questData?.status}
-                                    questId={questData?.id}
-                                    ownerUserId={questData?.user_id}
-                                    questName={questData?.name}
                                     isOwner={isOwner}
                                 />
                             )}
@@ -259,7 +243,6 @@ export const QuestView = () => {
                         <div className="-mt-1">
                             {questData && (
                                 <QuestSpecies
-                                    taxaWithProgress={taxaWithProgress}
                                     questData={
                                         {
                                             ...questData,
@@ -272,11 +255,6 @@ export const QuestView = () => {
                                     share={share}
                                     detailedProgress={detailedProgress}
                                     aggregatedProgress={aggregatedProgress}
-                                    isTaxaFetchingNextPage={
-                                        isTaxaFetchingNextPage
-                                    }
-                                    taxaHasNextPage={taxaHasNextPage}
-                                    fetchNextTaxaPage={fetchNextTaxaPage}
                                     taxa={taxa}
                                     mappings={mappings?.map((m) => ({
                                         ...m,
@@ -284,12 +262,7 @@ export const QuestView = () => {
                                             m.created_at ||
                                             new Date().toISOString(),
                                     }))} // Convert TaxonMapping to QuestMapping
-                                    updateStatus={
-                                        updateStatus ||
-                                        (() => {
-                                            // Fallback function for guests who cannot update quest status
-                                        })
-                                    }
+                                    updateStatus={updateStatus}
                                     isTaxaLoading={isTaxaLoading}
                                     user={user || undefined}
                                     viewMode={viewMode}

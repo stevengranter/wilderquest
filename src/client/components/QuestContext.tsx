@@ -1,6 +1,13 @@
 import React, { createContext, ReactNode, useContext } from 'react'
 import { INatTaxon } from '@shared/types/iNaturalist'
-import { AggregatedProgress, DetailedProgress, LeaderboardEntry, Quest, QuestMapping, Share } from '@/types/questTypes'
+import {
+    AggregatedProgress,
+    DetailedProgress,
+    LeaderboardEntry,
+    Quest,
+    QuestMapping,
+    Share,
+} from '@/types/questTypes'
 import { useQuest } from '@/hooks/useQuest'
 
 interface QuestContextType {
@@ -17,8 +24,6 @@ interface QuestContextType {
     // Loading states
     isLoading: boolean
     isTaxaLoading: boolean
-    isTaxaFetchingNextPage: boolean
-    taxaHasNextPage: boolean
     isError: boolean
     isProgressError?: boolean
     isLeaderboardError?: boolean
@@ -26,7 +31,6 @@ interface QuestContextType {
 
     // Actions
     updateStatus?: (status: 'pending' | 'active' | 'paused' | 'ended') => void
-    fetchNextTaxaPage: () => void
 
     // Permissions
     isOwner: boolean
@@ -64,8 +68,6 @@ export const QuestProvider: React.FC<QuestProviderProps> = ({
         // Loading states
         isLoading: questData.isLoading,
         isTaxaLoading: questData.isTaxaLoading,
-        isTaxaFetchingNextPage: questData.isTaxaFetchingNextPage,
-        taxaHasNextPage: questData.taxaHasNextPage,
         isError: questData.isError,
         isProgressError: questData.isProgressError,
         isLeaderboardError: questData.isLeaderboardError,
@@ -73,7 +75,6 @@ export const QuestProvider: React.FC<QuestProviderProps> = ({
 
         // Actions
         updateStatus: questData.updateStatus,
-        fetchNextTaxaPage: questData.fetchNextTaxaPage,
 
         // Permissions
         isOwner: questData.isOwner,

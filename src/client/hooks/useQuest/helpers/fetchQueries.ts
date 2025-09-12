@@ -62,63 +62,7 @@ export const fetchTaxa = async (taxonIds: number[]) => {
     )
     return taxaData.flatMap((data) => data)
 }
-export const fetchTaxaPaginated = async ({
-    taxonIds,
-    pageParam = 1,
-    pageSize = 12,
-}: {
-    taxonIds: number[]
-    pageParam?: number
-    pageSize?: number
-}) => {
-    if (!taxonIds || taxonIds.length === 0) {
-        return { taxa: [], nextPage: undefined, totalCount: 0 }
-    }
 
-    // Filter out invalid taxon IDs
-    const validTaxonIds = taxonIds.filter(
-        (id) => id && typeof id === 'number' && id > 0
-    )
-
-    if (validTaxonIds.length === 0) {
-        return { taxa: [], nextPage: undefined, totalCount: 0 }
-    }
-
-    // Calculate pagination indices
-    const startIndex = (pageParam - 1) * pageSize
-    const endIndex = startIndex + pageSize
-    const paginatedTaxonIds = validTaxonIds.slice(startIndex, endIndex)
-
-    if (paginatedTaxonIds.length === 0) {
-        return {
-            taxa: [],
-            nextPage: undefined,
-            totalCount: validTaxonIds.length,
-        }
-    }
-
-    // Fetch taxa for this page
-    const taxonIdChunks = chunk(paginatedTaxonIds, 30)
-    const taxaData = await Promise.all(
-        taxonIdChunks.map(async (ids) => {
-            const fields =
-                'id,name,preferred_common_name,default_photo,iconic_taxon_name,rank,observations_count,wikipedia_url'
-            const { data } = await axiosInstance.get(
-                `/iNatAPI/taxa/${ids.join(',')}?fields=${fields}`
-            )
-            return data.results || []
-        })
-    )
-
-    const taxa = taxaData.flatMap((data) => data)
-    const nextPage = endIndex < validTaxonIds.length ? pageParam + 1 : undefined
-
-    return {
-        taxa,
-        nextPage,
-        totalCount: validTaxonIds.length,
-    }
-}
 export const fetchMappingsAndProgress = async (
     qid: string | number
 ): Promise<ProgressData> => {

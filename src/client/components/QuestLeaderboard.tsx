@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog'
 import { LeaderboardEntry } from '@/types/questTypes'
 import { Link } from 'react-router-dom'
+import { useQuestContext } from './QuestContext'
 
 type QuestShare = {
     id: number
@@ -35,10 +36,6 @@ type QuestShare = {
 
 type QuestLeaderboardProps = {
     leaderboard: LeaderboardEntry[] | undefined
-    questStatus?: 'pending' | 'active' | 'paused' | 'ended'
-    questId?: number | string
-    ownerUserId?: number | string
-    questName?: string
     isOwner?: boolean
 }
 
@@ -148,12 +145,12 @@ function ActionFooter(props: {
 
 export const QuestLeaderboard = ({
     leaderboard,
-    questStatus,
-    questId,
-    ownerUserId,
-    questName,
     isOwner,
 }: QuestLeaderboardProps) => {
+    const { questData } = useQuestContext()
+    const questStatus = questData?.status
+    const questId = questData?.id
+    const questName = questData?.name
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const [participantToDelete, setParticipantToDelete] =
         useState<LeaderboardEntry | null>(null)

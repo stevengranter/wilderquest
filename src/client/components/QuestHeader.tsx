@@ -8,16 +8,13 @@ import { QuestTimestamps } from '@/components/QuestTimestamps'
 import { QuestStatusBadge } from './QuestStatusBadge'
 import { TaxaPieChart } from './TaxaPieChart'
 import { QuestControls } from './QuestControls'
-import { AggregatedProgress, QuestMapping, QuestStatus, Share } from '@/types/questTypes'
+import { QuestStatus, Share } from '@/types/questTypes'
+import { useQuestContext } from './QuestContext'
 
 type QuestHeaderProps = {
     questData: ClientQuest
     isOwner: boolean
     share?: Share
-    mappings?: QuestMapping[]
-    aggregatedProgress?: AggregatedProgress[]
-    isProgressError?: boolean
-    isTaxaError?: boolean
     canEdit?: boolean
     updateStatus?: (status: QuestStatus) => void
 }
@@ -26,13 +23,11 @@ export const QuestHeader = ({
     questData,
     isOwner,
     share,
-    mappings,
-    aggregatedProgress,
-    isProgressError,
-    isTaxaError,
     canEdit,
     updateStatus,
 }: QuestHeaderProps) => {
+    const { mappings, aggregatedProgress, isProgressError, isTaxaError } =
+        useQuestContext()
     return (
         <div className="relative">
             {/* Header Controls - Responsive layout */}

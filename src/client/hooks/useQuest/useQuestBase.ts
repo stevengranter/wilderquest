@@ -40,13 +40,10 @@ interface QuestBaseResult {
     share?: Share // For guest context
     isLoading: boolean
     isTaxaLoading: boolean
-    isTaxaFetchingNextPage: boolean
-    taxaHasNextPage: boolean
     isError: boolean
     isProgressError?: boolean
     isLeaderboardError?: boolean
     isTaxaError?: boolean
-    fetchNextTaxaPage: () => void
 }
 
 export const useQuestBase = ({
@@ -146,11 +143,6 @@ export const useQuestBase = ({
             progressQuery.isLoading ||
             leaderboardQuery.isLoading,
         isTaxaLoading: questQuery.isLoading || taxaQuery.isLoading,
-        isTaxaFetchingNextPage: taxaQuery.isFetching,
-        taxaHasNextPage: false,
-        fetchNextTaxaPage: () => {
-            // Placeholder for future pagination - taxa are loaded in single request
-        },
         isError: questQuery.isError,
         isProgressError: progressQuery.isError,
         isLeaderboardError: leaderboardQuery.isError,
