@@ -20,7 +20,7 @@ import {
 } from '@/types/questTypes'
 import { useSpeciesProgress } from '@/hooks/useSpeciesProgress'
 import { useSpeciesActions } from '@/hooks/useSpeciesActions'
-import { useTaxaWithProgress } from '../hooks/useTaxaWithProgress'
+import { useEnrichedTaxa } from '../hooks/useEnrichedTaxa'
 
 // Use QuestMapping instead of defining TaxonMapping
 type TaxonMapping = QuestMapping
@@ -61,13 +61,12 @@ export const QuestSpecies = ({
     user,
     viewMode,
 }: QuestSpeciesProps) => {
-    const taxaWithProgress = useTaxaWithProgress(
+    const taxaWithProgress = useEnrichedTaxa(
         taxa,
         mappings,
         aggregatedProgress,
         detailedProgress
     )
-    // Use the hooks from useQuest
     const { handleProgressUpdate, getAvatarOverlay } = useSpeciesProgress({
         mappings,
         detailedProgress,
@@ -83,7 +82,6 @@ export const QuestSpecies = ({
         share,
     })
 
-    // Create wrapper functions for the hook functions
     const handleProgressUpdateWrapper = useCallback(
         async (taxon: TaxonWithProgress) => {
             if (!taxon.mapping) return
@@ -146,7 +144,6 @@ export const QuestSpecies = ({
         ]
     )
 
-    // Extract skeleton rendering
     const renderSkeletons = useCallback(
         (
             keyPrefix: string,
@@ -180,7 +177,6 @@ export const QuestSpecies = ({
         [mappings?.length]
     )
 
-    // Extract species card rendering
     const renderSpeciesCard = useCallback(
         (taxon: TaxonWithProgress) => {
             return (

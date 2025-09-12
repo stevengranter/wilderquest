@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import { AggregatedProgress, DetailedProgress, QuestMapping } from '@/types/questTypes'
 
-export const useTaxaWithProgress = (
+export const useEnrichedTaxa = (
     taxa: INatTaxon[] | undefined,
     mappings: QuestMapping[] | undefined,
     aggregatedProgress: AggregatedProgress[] | undefined,

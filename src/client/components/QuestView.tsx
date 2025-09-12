@@ -10,7 +10,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 
 import { useQuestContext } from '@/components/QuestContext'
-import { useTaxaWithProgress } from '../hooks/useTaxaWithProgress'
+import { useEnrichedTaxa } from '../hooks/useEnrichedTaxa'
 import { QuestHeader } from './QuestHeader'
 import { QuestLeaderboard } from './QuestLeaderboard'
 import { QuestSpecies } from './QuestSpecies'
@@ -45,7 +45,7 @@ export const QuestView = () => {
         canEdit,
     } = useQuestContext()
 
-    const taxaWithProgress = useTaxaWithProgress(
+    const taxaWithProgress = useEnrichedTaxa(
         taxa,
         mappings,
         aggregatedProgress,
