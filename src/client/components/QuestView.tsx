@@ -23,7 +23,6 @@ import { useState, useEffect } from 'react'
 
 import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { useViewMode } from '@/hooks/useViewMode'
 
 export const QuestView = () => {
     const { user } = useAuth()
@@ -54,7 +53,7 @@ export const QuestView = () => {
     const [showSummaryModal, setShowSummaryModal] = useState(false)
     const [prevQuestStatus, setPrevQuestStatus] = useState<string | undefined>()
     const [showInviteDrawer, setShowInviteDrawer] = useState(false)
-    const { viewMode, setViewMode } = useViewMode()
+    const { viewMode, setViewMode } = useQuestContext()
     const [explorersExpanded, setExplorersExpanded] = useState(false)
 
     // Show summary modal when quest ends (only for quest owner)

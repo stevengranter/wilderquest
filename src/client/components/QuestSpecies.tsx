@@ -17,7 +17,7 @@ import {
     ClientQuest,
 } from '@/types/questTypes'
 import { useQuestContext } from '@/components/QuestContext'
-import { useViewMode } from '@/hooks/useViewMode'
+
 import { useSpeciesProgress } from '@/hooks/useSpeciesProgress'
 import { useSpeciesActions } from '@/hooks/useSpeciesActions'
 import { useEnrichedTaxa } from '../hooks/useEnrichedTaxa'
@@ -40,7 +40,7 @@ type QuestSpeciesProps = {
 export const QuestSpecies = ({ user }: QuestSpeciesProps) => {
     // Use existing context and hooks
     const questContext = useQuestContext()
-    const { viewMode } = useViewMode()
+    const { viewMode } = questContext
 
     // Extract all data from context
     const {

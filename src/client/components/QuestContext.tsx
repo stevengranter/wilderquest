@@ -10,6 +10,7 @@ import {
 } from '@/types/questTypes'
 import { LoggedInUser } from '@/types/authTypes'
 import { useQuest } from '@/hooks/useQuest'
+import { ViewMode, useViewMode } from '@/hooks/useViewMode'
 
 interface QuestContextType {
     // Quest data
@@ -39,6 +40,10 @@ interface QuestContextType {
 
     // User data
     user?: LoggedInUser
+
+    // View mode
+    viewMode: ViewMode
+    setViewMode: (mode: ViewMode) => void
 }
 
 const QuestContext = createContext<QuestContextType | undefined>(undefined)
@@ -59,6 +64,7 @@ export const QuestProvider: React.FC<QuestProviderProps> = ({
     children,
 }) => {
     const questData = useQuest({ questId, token, initialData })
+    const { viewMode, setViewMode } = useViewMode()
 
     const contextValue: QuestContextType = {
         // Quest data
@@ -88,6 +94,10 @@ export const QuestProvider: React.FC<QuestProviderProps> = ({
 
         // User data
         user: user,
+
+        // View mode
+        viewMode,
+        setViewMode,
     }
 
     return (
