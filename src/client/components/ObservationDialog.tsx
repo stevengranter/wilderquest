@@ -48,7 +48,7 @@ export function ObservationDialog(props: ObservationDialogProps) {
     const latitude = questData?.latitude
     const longitude = questData?.longitude
     const locationName = questData?.location_name
-    const prefetchTaxonPhoto = usePrefetchTaxonPhoto()
+    // const prefetchTaxonPhoto = usePrefetchTaxonPhoto()
     const [open, setOpen] = useState(false)
 
     const [searchRadius, setSearchRadius] = useState<number>(20)
@@ -151,14 +151,14 @@ export function ObservationDialog(props: ObservationDialogProps) {
     return (
         <Dialog open={open} onOpenChange={setOpen} modal={false}>
             <DialogTrigger
-                className="h-full w-full"
+                // className="h-full w-full"
                 asChild
-                onMouseEnter={() => prefetchTaxonPhoto(species.id)}
+                // onMouseEnter={() => prefetchTaxonPhoto(species.id)}
             >
                 <div className="h-full cursor-pointer">{children}</div>
             </DialogTrigger>
 
-            {/* Custom overlay (works even with modal={false}) */}
+             {/*Custom overlay (works even with modal={false})*/}
             {open && (
                 <DialogPortal>
                     <div

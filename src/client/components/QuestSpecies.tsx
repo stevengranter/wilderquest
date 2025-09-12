@@ -17,7 +17,7 @@ import {
     ClientQuest,
 } from '@/types/questTypes'
 import { useQuestContext } from '@/components/QuestContext'
-
+import {LayoutGroup} from 'motion/react'
 import { useSpeciesProgress } from '@/hooks/useSpeciesProgress'
 import { useSpeciesActions } from '@/hooks/useSpeciesActions'
 import { useEnrichedTaxa } from '../hooks/useEnrichedTaxa'
@@ -190,20 +190,20 @@ export const QuestSpecies = ({ user }: QuestSpeciesProps) => {
                 <motion.div
                     key={taxon.id}
                     className="relative"
-                    layout
-                    layoutId={`species-${taxon.id}`}
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    transition={{
-                        layout: {
-                            duration: 0.4,
-                            type: 'spring',
-                            damping: 25,
-                            stiffness: 200,
-                        },
-                        default: { duration: 0.3 },
-                    }}
+                    // layout
+                    // layoutId={`species-${taxon.id}`}
+                    // initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    // animate={{ opacity: 1, y: 0, scale: 1 }}
+                    // exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                    // transition={{
+                    //     layout: {
+                    //         duration: 0.4,
+                    //         type: 'spring',
+                    //         damping: 25,
+                    //         stiffness: 200,
+                    //     },
+                    //     default: { duration: 0.3 },
+                    // }}
                 >
                     <SpeciesCardWithObservations
                         species={taxon}
@@ -218,7 +218,7 @@ export const QuestSpecies = ({ user }: QuestSpeciesProps) => {
     )
 
     return (
-        <div>
+        <>
             {/* View Content */}
             {viewMode === 'grid' && (
                 <div className="space-y-8">
@@ -226,8 +226,9 @@ export const QuestSpecies = ({ user }: QuestSpeciesProps) => {
                     <div>
                         <motion.div
                             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5 auto-rows-fr"
-                            layout
+
                         >
+                            <LayoutGroup>
                             <AnimatePresence mode="popLayout">
                                 {isTaxaLoading
                                     ? renderSkeletons(
@@ -238,6 +239,7 @@ export const QuestSpecies = ({ user }: QuestSpeciesProps) => {
                                           renderSpeciesCard(taxon)
                                       )}
                             </AnimatePresence>
+                            </LayoutGroup>
                         </motion.div>
                     </div>
                 </div>
@@ -250,6 +252,6 @@ export const QuestSpecies = ({ user }: QuestSpeciesProps) => {
             {viewMode === 'map' && taxa && mappings && (
                 <QuestMapView className="h-96 w-full rounded-lg border" />
             )}
-        </div>
+        </>
     )
 }

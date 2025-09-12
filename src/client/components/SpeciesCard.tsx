@@ -214,28 +214,12 @@ function SpeciesGridItem({
             key={species.id}
             layout
             layoutId={`species-card-${species.id}`}
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{
-                opacity: 1,
-                y: 0,
-                scale: 1,
-            }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{
-                layout: {
-                    duration: 0.4,
-                    type: 'spring',
-                    damping: 25,
-                    stiffness: 200,
-                },
-                default: { duration: 0.3 },
-            }}
             whileTap={{ scale: 0.98 }}
-            className={cn('w-full cursor-pointer', className)}
+            className={cn('w-full cursor-pointer z-100', className)}
             ref={cardRef}
         >
             <div className="relative">
-                <motion.div>
+
                     <Card
                         className={cn(
                             'aspect-2.5/3.5 overflow-hidden duration-250 transition-all shadow-0 py-0 gap-0 border-1 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
@@ -321,7 +305,7 @@ function SpeciesGridItem({
                         </CardFooter>
                         {actionArea}
                     </Card>
-                </motion.div>
+
                 {avatarOverlay && (
                     <div className="absolute bottom-4 right-8 z-40">
                         {isMultiUserOverlay(avatarOverlay) ? (
