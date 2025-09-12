@@ -7,7 +7,7 @@ import { MouseEvent } from 'react'
 import {
     DetailedProgress,
     QuestMapping,
-    QuestStatus,
+    ClientQuest,
     Share,
 } from '@/types/questTypes'
 
@@ -17,15 +17,15 @@ interface FoundButtonProps {
     progressCount: number
     detailedProgress?: DetailedProgress[]
 
-    // User context
-    isOwner: boolean
-    user?: LoggedInUser | null
-    share?: Share
-    token?: string
-
-    // Quest context
-    questStatus: QuestStatus
-    questMode?: 'cooperative' | 'competitive'
+    // Consolidated context (replaces 8+ individual props)
+    questContext: {
+        questData: ClientQuest
+        user?: LoggedInUser
+        share?: Share
+        token?: string
+        isOwner: boolean
+        canInteract: (questStatus?: string) => boolean
+    }
 
     // Interaction
     onClick?: (e: MouseEvent) => void | Promise<void>
@@ -35,28 +35,23 @@ interface FoundButtonProps {
     size?: 'sm' | 'default'
     className?: string
     fullWidth?: boolean
-
-    // Permissions
-    canInteract?: (questStatus?: string) => boolean | string | undefined
 }
 
 export function FoundButton({
     mapping,
     progressCount,
     detailedProgress,
-    isOwner,
-    user,
-    share,
-    token,
-    questStatus,
-    questMode,
+    questContext,
     onClick,
     variant = 'neutral',
     size = 'sm',
     className,
     fullWidth = false,
-    canInteract,
 }: FoundButtonProps) {
+    // Extract values from consolidated context
+    const { questData, user, share, token, isOwner, canInteract } = questContext
+    const questStatus = questData.status
+    const questMode = questData.mode
     // Check if user can interact with this quest
     const canUserInteract = canInteract
         ? Boolean(canInteract(questStatus))

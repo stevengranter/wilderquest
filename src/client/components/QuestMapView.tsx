@@ -9,6 +9,7 @@ import { MdLocationPin } from 'react-icons/md'
 import { useLeaflet } from '@/hooks/useLeaflet'
 import { clientDebug } from '../lib/debug'
 import { QuestMapping } from '@/types/questTypes'
+import { useQuestContext } from './QuestContext'
 
 // Add custom CSS for markers
 const markerStyles = `
@@ -59,9 +60,6 @@ type QuestMapProps = {
     markerData?: INatObservation[]
     style?: React.CSSProperties
     className?: string
-    questData?: ClientQuest
-    taxa?: INatTaxon[]
-    mappings?: QuestMapping[]
     questLocation?: {
         latitude: number
         longitude: number
@@ -214,11 +212,9 @@ export const QuestMapView = React.memo(
         markerData,
         className,
         style,
-        questData,
-        taxa,
-        mappings,
         questLocation,
     }: QuestMapProps) => {
+        // Quest data is accessed in QuestMapViewInner via context
         const {
             isLoading: leafletLoading,
             error: leafletError,
@@ -267,9 +263,6 @@ export const QuestMapView = React.memo(
                 markerData={markerData}
                 className={className}
                 style={style}
-                questData={questData}
-                taxa={taxa}
-                mappings={mappings}
                 questLocation={questLocation}
             />
         )
@@ -283,11 +276,11 @@ function QuestMapViewInner({
     markerData,
     className,
     style,
-    questData,
-    taxa,
-    mappings,
     questLocation,
 }: QuestMapProps & { L: typeof import('leaflet') }) {
+    // Use QuestContext for quest data
+    const questContext = useQuestContext()
+    const { questData, taxa } = questContext
     // Dynamically import react-leaflet components after Leaflet is loaded
     // biome-ignore lint/suspicious/noExplicitAny: Dynamic import of react-leaflet components requires any for type safety
     const [components, setComponents] = useState<Record<string, any> | null>(

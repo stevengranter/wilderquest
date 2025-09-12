@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Camera } from 'lucide-react'
-import { ClientQuest } from './SpeciesCardWithObservations'
+import { ClientQuest } from '@/types/questTypes'
 import { FoundButton } from './FoundButton'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import api from '@/lib/axios'
@@ -16,6 +16,8 @@ import { SingleAvatar } from './SingleAvatar'
 import { AvatarGroup } from './AvatarGroup'
 import { Link } from 'react-router-dom'
 import { DetailedProgress, QuestMapping, Share } from '@/types/questTypes'
+import { useSpeciesActions } from '@/hooks/useSpeciesActions'
+import { useQuestContext } from './QuestContext'
 
 type TaxaWithProgress = INatTaxon & {
     mapping?: QuestMapping
@@ -25,30 +27,27 @@ type TaxaWithProgress = INatTaxon & {
 
 type QuestListViewProps = {
     taxaWithProgress: TaxaWithProgress[]
-    questData: ClientQuest
-    isOwner: boolean
-    token?: string
-    share?: Share
-    user?: LoggedInUser | null
-    detailedProgress?: DetailedProgress[]
 }
 
 function SpeciesListCard(props: {
     taxon: TaxaWithProgress
-    owner: boolean
-    token: string | undefined
-    status: 'pending' | 'active' | 'paused' | 'ended'
     onClick: (e: React.MouseEvent) => Promise<void>
     callbackfn: (entry: DetailedProgress) => JSX.Element
-    latitude?: number
-    longitude?: number
-    locationName?: string
     hoverEffect?: 'lift' | 'shadow' | 'none'
-    questMode?: 'competitive' | 'cooperative'
-    detailedProgress?: DetailedProgress[]
-    user?: LoggedInUser | null
-    share?: Share
 }) {
+    // Use QuestContext for all values
+    const questContext = useQuestContext()
+    const { questData, isOwner, token, share, user, detailedProgress } =
+        questContext
+
+    // Get canInteract function
+    const { canInteract } = useSpeciesActions({
+        isOwner,
+        token,
+        questData: questData ? { status: questData.status } : undefined,
+        user: user || undefined,
+        share,
+    })
     const hoverClasses = {
         lift: 'hover:shadow-shadow hover:-translate-y-2 duration-250',
         shadow: 'hover:shadow-shadow',
@@ -58,7 +57,7 @@ function SpeciesListCard(props: {
     // Determine avatar overlay for competitive/cooperative quests
     let avatarOverlay = null
     if (props.taxon.recentEntries.length > 0) {
-        if (props.questMode === 'competitive') {
+        if (questData?.mode === 'competitive') {
             // For competitive mode, show only the most recent finder
             const mostRecentEntry = props.taxon.recentEntries.sort(
                 (a, b) =>
@@ -69,7 +68,7 @@ function SpeciesListCard(props: {
                 username: mostRecentEntry.display_name,
                 isRegistered: mostRecentEntry.is_registered_user,
             }
-        } else if (props.questMode === 'cooperative') {
+        } else if (questData?.mode === 'cooperative') {
             // For cooperative mode, show all users who found it
             const uniqueEntries = props.taxon.recentEntries.filter(
                 (entry, index, arr) =>
@@ -171,31 +170,32 @@ function SpeciesListCard(props: {
                                 </Badge>
                             )}
 
-                            {(props.owner || props.token) &&
-                                props.taxon.mapping && (
-                                    <FoundButton
-                                        mapping={props.taxon.mapping}
-                                        progressCount={
-                                            props.taxon.progressCount
-                                        }
-                                        detailedProgress={
-                                            props.detailedProgress
-                                        }
-                                        isOwner={props.owner}
-                                        user={props.user}
-                                        share={props.share}
-                                        token={props.token}
-                                        questStatus={props.status}
-                                        questMode={props.questMode}
-                                        onClick={props.onClick}
-                                        variant={
-                                            props.taxon.progressCount > 0
-                                                ? 'neutral'
-                                                : 'default'
-                                        }
-                                        size="sm"
-                                    />
-                                )}
+                            {(isOwner || token) && props.taxon.mapping && (
+                                <FoundButton
+                                    mapping={props.taxon.mapping}
+                                    progressCount={props.taxon.progressCount}
+                                    detailedProgress={detailedProgress}
+                                    questContext={{
+                                        questData: {
+                                            ...questData!,
+                                            username: questData!.username || '',
+                                        } as ClientQuest,
+                                        user: user || undefined,
+                                        share,
+                                        token,
+                                        isOwner,
+                                        canInteract: (status?: string) =>
+                                            Boolean(canInteract(status)),
+                                    }}
+                                    onClick={props.onClick}
+                                    variant={
+                                        props.taxon.progressCount > 0
+                                            ? 'neutral'
+                                            : 'default'
+                                    }
+                                    size="sm"
+                                />
+                            )}
                         </div>
                     </div>
 
@@ -218,14 +218,11 @@ function SpeciesListCard(props: {
         </Card>
     )
 
-    if (props.latitude && props.longitude) {
+    if (questData?.latitude && questData?.longitude) {
         return (
             <>
                 <ObservationDialog
                     species={props.taxon}
-                    latitude={props.latitude}
-                    longitude={props.longitude}
-                    locationName={props.locationName}
                     found={props.taxon.progressCount > 0}
                 >
                     {cardContent}
@@ -237,15 +234,17 @@ function SpeciesListCard(props: {
     return cardContent
 }
 
-export const QuestListView = ({
-    taxaWithProgress,
-    questData,
-    isOwner,
-    token,
-    share,
-    user,
-    detailedProgress,
-}: QuestListViewProps) => {
+export const QuestListView = ({ taxaWithProgress }: QuestListViewProps) => {
+    // Use QuestContext for all other values
+    const questContext = useQuestContext()
+    const { questData, isOwner, token, share, user, detailedProgress } =
+        questContext
+
+    // Handle null questData
+    if (!questData) {
+        return <div>Loading...</div>
+    }
+
     return (
         <AnimatePresence mode="popLayout">
             <motion.div className="space-y-3" layout>
@@ -271,17 +270,7 @@ export const QuestListView = ({
                         <SpeciesListCard
                             key={taxon.id}
                             taxon={taxon}
-                            owner={isOwner}
-                            token={token}
-                            status={questData.status}
-                            latitude={questData.latitude}
-                            longitude={questData.longitude}
-                            locationName={questData.location_name}
                             hoverEffect="lift"
-                            questMode={questData.mode}
-                            detailedProgress={detailedProgress}
-                            user={user}
-                            share={share}
                             onClick={async (e) => {
                                 e.stopPropagation()
                                 e.preventDefault()

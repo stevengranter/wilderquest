@@ -35,9 +35,7 @@ export const QuestView = () => {
         detailedProgress,
         leaderboard,
         share,
-        token,
         isLoading,
-        isTaxaLoading,
         isError,
         isLeaderboardError,
         updateStatus,
@@ -242,32 +240,7 @@ export const QuestView = () => {
                         </div>
                         <div className="-mt-1">
                             {questData && (
-                                <QuestSpecies
-                                    questData={
-                                        {
-                                            ...questData,
-                                            user_id:
-                                                questData.user_id.toString(),
-                                        } as ClientQuest
-                                    }
-                                    isOwner={isOwner}
-                                    token={token}
-                                    share={share}
-                                    detailedProgress={detailedProgress}
-                                    aggregatedProgress={aggregatedProgress}
-                                    taxa={taxa}
-                                    mappings={mappings?.map((m) => ({
-                                        ...m,
-                                        created_at:
-                                            m.created_at ||
-                                            new Date().toISOString(),
-                                    }))} // Convert TaxonMapping to QuestMapping
-                                    updateStatus={updateStatus}
-                                    isTaxaLoading={isTaxaLoading}
-                                    user={user || undefined}
-                                    viewMode={viewMode}
-                                    setViewMode={setViewMode}
-                                />
+                                <QuestSpecies user={user || undefined} />
                             )}
                         </div>
                     </div>

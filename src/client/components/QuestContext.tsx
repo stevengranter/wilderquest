@@ -8,6 +8,7 @@ import {
     QuestMapping,
     Share,
 } from '@/types/questTypes'
+import { LoggedInUser } from '@/types/authTypes'
 import { useQuest } from '@/hooks/useQuest'
 
 interface QuestContextType {
@@ -35,6 +36,9 @@ interface QuestContextType {
     // Permissions
     isOwner: boolean
     canEdit: boolean
+
+    // User data
+    user?: LoggedInUser
 }
 
 const QuestContext = createContext<QuestContextType | undefined>(undefined)
@@ -43,6 +47,7 @@ interface QuestProviderProps {
     questId?: string | number
     token?: string
     initialData?: { quest?: Quest; taxa?: INatTaxon[] }
+    user?: LoggedInUser
     children: ReactNode
 }
 
@@ -50,6 +55,7 @@ export const QuestProvider: React.FC<QuestProviderProps> = ({
     questId,
     token,
     initialData,
+    user,
     children,
 }) => {
     const questData = useQuest({ questId, token, initialData })
@@ -79,6 +85,9 @@ export const QuestProvider: React.FC<QuestProviderProps> = ({
         // Permissions
         isOwner: questData.isOwner,
         canEdit: questData.canEdit,
+
+        // User data
+        user: user,
     }
 
     return (

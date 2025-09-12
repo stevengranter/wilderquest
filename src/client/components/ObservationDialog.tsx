@@ -31,19 +31,23 @@ import { ObservationListView } from './ObservationListView'
 import { ObservationMapView } from './ObservationMapView'
 import { MdOutlineLocationOn } from 'react-icons/md'
 import { usePrefetchTaxonPhoto } from '@/hooks/useTaxonPhotos'
+import { useQuestContext } from './QuestContext'
 
 interface ObservationDialogProps {
     species: INatTaxon
-    latitude?: number
-    longitude?: number
-    locationName?: string
     children: ReactNode
     found?: boolean
 }
 
 export function ObservationDialog(props: ObservationDialogProps) {
-    const { species, latitude, longitude, locationName, children, found } =
-        props
+    const { species, children, found } = props
+
+    // Use QuestContext for location data
+    const questContext = useQuestContext()
+    const { questData } = questContext
+    const latitude = questData?.latitude
+    const longitude = questData?.longitude
+    const locationName = questData?.location_name
     const prefetchTaxonPhoto = usePrefetchTaxonPhoto()
     const [open, setOpen] = useState(false)
 

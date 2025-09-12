@@ -133,7 +133,6 @@ export function ResponsiveSpeciesThumbnail({
     return (
         <SpeciesCardWithObservations
             species={inatTaxon}
-            questData={questData}
             locationData={locationData}
         >
             {thumbnailContent}

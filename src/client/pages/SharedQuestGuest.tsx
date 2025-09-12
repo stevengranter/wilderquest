@@ -22,7 +22,7 @@ export default function SharedQuestGuest() {
     }, [token])
 
     return (
-        <QuestProvider token={token}>
+        <QuestProvider token={token} user={undefined}>
             <QuestView />
         </QuestProvider>
     )

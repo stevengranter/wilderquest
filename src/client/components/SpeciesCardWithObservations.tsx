@@ -4,6 +4,7 @@ import { Quest as ServerQuest } from '../types/questTypes'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import { ObservationDialog } from './ObservationDialog'
 import { clientDebug } from '../lib/debug'
+import { useQuestContext } from './QuestContext'
 
 export type ClientQuest = Omit<ServerQuest, 'user_id'> & {
     user_id: string
@@ -11,7 +12,6 @@ export type ClientQuest = Omit<ServerQuest, 'user_id'> & {
 
 interface SpeciesCardWithObservationsProps {
     species: INatTaxon
-    questData?: ClientQuest
     locationData?: {
         location_name?: string
         latitude?: number
@@ -38,13 +38,17 @@ export function SpeciesCardWithObservations(
 ) {
     const {
         species,
-        questData,
         locationData,
         children,
         found,
         actionArea,
         avatarOverlay,
     } = props
+
+    // Use QuestContext for quest data
+    const questContext = useQuestContext()
+    const { questData } = questContext
+
     const displayData = questData || locationData
 
     const card = children || (
@@ -68,13 +72,7 @@ export function SpeciesCardWithObservations(
 
     return (
         <>
-            <ObservationDialog
-                species={species}
-                latitude={displayData?.latitude}
-                longitude={displayData?.longitude}
-                locationName={displayData?.location_name}
-                found={found}
-            >
+            <ObservationDialog species={species} found={found}>
                 {card}
             </ObservationDialog>
         </>

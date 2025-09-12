@@ -1,10 +1,7 @@
 import { useCallback } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 
-import {
-    ClientQuest,
-    SpeciesCardWithObservations,
-} from '@/components/SpeciesCardWithObservations'
+import { SpeciesCardWithObservations } from '@/components/SpeciesCardWithObservations'
 import { SpeciesCardSkeleton } from '@/components/SpeciesCard'
 import { FoundButton } from '@/components/FoundButton'
 import { QuestListView } from './QuestListView'
@@ -17,7 +14,10 @@ import {
     QuestMapping,
     QuestStatus,
     Share,
+    ClientQuest,
 } from '@/types/questTypes'
+import { useQuestContext } from '@/components/QuestContext'
+import { useViewMode } from '@/hooks/useViewMode'
 import { useSpeciesProgress } from '@/hooks/useSpeciesProgress'
 import { useSpeciesActions } from '@/hooks/useSpeciesActions'
 import { useEnrichedTaxa } from '../hooks/useEnrichedTaxa'
@@ -33,34 +33,39 @@ type TaxonWithProgress = INatTaxon & {
 }
 
 type QuestSpeciesProps = {
-    questData: ClientQuest
-    isOwner: boolean
-    token: string | undefined
-    share: Share | undefined
-    detailedProgress: DetailedProgress[] | undefined
-    aggregatedProgress: AggregatedProgress[] | undefined
-    taxa: INatTaxon[] | undefined
-    mappings: TaxonMapping[] | undefined
-    updateStatus?: (status: QuestStatus) => void
-    isTaxaLoading: boolean
+    // Only user prop needed - everything else comes from QuestContext
     user?: LoggedInUser
-    viewMode: 'grid' | 'list' | 'map'
-    setViewMode: (mode: 'grid' | 'list' | 'map') => void
 }
 
-export const QuestSpecies = ({
-    questData,
-    isOwner,
-    token,
-    share,
-    detailedProgress,
-    aggregatedProgress,
-    taxa,
-    mappings,
-    isTaxaLoading,
-    user,
-    viewMode,
-}: QuestSpeciesProps) => {
+export const QuestSpecies = ({ user }: QuestSpeciesProps) => {
+    // Use existing context and hooks
+    const questContext = useQuestContext()
+    const { viewMode } = useViewMode()
+
+    // Extract all data from context
+    const {
+        questData,
+        taxa,
+        mappings,
+        detailedProgress,
+        aggregatedProgress,
+        isTaxaLoading,
+        isOwner,
+        token,
+        share,
+    } = questContext
+
+    // Handle null questData
+    if (!questData) {
+        return <div>Loading...</div>
+    }
+
+    // Convert Quest to ClientQuest
+    const clientQuestData: ClientQuest = {
+        ...questData,
+        username: questData.username || '',
+    }
+
     const taxaWithProgress = useEnrichedTaxa(
         taxa,
         mappings,
@@ -77,7 +82,7 @@ export const QuestSpecies = ({
     const { canInteract } = useSpeciesActions({
         isOwner,
         token,
-        questData,
+        questData: clientQuestData,
         user,
         share,
     })
@@ -90,18 +95,18 @@ export const QuestSpecies = ({
                 isOwner,
                 user,
                 share,
-                questData,
+                clientQuestData,
                 token
             )
         },
-        [handleProgressUpdate, isOwner, user, share, questData, token]
+        [handleProgressUpdate, isOwner, user, share, clientQuestData, token]
     )
 
     const getAvatarOverlayWrapper = useCallback(
         (taxon: TaxonWithProgress) => {
-            return getAvatarOverlay(taxon.recentEntries, questData.mode)
+            return getAvatarOverlay(taxon.recentEntries, clientQuestData.mode)
         },
-        [getAvatarOverlay, questData.mode]
+        [getAvatarOverlay, clientQuestData.mode]
     )
 
     // Extract action button rendering
@@ -117,16 +122,18 @@ export const QuestSpecies = ({
                         mapping={taxon.mapping}
                         progressCount={taxon.progressCount}
                         detailedProgress={detailedProgress}
-                        isOwner={isOwner}
-                        user={user}
-                        share={share}
-                        token={token}
-                        questStatus={questData.status}
-                        questMode={questData.mode}
+                        questContext={{
+                            questData: clientQuestData as ClientQuest,
+                            user,
+                            share,
+                            token,
+                            isOwner,
+                            canInteract: (status?: string) =>
+                                Boolean(canInteract(status)),
+                        }}
                         onClick={async () => {
                             await handleProgressUpdateWrapper(taxon)
                         }}
-                        canInteract={canInteract}
                         fullWidth={true}
                     />
                 </div>
@@ -200,7 +207,6 @@ export const QuestSpecies = ({
                 >
                     <SpeciesCardWithObservations
                         species={taxon}
-                        questData={questData}
                         found={taxon.progressCount > 0}
                         avatarOverlay={getAvatarOverlayWrapper(taxon)}
                         actionArea={renderActionButton(taxon)}
@@ -238,24 +244,11 @@ export const QuestSpecies = ({
             )}
 
             {viewMode === 'list' && (
-                <QuestListView
-                    taxaWithProgress={taxaWithProgress}
-                    questData={questData}
-                    isOwner={isOwner}
-                    token={token}
-                    share={share}
-                    user={user}
-                    detailedProgress={detailedProgress}
-                />
+                <QuestListView taxaWithProgress={taxaWithProgress} />
             )}
 
             {viewMode === 'map' && taxa && mappings && (
-                <QuestMapView
-                    className="h-96 w-full rounded-lg border"
-                    questData={questData}
-                    taxa={taxa}
-                    mappings={mappings}
-                />
+                <QuestMapView className="h-96 w-full rounded-lg border" />
             )}
         </div>
     )
