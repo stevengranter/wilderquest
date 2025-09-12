@@ -16,13 +16,9 @@ import { toast } from 'sonner'
 export const useSpeciesProgress = ({
     mappings,
     detailedProgress,
-    aggregatedProgress,
-    taxa,
 }: {
     mappings?: QuestMapping[]
     detailedProgress?: DetailedProgress[]
-    aggregatedProgress?: AggregatedProgress[]
-    taxa?: INatTaxon[]
 }) => {
     const queryClient = useQueryClient()
 

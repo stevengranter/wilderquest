@@ -17,7 +17,7 @@ import {
     ClientQuest,
 } from '@/types/questTypes'
 import { useQuestContext } from '@/components/QuestContext'
-import {LayoutGroup} from 'motion/react'
+import { LayoutGroup } from 'motion/react'
 import { useSpeciesProgress } from '@/hooks/useSpeciesProgress'
 import { useSpeciesActions } from '@/hooks/useSpeciesActions'
 import { useEnrichedTaxa } from '../hooks/useEnrichedTaxa'
@@ -75,8 +75,6 @@ export const QuestSpecies = ({ user }: QuestSpeciesProps) => {
     const { handleProgressUpdate, getAvatarOverlay } = useSpeciesProgress({
         mappings,
         detailedProgress,
-        aggregatedProgress,
-        taxa,
     })
 
     const { canInteract } = useSpeciesActions({
@@ -224,21 +222,18 @@ export const QuestSpecies = ({ user }: QuestSpeciesProps) => {
                 <div className="space-y-8">
                     {/* Combined section for all species */}
                     <div>
-                        <motion.div
-                            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5 auto-rows-fr"
-
-                        >
+                        <motion.div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5 auto-rows-fr">
                             <LayoutGroup>
-                            <AnimatePresence mode="popLayout">
-                                {isTaxaLoading
-                                    ? renderSkeletons(
-                                          'all-species',
-                                          mappings?.length || 6
-                                      )
-                                    : taxaWithProgress.map((taxon) =>
-                                          renderSpeciesCard(taxon)
-                                      )}
-                            </AnimatePresence>
+                                <AnimatePresence mode="popLayout">
+                                    {isTaxaLoading
+                                        ? renderSkeletons(
+                                              'all-species',
+                                              mappings?.length || 6
+                                          )
+                                        : taxaWithProgress.map((taxon) =>
+                                              renderSpeciesCard(taxon)
+                                          )}
+                                </AnimatePresence>
                             </LayoutGroup>
                         </motion.div>
                     </div>
