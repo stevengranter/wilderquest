@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useUserSearch, type SafeUser } from '@/hooks/useUserSearch'
 import { useAuth } from '@/hooks/useAuth'
-import { AvatarOverlay } from '@/components/AvatarOverlay'
+import { AvatarGroup } from '@/components/AvatarGroup'
 import { Button } from '@/components/ui/button'
 import {
     Command,
@@ -217,7 +217,7 @@ export function UserSearch({
                                             onSelect={() => handleSelect(user)}
                                             className="flex items-center gap-3 p-3"
                                         >
-                                            <AvatarOverlay
+                                            <AvatarGroup
                                                 displayName={user.username}
                                                 size={32}
                                                 className=""

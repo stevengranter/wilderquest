@@ -49,7 +49,7 @@ export const TaxaPieChart = ({
                     {found}
                 </div>
                 <div className="text-lg text-muted-foreground font-heading">
-                    of {total}
+                    of {total} found
                 </div>
             </div>
         </div>

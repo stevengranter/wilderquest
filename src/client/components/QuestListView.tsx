@@ -35,12 +35,10 @@ function SpeciesListCard(props: {
     callbackfn: (entry: DetailedProgress) => JSX.Element
     hoverEffect?: 'lift' | 'shadow' | 'none'
 }) {
-    // Use QuestContext for all values
     const questContext = useQuestContext()
     const { questData, isOwner, token, share, user, detailedProgress } =
         questContext
 
-    // Get canInteract function
     const { canInteract } = useSpeciesActions({
         isOwner,
         token,
@@ -54,7 +52,6 @@ function SpeciesListCard(props: {
         none: '',
     }
 
-    // Determine avatar overlay for competitive/cooperative quests
     let avatarOverlay = null
     if (props.taxon.recentEntries.length > 0) {
         if (questData?.mode === 'competitive') {

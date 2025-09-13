@@ -17,8 +17,13 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { AvatarOverlay } from './AvatarOverlay'
-import { DetailedProgress, LeaderboardEntry, Quest, QuestMapping } from '../types/questTypes'
+import { AvatarGroup } from './AvatarGroup'
+import {
+    DetailedProgress,
+    LeaderboardEntry,
+    Quest,
+    QuestMapping,
+} from '../types/questTypes'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import { useEffect, useState } from 'react'
 
@@ -102,7 +107,7 @@ export function QuestSummaryModal({
             navigator.clipboard.writeText(
                 `${shareText} ${window.location.href}`
             )
-            // Could show a toast notification here
+
         }
     }
 
@@ -126,16 +131,9 @@ export function QuestSummaryModal({
                                 <DialogTitle className="text-5xl font-black text-black mb-2 relative z-10">
                                     Quest Complete!
                                 </DialogTitle>
-                                {/*<motion.div
-                                    className="absolute top-2 right-2 text-6xl opacity-20"
-                                    animate={{ rotate: [0, 10, -10, 0] }}
-                                    transition={{
-                                        duration: 2,
-                                        repeat: Infinity,
-                                    }}
-                                >
-                                    ⚡
-                                </motion.div>*/}
+
+
+
                             </div>
                             <div className="bg-white border border-black p-4 rounded-md">
                                 <p className="text-2xl text-black font-bold uppercase">
@@ -143,15 +141,7 @@ export function QuestSummaryModal({
                                 </p>
                             </div>
                         </motion.div>
-                        {/*
-                        <Button
-                            variant="default"
-                            size="sm"
-                            onClick={onClose}
-                            className="absolute right-4 top-4 bg-red-400 hover:bg-red-500 border border-black rounded-md font-bold"
-                        >
-                            <X className="h-5 w-5 text-black" />
-                        </Button>*/}
+                        
                     </DialogHeader>
 
                     <div className="space-y-8">
@@ -328,7 +318,7 @@ export function QuestSummaryModal({
                                                                 ? '🥉'
                                                                 : `#${index + 1}`}
                                                     </motion.div>
-                                                    <AvatarOverlay
+                                                    <AvatarGroup
                                                         displayName={
                                                             entry.display_name ||
                                                             'Guest'

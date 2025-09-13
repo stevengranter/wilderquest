@@ -219,17 +219,7 @@ export function LocationInput({
                                     <span className="flex-1">
                                         {s.display_name}
                                     </span>
-                                    {/*<span
-                                        className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                                            s.source === 'inaturalist'
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-blue-100 text-blue-800'
-                                        }`}
-                                    >
-                                        {s.source === 'inaturalist'
-                                            ? '🌿 iNat'
-                                            : ' City'}
-                                    </span>*/}
+
                                 </li>
                             ))}
                         </ul>

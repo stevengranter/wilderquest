@@ -151,14 +151,11 @@ export function ObservationDialog(props: ObservationDialogProps) {
     return (
         <Dialog open={open} onOpenChange={setOpen} modal={false}>
             <DialogTrigger
-                // className="h-full w-full"
                 asChild
-                // onMouseEnter={() => prefetchTaxonPhoto(species.id)}
             >
                 <div className="h-full cursor-pointer">{children}</div>
             </DialogTrigger>
 
-             {/*Custom overlay (works even with modal={false})*/}
             {open && (
                 <DialogPortal>
                     <div
