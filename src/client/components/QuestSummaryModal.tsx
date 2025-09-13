@@ -17,8 +17,13 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { AvatarOverlay } from './AvatarOverlay'
-import { DetailedProgress, LeaderboardEntry, Quest, QuestMapping } from '../types/questTypes'
+import { AvatarGroup } from './AvatarGroup'
+import {
+    DetailedProgress,
+    LeaderboardEntry,
+    Quest,
+    QuestMapping,
+} from '../types/questTypes'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import { useEffect, useState } from 'react'
 
@@ -328,7 +333,7 @@ export function QuestSummaryModal({
                                                                 ? '🥉'
                                                                 : `#${index + 1}`}
                                                     </motion.div>
-                                                    <AvatarOverlay
+                                                    <AvatarGroup
                                                         displayName={
                                                             entry.display_name ||
                                                             'Guest'

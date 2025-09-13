@@ -5,7 +5,7 @@ import {
     FaShareFromSquare,
     FaTrash,
 } from 'react-icons/fa6'
-import { AvatarOverlay } from './AvatarOverlay'
+import { AvatarGroup } from './AvatarGroup'
 import { useState, useEffect } from 'react'
 import { useCopyToClipboard } from 'usehooks-ts'
 import api from '@/lib/axios'
@@ -470,7 +470,7 @@ export const QuestLeaderboard = ({
                                                     </motion.span>
                                                 </motion.div>
                                                 <div className="flex items-center gap-3">
-                                                    <AvatarOverlay
+                                                    <AvatarGroup
                                                         displayName={
                                                             entry.display_name ||
                                                             'Guest'

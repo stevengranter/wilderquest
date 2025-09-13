@@ -119,7 +119,6 @@ const ObservationMapViewInner = React.memo(function ObservationMapViewInner({
     L: typeof import('leaflet')
     onPhotoClick: (observationIndex: number, photoIndex: number) => void
 }) {
-    // Dynamically import react-leaflet components after Leaflet is loaded
     // biome-ignore lint/suspicious/noExplicitAny: Dynamic import of react-leaflet components requires any for type safety
     const [components, setComponents] = useState<Record<string, any> | null>(
         null

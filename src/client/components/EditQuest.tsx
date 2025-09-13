@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import { SpeciesCountItem } from '@/components/ResponsiveSpeciesThumbnail'
 import chunk from 'lodash/chunk'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AxiosError } from 'axios'
 import {
     FormProvider,
@@ -14,7 +14,7 @@ import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import axiosInstance from '@/lib/axios'
-import { clientDebug } from '../lib/debug'
+import { clientDebug } from '@/lib/debug'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -48,16 +48,10 @@ export default function EditQuest() {
     const { questId } = useParams<{ questId: string }>()
     const navigate = useNavigate()
     const queryClient = useQueryClient()
-    // const { user } = useAuth()
-    const [taxa, setTaxa] = useState<INatTaxon[]>([])
-    const [_initialTaxonIds, setInitialTaxonIds] = useState<number[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [questSpeciesMap, setQuestSpeciesMap] = useState<
         Map<number, SpeciesCountItem>
     >(new Map())
-    const prevQuestSpeciesMapRef = useRef<Map<number, SpeciesCountItem> | null>(
-        null
-    )
 
     const form = useForm<QuestFormValues>({
         resolver: zodResolver(questFormSchema),
@@ -119,9 +113,8 @@ export default function EditQuest() {
                         : '',
                 })
                 if (quest.taxon_ids?.length) {
-                    setInitialTaxonIds(quest.taxon_ids)
                     const taxaIdsChunks = chunk(quest.taxon_ids, 30)
-                    const allTaxaResults: INatTaxon[] = []
+                    const speciesMap = new Map<number, SpeciesCountItem>()
 
                     for (const chunk of taxaIdsChunks) {
                         const chunkIds = chunk.join(',')
@@ -129,10 +122,28 @@ export default function EditQuest() {
                             `/iNatApi/taxa/${chunkIds}`
                         )
                         if (taxaResponse.data.results) {
-                            allTaxaResults.push(...taxaResponse.data.results)
+                            // Transform INatTaxon to TaxonData immediately
+                            taxaResponse.data.results.forEach(
+                                (taxon: INatTaxon) => {
+                                    const taxonData = {
+                                        id: taxon.id,
+                                        name: taxon.name,
+                                        preferred_common_name:
+                                            taxon.preferred_common_name,
+                                        rank: taxon.rank,
+                                        default_photo: taxon.default_photo,
+                                        observations_count:
+                                            taxon.observations_count,
+                                    }
+                                    speciesMap.set(taxon.id, {
+                                        taxon: taxonData,
+                                        count: taxon.observations_count || 0,
+                                    })
+                                }
+                            )
                         }
                     }
-                    setTaxa(allTaxaResults)
+                    setQuestSpeciesMap(speciesMap)
                 }
             } catch (err) {
                 console.error('Failed to fetch quest data.', err)
@@ -142,122 +153,9 @@ export default function EditQuest() {
         fetchQuest()
     }, [questId, form.reset])
 
-    // Sync taxa state with questSpeciesMap for swipe interface
-    useEffect(() => {
-        const newMap = new Map<number, SpeciesCountItem>()
-        taxa.forEach((taxon) => {
-            newMap.set(taxon.id, {
-                taxon: {
-                    id: taxon.id,
-                    name: taxon.name,
-                    preferred_common_name: taxon.preferred_common_name,
-                    rank: taxon.rank || 'species',
-                    default_photo: taxon.default_photo
-                        ? {
-                              ...taxon.default_photo,
-                              attribution_name:
-                                  taxon.default_photo.attribution || null,
-                              license_code:
-                                  taxon.default_photo.license_code || '',
-                          }
-                        : undefined,
-                },
-                count: taxon.observations_count || 0,
-            })
-        })
-        setQuestSpeciesMap(newMap)
-    }, [taxa])
-
-    // Convert questSpeciesMap back to taxa when it changes
-    const syncQuestSpeciesToTaxa = useCallback(() => {
-        const newTaxa = Array.from(questSpeciesMap.values()).map((item) => ({
-            id: item.taxon.id,
-            name: item.taxon.name,
-            preferred_common_name: item.taxon.preferred_common_name,
-            rank: (item.taxon.rank as INatTaxon['rank']) || 'species',
-            rank_level: 10,
-            iconic_taxon_id: 0,
-            ancestor_ids: [],
-            is_active: true,
-            parent_id: 0,
-            ancestry: '',
-            extinct: false,
-            default_photo: item.taxon.default_photo,
-            taxon_changes_count: 0,
-            taxon_schemes_count: 0,
-            observations_count: item.count,
-            flag_counts: { resolved: 0, unresolved: 0 },
-            current_synonymous_taxon_ids: null,
-            atlas_id: 0,
-            complete_species_count: null,
-            wikipedia_url: '',
-            matched_term: '',
-            iconic_taxon_name: '',
-        }))
-        setTaxa(newTaxa as INatTaxon[])
-    }, [questSpeciesMap])
-
-    const _syncQuestSpeciesToTaxa = useCallback(
-        (
-            updateFn: (
-                prev: Map<number, SpeciesCountItem>
-            ) => Map<number, SpeciesCountItem>
-        ) => {
-            const newQuestSpeciesMap = updateFn(questSpeciesMap)
-            setQuestSpeciesMap(newQuestSpeciesMap)
-
-            const newTaxa = Array.from(newQuestSpeciesMap.values()).map(
-                (item) => ({
-                    id: item.taxon.id,
-                    name: item.taxon.name,
-                    preferred_common_name: item.taxon.preferred_common_name,
-                    rank: (item.taxon.rank as INatTaxon['rank']) || 'species',
-                    rank_level: 10,
-                    iconic_taxon_id: 0,
-                    ancestor_ids: [],
-                    is_active: true,
-                    parent_id: 0,
-                    ancestry: '',
-                    extinct: false,
-                    default_photo: item.taxon.default_photo,
-                    taxon_changes_count: 0,
-                    taxon_schemes_count: 0,
-                    observations_count: item.count,
-                    flag_counts: { resolved: 0, unresolved: 0 },
-                    current_synonymous_taxon_ids: null,
-                    atlas_id: 0,
-                    complete_species_count: null,
-                    wikipedia_url: '',
-                    matched_term: '',
-                    iconic_taxon_name: '',
-                })
-            )
-            setTaxa(newTaxa as INatTaxon[])
-        },
-        [questSpeciesMap]
-    )
-
-    // Sync questSpeciesMap back to taxa when questSpeciesMap changes
-    useEffect(() => {
-        // Only sync if the map has actually changed to prevent infinite loops
-        const prevMap = prevQuestSpeciesMapRef.current
-        const hasChanged =
-            !prevMap ||
-            prevMap.size !== questSpeciesMap.size ||
-            Array.from(questSpeciesMap.entries()).some(([id, item]) => {
-                const prevItem = prevMap.get(id)
-                return !prevItem || prevItem.taxon.id !== item.taxon.id
-            })
-
-        if (hasChanged) {
-            syncQuestSpeciesToTaxa()
-            prevQuestSpeciesMapRef.current = new Map(questSpeciesMap)
-        }
-    }, [questSpeciesMap, syncQuestSpeciesToTaxa])
-
     const onSubmit = async (data: QuestFormValues) => {
         setIsLoading(true)
-        const taxon_ids = taxa.map((t) => t.id)
+        const taxon_ids = Array.from(questSpeciesMap.keys())
         const payload = {
             name: data.questName,
             location_name: data.locationName || null,
@@ -304,7 +202,6 @@ export default function EditQuest() {
         } catch (err: unknown) {
             console.error('Failed to update quest.', err)
 
-            // Type guard for axios error
             const isAxiosError = (error: unknown): error is AxiosError => {
                 return (
                     error !== null &&
@@ -313,7 +210,6 @@ export default function EditQuest() {
                 )
             }
 
-            // Provide more specific error messages
             if (
                 isAxiosError(err) &&
                 err.response &&
@@ -323,7 +219,6 @@ export default function EditQuest() {
                     description:
                         'Your session has expired. You will be redirected to login.',
                 })
-                // Redirect will be handled by API interceptor
             } else if (
                 isAxiosError(err) &&
                 err.response &&
@@ -372,11 +267,7 @@ export default function EditQuest() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            {/*<Card>*/}
-            {/*    <CardHeader>*/}
-            {/*        <CardTitle>Edit Quest</CardTitle>*/}
-            {/*    </CardHeader>*/}
-            {/*    <CardContent>*/}
+
             <h1>Edit quest</h1>
 
             {/* Status banner for paused quests */}
@@ -402,19 +293,7 @@ export default function EditQuest() {
                                 <h3 className="text-lg font-semibold mb-2">
                                     Edit Quest Species
                                 </h3>
-                                {/*<p className="text-gray-600 text-sm">*/}
-                                {/*    Swipe through available species*/}
-                                {/*    to add new ones. Click existing*/}
-                                {/*    thumbnails above to remove them.*/}
-                                {/*</p>*/}
-                                {/*{questSpeciesMap.size > 0 && (*/}
-                                {/*    <p className="text-xs text-blue-600 mt-1">*/}
-                                {/*        💡 Your current{' '}*/}
-                                {/*        {questSpeciesMap.size}{' '}*/}
-                                {/*        species are shown as*/}
-                                {/*        thumbnails above*/}
-                                {/*    </p>*/}
-                                {/*)}*/}
+
                             </div>
 
                             <SpeciesSwipeSelector
@@ -428,7 +307,7 @@ export default function EditQuest() {
 
                         <div className="flex justify-between items-center pt-6 border-t">
                             <div className="text-sm text-gray-600">
-                                {taxa.length} species selected
+                                {questSpeciesMap.size} species selected
                             </div>
                             <Button type="submit" disabled={isLoading}>
                                 {isLoading ? 'Saving...' : 'Save Changes'}
@@ -436,8 +315,7 @@ export default function EditQuest() {
                         </div>
                     </form>
                 </FormProvider>
-                {/*    </CardContent>*/}
-                {/*</Card>*/}
+
             </SpeciesAnimationProvider>
         </div>
     )

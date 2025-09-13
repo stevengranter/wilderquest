@@ -7,7 +7,6 @@ export function Footer() {
 
     return (
         <footer className="relative mt-16 -mx-4 py-4  text-center text-sm text-muted-foreground bg-main">
-            {/* Badge positioned to overlap the content above */}
             {!isOnHomepage ? (
                 <Link to="/">
                     <div className="absolute -top-14 left-8 -rotate-12 drop-shadow-md hover:rotate-0 hover:scale-110 transition-all duration-300 cursor-pointer">

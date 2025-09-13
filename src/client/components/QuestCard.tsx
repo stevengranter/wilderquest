@@ -165,14 +165,7 @@ function QuestCardContent({
                                                             i + 1
                                                         }`}
                                                         className="w-full h-full object-cover transition-opacity duration-300"
-                                                        // style={{
-                                                        //     imageRendering:
-                                                        //         '-webkit-optimize-contrast',
-                                                        //     backfaceVisibility:
-                                                        //         'hidden',
-                                                        //     transform:
-                                                        //         'translateZ(0)',
-                                                        // }}
+
                                                     />
                                                 )}
                                                 {shouldShowOverlay &&

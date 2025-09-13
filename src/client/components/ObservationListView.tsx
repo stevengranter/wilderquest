@@ -56,7 +56,6 @@ export function ObservationListView({
                 ))}
             </AnimatePresence>
 
-            {/* Photo Modal */}
             <PhotoModal
                 isOpen={photoModalOpen}
                 onClose={() => setPhotoModalOpen(false)}

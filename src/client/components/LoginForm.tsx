@@ -64,13 +64,11 @@ const LoginForm = React.forwardRef(() => {
             clientDebug.auth('📥 Response has user?', !!response?.user)
             clientDebug.auth('📥 Response user:', response?.user)
 
-            // Check if we have a successful response with user data
             if (response?.success && response?.user) {
                 clientDebug.auth('✅ Login successful, user:', response.user)
                 toast.success('Logged in successfully!')
                 navigate(`/users/${response.user.username}`)
             } else if (response === undefined) {
-                // This might indicate a network error or parsing issue
                 clientDebug.auth(
                     '❌ Login response is undefined - check network/parsing'
                 )
@@ -80,7 +78,6 @@ const LoginForm = React.forwardRef(() => {
                         'Login failed - no response received. Check your network connection.',
                 })
             } else {
-                // Response exists but doesn't have user data
                 clientDebug.auth(
                     '❌ Login response missing user data:',
                     response
@@ -96,7 +93,6 @@ const LoginForm = React.forwardRef(() => {
             clientDebug.auth('Error type:', typeof error)
             clientDebug.auth('Error constructor:', error?.constructor?.name)
 
-            // Log more details about the error
             if (error instanceof Error) {
                 clientDebug.auth('Error name:', error.name)
                 clientDebug.auth('Error message:', error.message)
@@ -105,7 +101,6 @@ const LoginForm = React.forwardRef(() => {
                 clientDebug.auth('Error is not an Error instance:', error)
             }
 
-            // More specific error handling
             const errorMessage =
                 error instanceof Error ? error.message : String(error)
             clientDebug.auth('Error message string:', errorMessage)

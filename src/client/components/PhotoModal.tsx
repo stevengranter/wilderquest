@@ -201,7 +201,6 @@ export function PhotoModal({
         return null
     }
 
-    // Always show navigation buttons since we have continuous navigation
     const hasPrevious = true
     const hasNext = true
 
