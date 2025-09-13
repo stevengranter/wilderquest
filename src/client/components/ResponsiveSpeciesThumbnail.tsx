@@ -251,10 +251,7 @@ export function ResponsiveSpeciesGrid({
                 <h3 className="text-sm font-medium text-gray-700">
                     Current Species ({species.length})
                 </h3>
-                {/*<p className="text-xs text-gray-500 mt-1">*/}
-                {/*    Click to view observations • Hover for name and remove*/}
-                {/*    option*/}
-                {/*</p>*/}
+
             </div>
 
             <div

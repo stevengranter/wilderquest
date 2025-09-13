@@ -1,17 +1,15 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
+import { useEffect, useState } from 'react'
 import {
     FaChevronDown,
     FaLink,
     FaShareFromSquare,
     FaTrash,
 } from 'react-icons/fa6'
-import { AvatarGroup } from './AvatarGroup'
-import { useState, useEffect } from 'react'
-import { useCopyToClipboard } from 'usehooks-ts'
-import api from '@/lib/axios'
-import { useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { clientDebug } from '../lib/debug'
+import { useCopyToClipboard } from 'usehooks-ts'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -21,8 +19,10 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
+import api from '@/lib/axios'
 import { LeaderboardEntry } from '@/types/questTypes'
-import { Link } from 'react-router-dom'
+import { clientDebug } from '../lib/debug'
+import { AvatarGroup } from './AvatarGroup'
 import { useQuestContext } from './QuestContext'
 
 type QuestShare = {
@@ -39,48 +39,54 @@ type QuestLeaderboardProps = {
     isOwner?: boolean
 }
 
+const BADGE_TYPES = {
+    INVITED: 'Invited',
+    JOINED: 'Joined',
+    ACTIVE: '🏆 Active',
+    RECENT: 'Recent',
+    EXPLORER: 'Explorer',
+} as const
+
+const TIME_THRESHOLDS = {
+    ACTIVE_DAYS: 7,
+    RECENT_DAYS: 30,
+    MS_PER_DAY: 1000 * 60 * 60 * 24,
+} as const
+
+const BADGE_STYLES = {
+    [BADGE_TYPES.INVITED]: 'bg-gray-100 text-gray-600',
+    [BADGE_TYPES.JOINED]: 'bg-blue-100 text-blue-600',
+    [BADGE_TYPES.ACTIVE]: 'bg-green-100 text-green-600',
+    [BADGE_TYPES.RECENT]: 'bg-yellow-100 text-yellow-600',
+    [BADGE_TYPES.EXPLORER]: 'bg-purple-100 text-purple-600',
+} as const
+
 const getParticipantBadge = (entry: LeaderboardEntry, questStatus?: string) => {
-    // Quest not started yet
-    if (questStatus === 'pending') {
-        return entry.has_accessed_page ? 'Joined' : 'Invited'
+    const isPending = questStatus === 'pending'
+    const hasProgress = entry.observation_count > 0
+    const hasAccessed = entry.has_accessed_page
+
+    if (isPending || !hasProgress) {
+        return hasAccessed ? BADGE_TYPES.JOINED : BADGE_TYPES.INVITED
     }
 
-    // Quest is active/ended
-    if (entry.observation_count === 0) {
-        return entry.has_accessed_page ? 'Joined' : 'Invited'
-    }
+    if (!entry.last_progress_at) return BADGE_TYPES.EXPLORER
 
-    // Has progress - check if recently active
-    if (entry.last_progress_at) {
-        const daysSinceLastProgress =
-            (Date.now() - new Date(entry.last_progress_at).getTime()) /
-            (1000 * 60 * 60 * 24)
-        if (daysSinceLastProgress <= 7) {
-            return '🏆 Active'
-        } else if (daysSinceLastProgress <= 30) {
-            return 'Recent'
-        }
-    }
-
-    // Has progress but not recent
-    return 'Explorer'
+    const daysSinceProgress =
+        (Date.now() - new Date(entry.last_progress_at).getTime()) /
+        TIME_THRESHOLDS.MS_PER_DAY
+    if (daysSinceProgress <= TIME_THRESHOLDS.ACTIVE_DAYS)
+        return BADGE_TYPES.ACTIVE
+    if (daysSinceProgress <= TIME_THRESHOLDS.RECENT_DAYS)
+        return BADGE_TYPES.RECENT
+    return BADGE_TYPES.EXPLORER
 }
 
 const getBadgeStyles = (badgeType: string) => {
-    switch (badgeType) {
-        case 'Invited':
-            return 'bg-gray-100 text-gray-600'
-        case 'Joined':
-            return 'bg-blue-100 text-blue-600'
-        case '🏆 Active':
-            return 'bg-green-100 text-green-600'
-        case 'Recent':
-            return 'bg-yellow-100 text-yellow-600'
-        case 'Explorer':
-            return 'bg-purple-100 text-purple-600'
-        default:
-            return 'bg-gray-100 text-gray-600'
-    }
+    return (
+        BADGE_STYLES[badgeType as keyof typeof BADGE_STYLES] ||
+        BADGE_STYLES[BADGE_TYPES.INVITED]
+    )
 }
 
 function ActionFooter(props: {
@@ -151,17 +157,46 @@ export const QuestLeaderboard = ({
     const questStatus = questData?.status
     const questId = questData?.id
     const questName = questData?.name
-    const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-    const [participantToDelete, setParticipantToDelete] =
-        useState<LeaderboardEntry | null>(null)
-    const [deleting, setDeleting] = useState(false)
+
+    const [deleteState, setDeleteState] = useState({
+        showDialog: false,
+        participant: null as LeaderboardEntry | null,
+        isDeleting: false,
+    })
     const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
     const [shareLinks, setShareLinks] = useState<Record<string, string>>({})
     const [copyingLink, setCopyingLink] = useState<string | null>(null)
 
     const [_copiedText, copyToClipboard] = useCopyToClipboard()
-
     const queryClient = useQueryClient()
+
+    const handleApiError = (error: unknown, message: string) => {
+        console.error(message, error)
+        toast.error('Operation failed', { description: 'Please try again.' })
+    }
+
+    const findMatchingShare = (
+        shares: QuestShare[],
+        entry: LeaderboardEntry
+    ): QuestShare | undefined => {
+        return shares.find(
+            (share) =>
+                share.guest_name === entry.display_name ||
+                (share.guest_name === null && entry.display_name === 'Guest') ||
+                (share.shared_with_user_id &&
+                    share.invited_username === entry.display_name)
+        )
+    }
+
+    const getEntryClasses = (entry: LeaderboardEntry, isOwner: boolean) => {
+        const baseClasses =
+            'flex flex-col gap-3 py-3 px-4 rounded-xl border-1 border-slate-400 transition-all duration-300 ease-out'
+        const ownerClasses = isOwner ? 'cursor-pointer hover:shadow-sm' : ''
+        const progressClasses =
+            entry.observation_count > 0 ? 'bg-green-100' : 'bg-background'
+
+        return `${baseClasses} ${ownerClasses} ${progressClasses}`
+    }
 
     const handleCopyShareLink = async (entry: LeaderboardEntry) => {
         const entryKey = `${entry.display_name}-${entry.invited_at}`
@@ -200,7 +235,6 @@ export const QuestLeaderboard = ({
 
             for (const entry of leaderboard) {
                 if (!entry.is_primary) {
-                    // Only fetch links for non-primary entries
                     const entryKey = `${entry.display_name}-${entry.invited_at}`
                     try {
                         const shareUrl = await buildShareLink(entry)
@@ -224,51 +258,63 @@ export const QuestLeaderboard = ({
     }, [leaderboard, questId, isOwner])
 
     const handleDeleteClick = (entry: LeaderboardEntry) => {
-        setParticipantToDelete(entry)
-        setShowDeleteDialog(true)
+        setDeleteState((prev) => ({
+            ...prev,
+            participant: entry,
+            showDialog: true,
+        }))
     }
 
     const toggleEntryExpansion = (entryKey: string) => {
         setExpandedEntry(expandedEntry === entryKey ? null : entryKey)
     }
 
-    const confirmDeleteParticipant = async () => {
-        if (!participantToDelete || !questId) return
+    const handleEntryClick = (entryKey: string) => (e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (questId && isOwner) {
+            toggleEntryExpansion(entryKey)
+        }
+    }
 
-        setDeleting(true)
+    const handleActionClick = (action: () => void) => (e: React.MouseEvent) => {
+        e.stopPropagation()
+        action()
+    }
+
+    const handleShareClick =
+        (entry: LeaderboardEntry) => (e: React.MouseEvent) => {
+            e.stopPropagation()
+            handleShare(entry, e)
+        }
+
+    const confirmDeleteParticipant = async () => {
+        if (!deleteState.participant || !questId) return
+
+        setDeleteState((prev) => ({ ...prev, isDeleting: true }))
+
         try {
-            // Get all shares for this quest
-            const response = await api.get(
+            const { data: shares } = await api.get(
                 `/quest-sharing/quests/${questId}/shares`
             )
-            const shares = response.data || []
-
-            // Find matching share - handle both guest and user shares
-            const matchingShare = shares.find(
-                (s: QuestShare) =>
-                    // Match guest shares by name
-                    s.guest_name === participantToDelete.display_name ||
-                    (s.guest_name === null &&
-                        participantToDelete.display_name === 'Guest') ||
-                    // Match user shares by username (display_name will be the username for user shares)
-                    (s.shared_with_user_id &&
-                        s.invited_username === participantToDelete.display_name)
+            const matchingShare = findMatchingShare(
+                shares,
+                deleteState.participant!
             )
 
             if (matchingShare) {
-                // Delete the share - database CASCADE will handle deleting all related progress
                 await api.delete(`/quest-sharing/shares/${matchingShare.id}`)
-
                 queryClient.invalidateQueries({
                     queryKey: ['leaderboard', questId],
                 })
             }
-        } catch (e) {
-            console.error('Failed to remove participant', e)
+        } catch (error) {
+            handleApiError(error, 'Failed to remove participant')
         } finally {
-            setDeleting(false)
-            setShowDeleteDialog(false)
-            setParticipantToDelete(null)
+            setDeleteState({
+                showDialog: false,
+                participant: null,
+                isDeleting: false,
+            })
         }
     }
 
@@ -279,31 +325,10 @@ export const QuestLeaderboard = ({
         }
 
         try {
-            // Get all shares for this quest
-            const response = await api.get(
+            const { data: shares } = await api.get(
                 `/quest-sharing/quests/${questId}/shares`
             )
-            const shares = response.data || []
-
-            // Find the share that matches this entry
-            const matchingShare = shares.find((s: QuestShare) => {
-                // For user shares (invited registered users)
-                if (s.shared_with_user_id && s.invited_username) {
-                    return s.invited_username === entry.display_name
-                }
-
-                // For guest shares (invited by name/email)
-                if (s.guest_name) {
-                    return s.guest_name === entry.display_name
-                }
-
-                // For generic guest entries
-                if (s.guest_name === null && entry.display_name === 'Guest') {
-                    return true
-                }
-
-                return false
-            })
+            const matchingShare = findMatchingShare(shares, entry)
 
             if (matchingShare) {
                 const shareUrl = `${window.location.origin}/share/${matchingShare.token}`
@@ -320,8 +345,8 @@ export const QuestLeaderboard = ({
                 )
                 return ''
             }
-        } catch (e) {
-            console.error('Failed to get share link', e)
+        } catch (error) {
+            console.error('Failed to get share link', error)
             return ''
         }
     }
@@ -332,7 +357,6 @@ export const QuestLeaderboard = ({
     ) => {
         e.stopPropagation()
 
-        // Show loading state immediately
         const loadingToast = toast.loading('Generating link...', {
             description: 'Please wait while we prepare the share link.',
         })
@@ -340,7 +364,6 @@ export const QuestLeaderboard = ({
         try {
             const shareUrl = await buildShareLink(entry)
 
-            // Dismiss loading toast
             toast.dismiss(loadingToast)
 
             if (!shareUrl) {
@@ -392,7 +415,13 @@ export const QuestLeaderboard = ({
                 </div>
             )}
 
-            {leaderboard && leaderboard.length > 0 ? (
+            {!leaderboard?.length ? (
+                <div className="text-left text-muted-foreground py-4 bg-gray-50 p-4 rounded-md border border-gray-200">
+                    {questStatus === 'pending'
+                        ? 'Quest participants will appear here once the quest starts.'
+                        : 'No participants have joined this quest yet.'}
+                </div>
+            ) : (
                 <div className="space-y-2">
                     <AnimatePresence>
                         {leaderboard.map(
@@ -409,43 +438,20 @@ export const QuestLeaderboard = ({
                                 return (
                                     <motion.div
                                         key={entryKey}
-                                        initial={{
-                                            opacity: 0,
-                                            y: 20,
-                                            scale: 0.95,
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -20 }}
+                                        transition={{
+                                            type: 'spring',
+                                            stiffness: 300,
+                                            damping: 30,
+                                            delay: index * 0.05,
                                         }}
-                                        animate={{
-                                            opacity: 1,
-                                            y: 0,
-                                            scale: 1,
-                                            transition: {
-                                                type: 'spring',
-                                                stiffness: 300,
-                                                damping: 30,
-                                                delay: index * 0.05, // Staggered entrance
-                                            },
-                                        }}
-                                        exit={{
-                                            opacity: 0,
-                                            y: -20,
-                                            scale: 0.95,
-                                            transition: { duration: 0.2 },
-                                        }}
-                                        className={`flex flex-col gap-3 py-3 px-4 rounded-xl border-1 border-slate-400 transition-all duration-300 ease-out ${
-                                            isOwner
-                                                ? 'cursor-pointer hover:shadow-sm'
-                                                : ''
-                                        } ${
-                                            entry.observation_count > 0
-                                                ? 'bg-green-100'
-                                                : 'bg-background'
-                                        }`}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            if (questId && isOwner) {
-                                                toggleEntryExpansion(entryKey)
-                                            }
-                                        }}
+                                        className={getEntryClasses(
+                                            entry,
+                                            !!isOwner
+                                        )}
+                                        onClick={handleEntryClick(entryKey)}
                                     >
                                         {/* First row: Participant info and progress */}
                                         <div className="flex justify-between items-center">
@@ -548,26 +554,21 @@ export const QuestLeaderboard = ({
                                             !entry.is_primary && (
                                                 <ActionFooter
                                                     expanded={isExpanded}
-                                                    onCopyLink={(
-                                                        e: React.MouseEvent
-                                                    ) => {
-                                                        e.stopPropagation()
-                                                        handleCopyShareLink(
-                                                            entry
-                                                        )
-                                                    }}
-                                                    onShare={(
-                                                        e: React.MouseEvent
-                                                    ) => {
-                                                        e.stopPropagation()
-                                                        handleShare(entry, e)
-                                                    }}
-                                                    onRemove={(
-                                                        e: React.MouseEvent
-                                                    ) => {
-                                                        e.stopPropagation()
-                                                        handleDeleteClick(entry)
-                                                    }}
+                                                    onCopyLink={handleActionClick(
+                                                        () =>
+                                                            handleCopyShareLink(
+                                                                entry
+                                                            )
+                                                    )}
+                                                    onShare={handleShareClick(
+                                                        entry
+                                                    )}
+                                                    onRemove={handleActionClick(
+                                                        () =>
+                                                            handleDeleteClick(
+                                                                entry
+                                                            )
+                                                    )}
                                                     copyingLink={copyingLink}
                                                     entry={entry}
                                                 />
@@ -578,74 +579,72 @@ export const QuestLeaderboard = ({
                         )}
                     </AnimatePresence>
                 </div>
-            ) : (
-                <div className="text-left text-muted-foreground py-4 bg-gray-50 p-4 rounded-md border border-gray-200">
-                    {questStatus === 'pending'
-                        ? 'Quest participants will appear here once the quest starts.'
-                        : 'No participants have joined this quest yet.'}
-                </div>
             )}
 
             {/* Delete Confirmation Dialog */}
-            <>
-                <Dialog
-                    open={showDeleteDialog}
-                    onOpenChange={setShowDeleteDialog}
-                >
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Remove Participant</DialogTitle>
-                            <DialogDescription>
-                                Are you sure you want to remove{' '}
-                                <strong>
-                                    {participantToDelete?.display_name}
-                                </strong>{' '}
-                                from this quest?
-                            </DialogDescription>
-                        </DialogHeader>
+            <Dialog
+                open={deleteState.showDialog}
+                onOpenChange={(open) =>
+                    setDeleteState((prev) => ({ ...prev, showDialog: open }))
+                }
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Remove Participant</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to remove{' '}
+                            <strong>
+                                {deleteState.participant?.display_name}
+                            </strong>{' '}
+                            from this quest?
+                        </DialogDescription>
+                    </DialogHeader>
 
-                        <div className="space-y-3">
-                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
-                                <p className="text-sm text-amber-800">
-                                    <strong>Warning:</strong> This action will
-                                    permanently delete:
-                                </p>
-                                <ul className="mt-2 text-sm text-amber-700 list-disc list-inside space-y-1">
-                                    <li>
-                                        All of their progress and observations
-                                    </li>
-                                    <li>Their access to this quest</li>
-                                    <li>
-                                        Any leaderboard rankings they've
-                                        achieved
-                                    </li>
-                                </ul>
-                                <p className="mt-2 text-sm text-amber-800 font-medium">
-                                    This action cannot be undone.
-                                </p>
-                            </div>
+                    <div className="space-y-3">
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+                            <p className="text-sm text-amber-800">
+                                <strong>Warning:</strong> This action will
+                                permanently delete:
+                            </p>
+                            <ul className="mt-2 text-sm text-amber-700 list-disc list-inside space-y-1">
+                                <li>All of their progress and observations</li>
+                                <li>Their access to this quest</li>
+                                <li>
+                                    Any leaderboard rankings they've achieved
+                                </li>
+                            </ul>
+                            <p className="mt-2 text-sm text-amber-800 font-medium">
+                                This action cannot be undone.
+                            </p>
                         </div>
+                    </div>
 
-                        <DialogFooter>
-                            <Button
-                                variant="neutral"
-                                onClick={() => setShowDeleteDialog(false)}
-                                disabled={deleting}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="default"
-                                onClick={confirmDeleteParticipant}
-                                disabled={deleting}
-                                className="bg-red-600 hover:bg-red-700 text-white"
-                            >
-                                {deleting ? 'Removing…' : 'Remove Participant'}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </>
+                    <DialogFooter>
+                        <Button
+                            variant="neutral"
+                            onClick={() =>
+                                setDeleteState((prev) => ({
+                                    ...prev,
+                                    showDialog: false,
+                                }))
+                            }
+                            disabled={deleteState.isDeleting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="default"
+                            onClick={confirmDeleteParticipant}
+                            disabled={deleteState.isDeleting}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            {deleteState.isDeleting
+                                ? 'Removing…'
+                                : 'Remove Participant'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
