@@ -2,7 +2,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import { Quest, QuestDataResult } from '@/types/questTypes'
 import { useQuestData } from './useQuestData'
-import { useQuestEventsSimple } from './useQuestEventsSimple'
+import { useQuestEvents } from './useQuestEvents'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import axiosInstance from '@/lib/axios'
 import { toast } from 'sonner'
@@ -20,18 +20,22 @@ export const useQuest = ({
     canEdit: boolean
     updateStatus?: (status: 'pending' | 'active' | 'paused' | 'ended') => void
 } => {
-    const { isAuthenticated, user } = useAuth()
+    const { isAuthenticated, user, getValidToken } = useAuth()
     const queryClient = useQueryClient()
 
     const questData = useQuestData({ questId, token, initialData })
 
-    useQuestEventsSimple({
+    useQuestEvents({
         questId: questData.questData?.id || 0,
         token,
         isOwner:
             !!questId &&
             isAuthenticated &&
             questData.questData?.user_id === user?.id,
+        getValidToken,
+        isAuthenticated,
+        user,
+        share: questData.share,
     })
 
     const isOwner =

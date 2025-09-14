@@ -5,12 +5,17 @@ import { toast } from 'sonner'
 import React from 'react'
 import QuestEventToast from '@/components/QuestEventToast'
 import { INatTaxon } from '@shared/types/iNaturalist'
-import { QuestMapping, ProgressData } from '@/types/questTypes'
+import { QuestMapping, ProgressData, Share } from '@/types/questTypes'
+import { LoggedInUser } from '@/types/authTypes'
 
 interface QuestEventsConfig {
     questId: number | undefined
     token?: string
     isOwner: boolean
+    getValidToken?: () => Promise<string | null>
+    isAuthenticated?: boolean
+    user?: LoggedInUser | null
+    share?: Share
 }
 
 interface SpeciesEvent {
@@ -37,10 +42,14 @@ interface QuestEditingEvent {
 
 type QuestEvent = SpeciesEvent | QuestStatusEvent | QuestEditingEvent
 
-export const useQuestEventsSimple = ({
+export const useQuestEvents = ({
     questId,
     token,
     isOwner,
+    getValidToken,
+    isAuthenticated,
+    user,
+    share,
 }: QuestEventsConfig) => {
     const queryClient = useQueryClient()
 
@@ -54,10 +63,21 @@ export const useQuestEventsSimple = ({
                 // Build EventSource URL based on context
                 let eventSourceUrl: string
                 if (isOwner) {
-                    const accessToken = localStorage.getItem('access_token')
-                    eventSourceUrl = accessToken
-                        ? `/api/quests/${questId}/events?token=${encodeURIComponent(accessToken)}`
-                        : `/api/quests/${questId}/events`
+                    try {
+                        const accessToken = getValidToken
+                            ? await getValidToken()
+                            : null
+                        eventSourceUrl = accessToken
+                            ? `/api/quests/${questId}/events?token=${encodeURIComponent(accessToken)}`
+                            : `/api/quests/${questId}/events` // Fall back to session auth
+                    } catch (error) {
+                        clientDebug.events(
+                            'Failed to get valid token for EventSource:',
+                            error
+                        )
+                        // Fall back to session auth
+                        eventSourceUrl = `/api/quests/${questId}/events`
+                    }
                 } else if (token) {
                     eventSourceUrl = `/api/quests/${questId}/events?token=${encodeURIComponent(token)}`
                 } else {
@@ -81,7 +101,15 @@ export const useQuestEventsSimple = ({
 
                     try {
                         const data: QuestEvent = JSON.parse(e.data)
-                        handleQuestEvent(data, questId, token, queryClient)
+                        handleQuestEvent(
+                            data,
+                            questId,
+                            token,
+                            queryClient,
+                            user,
+                            isOwner,
+                            share
+                        )
                     } catch (error) {
                         clientDebug.events('Error parsing event data:', error)
                     }
@@ -107,14 +135,17 @@ export const useQuestEventsSimple = ({
                 eventSource.close()
             }
         }
-    }, [questId, token, isOwner, queryClient])
+    }, [questId, token, isOwner, isAuthenticated, user, queryClient])
 }
 
 const handleQuestEvent = (
     data: QuestEvent,
     questId: number,
     token: string | undefined,
-    queryClient: QueryClient
+    queryClient: QueryClient,
+    user: LoggedInUser | null | undefined,
+    isOwner: boolean,
+    share?: Share
 ) => {
     clientDebug.events('Processing quest event:', data.type)
 
@@ -131,7 +162,15 @@ const handleQuestEvent = (
         data.type === 'SPECIES_FOUND' ||
         data.type === 'SPECIES_UNFOUND'
     ) {
-        handleSpeciesEvent(data, questId, token, queryClient)
+        handleSpeciesEvent(
+            data,
+            questId,
+            token,
+            queryClient,
+            user,
+            isOwner,
+            share
+        )
     } else {
         clientDebug.events('Unknown event type:', data.type)
     }
@@ -163,9 +202,13 @@ const handleSpeciesEvent = (
     data: SpeciesEvent,
     questId: number,
     token: string | undefined,
-    queryClient: QueryClient
+    queryClient: QueryClient,
+    user: LoggedInUser | null | undefined,
+    isOwner: boolean,
+    share?: Share
 ) => {
     clientDebug.events('Species event:', data.type, data.payload)
+    console.log('Species Event')
 
     // Get cached data based on context
     let mappings: QuestMapping[] | undefined
@@ -203,13 +246,20 @@ const handleSpeciesEvent = (
     const speciesName =
         species?.preferred_common_name || species?.name || 'a species'
 
-    const guestName = data.payload.guestName || 'A guest'
+    // Determine if this event is for the current user
+    const isCurrentUser = isOwner
+        ? data.payload.guestName === user?.username
+        : data.payload.guestName === share?.guest_name
+
+    const displayName = isCurrentUser
+        ? 'You'
+        : data.payload.guestName || 'A guest'
     const action = data.type === 'SPECIES_FOUND' ? 'found' : 'unmarked'
 
     // Show notification
     toast(
         React.createElement(QuestEventToast, {
-            guestName,
+            guestName: displayName,
             speciesName,
             action,
             speciesImage: species?.default_photo?.square_url,

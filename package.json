@@ -9,7 +9,7 @@
         "start:preview": "NODE_ENV=production tsx src/server/server.ts",
         "start:bg": "nohup pnpm start > start.log 2>&1 & echo $! > .start.pid",
         "dev": "NODE_ENV=development nodemon --verbose --watch src/server --ext ts,json --exec \"tsx src/server/server.ts\" --",
-        "dev:bg": "nohup pnpm dev > dev.log 2>&1 & echo $! > .dev.pid",
+        "dev:bg": "NODE_ENV=development nohup pnpm dev > dev.log 2>&1 & echo $! > .dev.pid",
         "check": "pnpm run typecheck && pnpm run lint",
         "typecheck:client": "tsc --noEmit -p src/client/tsconfig.json",
         "typecheck:server": "tsc --noEmit -p src/server/tsconfig.json",
