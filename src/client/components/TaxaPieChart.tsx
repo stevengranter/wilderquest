@@ -42,14 +42,15 @@ export const TaxaPieChart = ({
                 labelStyle={{ fontSize: '0px' }} // Hide default labels
                 style={{ width: '100%', height: '100%' }}
             />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                <div
-                    className={`text-4xl font-bold font-heading text-primary transition-transform duration-300 ${isAnimating ? 'scale-110' : 'scale-100'}`}
-                >
-                    {found}
-                </div>
-                <div className="text-lg text-muted-foreground font-heading">
-                    of {total} found
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-emerald-50">
+                <div className="absolute -inset-2 rounded-full bg-emerald-600"></div>
+                <div className="relative font-heading flex text-shadow-md flex-col items-center gap-0 -rotate-8 scale-110 w-20 h-20 pt-3">
+                    <div>
+                        <span className='text-3xl font-bold'>{found}</span>
+                        <span className='text-sm mx-1'>/</span>
+                        <span className="text-lg">{total}</span>
+                    </div>
+                    <span className="text-xs">found</span>
                 </div>
             </div>
         </div>
