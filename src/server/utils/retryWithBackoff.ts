@@ -28,7 +28,9 @@ export async function retryWithBackoff<T>(
 
             // If we get here, the request succeeded
             if (attempt > 0) {
-                logger.info(`Request succeeded on attempt ${attempt + 1}`)
+                logger.info(
+                    `Request succeeded on attempt ${attempt + 1} after ${attempt} retries`
+                )
             }
 
             return response
@@ -48,8 +50,16 @@ export async function retryWithBackoff<T>(
                     const delay = Math.min(exponentialDelay + jitter, maxDelay)
 
                     logger.warn(
-                        `Received 429 error on attempt ${attempt + 1}/${maxRetries + 1}. ` +
-                            `Retrying in ${(delay / 1000).toFixed(1)}s...`
+                        `Rate limit hit on attempt ${attempt + 1}/${maxRetries + 1}. ` +
+                            `Retrying in ${(delay / 1000).toFixed(1)}s...`,
+                        {
+                            attempt: attempt + 1,
+                            maxRetries: maxRetries + 1,
+                            delay: (delay / 1000).toFixed(1) + 's',
+                            retryAfter:
+                                error.response?.headers?.['retry-after'],
+                            status: error.response?.status,
+                        }
                     )
 
                     // Wait before retrying
@@ -57,7 +67,14 @@ export async function retryWithBackoff<T>(
                     continue
                 } else {
                     logger.error(
-                        `Max retries (${maxRetries}) exceeded for 429 error. Giving up.`
+                        `Max retries (${maxRetries}) exceeded for 429 error. Giving up.`,
+                        {
+                            maxRetries,
+                            totalAttempts: maxRetries + 1,
+                            finalStatus: error.response?.status,
+                            finalRetryAfter:
+                                error.response?.headers?.['retry-after'],
+                        }
                     )
                     throw error
                 }

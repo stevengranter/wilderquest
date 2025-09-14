@@ -2,7 +2,11 @@ import 'dotenv/config'
 import axios from 'axios'
 import chalk from 'chalk'
 import { NextFunction, type Request, type Response } from 'express'
-import { globalThunderForestRateLimiter } from '../utils/rateLimiterGlobal.js'
+import {
+    globalThunderForestRateLimiter,
+    consumeWithLogging,
+    getWithLogging,
+} from '../utils/rateLimiterGlobal.js'
 
 const MAP_TILES_API_KEY = process.env.MAP_TILES_API_KEY
 const TILE_PROVIDER_BASE_URL = 'https://tile.thunderforest.com/atlas/'
@@ -20,18 +24,20 @@ const mapTilesProxy = async (
     console.log('API:', 'Proxying tile request to: %s', tileProviderUrl)
 
     try {
-        await globalThunderForestRateLimiter.consume('global')
+        await consumeWithLogging(
+            globalThunderForestRateLimiter,
+            'ThunderForest',
+            150_000
+        )
     } catch (_error) {
         // Rate limit exceeded - set Retry-After header
-        const status = await globalThunderForestRateLimiter.get('global')
+        const status = await getWithLogging(
+            globalThunderForestRateLimiter,
+            'ThunderForest',
+            150_000
+        )
         const msBeforeNext = status?.msBeforeNext ?? 2592000000 // Default to 30 days
         const retryAfterSeconds = Math.ceil(msBeforeNext / 1000)
-
-        console.log(
-            'API:',
-            'Global ThunderForest rate limit exceeded. Retry after: %ss',
-            retryAfterSeconds
-        )
 
         return res
             .status(429)
@@ -51,14 +57,10 @@ const mapTilesProxy = async (
             })
     }
 
-    const status = await globalThunderForestRateLimiter.get('global')
-    const used = 150_000 - (status?.remainingPoints ?? 0)
-    const remaining = status?.remainingPoints ?? 0
-    console.log(
-        'API:',
-        'ThunderForest API: Used=%s, Remaining=%s',
-        used,
-        remaining
+    const status = await getWithLogging(
+        globalThunderForestRateLimiter,
+        'ThunderForest',
+        150_000
     )
     const ms = status?.msBeforeNext ?? 0
     const days = ms / 1000 / 60 / 60 / 24
