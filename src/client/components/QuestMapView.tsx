@@ -68,8 +68,6 @@ type QuestMapProps = {
     }
 }
 
-// Helper functions that will be used with dynamically loaded components
-// (Removed createMapUpdater and createMapSyncHandler - now defined inline)
 
 // Create custom marker icon with thumbnail
 function createMarkerIcon(
@@ -278,9 +276,14 @@ function QuestMapViewInner({
     style,
     questLocation,
 }: QuestMapProps & { L: typeof import('leaflet') }) {
-    // Use QuestContext for quest data
-    const questContext = useQuestContext()
-    const { questData, taxa } = questContext
+    // Use QuestContext for quest data (optional for creation mode)
+    let questContext = null
+    try {
+        questContext = useQuestContext()
+    } catch {
+        // Not in a QuestProvider, e.g., during quest creation
+    }
+    const { questData, taxa } = questContext || { questData: null, taxa: [] }
     // Dynamically import react-leaflet components after Leaflet is loaded
     // biome-ignore lint/suspicious/noExplicitAny: Dynamic import of react-leaflet components requires any for type safety
     const [components, setComponents] = useState<Record<string, any> | null>(

@@ -45,9 +45,13 @@ export function SpeciesCardWithObservations(
         avatarOverlay,
     } = props
 
-    // Use QuestContext for quest data
-    const questContext = useQuestContext()
-    const { questData } = questContext
+    let questContext = null
+    try {
+        questContext = useQuestContext()
+    } catch {
+        // Not in a QuestProvider, e.g., during quest creation
+    }
+    const { questData } = questContext || { questData: null }
 
     const displayData = questData || locationData
 

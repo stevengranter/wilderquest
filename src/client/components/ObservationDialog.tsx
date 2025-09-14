@@ -2,9 +2,9 @@ import { INatTaxon } from '@shared/types/iNaturalist'
 import { useQuery } from '@tanstack/react-query'
 import { Grid, List, Map as MapIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import React, { ReactNode,  useState } from 'react'
+import React, { ReactNode, useState } from 'react'
 import api from '@/lib/axios'
-import { clientDebug } from '../lib/debug'
+import { clientDebug } from '@/lib/debug'
 import { SpeciesCard } from '@/components/SpeciesCard'
 import {
     Dialog,
@@ -42,9 +42,14 @@ interface ObservationDialogProps {
 export function ObservationDialog(props: ObservationDialogProps) {
     const { species, children, found } = props
 
-    // Use QuestContext for location data
-    const questContext = useQuestContext()
-    const { questData } = questContext
+    // Use QuestContext for location data (optional for creation mode)
+    let questContext = null
+    try {
+        questContext = useQuestContext()
+    } catch {
+        // Not in a QuestProvider, e.g., during quest creation
+    }
+    const { questData } = questContext || { questData: null }
     const latitude = questData?.latitude
     const longitude = questData?.longitude
     const locationName = questData?.location_name
@@ -147,12 +152,9 @@ export function ObservationDialog(props: ObservationDialogProps) {
         }
     )
 
-
     return (
         <Dialog open={open} onOpenChange={setOpen} modal={false}>
-            <DialogTrigger
-                asChild
-            >
+            <DialogTrigger asChild>
                 <div className="h-full cursor-pointer">{children}</div>
             </DialogTrigger>
 
@@ -232,7 +234,6 @@ export function ObservationDialog(props: ObservationDialogProps) {
         </Dialog>
     )
 }
-
 
 type ViewMode = 'grid' | 'list' | 'map'
 
