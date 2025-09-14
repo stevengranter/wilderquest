@@ -2,20 +2,16 @@ import { AnimatePresence, motion } from 'motion/react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Camera } from 'lucide-react'
-import { ClientQuest } from '@/types/questTypes'
 import { FoundButton } from './FoundButton'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import api from '@/lib/axios'
 import { toast } from 'sonner'
 import { ObservationDialog } from './ObservationDialog'
-import { Observation } from './ObservationCard'
 import { cn } from '@/lib/utils'
-import { LoggedInUser } from '@/types/authTypes'
-import { JSX, useState } from 'react'
+import { JSX } from 'react'
 import { SingleAvatar } from './SingleAvatar'
 import { AvatarGroup } from './AvatarGroup'
-import { Link } from 'react-router-dom'
-import { DetailedProgress, QuestMapping, Share } from '@/types/questTypes'
+import { DetailedProgress, QuestMapping } from '@/types/questTypes'
 import { useSpeciesActions } from '@/hooks/useSpeciesActions'
 import { useQuestContext } from './QuestContext'
 
@@ -50,6 +46,50 @@ function SpeciesListCard(props: {
         lift: 'hover:shadow-shadow hover:-translate-y-2 duration-250',
         shadow: 'hover:shadow-shadow',
         none: '',
+    }
+
+    // Helper function to compute button props from complex data
+    const getFoundButtonProps = () => {
+        if (!props.taxon.mapping) {
+            return null
+        }
+
+        // Check if user can interact with this quest
+        const canUserInteract = canInteract
+            ? Boolean(canInteract(questData?.status))
+            : questData?.status === 'active'
+
+        // Don't render if can't interact or not owner and no token
+        if (!canUserInteract || (!isOwner && !token)) {
+            return null
+        }
+
+        // Check if current user has already marked this species as found
+        const currentUserDisplayName = isOwner
+            ? user?.username
+            : share?.guest_name
+        const userHasFound = detailedProgress?.some(
+            (progress) =>
+                progress.mapping_id === props.taxon.mapping!.id &&
+                progress.display_name === currentUserDisplayName
+        )
+
+        // In competitive mode, if someone else has found it, disable the button
+        const isDisabledInCompetitiveMode =
+            questData?.mode === 'competitive' &&
+            props.taxon.progressCount > 0 &&
+            !userHasFound
+
+        return {
+            disabled:
+                questData?.status !== 'active' || isDisabledInCompetitiveMode,
+            variant: (props.taxon.progressCount > 0 ? 'neutral' : 'default') as
+                | 'neutral'
+                | 'default',
+            children: userHasFound ? 'Mark as unfound' : 'Found',
+            onClick: props.onClick,
+            size: 'sm' as const,
+        }
     }
 
     let avatarOverlay = null
@@ -167,32 +207,12 @@ function SpeciesListCard(props: {
                                 </Badge>
                             )}
 
-                            {(isOwner || token) && props.taxon.mapping && (
-                                <FoundButton
-                                    mapping={props.taxon.mapping}
-                                    progressCount={props.taxon.progressCount}
-                                    detailedProgress={detailedProgress}
-                                    questContext={{
-                                        questData: {
-                                            ...questData!,
-                                            username: questData!.username || '',
-                                        } as ClientQuest,
-                                        user: user || undefined,
-                                        share,
-                                        token,
-                                        isOwner,
-                                        canInteract: (status?: string) =>
-                                            Boolean(canInteract(status)),
-                                    }}
-                                    onClick={props.onClick}
-                                    variant={
-                                        props.taxon.progressCount > 0
-                                            ? 'neutral'
-                                            : 'default'
-                                    }
-                                    size="sm"
-                                />
-                            )}
+                            {(() => {
+                                const buttonProps = getFoundButtonProps()
+                                return buttonProps ? (
+                                    <FoundButton {...buttonProps} />
+                                ) : null
+                            })()}
                         </div>
                     </div>
 
