@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 
 import { cn } from '@/lib/utils'
-import { useLazyImage } from '@/hooks/useLazyImage'
+import { useImage } from '@/hooks/useImage'
 import { BiWorld } from 'react-icons/bi'
 import { SingleAvatar } from './SingleAvatar'
 import { AvatarGroup } from './AvatarGroup'
@@ -191,11 +191,16 @@ function SpeciesGridItem({
     } | null
 }) {
     const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
-    const { src, isBlurred, imgRef } = useLazyImage({
-        lowQualitySrc: species.default_photo?.square_url || '',
-        highQualitySrc: species.default_photo?.medium_url || '',
-        rootMargin: '100px', // Load high-res when image is 100px from viewport
-        threshold: 0.1,
+    const { src, isBlurred, imgRef } = useImage({
+        src: species.default_photo?.medium_url || '',
+        lazy: true,
+        progressive: {
+            lowQualitySrc: species.default_photo?.square_url || '',
+        },
+        intersectionOptions: {
+            rootMargin: '100px',
+            threshold: 0.1,
+        },
     })
 
     const hoverClasses = {
@@ -219,92 +224,91 @@ function SpeciesGridItem({
             ref={cardRef}
         >
             <div className="relative">
-
-                    <Card
-                        className={cn(
-                            'aspect-2.5/3.5 overflow-hidden duration-250 transition-all shadow-0 py-0 gap-0 border-1 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
-                            hoverClasses[hoverEffect || 'lift'],
-                            hasShadow
-                                ? hasShadowClasses['true']
-                                : hasShadowClasses['false']
+                <Card
+                    className={cn(
+                        'aspect-2.5/3.5 overflow-hidden duration-250 transition-all shadow-0 py-0 gap-0 border-1 rounded-xl border-slate-400 rotate-0 z-100 flex flex-column justify-between',
+                        hoverClasses[hoverEffect || 'lift'],
+                        hasShadow
+                            ? hasShadowClasses['true']
+                            : hasShadowClasses['false']
+                    )}
+                >
+                    <CardHeader className="gap-0 text-left justify-start pb-1 pt-3 relative text-foreground tracking-normal font-bold sm:text-md md:text-md lg:text-xl line-clamp-1 font-barlow">
+                        {species.preferred_common_name && (
+                            <h3 className="text-md xl:text-lg">
+                                {species.preferred_common_name}
+                            </h3>
                         )}
-                    >
-                        <CardHeader className="gap-0 text-left justify-start pb-1 pt-3 relative text-foreground tracking-normal font-bold sm:text-md md:text-md lg:text-xl line-clamp-1 font-barlow">
-                            {species.preferred_common_name && (
-                                <h3 className="text-md xl:text-lg">
-                                    {species.preferred_common_name}
-                                </h3>
-                            )}
-                        </CardHeader>
+                    </CardHeader>
 
-                        <CardContent className="relative px-0 mx-6">
-                            <div className="absolute -top-1 -right-1">
-                                {species.iconic_taxon_name && (
-                                    <div className="bg-yellow-300 rounded-full text-bg-main-foreground p-2 rotate-15 border-2">
-                                        <KingdomIcon size={16} />
-                                    </div>
-                                )}
-                            </div>
-
-                            {src ? (
-                                <div className="overflow-hidden w-full h-full aspect-square rounded-sm">
-                                    <motion.img
-                                        ref={imgRef}
-                                        src={src}
-                                        alt={species.name}
-                                        className={cn(
-                                            'w-full h-full object-cover border-2 border-white outline-black outline-2',
-                                            isBlurred &&
-                                                'filter blur-sm scale-110 transition-all duration-500'
-                                        )}
-                                        animate={{
-                                            backgroundColor: found
-                                                ? '#5eead4'
-                                                : 'transparent',
-                                        }}
-                                        transition={{ duration: 0.3 }}
-                                        draggable={false}
-                                    />
+                    <CardContent className="relative px-0 mx-6">
+                        <div className="absolute -top-1 -right-1">
+                            {species.iconic_taxon_name && (
+                                <div className="bg-yellow-300 rounded-full text-bg-main-foreground p-2 rotate-15 border-2">
+                                    <KingdomIcon size={16} />
                                 </div>
-                            ) : (
-                                <Skeleton className="w-full aspect-square rounded-sm" />
                             )}
+                        </div>
 
-                            <div className="space-y-1 text-right self-end mt-1 mb-2">
-                                {species.preferred_common_name && (
-                                    <p className="text-[11px] text-foreground italic leading-tight line-clamp-1">
-                                        {species.name}
-                                    </p>
-                                )}
-                            </div>
-                        </CardContent>
-
-                        <CardFooter className="flex flex-row justify-start items-center py-2 pb-4">
-                            <Badge>
-                                <BiWorld size={15} />
-                                {(
-                                    geoObservationsCount ??
-                                    species.observations_count
-                                )?.toLocaleString()}
-                            </Badge>
-
-                            {rarity && (
-                                <Badge
+                        {src ? (
+                            <div className="overflow-hidden w-full h-full aspect-square rounded-sm">
+                                <motion.img
+                                    ref={imgRef}
+                                    src={src}
+                                    alt={species.name}
                                     className={cn(
-                                        'text-xs font-semibold border-0',
-                                        rarity === 'common'
-                                            ? 'bg-green-100 text-green-800'
-                                            : rarity === 'uncommon'
-                                              ? 'bg-yellow-100 text-yellow-800'
-                                              : 'bg-red-100 text-red-800'
+                                        'w-full h-full object-cover border-2 border-white outline-black outline-2',
+                                        isBlurred &&
+                                            'filter blur-sm scale-110 transition-all duration-500'
                                     )}
-                                >
-                                    {rarity.toUpperCase()}
-                                </Badge>
+                                    animate={{
+                                        backgroundColor: found
+                                            ? '#5eead4'
+                                            : 'transparent',
+                                    }}
+                                    transition={{ duration: 0.3 }}
+                                    draggable={false}
+                                />
+                            </div>
+                        ) : (
+                            <Skeleton className="w-full aspect-square rounded-sm" />
+                        )}
+
+                        <div className="space-y-1 text-right self-end mt-1 mb-2">
+                            {species.preferred_common_name && (
+                                <p className="text-[11px] text-foreground italic leading-tight line-clamp-1">
+                                    {species.name}
+                                </p>
                             )}
-                        </CardFooter>
-                        {actionArea}
-                    </Card>
+                        </div>
+                    </CardContent>
+
+                    <CardFooter className="flex flex-row justify-start items-center py-2 pb-4">
+                        <Badge>
+                            <BiWorld size={15} />
+                            {(
+                                geoObservationsCount ??
+                                species.observations_count
+                            )?.toLocaleString()}
+                        </Badge>
+
+                        {rarity && (
+                            <Badge
+                                className={cn(
+                                    'text-xs font-semibold border-0',
+                                    rarity === 'common'
+                                        ? 'bg-green-100 text-green-800'
+                                        : rarity === 'uncommon'
+                                          ? 'bg-yellow-100 text-yellow-800'
+                                          : 'bg-red-100 text-red-800'
+                                )}
+                            >
+                                {rarity.toUpperCase()}
+                            </Badge>
+                        )}
+                    </CardFooter>
+                    {actionArea}
+                </Card>
 
                 {avatarOverlay && (
                     <div className="absolute bottom-4 right-8 z-40">
@@ -346,11 +350,16 @@ function SpeciesListItem({
     found?: boolean
     hoverEffect?: 'lift' | 'shadow' | 'none'
 }) {
-    const { src, isBlurred, imgRef } = useLazyImage({
-        lowQualitySrc: species.default_photo?.square_url || '',
-        highQualitySrc: species.default_photo?.medium_url || '',
-        rootMargin: '100px', // Load high-res when image is 100px from viewport
-        threshold: 0.1,
+    const { src, isBlurred, imgRef } = useImage({
+        src: species.default_photo?.medium_url || '',
+        lazy: true,
+        progressive: {
+            lowQualitySrc: species.default_photo?.square_url || '',
+        },
+        intersectionOptions: {
+            rootMargin: '100px',
+            threshold: 0.1,
+        },
     })
     const KingdomIcon = getKingdomIcon(species.iconic_taxon_name)
 

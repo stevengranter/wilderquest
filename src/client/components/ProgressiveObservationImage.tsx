@@ -1,4 +1,4 @@
-import { useProgressiveImage } from '@/hooks/useProgressiveImage'
+import { useImage } from '@/hooks/useImage'
 import { cn } from '@/lib/utils'
 
 interface ObservationPhoto {
@@ -16,10 +16,12 @@ export function ProgressiveObservationImage({
     photo,
     className,
 }: ProgressiveObservationImageProps) {
-    const { src, isBlurred } = useProgressiveImage(
-        photo.url,
-        photo.url.replace('square', 'medium')
-    )
+    const { src, isBlurred } = useImage({
+        src: photo.url.replace('square', 'medium'),
+        progressive: {
+            lowQualitySrc: photo.url,
+        },
+    })
 
     return (
         <div className={cn('overflow-hidden', className)}>

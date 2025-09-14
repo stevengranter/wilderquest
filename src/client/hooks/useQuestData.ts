@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect } from 'react'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import {
     Quest,
@@ -19,9 +18,9 @@ import {
     fetchGuestProgress,
     fetchLeaderboard,
     fetchLeaderboardByToken,
-} from './helpers/fetchQueries'
+} from './fetchQueries'
 
-interface BaseQuestConfig {
+interface QuestDataConfig {
     questId?: string | number
     token?: string
     initialData?: {
@@ -30,14 +29,19 @@ interface BaseQuestConfig {
     }
 }
 
-interface QuestBaseResult {
+interface QuestDataResult {
+    // Quest data
     questData: Quest | null | undefined
+    share?: Share
+
+    // Related data
     taxa: INatTaxon[]
     mappings?: QuestMapping[]
     aggregatedProgress?: AggregatedProgress[]
     detailedProgress?: DetailedProgress[]
     leaderboard?: LeaderboardEntry[]
-    share?: Share // For guest context
+
+    // Loading states
     isLoading: boolean
     isTaxaLoading: boolean
     isError: boolean
@@ -46,14 +50,15 @@ interface QuestBaseResult {
     isTaxaError?: boolean
 }
 
-export const useQuestBase = ({
+export const useQuestData = ({
     questId,
     token,
     initialData,
-}: BaseQuestConfig): QuestBaseResult => {
+}: QuestDataConfig): QuestDataResult => {
     const queryKey = token ? ['sharedQuest', token] : ['quest', questId]
     const isEnabled = !!(token || questId)
 
+    // Main quest data query
     const questQuery = useQuery({
         queryKey,
         queryFn: async () => {
@@ -61,7 +66,6 @@ export const useQuestBase = ({
                 ? await fetchQuestByToken(token)
                 : await fetchQuest(questId)
 
-            // If result is null/undefined, return a fallback
             if (!result) {
                 return token
                     ? {
@@ -78,34 +82,32 @@ export const useQuestBase = ({
         initialData: token ? undefined : initialData?.quest,
         staleTime: 1000 * 60 * 5, // 5 minutes
         enabled: isEnabled,
-        retry: (failureCount, error) => {
-            return failureCount < 3
-        },
+        retry: (failureCount) => failureCount < 3,
     })
 
-    // Extract quest and share data with defensive checks
+    // Extract quest and share data
     let quest: Quest | null = null
     let share: Share | undefined = undefined
 
     if (token) {
-        // For token-based queries, data should have quest and share properties
         quest = questQuery.data?.quest
         share = questQuery.data?.share
     } else {
-        // For questId-based queries, data is the quest directly
         quest = questQuery.data
     }
-    const isQuestSuccess = questQuery.isSuccess
 
+    // Taxa data query
     const taxaQuery = useQuery({
         queryKey: ['taxa', quest?.id],
         queryFn: () => fetchTaxa((quest as QuestWithTaxa)?.taxon_ids || []),
         initialData: initialData?.taxa,
         enabled:
-            isQuestSuccess && !!(quest as QuestWithTaxa)?.taxon_ids?.length,
+            questQuery.isSuccess &&
+            !!(quest as QuestWithTaxa)?.taxon_ids?.length,
         staleTime: 1000 * 60 * 5, // 5 minutes
     })
 
+    // Progress data query
     const progressQuery = useQuery({
         queryKey: token ? ['guestProgress', token] : ['progress', quest?.id],
         queryFn: token
@@ -115,6 +117,7 @@ export const useQuestBase = ({
         staleTime: 1000 * 60 * 5, // 5 minutes
     })
 
+    // Leaderboard query
     const leaderboardQuery = useQuery({
         queryKey: token ? ['leaderboard', token] : ['leaderboard', quest?.id],
         queryFn: token
@@ -124,9 +127,9 @@ export const useQuestBase = ({
         staleTime: 1000 * 30, // 30 seconds
     })
 
-    // Return unified result
     return {
         questData: quest,
+        share: token ? share : undefined,
         taxa: taxaQuery.data || [],
         mappings: token
             ? (questQuery.data?.taxa_mappings as QuestMapping[] | undefined) ||
@@ -137,7 +140,6 @@ export const useQuestBase = ({
         aggregatedProgress: progressQuery.data?.aggregatedProgress,
         detailedProgress: progressQuery.data?.detailedProgress,
         leaderboard: leaderboardQuery.data,
-        share: token ? share : undefined,
         isLoading:
             questQuery.isLoading ||
             progressQuery.isLoading ||

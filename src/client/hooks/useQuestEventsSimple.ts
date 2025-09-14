@@ -7,10 +7,9 @@ import QuestEventToast from '@/components/QuestEventToast'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import { QuestMapping, ProgressData } from '@/types/questTypes'
 
-interface QuestEventConfig {
-    questId: number
+interface QuestEventsConfig {
+    questId: number | undefined
     token?: string
-    getValidToken?: () => Promise<string | null>
     isOwner: boolean
 }
 
@@ -38,16 +37,15 @@ interface QuestEditingEvent {
 
 type QuestEvent = SpeciesEvent | QuestStatusEvent | QuestEditingEvent
 
-export const useQuestEvents = ({
+export const useQuestEventsSimple = ({
     questId,
     token,
-    getValidToken,
     isOwner,
-}: QuestEventConfig) => {
+}: QuestEventsConfig) => {
     const queryClient = useQueryClient()
 
     useEffect(() => {
-        if (!questId) return
+        if (!questId || questId === 0) return
 
         let eventSource: EventSource | null = null
 
@@ -56,7 +54,6 @@ export const useQuestEvents = ({
                 // Build EventSource URL based on context
                 let eventSourceUrl: string
                 if (isOwner) {
-                    // For owners, get the current access token synchronously from localStorage
                     const accessToken = localStorage.getItem('access_token')
                     eventSourceUrl = accessToken
                         ? `/api/quests/${questId}/events?token=${encodeURIComponent(accessToken)}`
@@ -70,7 +67,6 @@ export const useQuestEvents = ({
                 clientDebug.events(
                     `Setting up EventSource for quest ${questId}`
                 )
-                clientDebug.events(`EventSource URL: ${eventSourceUrl}`)
 
                 eventSource = new EventSource(eventSourceUrl, {
                     withCredentials: true,
@@ -111,7 +107,7 @@ export const useQuestEvents = ({
                 eventSource.close()
             }
         }
-    }, [questId, token, getValidToken, isOwner, queryClient])
+    }, [questId, token, isOwner, queryClient])
 }
 
 const handleQuestEvent = (
@@ -169,6 +165,8 @@ const handleSpeciesEvent = (
     token: string | undefined,
     queryClient: QueryClient
 ) => {
+    clientDebug.events('Species event:', data.type, data.payload)
+
     // Get cached data based on context
     let mappings: QuestMapping[] | undefined
     let taxaData: INatTaxon[] | undefined
