@@ -26,6 +26,7 @@ import {
 } from '../types/questTypes'
 import { INatTaxon } from '@shared/types/iNaturalist'
 import { useEffect, useState } from 'react'
+import Confetti from 'react-confetti'
 
 type TaxonWithProgress = INatTaxon & {
     mapping?: QuestMapping
@@ -90,7 +91,7 @@ export function QuestSummaryModal({
     useEffect(() => {
         if (isOpen) {
             setShowConfetti(true)
-            const timer = setTimeout(() => setShowConfetti(false), 3000)
+            const timer = setTimeout(() => setShowConfetti(false), 5000)
             return () => clearTimeout(timer)
         }
     }, [isOpen])
@@ -146,53 +147,14 @@ export function QuestSummaryModal({
 
                     <div className="space-y-8">
                         {/* Celebration Confetti Effect */}
-                        <AnimatePresence>
-                            {showConfetti && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="absolute inset-0 pointer-events-none z-50"
-                                >
-                                    {Array.from({ length: 60 }).map((_, i) => (
-                                        <motion.div
-                                            key={i}
-                                            className={`absolute w-3 h-3 rounded-full ${
-                                                [
-                                                    'bg-yellow-400',
-                                                    'bg-pink-400',
-                                                    'bg-blue-400',
-                                                    'bg-green-400',
-                                                    'bg-purple-400',
-                                                ][i % 5]
-                                            }`}
-                                            initial={{
-                                                x:
-                                                    Math.random() *
-                                                    window.innerWidth,
-                                                y: -20,
-                                                rotate: 0,
-                                                scale: 0,
-                                            }}
-                                            animate={{
-                                                y: window.innerHeight + 20,
-                                                rotate: 720,
-                                                scale: [0, 1, 0.5, 0],
-                                                transition: {
-                                                    duration:
-                                                        3 + Math.random() * 2,
-                                                    delay: Math.random() * 1,
-                                                    ease: 'easeOut',
-                                                },
-                                            }}
-                                            style={{
-                                                left: Math.random() * 100 + '%',
-                                            }}
-                                        />
-                                    ))}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                        {showConfetti && (<Confetti
+                            gravity={0.4}
+                            recycle={false}
+                            onConfettiComplete={
+                            (confetti) => {
+                                confetti?.reset();
+                            }}
+                        />)}
 
                         {/* Quest Statistics */}
                         <motion.div

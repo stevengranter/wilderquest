@@ -263,6 +263,7 @@ const handleSpeciesEvent = (
             speciesName,
             action,
             speciesImage: species?.default_photo?.square_url,
+            isCurrentUser: isCurrentUser,
         }),
         {
             position: 'top-left',
