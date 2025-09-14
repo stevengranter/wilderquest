@@ -31,7 +31,7 @@ FROM base as deps
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
     --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm install --prod --frozen-lockfile
+    pnpm install --frozen-lockfile
 
 ################################################################################
 # Create a stage for building the application.
