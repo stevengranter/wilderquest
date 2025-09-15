@@ -1,8 +1,10 @@
 import { CorsOptions } from 'cors'
 
 const allowedOrigins = [
-    'https://wildernest.fly.dev',
-    'https://wilderquest.fly.dev'
+    // 'https://wildernest.fly.dev',
+    'https://wilderquest.fly.dev',
+    'https://localhost:3000',
+    'https://localhost:5173'
 ]
 
 const corsConfig: CorsOptions = {

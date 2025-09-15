@@ -28,6 +28,63 @@ const db = await mysql.createConnection({
 
 // Use internal proxy instead of direct API call for rate limiting and caching
 const API_URL = 'http://localhost:3000/api/iNatAPI/observations/species_counts'
+const INATURALIST_API_BASE_URL = 'https://api.inaturalist.org/v1'
+
+// Rate limiting for direct API calls (60 per minute)
+let apiCallCount = 0
+let apiCallWindowStart = Date.now()
+const MAX_CALLS_PER_MINUTE = 60
+const WINDOW_SIZE_MS = 60 * 1000 // 1 minute
+
+// Check if server is running
+async function isServerRunning(): Promise<boolean> {
+    try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+
+        const response = await fetch('http://localhost:3000/api/health', {
+            signal: controller.signal,
+        })
+
+        clearTimeout(timeoutId)
+        return response.ok
+    } catch (error) {
+        if (error instanceof Error) {
+            console.log('Server check failed:', error.message)
+        } else {
+            console.log('Server check failed with unknown error')
+        }
+        return false
+    }
+}
+
+// Rate limiting function for direct API calls
+async function rateLimitedFetch(
+    url: string,
+    options?: RequestInit
+): Promise<Response> {
+    const now = Date.now()
+
+    // Reset counter if window has passed
+    if (now - apiCallWindowStart >= WINDOW_SIZE_MS) {
+        apiCallCount = 0
+        apiCallWindowStart = now
+    }
+
+    // Check if we're at the limit
+    if (apiCallCount >= MAX_CALLS_PER_MINUTE) {
+        const waitTime = WINDOW_SIZE_MS - (now - apiCallWindowStart)
+        console.log(
+            `Rate limit reached. Waiting ${Math.ceil(waitTime / 1000)} seconds...`
+        )
+        await new Promise((resolve) => setTimeout(resolve, waitTime))
+        apiCallCount = 0
+        apiCallWindowStart = Date.now()
+    }
+
+    apiCallCount++
+    return fetch(url, options)
+}
 
 type inatApiParams = {
     lat: number
@@ -62,7 +119,18 @@ const fetchLocationTaxa = async (
             )
             .join('&')
 
-        const response = await fetch(`${API_URL}?${queryString}`)
+        // Check if server is running, if not use direct API
+        const serverRunning = await isServerRunning()
+        let response: Response
+
+        if (serverRunning) {
+            console.log('Server is running, using proxy API')
+            response = await fetch(`${API_URL}?${queryString}`)
+        } else {
+            console.log('Server is not running, using direct iNaturalist API')
+            const directUrl = `${INATURALIST_API_BASE_URL}/observations/species_counts?${queryString}`
+            response = await rateLimitedFetch(directUrl)
+        }
 
         if (!response.ok) {
             console.warn(
@@ -94,14 +162,21 @@ const fetchLocationTaxa = async (
         )
         return selected
     } catch (error) {
-        console.error('Error fetching taxa from iNaturalist:', error)
+        if (error instanceof Error) {
+            console.error(
+                'Error fetching taxa from iNaturalist:',
+                error.message
+            )
+        } else {
+            console.error('Error fetching taxa from iNaturalist:', error)
+        }
         console.log('Using fallback random taxa')
         return generateFallbackTaxa(limit)
     }
 }
 
-const generateFallbackTaxa = (quantity: number) => {
-    const taxa = []
+const generateFallbackTaxa = (quantity: number): number[] => {
+    const taxa: number[] = []
     for (let i = 0; i < quantity; i++) {
         taxa.push(getRandomInt(5000, 999999))
     }
@@ -486,7 +561,7 @@ const createFakeQuest = async (animal = faker.animal.type()) => {
 }
 
 const createUsers = async (quantity: number, allUserIds: number[]) => {
-    const userIds = []
+    const userIds: number[] = []
     for (let i = 0; i < quantity; i++) {
         const user = createFakeUser()
         logRawUserData(user)
@@ -517,7 +592,7 @@ const createUsers = async (quantity: number, allUserIds: number[]) => {
                 numberOfTaxa
             )
 
-            const questsToTaxaIds = []
+            const questsToTaxaIds: number[] = []
             for (const taxon_id of taxaArray) {
                 const id = await addRowToTable('quests_to_taxa', {
                     quest_id,
@@ -659,7 +734,7 @@ for (const questData of sampleQuests) {
         quest.longitude,
         numberOfTaxa
     )
-    const questsToTaxaIds = []
+    const questsToTaxaIds: number[] = []
     for (const taxon_id of taxaArray) {
         const id = await addRowToTable('quests_to_taxa', {
             quest_id,

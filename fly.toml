@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for wildernest on 2025-08-04T14:38:52-02:30
+# fly.toml app configuration file generated for wilderquest on 2025-09-15T14:17:48-02:30
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'wildernest'
+app = 'wilderquest'
 primary_region = 'yyz'
 
 [build]
